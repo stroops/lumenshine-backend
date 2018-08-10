@@ -54,6 +54,55 @@ Example:
 ~~~~
 
 The `"env": {"icop_debug": "1"}` is needed, because we use live-reload of the configuration from viper. There is a problem with this feature and debugging, so that the debugger will not stop the application on exit. Therefore you can specify this argument and live-reload will not be enabled.
+
 # Hint
 
 The project is also refered as `icop` in some places. This will be changed in future.
+
+
+# Directroy description
+
+The backend is build as a monorepo.
+Here is some information on the directories.
+
+## addons
+
+Includes some tools we use to extend the basic functionality
+
+## admin
+
+This is the backend for the admin-frontend.
+
+## api
+
+This includes all exposed APIs
+
+## constants
+
+This includes some commonly used constants
+
+## db
+
+This includes some commonly used db functionality
+
+## example-data
+
+Examples for the service configuration, docker, etc.
+
+## helpers
+
+Some helper package with shared functionality
+
+## icop_errors
+
+Defines some commonly used error constants
+
+## pb
+
+Includes the definitions and buildoutput for the gRPC services
+
+## services
+
+This includes all services, which are exposed internaly as gRPC.
+
+
