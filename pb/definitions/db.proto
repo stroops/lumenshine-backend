@@ -1,0 +1,425 @@
+syntax = "proto3";
+
+import "global.proto";
+import "jwt.proto";
+
+package pb;
+
+message GetUserByIDOrEmailRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+  string email = 3;
+  bool with_qr_data = 4;
+  bool user_not_found = 5;
+}
+
+message CreateUserRequest {
+  BaseRequest base = 1;
+  string email = 2;
+  string kdf_salt = 3;
+  string mnemonic_master_key = 4;
+  string mnemonic_master_iv = 5;
+  string wordlist_master_key = 6;
+  string wordlist_master_iv = 7;
+  string mnemonic = 8;
+  string mnemonic_iv = 9;
+  string wordlist = 10;
+  string wordlist_iv = 11;
+  string public_key_0 = 12;
+  string public_key_188 = 13;
+
+  string salutation = 14;
+  string title = 15;
+  string forename = 16;
+  string lastname = 17;
+  string company = 18;
+  string street_address = 19;
+  string street_number = 20;
+  string zip_code = 21;
+  string city = 22;
+  string state = 23;
+  string country_code = 24;
+  string nationality = 25;
+  string mobile_nr = 26;
+  int64 birth_day = 27;
+  string birth_place = 28;
+
+  string password = 29;
+  string mail_confirmation_key = 30;
+  int64 mail_confirmation_expiry = 31;
+  string tfa_secret = 32;
+  bytes tfa_qrcode = 33;
+  string tfa_url = 34;
+}
+
+message UserProfileResponse {
+  int64 id = 1;
+  string email = 2;
+  string salutation = 3;
+  string title = 4;
+  string forename = 5;
+  string lastname = 6;
+  string company = 7;
+  string street_address = 8;
+  string street_number = 9;
+  string zip_code = 10;
+  string city = 11;
+  string state = 12;
+  string country_code = 13;
+  string nationality = 14;
+  string mobile_nr = 15;
+  int64 birth_day = 16;
+  string birth_place = 17;
+  string password = 18;
+  bool user_not_found = 19;
+}
+
+message UserDetailsResponse {
+  int64 id = 1;
+  bool mail_confirmed = 2;
+  string mail_confirmation_key = 3;
+  int64 mail_confirmation_expiry = 4;
+  string tfa_secret = 5;
+  bytes tfa_qrcode = 6;
+  string tfa_url = 7;
+  bool tfa_confirmed = 8;
+  bool mnemonic_confirmed = 9;
+  string password = 10;
+  string email = 11;
+  int64 message_count = 12;
+  bool user_not_found = 13;
+}
+
+message ExistsEmailRequest {
+  BaseRequest base = 1;
+  string email = 2;
+}
+
+message ExistsEmailResponse {
+  bool exists = 1;
+}
+
+message LanguageCodeRequest {
+  BaseRequest base = 1;
+  string language_code = 2;
+}
+
+message Country {
+  string code = 1;
+  string name = 2;
+}
+
+message CountryListResponse {
+  repeated Country countries = 1;
+}
+
+message SalutationListResponse {
+  repeated string salutation = 1;
+}
+
+message UserMailTokenRequest {
+  BaseRequest base = 1;
+  string token = 2;
+}
+message UserMailTokenResponse {
+  int64 user_id = 1;
+  int64 mail_confirmation_expiry = 2;
+  bool token_not_found = 3;
+  bool mail_confirmed = 4;
+}
+
+message UserSecurityRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;
+  string kdf_salt = 4;
+  string mnemonic_master_key = 5;
+  string mnemonic_master_iv = 6;
+  string wordlist_master_key = 7;
+  string wordlist_master_iv = 8;
+  string mnemonic = 9;
+  string mnemonic_iv = 10;
+  string wordlist = 11;
+  string wordlist_iv = 12;
+  string public_key_0 = 13;
+  string public_key_188 = 14;
+  bool user_not_found = 15;
+}
+
+message UserSecurityResponse {
+  int64 id = 1;
+  int64 user_id = 2;
+  string kdf_salt = 3;
+  string mnemonic_master_key = 4;
+  string mnemonic_master_iv = 5;
+  string wordlist_master_key = 6;
+  string wordlist_master_iv = 7;
+  string mnemonic = 8;
+  string mnemonic_iv = 9;
+  string wordlist = 10;
+  string wordlist_iv = 11;
+  string public_key_0 = 12;
+  string public_key_188 = 13;
+  bool user_not_found = 14;
+}
+
+message SetMailTokenRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string mail_confirmation_key =3;
+  int64 mail_confirmation_expiry =4;
+}
+
+message SetTfaDataRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string tfa_secret = 3;
+  bytes tfa_qrcode = 4;
+  string tfa_url = 5;
+}
+
+message JwtSetKeyRequest {
+  BaseRequest base = 1;
+  string key = 2;
+  string value1 = 3;
+  string value2 = 4;
+  int64 expiry1 = 5;
+  int64 expiry2 = 6;
+}
+
+message SaveMailRequest {
+  BaseRequest base = 1;
+  string mail_from = 2;
+  string mail_to = 3;
+  string mail_subject = 4;
+  string mail_body = 5;
+  string external_status = 6;
+  string external_status_id = 7;
+  int64 internal_status = 8;
+}
+
+
+message UserMessageListRequest{
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  bool archive = 3;
+}
+message UserMessageRequest{
+  BaseRequest base = 1;
+  int64 message_id = 3;
+  bool archive = 4;
+}
+
+message UserMessageItem {
+  int64 id = 1;
+  int64 user_id = 2;
+  string title = 3;
+  string message = 4;
+  int64 date_created = 5;
+}
+
+message UserMessageListResponse {
+  repeated UserMessageItem message_list_items = 1;
+  int64 current_count = 2;
+  int64 archive_count = 3;
+}
+
+message AddWalletRequest {  
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string public_key_0 = 3;
+  string wallet_name = 4;
+  string federation_address = 5;
+  bool show_on_homescreen = 6;
+}
+
+message WalletChangeNameRequest {  
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;  
+  string name = 4;
+}
+
+message WalletSetHomescreenRequest {  
+  BaseRequest base = 1;
+  int64 user_id = 2;  
+  int64 id = 3;
+  bool visible = 4;
+}
+
+message WalletChangeFederationAddressRequest {  
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;  
+  string federation_address = 4;
+}
+
+message CheckWalletRequest {  
+  BaseRequest base = 1;
+  int64 user_id = 2;  
+  string wallet_name = 3;
+  string federation_address = 4;
+  string public_key_0 = 5;
+}
+
+message CheckWalletResponse {  
+  bool name_ok = 1;    
+  bool federation_address_ok = 2;
+  bool public_key_0_ok = 3;
+}
+
+message Wallet {  
+  int64 id = 1;    
+  int64 user_id = 2;
+  string public_key_0 = 3;
+  string wallet_name = 4;
+  string federation_address = 5;
+  bool show_on_homescreen = 6;
+}
+
+message GetWalletsRequest {  
+  BaseRequest base = 1;
+  int64 user_id = 2;  
+}
+
+message GetWalletsResponse {  
+  repeated Wallet wallets = 1;  
+}
+
+message RemoveWalletRequest {  
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;  
+}
+
+message WalletIsLastRequest {  
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;  
+}
+
+message QueuePushNotificationRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string push_token = 3;
+  string content = 4;
+  NotificationType deviceType = 5;
+}
+
+message QueueMailNotificationRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string content = 3;
+  string subject = 4;
+  EmailContentType mail_type = 5;
+  string user_email = 6;
+}
+
+message DequeueRequest {
+  BaseRequest base = 1;
+  int64 limit_count = 2;
+}
+
+message NotificationListResponse {
+  repeated Notification notifications = 1;
+}
+
+message UpdateNotificationsStatusRequest{
+  BaseRequest base = 1;
+  repeated NotificationArchive notifications = 2;
+}
+
+message Notification {
+  int64 id = 1;
+  int64 user_id = 2;
+  NotificationType notification_type = 3;
+  string push_token = 4;
+  string content = 5;
+  string mail_subject = 6;
+  EmailContentType mail_type = 7;
+  string user_email = 8;
+}
+
+message NotificationArchive {
+  int64 id = 1;
+  NotificationStatusCode status = 2;
+  string internal_error = 3;
+  string external_status = 4;
+  string external_error = 5;
+}
+
+message AddPushTokenRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  DeviceType device_type = 3;
+  string push_token = 4;
+}
+
+message GetPushTokensResponse {
+  repeated PushToken pushTokens = 1;
+}
+
+message PushToken {
+  DeviceType device_type = 1;
+  string push_token = 2;
+}
+
+message DeletePushTokenRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string push_token = 3;
+}
+
+message UpdatePushTokenRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  DeviceType device_type = 3;
+  string old_push_token = 4;
+  string new_push_token = 5;  
+}
+
+service DBService {
+  rpc GetUserDetails (GetUserByIDOrEmailRequest) returns (UserDetailsResponse) {}
+  rpc GetUserSecurities (IDRequest) returns (UserSecurityResponse) {}
+  rpc SetUserSecurities (UserSecurityRequest) returns (Empty) {}
+  rpc SetTfaData (SetTfaDataRequest) returns (Empty) {}
+  rpc UpdateUserSecurityPassword (UserSecurityRequest) returns (Empty) {}
+  rpc CreateUser (CreateUserRequest) returns (IDResponse) {}
+  rpc ExistsEmail (ExistsEmailRequest) returns (ExistsEmailResponse) {}
+  rpc GetCountryList (LanguageCodeRequest) returns (CountryListResponse) {}
+  rpc GetSalutationList (LanguageCodeRequest) returns (SalutationListResponse) {}
+
+  rpc GetUserByMailtoken (UserMailTokenRequest) returns (UserMailTokenResponse) {}
+  rpc SetUserMailToken (SetMailTokenRequest) returns (Empty) {}
+  rpc GetUserProfile (IDRequest) returns (UserProfileResponse) {}
+
+  rpc SetUserMailConfirmed (IDRequest) returns (Empty) {}
+  rpc SetUserMnemonicConfirmed (IDRequest) returns (Empty) {}
+  rpc SetUserTFARegistered (IDRequest) returns (Empty) {}
+
+  rpc GetAllJwtKeys (Empty) returns (KeyListResponse) {}
+  rpc SetJwtKey (JwtSetKeyRequest) returns (Empty) {}
+  rpc SaveMail (SaveMailRequest) returns (Empty) {}
+  rpc GetUserMessages (UserMessageListRequest) returns (UserMessageListResponse) {}
+  rpc GetUserMessage (UserMessageRequest) returns (UserMessageItem) {}
+  rpc MoveMessageToArchive (IDRequest) returns (Empty) {}
+
+  rpc CheckWalletData (CheckWalletRequest) returns (CheckWalletResponse) {}
+  rpc AddWallet (AddWalletRequest) returns (IDResponse) {}
+  rpc RemoveWallet (RemoveWalletRequest) returns (Empty) {}
+  rpc WalletChangeName (WalletChangeNameRequest) returns (Empty) {}
+  rpc WalletChangeFederationAddress (WalletChangeFederationAddressRequest) returns (Empty) {}
+  rpc GetUserWallets (GetWalletsRequest) returns (GetWalletsResponse) {}
+  rpc WalletIsLast (WalletIsLastRequest) returns (BoolResponse) {}
+  rpc WalletSetHomescreen (WalletSetHomescreenRequest) returns (Empty) {}  
+
+  rpc AddPushToken(AddPushTokenRequest) returns (Empty) {}
+  rpc DeletePushToken(DeletePushTokenRequest) returns (Empty) {}
+  rpc GetPushTokens(IDRequest) returns (GetPushTokensResponse) {}
+  rpc UpdatePushToken(UpdatePushTokenRequest) returns (Empty) {}
+
+  rpc QueuePushNotification(QueuePushNotificationRequest) returns (Empty) {}
+  rpc QueueMailNotification(QueueMailNotificationRequest) returns (Empty) {}
+  rpc DequeueNotifications(DequeueRequest) returns (NotificationListResponse) {}
+  rpc UpdateNotificationsStatus(UpdateNotificationsStatusRequest) returns (Empty) {}
+}

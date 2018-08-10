@@ -1,0 +1,7 @@
+IsDevSystem=true
+LogLevel = "debug" # possible values/order: panic, fatal, error, warn, info, debug
+
+[WebLinks]
+    ConfirmMail = "http://localhost:9000/confirm-email/"
+	LostPassword = "http://localhost:9000/lost-password/"
+	LostTFA = "http://localhost:9000/lost-tfa/"

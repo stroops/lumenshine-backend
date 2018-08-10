@@ -1,0 +1,22 @@
+IsDevSystem=true
+
+LimitCount = 50
+IdleSeconds = 60
+EmailSender = "dont_reply@xxxx"
+
+[Services]
+    DBSrvPort = 4001
+    DBSrvHost = "localhost"
+
+	MailSrvPort = 4003
+	MailSrvHost = "localhost"
+
+[IOSConfig]
+    DevelopmentCertificate = "./data/APNs_Development.p12"
+    DevelopmentCertificatePassword = "1234"
+    ProductionCertificate = "./data/APNs_Production.p12"
+    ProductionCertificatePassword = "1234"
+    BundleId = "com.soneso.stellar"
+
+[AndroidConfig]
+    APIKey = "xxxx"

@@ -1,0 +1,10 @@
+IsDevSystem=true
+
+[Ethereum]
+    Enabled = false
+
+[Stellar]
+    Enabled = false    
+
+[Bitcoin]
+    Enabled = false    

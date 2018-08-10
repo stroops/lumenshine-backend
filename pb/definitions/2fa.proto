@@ -1,0 +1,30 @@
+syntax = "proto3";
+import "global.proto";
+
+package pb;
+
+message ConstructUserRequest {
+  BaseRequest base = 1;  
+  string email = 2;  
+}
+
+message ConstructUserResponse {
+  string url = 1;
+  bytes bitmap = 2;
+  string secret = 3;
+}
+
+message AuthenticateRequest {
+  BaseRequest base = 1;  
+  string code = 2;
+  string secret = 3;
+}
+
+message AuthenticateResponse {
+  bool result = 1;
+}
+
+service TwoFactorAuthService {
+  rpc ConstructUser (ConstructUserRequest) returns (ConstructUserResponse) {}
+  rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
+}

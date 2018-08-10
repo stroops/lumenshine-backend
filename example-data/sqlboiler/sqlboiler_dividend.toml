@@ -1,0 +1,8 @@
+[postgres]
+  dbname="cali_dividend"
+  host="localhost"
+  port=5432
+  user="postgres"
+  pass="xxx"
+  sslmode="disable"
+  schema="public"

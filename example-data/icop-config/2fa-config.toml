@@ -1,0 +1,5 @@
+IsDevSystem=false
+Port = 4000
+SecreteKeyLen = 10
+IssuerName = "Lumenshine Demo"
+UseDemoSecrete = false

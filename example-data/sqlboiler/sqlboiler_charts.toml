@@ -1,0 +1,7 @@
+[postgres]
+  dbname="chart"
+  host="localhost"
+  port=5433
+  user="icop"
+  pass="jw8s0F4"
+  sslmode="disable"

@@ -1,0 +1,4 @@
+Port = 4004
+
+DBSrvPort = 4001
+DBSrvHost = "localhost"

@@ -1,0 +1,24 @@
+syntax = "proto3";
+import "global.proto";
+
+package pb;
+
+message GetKnownCurrenciesRequest {
+  BaseRequest base = 1;  
+  int id = 2;  
+}
+
+message GetKnownCurrenciesResponse {
+  int id = 1;
+  string name = 2;
+  string issuer_public_key = 3;
+  string asset_code = 4;
+  string short_description = 5;
+  string long_description = 6;
+  int order_index = 7;
+}
+
+service AdminApiService {
+  rpc GetKnownCurrency (GetKnownCurrenciesRequest) returns (GetKnownCurrenciesResponse) {}
+  rpc GetKnownCurrencies () returns ([]GetKnownCurrenciesResponse) {}
+}

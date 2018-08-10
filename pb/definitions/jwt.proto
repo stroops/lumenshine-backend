@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "global.proto";
+
+package pb;
+
+
+message KeyListResponse {
+  message KeyValue {
+    string key_name = 1;
+    string key_value1 = 2;
+    string key_value2 = 3;
+    int64 valid1_to = 4;
+    int64 valid2_to = 5;
+  }
+  repeated  KeyValue key_values = 1;
+}
+
+message JwtKeysResponse{
+  string key1 = 1;
+  string key2 = 2;
+}
+
+service JwtService {
+  rpc GetJwtValue (KeyRequest) returns (JwtKeysResponse) {}
+}

@@ -1,0 +1,15 @@
+IsDevSystem=false
+Port = 4003
+
+DBSrvPort = 4001
+DBSrvHost = "localhost"
+
+
+[MailConfig]
+  Host = "xxx"
+  Port = 465
+  User = "xxx"
+  Password = "xxx"
+  Sender = "xxx"
+  Insecure = false
+  UseSSL = true    

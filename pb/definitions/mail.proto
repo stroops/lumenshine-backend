@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package pb;
+
+import "global.proto";
+
+message SendMailRequest {
+    BaseRequest base = 1;
+    string from = 2;
+    string to = 3;
+    repeated string to_multiple = 4;
+    string subject = 5;
+    string body = 6;
+    bool is_html = 7;
+    //repeated bytes attachements = 7;
+
+}
+
+service MailService {
+  rpc SendMail (SendMailRequest) returns (Empty) {}
+}

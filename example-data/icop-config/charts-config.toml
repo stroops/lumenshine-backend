@@ -1,0 +1,95 @@
+IsDevSystem = false
+Port = "9003"
+
+CORSHosts = [
+	"https://admin.lumenshine.com",	
+	"https://demo.lumenshine.com",	
+	"https://api.lumenshine.com",
+
+	"http://localhost:8000",	
+	"http://localhost:8001",
+	"http://localhost:8002",
+	"http://localhost:8003"
+]
+
+LocalDownloadDir = "downloads/"
+HorizonURL = "https://horizon.stellar.org/" #used for ticker. must end in /
+[DB]
+    DBUser = "icop"
+    DBPassword = "jw8s0F4"
+    DBHost = "localhost"
+    DBPort = 5433
+    DBName = "chart"
+    # DBSchema = "public"
+
+[Ticker]
+    TickSeconds = 60
+    SourceCurrency = "XLM"
+    DestinationCurrency = [ "USD", "BTC", "ETH", "EUR", "CNY", "KRW" ]
+    DecentralizedExchangeCode = [ "MOBI", "CNY", "RMT"]
+    DecentralizedExchangeIssuer = [ "GA6HCMBLTZS5VYYBCATRBRZ3BZJMAFUDKYYF6AH6MVCMGWMRDNSWJPIH", "GAREELUB43IRHWEASCFBLKHURCGMHE5IF6XSE7EXDLACYHGRHM43RFOX", "GDEGOXPCHXWFYY234D2YZSPEJ24BX42ESJNVHY5H7TWWQSYRN5ZKZE3N"]
+
+[Cleanup]
+    CleanupMinutesInterval= 60
+    HoursToKeepMinutelyData = 24
+	HoursToKeepHourlyData   = 720
+
+# [[ImportTransactions]]
+# model= "coinmetrics"
+# fileURL= "https://coinmetrics.io/data/xlm.csv"
+# sourceCurrency= "XLM"
+# destinationCurrency= "USD"
+# sourceCurrencyName= "Lumen"
+# destinationCurrencyName= "United States Dollar"
+# sourceCurrencyIssuer= ""
+# destinationCurrencyIssuer= ""
+
+# [[ImportTransactions]]
+# model= "coinmetrics"
+# fileURL= "https://coinmetrics.io/data/btc.csv"
+# sourceCurrency= "BTC"
+# destinationCurrency= "USD"
+# sourceCurrencyName= "Bitcoin"
+# destinationCurrencyName= "United States Dollar"
+# sourceCurrencyIssuer= ""
+# destinationCurrencyIssuer= ""
+
+# [[ImportTransactions]]
+# model= "coinmetrics"
+# fileURL= "https://coinmetrics.io/data/eth.csv"
+# sourceCurrency= "ETH"
+# destinationCurrency= "USD"
+# sourceCurrencyName= "Ether"
+# destinationCurrencyName= "United States Dollar"
+# sourceCurrencyIssuer= ""
+# destinationCurrencyIssuer= ""
+
+# [[ImportTransactions]]
+# model= "sauder"
+# fileURL= "http://fx.sauder.ubc.ca/cgi/fxdata"
+# sourceCurrency= "EUR"
+# destinationCurrency= "USD"
+# sourceCurrencyName= "Euro"
+# destinationCurrencyName= "United States Dollar"
+# sourceCurrencyIssuer= ""
+# destinationCurrencyIssuer= ""
+
+# [[ImportTransactions]]
+# model= "sauder"
+# fileURL= "http://fx.sauder.ubc.ca/cgi/fxdata"
+# sourceCurrency= "CNY"
+# destinationCurrency= "USD"
+# sourceCurrencyName= "Chinese Yuan Renminbi"
+# destinationCurrencyName= "United States Dollar"
+# sourceCurrencyIssuer= ""
+# destinationCurrencyIssuer= ""
+
+# [[ImportTransactions]]
+# model= "sauder"
+# fileURL= "http://fx.sauder.ubc.ca/cgi/fxdata"
+# sourceCurrency= "KRW"
+# destinationCurrency= "USD"
+# sourceCurrencyName= "South Korean Won"
+# destinationCurrencyName= "United States Dollar"
+# sourceCurrencyIssuer= ""
+# destinationCurrencyIssuer= ""

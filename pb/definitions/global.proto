@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package pb;
+
+message BaseRequest {
+  string request_id = 1;  
+  string update_by = 2;
+
+}
+message IDRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+}
+
+message IDResponse {
+  int64 id = 1;
+}
+
+message KeyRequest {
+  BaseRequest base = 1;
+  string key = 2;
+}
+
+message StringResponse {
+  string value = 1;
+}
+
+message BoolResponse {
+  bool value = 1;
+}
+
+message Empty {
+  BaseRequest base = 1;
+}
+
+message KeyValueRequest {
+  BaseRequest base = 1;
+  string key = 2;
+  string value = 3;
+}
+
+enum EmailContentType {
+  text = 0;
+  html = 1;
+}
+
+enum NotificationType {
+  ios = 0;
+  android = 1;
+  mail = 2;
+}
+
+enum NotificationStatusCode {
+  success = 0;
+  error = 1;
+}
+
+enum DeviceType {
+  apple = 0;
+  google = 1;
+}

@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+import "global.proto";
+
+package pb;
+
+message CoinPriceRequest{
+    BaseRequest base = 1;
+    string chain = 2;
+    int64 coin_amount = 3;
+}
+
+message CoinPriceResponse{
+    double chain_amount = 1;
+    string chain_amount_denomination = 2;
+}
+
+message CreateOrderRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;
+    string chain = 3; 
+    string user_public_key = 4;   
+    int64 coin_amount = 5;
+    string ico_phase = 6;
+}
+
+message CreateOrderResponse {
+    int64 order_id = 1;
+    string address = 2;
+    string chain = 3;
+    double chain_amount = 4;    
+    string fiat_bic = 5;
+    string fiat_iban = 6;
+    string fiat_destination_name = 7;
+    string fiat_payment_usage = 8;
+}
+
+message UserOrdersRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;    
+    string status = 3;
+    int64 order_id = 4;
+}
+
+message UserOrder{
+    int64 id = 1;
+    string order_status = 2;
+    int64 coin_amount = 3;
+    double chain_amount = 4;
+    string chain_amount_denom = 5;
+    string chain = 6;    
+    string chain_address = 7;
+    string user_stellar_public_key = 8;
+    string fiat_bic = 9;
+    string fiat_iban = 10;
+    string fiat_destination_name = 11;
+    string fiat_payment_usage = 12;
+}
+message UserOrdersResponse{
+    repeated UserOrder UserOrders=1;
+}
+
+message UserOrderGetTransactionRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;        
+    int64 order_id = 3;
+}
+message UserOrderTransactionResponse{
+    string transaction = 1;
+    string issuer_public_key = 2;
+    string token_asset_code = 3;    
+    bool has_trustline = 4;
+    uint64 trust_sequence = 5;
+}
+
+message UserOrderSetStatusRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;        
+    int64 order_id = 3;
+    string status = 4;
+    string error_message = 5;
+}
+
+message IcoPhaseResponse{
+    string phase_name = 1;
+    int64 start_time = 2;
+    int64 end_time = 3;    
+    int64 coin_amount = 4;
+    bool is_active = 5;
+}
+
+message PayGetTrustStatusRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;        
+    int64 order_id = 3;  
+}
+
+message PayGetTransactionRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;        
+    int64 order_id = 3;  
+}
+
+message PayGetTransactionResponse{
+    string transaction = 1;
+    int64 error_code = 2;
+}
+
+message PayExecuteTransactionRequest{
+    BaseRequest base = 1;
+    int64 user_id = 2;        
+    int64 order_id = 3;  
+    string transaction = 4;
+}
+
+service PayService {
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
+  rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
+  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}  
+  rpc UserOrderSetStatus (UserOrderSetStatusRequest) returns (Empty) {}  
+  rpc GetActveICOPhase (Empty) returns (IcoPhaseResponse) {}
+  
+  rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (BoolResponse) {}
+  rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}
+  rpc PayExecuteTransaction (PayExecuteTransactionRequest) returns (Empty) {}
+}

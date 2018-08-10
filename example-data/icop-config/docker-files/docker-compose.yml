@@ -1,0 +1,27 @@
+version: '3.6'
+
+services:
+  db:
+    image: postgres:10.3
+    restart: always
+    environment:      
+      POSTGRES_PASSWORD: BEsyr3DBJyZ2QBhBWgG6xTVtwBE4t2cVfGPZ9PSGM6      
+      PGDATA: /var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres10-data:/var/lib/postgresql/data      
+      - ./icop-sql:/docker-entrypoint-initdb.d
+
+  memcached:
+    image: memcached
+    restart: always
+    ports:
+      - "11211:11211"
+      
+# please create the data volumes external with this command
+# docker volume create --name postgres10-data -d local
+# docker volume create --name stellar-data -d local
+volumes:
+  postgres10-data:
+    external: true

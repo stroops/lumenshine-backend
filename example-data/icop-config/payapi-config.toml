@@ -1,0 +1,39 @@
+IsDevSystem=false
+Port = 9004
+LogLevel = "info" # possible values/order: panic, fatal, error, warn, info, debug
+
+CORSHosts = [
+	"http://*", 
+	"https://*",
+	"http://admin.stellargate.net",
+	"http://ico.stellargate.net",
+	"http://localhost:8000",	
+	"http://localhost:8001",
+	"http://localhost:8002",
+	"http://localhost:8003"
+]
+
+[Services]
+  DBSrvPort = 4001
+	DBSrvHost = "localhost"
+
+	TfaSrvPort = 4000
+	TfaSrvHost = "localhost"
+
+	JwtSrvPort = 4002
+	JwtSrvHost = "localhost"
+
+	MailSrvPort = 4003
+	MailSrvHost = "localhost"
+
+	PaySrvPort = 4005
+	PaySrvHost = "localhost"
+
+[Site]
+  SiteName = "XXX-ICO"
+	EmailSender = "dont_reply@xxx"
+
+[WebLinks]
+  ConfirmMail = "http://ico.stellargate.net/confirm-email/"
+	LostPassword = "http://ico.stellargate.net/lost-password/"
+	LostTFA = "http://ico.stellargate.net/lost-tfa/"

@@ -1,0 +1,35 @@
+IsDevSystem=false
+Port = 9001
+LogLevel = "info" # possible values/order: panic, fatal, error, warn, info, debug
+
+CORSHosts = [
+	"https://demoadmin.lumenshine.com",
+        "https://demo.lumenshine.com",
+
+	"http://localhost:8000",	
+	"http://localhost:8001",
+	"http://localhost:8002",
+	"http://localhost:8003"
+]
+
+[Services]
+  DBSrvPort = 4001
+	DBSrvHost = "localhost"
+
+	TfaSrvPort = 4000
+	TfaSrvHost = "localhost"
+
+	JwtSrvPort = 4002
+	JwtSrvHost = "localhost"
+
+	MailSrvPort = 4003
+	MailSrvHost = "localhost"
+
+[Site]
+  SiteName = "Lumenshine Demo"
+	EmailSender = "demo@lumenshine.com"
+
+[WebLinks]
+  	ConfirmMail = "https://demo.lumenshine.com/confirm-email/"
+	LostPassword = "https://demo.lumenshine.com/lost-password/"
+	LostTFA = "https://demo.lumenshine.com/lost-tfa/"

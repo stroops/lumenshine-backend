@@ -1,0 +1,10 @@
+IsDevSystem=false
+Port = 4002
+DBSrvPort = 4001
+DBSrvHost = "localhost"
+MemcachedServerURL = "localhost:11211"
+ValidMinutes1 = 60
+ValidMinutes2 = 120
+LengthJWTKey = 100
+SleepTimeLoopSeconds = 10
+

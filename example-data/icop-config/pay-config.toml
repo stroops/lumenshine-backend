@@ -1,0 +1,59 @@
+IsDevSystem=false
+Port = 4005
+
+
+[DBService]
+    ServicePort = 4001
+    ServiceHost = "localhost"
+
+[CustomerDB]
+    DBUser = "icop"
+    DBPassword = "xxx"
+    DBHost = "localhost"
+    DBPort = 5433
+    DBName = "icop"
+
+[Bitcoin]
+    Enabled = false
+    MasterPublicKey = "xpub6xxxx"
+    RPCServer = "localhost:18332"
+    RPCUser = "xxx"
+    RPCPass = "xxx"
+    Testnet = true
+    MinimumValueBTCStr = "0.0001"
+    TokenPrice = 0.0001
+
+[Ethereum]
+    Enabled = true
+    MasterPublicKey = "xpub6xxx"
+    RPCServer = "localhost:8545"
+    NetworkID = "3"
+    MinimumWeiValueEthStr = "0.00001"
+    TokenPrice = 0.0002
+    Testnet = true
+
+[Stellar]
+    Enabled = false
+    IssuerPublicKey = "GCCxxx"    
+    DistributionPublicKey = "GA2xxx"
+    DistributionSeed = "Sxxx"
+    TokenAssetCode = "MyCoin"    
+    Horizon = "https://horizon-testnet.stellar.org"
+    NetworkPassphrase = "Test SDF Network ; September 2015"
+    StartingBalance = "15"
+    Testnet = true
+    TokenPrice = 0.3
+
+[Fiat]
+    IBAN = "DE12345678"
+    BIC = "BIC123"
+    TokenPrice = 1.0
+    DestiantionName = "To Me"
+    PaymentUsage = "My Holidays"
+
+[StellarHorizenDB]
+    DBUser = "icop"
+    DBPassword = "xxx"
+    DBHost = "localhost"
+    DBPort = 5433
+    DBName = "icop"

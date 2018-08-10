@@ -1,0 +1,14 @@
+IsDevSystem=true
+DBUser = "postgres"
+DBPassword = "xxxx"
+DBHost = "localhost"
+DBPort = 5432
+DBName = "cali_dividend"
+DBSchema = "public"
+
+CoreDBUser = "postgres"
+CoreDBPassword = "xxxx"
+CoreDBHost = "localhost"
+CoreDBPort = 5641
+CoreDBName = "stellar"
+CoreDBSchema = "public"
