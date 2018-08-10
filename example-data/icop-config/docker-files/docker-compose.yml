@@ -5,7 +5,7 @@ services:
     image: postgres:10.3
     restart: always
     environment:      
-      POSTGRES_PASSWORD: BEsyr3DBJyZ2QBhBWgG6xTVtwBE4t2cVfGPZ9PSGM6      
+      POSTGRES_PASSWORD: xxxx      
       PGDATA: /var/lib/postgresql/data
     ports:
       - "5433:5432"

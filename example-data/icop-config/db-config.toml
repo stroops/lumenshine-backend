@@ -1,7 +1,7 @@
 IsDevSystem=false
 Port = 4001
 DBUser = "icop"
-DBPassword = "jw8s0F4"
+DBPassword = "xxxx"
 DBHost = "localhost"
 DBPort = 5433
 DBName = "icop"

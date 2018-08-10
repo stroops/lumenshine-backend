@@ -1,7 +1,7 @@
 #!/bin/bash
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-    CREATE USER icop WITH PASSWORD 'jw8s0F4';
+    CREATE USER icop WITH PASSWORD 'xxxx';
     GRANT ALL PRIVILEGES ON DATABASE postgres TO icop;
 
     CREATE DATABASE icop

@@ -11,14 +11,14 @@ CORSHosts = [
 
 [AdminDB]
     DBUser = "icop"
-    DBPassword = "jw8s0F4"
+    DBPassword = "xxxx"
     DBHost = "localhost"
     DBPort = 5433
     DBName = "admin"
 
 [CustomerDB]
     DBUser = "icop"
-    DBPassword = "jw8s0F4"
+    DBPassword = "xxxx"
     DBHost = "localhost"
     DBPort = 5433
     DBName = "icop"
