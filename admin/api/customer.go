@@ -33,6 +33,7 @@ func init() {
 	route.AddRoute("GET", "/details/:id", CustomerDetails, []string{}, "customer_details", CustomerRoutePrefix)
 	route.AddRoute("POST", "/update_personal_data", CustomerEdit, []string{}, "customer_update_personal_data", CustomerRoutePrefix)
 	route.AddRoute("GET", "/orders/:id", CustomerOrders, []string{}, "customer_orders", CustomerRoutePrefix)
+	route.AddRoute("GET", "/wallets/:id", CustomerWallets, []string{}, "customer_wallets", CustomerRoutePrefix)
 }
 
 //AddCustomerRoutes adds all the routes for the user handling
@@ -351,7 +352,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	})
 }
 
-//CustomerOrdersRequest for filtering the customers
+//CustomerOrdersRequest to get the orders
 type CustomerOrdersRequest struct {
 	pageinate.PaginationRequestStruct
 }
@@ -430,6 +431,78 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 			Price:  o.ChainAmount,
 			Chain:  o.Chain,
 			Status: o.OrderStatus,
+		}
+	}
+	c.JSON(http.StatusOK, r)
+}
+
+//CustomerWalletsRequest to get the wallets
+type CustomerWalletsRequest struct {
+	pageinate.PaginationRequestStruct
+}
+
+//WalletListItem is one item in the list
+type WalletListItem struct {
+	Name      string `json:"name"`
+	PublicKey string `json:"public_key"`
+}
+
+//WalletListResponse list of wallets
+type WalletListResponse struct {
+	pageinate.PaginationResponseStruct
+	Items []WalletListItem `json:"items"`
+}
+
+//CustomerWallets returns list of all customer's orders
+func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error parsing id", cerr.GeneralError))
+		return
+	}
+
+	var rr CustomerWalletsRequest
+	if err = c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	q := []qm.QueryMod{
+		qm.Select(
+			m.UserWalletColumns.WalletName,
+			m.UserWalletColumns.PublicKey0,
+		),
+	}
+	q = append(q, qm.Where(m.UserWalletColumns.UserID+"=?", id))
+
+	r := new(WalletListResponse)
+
+	//we need to get the total count before sorting and applying the pagination
+	r.TotalCount, err = m.UserWallets(db.DBC, q...).Count()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting total count", cerr.GeneralError))
+		return
+	}
+
+	q = append(q, qm.OrderBy(m.UserWalletColumns.CreatedAt))
+
+	qP := pageinate.Paginate(q, &rr.PaginationRequestStruct, &r.PaginationResponseStruct)
+	wallets, err := m.UserWallets(db.DBC, qP...).All()
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting wallets", cerr.GeneralError))
+		return
+	}
+
+	r.Items = make([]WalletListItem, len(wallets))
+	for i, w := range wallets {
+		r.Items[i] = WalletListItem{
+			Name:      w.WalletName,
+			PublicKey: w.PublicKey0,
 		}
 	}
 	c.JSON(http.StatusOK, r)
