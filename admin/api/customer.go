@@ -2,10 +2,11 @@ package api
 
 import (
 	"database/sql"
-	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
-	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"net/http"
 	"time"
+
+	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
+	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
@@ -16,8 +17,9 @@ import (
 	"github.com/Soneso/lumenshine-backend/db/pageinate"
 	qq "github.com/Soneso/lumenshine-backend/db/querying"
 
-	m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"strconv"
+
+	m "github.com/Soneso/lumenshine-backend/services/db/models"
 )
 
 const (
@@ -30,6 +32,7 @@ func init() {
 	route.AddRoute("GET", "/list", CustomerList, []string{}, "customer_list", CustomerRoutePrefix)
 	route.AddRoute("GET", "/details/:id", CustomerDetails, []string{}, "customer_details", CustomerRoutePrefix)
 	route.AddRoute("POST", "/update_personal_data", CustomerEdit, []string{}, "customer_update_personal_data", CustomerRoutePrefix)
+	route.AddRoute("GET", "/orders/:id", CustomerOrders, []string{}, "customer_orders", CustomerRoutePrefix)
 }
 
 //AddCustomerRoutes adds all the routes for the user handling
@@ -346,4 +349,88 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		BirthDay:         u.BirthDay,
 		BirthPlace:       u.BirthPlace,
 	})
+}
+
+//CustomerOrdersRequest for filtering the customers
+type CustomerOrdersRequest struct {
+	pageinate.PaginationRequestStruct
+}
+
+//OrderListItem is one item in the list
+type OrderListItem struct {
+	ID     int       `json:"id"`
+	Date   time.Time `json:"date"`
+	Amount int64     `json:"amount"`
+	Price  float64   `json:"price"`
+	Chain  string    `json:"chain"`
+	Status string    `json:"status"`
+}
+
+//OrderListResponse list of orders
+type OrderListResponse struct {
+	pageinate.PaginationResponseStruct
+	Items []OrderListItem `json:"items"`
+}
+
+//CustomerOrders returns list of all customer's orders
+func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error parsing id", cerr.GeneralError))
+		return
+	}
+
+	var rr CustomerOrdersRequest
+	if err = c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	q := []qm.QueryMod{
+		qm.Select(
+			m.UserOrderColumns.ID,
+			m.UserOrderColumns.CoinAmount,
+			m.UserOrderColumns.ChainAmount,
+			m.UserOrderColumns.Chain,
+			m.UserOrderColumns.OrderStatus,
+			m.UserOrderColumns.CreatedAt,
+		),
+	}
+	q = append(q, qm.Where(m.UserOrderColumns.UserID+"=?", id))
+
+	r := new(OrderListResponse)
+
+	//we need to get the total count before sorting and applying the pagination
+	r.TotalCount, err = m.UserOrders(db.DBC, q...).Count()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting total count", cerr.GeneralError))
+		return
+	}
+
+	q = append(q, qm.OrderBy(m.UserOrderColumns.CreatedAt))
+
+	qP := pageinate.Paginate(q, &rr.PaginationRequestStruct, &r.PaginationResponseStruct)
+	orders, err := m.UserOrders(db.DBC, qP...).All()
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting orders", cerr.GeneralError))
+		return
+	}
+
+	r.Items = make([]OrderListItem, len(orders))
+	for i, o := range orders {
+		r.Items[i] = OrderListItem{
+			ID:     o.ID,
+			Date:   o.CreatedAt,
+			Amount: o.CoinAmount,
+			Price:  o.ChainAmount,
+			Chain:  o.Chain,
+			Status: o.OrderStatus,
+		}
+	}
+	c.JSON(http.StatusOK, r)
 }

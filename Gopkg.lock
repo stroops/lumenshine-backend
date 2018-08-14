@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  digest = "1:b16fbfbcc20645cb419f78325bb2e85ec729b338e996a228124d68931a6f2a37"
-  name = "github.com/BurntSushi/toml"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
-  version = "v0.3.0"
-
-[[projects]]
   branch = "master"
   digest = "1:696c8d2d1fcd5d13bf58203593fc640b70917a7b9871741878efe86db55ec830"
   name = "github.com/FactomProject/basen"
@@ -37,14 +29,6 @@
   revision = "c02ca9a983da5807ddf7d796784928f5be4afd09"
 
 [[projects]]
-  digest = "1:3ca2109e48660e527509b433c4efb5b910e5b9010d5149a6f44137d47b7970ca"
-  name = "github.com/Masterminds/squirrel"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "a6b93000bd219143c56c16e6cb1c4b91da3f224b"
-  version = "v1.0"
-
-[[projects]]
   branch = "master"
   digest = "1:d60a6983f605420d17520ad3e206319a252989044f4ac580799575c850d4eb41"
   name = "github.com/NaySoftware/go-fcm"
@@ -62,14 +46,6 @@
   ]
   pruneopts = "UT"
   revision = "5312a61534124124185d41f09206b9fef1d88403"
-
-[[projects]]
-  digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
-  name = "github.com/asaskevich/govalidator"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
-  version = "v9"
 
 [[projects]]
   branch = "master"
@@ -190,22 +166,6 @@
   version = "v1.8.11"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d82da120bfcb93e6e5a314101e1e3903dc21b2935deb549070c4a0fe941ac398"
-  name = "github.com/facebookgo/inject"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "cc1aa653e50f6a9893bcaef89e673e5b24e1e97b"
-
-[[projects]]
-  branch = "master"
-  digest = "1:ebaa56dda9c50929b1ade8dc5388e1d0f7861c6e3af78459ac560212310feb25"
-  name = "github.com/facebookgo/structtag"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "217e25fb96916cc60332e399c9aa63f5c422ceed"
-
-[[projects]]
   digest = "1:5f5deb289049dcfd65cdc2a26445b25a998508916d69c9859e91fc1f970bc955"
   name = "github.com/fatih/structtag"
   packages = ["."]
@@ -250,17 +210,6 @@
   version = "v1.2"
 
 [[projects]]
-  digest = "1:4eda9f7bf70f5145b3b9ed3f18ac93e9b1a0e38906eb69e526380c34861e2b07"
-  name = "github.com/go-chi/chi"
-  packages = [
-    ".",
-    "middleware",
-  ]
-  pruneopts = "UT"
-  revision = "e83ac2304db3c50cf03d96a2fcd39009d458bc35"
-  version = "v3.3.2"
-
-[[projects]]
   digest = "1:aacef5f5e45685f2aeda5534d0a750dee6859de7e9088cdd06192787bb01ae6d"
   name = "github.com/go-errors/errors"
   packages = ["."]
@@ -286,14 +235,6 @@
   pruneopts = "UT"
   revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
   version = "v0.16.0"
-
-[[projects]]
-  digest = "1:adea5a94903eb4384abef30f3d878dc9ff6b6b5b0722da25b82e5169216dfb61"
-  name = "github.com/go-sql-driver/mysql"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "d523deb1b23d913de5bdada721a6071e71283618"
-  version = "v1.4.0"
 
 [[projects]]
   digest = "1:c4a2528ccbcabf90f9f3c464a5fc9e302d592861bbfd0b7135a7de8a943d0406"
@@ -366,17 +307,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7654989089e5bd5b6734ec3be8b695e87d3f1f8d95620b343fd7d3995a5b60d7"
-  name = "github.com/jmoiron/sqlx"
-  packages = [
-    ".",
-    "reflectx",
-  ]
-  pruneopts = "UT"
-  revision = "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849"
-
-[[projects]]
-  branch = "master"
   digest = "1:caf6db28595425c0e0f2301a00257d11712f65c1878e12cffc42f6b9a9cf3f23"
   name = "github.com/kardianos/osext"
   packages = ["."]
@@ -401,22 +331,6 @@
   pruneopts = "UT"
   revision = "d6898124de917583f5ff5592ef931d1dfe0ddc05"
   version = "0.2.6"
-
-[[projects]]
-  branch = "master"
-  digest = "1:316d80e40d578fd549c122a1255bfd7ba2758bc25dc04a93ef230d61ab9c66a2"
-  name = "github.com/lann/builder"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "1b87b36280d04fe7882d1512bf038ea2967ad534"
-
-[[projects]]
-  branch = "master"
-  digest = "1:225499d25a9f1486f3b77cdc4f7d6590c506c3839bb9d8497113f6d19676d54a"
-  name = "github.com/lann/ps"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "62de8c46ede02a7675c4c79c84883eb164cb71e3"
 
 [[projects]]
   branch = "master"
@@ -460,14 +374,6 @@
   pruneopts = "UT"
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
-
-[[projects]]
-  digest = "1:3cafc6a5a1b8269605d9df4c6956d43d8011fc57f266ca6b9d04da6c09dee548"
-  name = "github.com/mattn/go-sqlite3"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "25ecb14adfc7543176f7d85291ec7dba82c6f7e4"
-  version = "v1.9.0"
 
 [[projects]]
   branch = "master"
@@ -516,14 +422,6 @@
   pruneopts = "UT"
   revision = "95600eb369b1f657efd54a401ab85d0647a1db80"
   version = "v2.3.0"
-
-[[projects]]
-  digest = "1:daf4c81cf646dd9e403e2ca3ddf09d500f77396f86cfecb3fb9875bbec9212b8"
-  name = "github.com/r3labs/sse"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ab73c814bbdece537f16e92302cd99d1618d0e0d"
-  version = "1.0.1"
 
 [[projects]]
   digest = "1:9695b472826ca23e521d650849fefac3102dddbf841c9a4b35fb9d3ed5d17011"
@@ -633,7 +531,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c03c142ccf48ec615bdbef96ba8b2637b6588fd3188ff8d59fa1a989adae01dd"
+  digest = "1:9a3094a8de8fa915c9c7f2cf7949971f2f9244d323d0a49567aa865de39e3e51"
   name = "github.com/stellar/go"
   packages = [
     "amount",
@@ -647,12 +545,7 @@
     "protocols/horizon",
     "protocols/horizon/base",
     "strkey",
-    "support/app",
-    "support/config",
-    "support/db",
-    "support/db/sqlutils",
     "support/errors",
-    "support/http",
     "support/http/mutil",
     "support/log",
     "support/render/hal",
@@ -672,13 +565,11 @@
   version = "v0.1.1"
 
 [[projects]]
-  digest = "1:ffae6a0390594c05dc5ba534c385229e883508f17f6da257624913fd9aaa4d21"
+  digest = "1:15a4a7e5afac3cea801fa24831fce3bf3b5bd3620cbf8355a07b7dbf06877883"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "mock",
-    "require",
-    "suite",
   ]
   pruneopts = "UT"
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
@@ -828,14 +719,6 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
-  name = "google.golang.org/appengine"
-  packages = ["cloudsql"]
-  pruneopts = "UT"
-  revision = "b1f26356af11148e710935ed1ac8a7f5702c7612"
-  version = "v1.1.0"
-
-[[projects]]
   branch = "master"
   digest = "1:601e63e7d4577f907118bec825902505291918859d223bce015539e79f1160e3"
   name = "google.golang.org/genproto"
@@ -943,14 +826,6 @@
   revision = "c1b8fa8bdccecb0b8db834ee0b92fdbcfa606dd6"
 
 [[projects]]
-  digest = "1:43b8a34f6390d8fbdcfd300ed52103064e9eaaecc7e50b7e3518fe246ebe8403"
-  name = "gopkg.in/tylerb/graceful.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb"
-  version = "v1.2.15"
-
-[[projects]]
   digest = "1:8a1a728f86b71d82c099eebd03bdda5abc089babfaec80954b874921a3743089"
   name = "gopkg.in/volatiletech/null.v6"
   packages = [
@@ -985,11 +860,9 @@
   analyzer-version = 1
   input-imports = [
     "github.com/GeertJohan/go.rice",
-    "github.com/GeertJohan/go.rice/embedded",
     "github.com/NaySoftware/go-fcm",
     "github.com/bradfitz/gomemcache/memcache",
     "github.com/btcsuite/btcd/chaincfg",
-    "github.com/btcsuite/btcd/chaincfg/chainhash",
     "github.com/btcsuite/btcd/rpcclient",
     "github.com/btcsuite/btcd/txscript",
     "github.com/btcsuite/btcd/wire",
@@ -999,8 +872,8 @@
     "github.com/ethereum/go-ethereum/core/types",
     "github.com/ethereum/go-ethereum/crypto",
     "github.com/ethereum/go-ethereum/ethclient",
-    "github.com/facebookgo/inject",
     "github.com/fatih/structtag",
+    "github.com/fsnotify/fsnotify",
     "github.com/gin-contrib/cors",
     "github.com/gin-gonic/gin",
     "github.com/golang/protobuf/proto",
@@ -1010,7 +883,6 @@
     "github.com/lib/pq",
     "github.com/pkg/errors",
     "github.com/pressly/goose",
-    "github.com/r3labs/sse",
     "github.com/rsc/qr",
     "github.com/satori/go.uuid",
     "github.com/sideshow/apns2",
@@ -1021,16 +893,9 @@
     "github.com/stellar/go/build",
     "github.com/stellar/go/clients/horizon",
     "github.com/stellar/go/keypair",
-    "github.com/stellar/go/support/app",
-    "github.com/stellar/go/support/config",
-    "github.com/stellar/go/support/db",
     "github.com/stellar/go/support/errors",
-    "github.com/stellar/go/support/http",
     "github.com/stellar/go/support/log",
     "github.com/stellar/go/xdr",
-    "github.com/stretchr/testify/assert",
-    "github.com/stretchr/testify/mock",
-    "github.com/stretchr/testify/suite",
     "github.com/tyler-smith/go-bip32",
     "github.com/volatiletech/sqlboiler/boil",
     "github.com/volatiletech/sqlboiler/queries",
