@@ -78,4 +78,4 @@ lumenshine-backend
 lumenshine-backend.exe
 
 dist/
-/go/src/github.com/Soneso/lumenshine-backend/.icop_config/
+.icop_config/
