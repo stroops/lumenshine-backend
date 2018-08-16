@@ -67,10 +67,7 @@ func (s *server) ConstructUser(ctx context.Context, r *pb.ConstructUserRequest) 
 	// now := time.Now()
 	issuer := cnf.IssuerName
 
-	secrete := []byte("1234567890") //only for developing
-	if !cnf.UseDemoSecrete {
-		secrete = []byte(helpers.RandomString(cnf.SecreteKeyLen))
-	}
+	secrete := []byte(helpers.RandomString(cnf.SecreteKeyLen))
 
 	secretBase32 := base32.StdEncoding.EncodeToString(secrete)
 
@@ -108,19 +105,15 @@ func (s *server) ConstructUser(ctx context.Context, r *pb.ConstructUserRequest) 
 	return &pb.ConstructUserResponse{
 		Url:    URL.String(),
 		Bitmap: code.PNG(),
-		Secret: string(secrete),
+		Secret: secretBase32,
 	}, nil
 }
 
 func (s *server) Authenticate(ctx context.Context, r *pb.AuthenticateRequest) (*pb.AuthenticateResponse, error) {
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 
-	secrete := []byte(r.Secret)
-
-	secretBase32 := base32.StdEncoding.EncodeToString(secrete)
-
 	otpc := &dgoogauth.OTPConfig{
-		Secret:      secretBase32,
+		Secret:      r.Secret,
 		WindowSize:  3,
 		HotpCounter: 0,
 	}

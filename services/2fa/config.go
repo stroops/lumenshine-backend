@@ -16,7 +16,6 @@ type Config struct {
 	ApplicationDir string
 	IsDevSystem    bool
 	IssuerName     string
-	UseDemoSecrete bool
 	SecreteKeyLen  int
 }
 
