@@ -1,12 +1,13 @@
 package api
 
 import (
+	"net/http"
+	"strings"
+
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -44,6 +45,7 @@ func init() {
 	route.AddRoute("POST", "/add_allowtrust_signer", AddAllowtrustSigner, []string{}, "add_allowtrust_signer", StellarAccountRoutePrefix)
 	route.AddRoute("POST", "/remove_allowtrust_signer", RemoveAllowtrustSigner, []string{}, "remove_allowtrust_signer", StellarAccountRoutePrefix)
 	route.AddRoute("POST", "/edit_allowtrust_signer", EditAllowtrustSigner, []string{}, "edit_allowtrust_signer", StellarAccountRoutePrefix)
+	route.AddRoute("POST", "/edit_other_signer", EditOtherSigner, []string{}, "edit_other_signer", StellarAccountRoutePrefix)
 	route.AddRoute("POST", "/add_other_signer", AddOtherSigner, []string{}, "add_other_signer", StellarAccountRoutePrefix)
 	route.AddRoute("POST", "/remove_other_signer", RemoveOtherSigner, []string{}, "remove_other_signer", StellarAccountRoutePrefix)
 }
@@ -722,6 +724,52 @@ func EditAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 	}
 	if !strings.EqualFold(signer.Type, models.StellarSignerTypeAllowTrust) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "public_key", cerr.InvalidArgument, "Signer is not of type allow trust", ""))
+		return
+	}
+
+	signer.Name = rr.Name
+	if rr.Description != nil {
+		signer.Description = *rr.Description
+	}
+	err = db.UpdateSigner(signer, getUpdatedBy(c))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error editing signer", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
+}
+
+//EditOtherSignerRequest edits signer
+type EditOtherSignerRequest struct {
+	PublicKey   string  `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	Name        string  `form:"name" json:"name" validate:"required,max=256"`
+	Description *string `form:"description" json:"description"`
+}
+
+//EditOtherSigner - edits signer
+func EditOtherSigner(uc *mw.AdminContext, c *gin.Context) {
+	var rr EditOtherSignerRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	signer, err := db.GetStellarSigner(rr.PublicKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing signer", cerr.GeneralError))
+		return
+	}
+	if signer == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "public_key", cerr.InvalidArgument, "Public key not found in database", ""))
+		return
+	}
+	if !strings.EqualFold(signer.Type, models.StellarSignerTypeOther) {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "public_key", cerr.InvalidArgument, "Signer is not of type other", ""))
 		return
 	}
 
