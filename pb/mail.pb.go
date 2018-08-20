@@ -40,7 +40,7 @@ func (m *SendMailRequest) Reset()         { *m = SendMailRequest{} }
 func (m *SendMailRequest) String() string { return proto.CompactTextString(m) }
 func (*SendMailRequest) ProtoMessage()    {}
 func (*SendMailRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mail_d63ba60ec7fd5a75, []int{0}
+	return fileDescriptor_mail_c6e71c3364af632f, []int{0}
 }
 func (m *SendMailRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SendMailRequest.Unmarshal(m, b)
@@ -185,9 +185,9 @@ var _MailService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "mail.proto",
 }
 
-func init() { proto.RegisterFile("mail.proto", fileDescriptor_mail_d63ba60ec7fd5a75) }
+func init() { proto.RegisterFile("mail.proto", fileDescriptor_mail_c6e71c3364af632f) }
 
-var fileDescriptor_mail_d63ba60ec7fd5a75 = []byte{
+var fileDescriptor_mail_c6e71c3364af632f = []byte{
 	// 242 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0x31, 0x4f, 0xc3, 0x30,
 	0x14, 0x84, 0x49, 0x1a, 0x92, 0xe6, 0x05, 0x51, 0xe9, 0x31, 0x60, 0x75, 0x21, 0x2a, 0x4b, 0x06,

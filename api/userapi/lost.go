@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/Soneso/lumenshine-backend/constants"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
-	"net/http"
-	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 
@@ -415,23 +416,22 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	//get 2fa data for email
-	req2FA := &pb.ConstructUserRequest{
+	req2FA := &pb.NewSecretRequest{
 		Base:  NewBaseRequest(uc),
 		Email: user.Email,
 	}
-	tfaResp, err := twoFAClient.ConstructUser(c, req2FA)
+	tfaResp, err := twoFAClient.NewSecret(c, req2FA)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error generating 2FAcode", cerr.GeneralError))
 		return
 	}
 
-	req := &pb.SetTfaDataRequest{
+	req := &pb.SetTempTfaSecretRequest{
 		Base:      NewBaseRequest(uc),
 		UserId:    user.UserID,
-		TfaQrcode: tfaResp.Bitmap,
 		TfaSecret: tfaResp.Secret,
 	}
-	_, err = dbClient.SetTfaData(c, req)
+	_, err = dbClient.SetTempTfaSecret(c, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting tfa data in DB", cerr.GeneralError))
 		return

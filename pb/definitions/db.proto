@@ -47,9 +47,7 @@ message CreateUserRequest {
   string password = 29;
   string mail_confirmation_key = 30;
   int64 mail_confirmation_expiry = 31;
-  string tfa_secret = 32;
-  bytes tfa_qrcode = 33;
-  string tfa_url = 34;
+  string tfa_temp_secret = 32;
 }
 
 message UserProfileResponse {
@@ -88,6 +86,7 @@ message UserDetailsResponse {
   string email = 11;
   int64 message_count = 12;
   bool user_not_found = 13;
+  string tfa_temp_secret = 14;
 }
 
 message ExistsEmailRequest {
@@ -170,12 +169,18 @@ message SetMailTokenRequest {
   int64 mail_confirmation_expiry =4;
 }
 
-message SetTfaDataRequest {
+message SetUserTfaConfirmedRequest {
   BaseRequest base = 1;
   int64 user_id = 2;
   string tfa_secret = 3;
   bytes tfa_qrcode = 4;
   string tfa_url = 5;
+}
+
+message SetTempTfaSecretRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string tfa_secret = 3;
 }
 
 message JwtSetKeyRequest {
@@ -382,7 +387,7 @@ service DBService {
   rpc GetUserDetails (GetUserByIDOrEmailRequest) returns (UserDetailsResponse) {}
   rpc GetUserSecurities (IDRequest) returns (UserSecurityResponse) {}
   rpc SetUserSecurities (UserSecurityRequest) returns (Empty) {}
-  rpc SetTfaData (SetTfaDataRequest) returns (Empty) {}
+  rpc SetTempTfaSecret (SetTempTfaSecretRequest) returns (Empty) {}
   rpc UpdateUserSecurityPassword (UserSecurityRequest) returns (Empty) {}
   rpc CreateUser (CreateUserRequest) returns (IDResponse) {}
   rpc ExistsEmail (ExistsEmailRequest) returns (ExistsEmailResponse) {}
@@ -395,7 +400,7 @@ service DBService {
 
   rpc SetUserMailConfirmed (IDRequest) returns (Empty) {}
   rpc SetUserMnemonicConfirmed (IDRequest) returns (Empty) {}
-  rpc SetUserTFARegistered (IDRequest) returns (Empty) {}
+  rpc SetUserTFAConfirmed (SetUserTfaConfirmedRequest) returns (Empty) {}
 
   rpc GetAllJwtKeys (Empty) returns (KeyListResponse) {}
   rpc SetJwtKey (JwtSetKeyRequest) returns (Empty) {}

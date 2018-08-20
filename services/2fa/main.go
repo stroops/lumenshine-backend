@@ -61,32 +61,19 @@ func main() {
 	}
 }
 
-func (s *server) ConstructUser(ctx context.Context, r *pb.ConstructUserRequest) (*pb.ConstructUserResponse, error) {
+func (s *server) NewSecret(ctx context.Context, r *pb.NewSecretRequest) (*pb.QrCodeResponse, error) {
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 
-	// now := time.Now()
-	issuer := cnf.IssuerName
-
 	secrete := []byte(helpers.RandomString(cnf.SecreteKeyLen))
-
 	secretBase32 := base32.StdEncoding.EncodeToString(secrete)
 
-	URL, err := url.Parse("otpauth://totp")
+	URL, err := getQrCodeURL(secretBase32, r.Email)
 	if err != nil {
 		log.WithError(err).Error("Error parsing url")
 		return nil, err
 	}
 
-	// google auth app will not recognize url encoded characters e.g. will not recognize %20 as space will just print %20
-	URL.Path += "/" + url.PathEscape(issuer) + ":" + url.PathEscape(r.Email)
-
-	params := url.Values{}
-	params.Add("secret", secretBase32)
-	params.Add("issuer", issuer)
-
-	URL.RawQuery = params.Encode()
-
-	code, err := qr.Encode(URL.String(), qr.Q)
+	qrCode, err := getQrCode(URL)
 	if err != nil {
 		log.WithError(err).Error("Error encoding qr-image")
 		return nil, err
@@ -94,18 +81,37 @@ func (s *server) ConstructUser(ctx context.Context, r *pb.ConstructUserRequest) 
 
 	if cnf.IsDevSystem {
 		//write the image to disk on dev
-		b := code.PNG()
-		err = ioutil.WriteFile("qr.png", b, 0600)
+		err = ioutil.WriteFile("qr.png", qrCode, 0600)
 		if err != nil {
 			log.WithError(err).Error("Error saving qr-image")
 			return nil, err
 		}
 	}
-
-	return &pb.ConstructUserResponse{
-		Url:    URL.String(),
-		Bitmap: code.PNG(),
+	return &pb.QrCodeResponse{
+		Url:    URL,
+		Bitmap: qrCode,
 		Secret: secretBase32,
+	}, nil
+}
+
+func (s *server) FromSecret(ctx context.Context, r *pb.FromSecretRequest) (*pb.QrCodeResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	URL, err := getQrCodeURL(r.Secret, r.Email)
+	if err != nil {
+		log.WithError(err).Error("Error parsing url")
+		return nil, err
+	}
+
+	qrCode, err := getQrCode(URL)
+	if err != nil {
+		log.WithError(err).Error("Error encoding qr-image")
+		return nil, err
+	}
+	return &pb.QrCodeResponse{
+		Url:    URL,
+		Bitmap: qrCode,
+		Secret: r.Secret,
 	}, nil
 }
 
@@ -125,4 +131,31 @@ func (s *server) Authenticate(ctx context.Context, r *pb.AuthenticateRequest) (*
 	}
 
 	return &pb.AuthenticateResponse{Result: val}, nil
+}
+
+func getQrCodeURL(secretBase32 string, email string) (string, error) {
+	issuer := cnf.IssuerName
+
+	URL, err := url.Parse("otpauth://totp")
+	if err != nil {
+		return "", err
+	}
+	// google auth app will not recognize url encoded characters e.g. will not recognize %20 as space will just print %20
+	URL.Path += "/" + url.PathEscape(issuer) + ":" + url.PathEscape(email)
+
+	params := url.Values{}
+	params.Add("secret", secretBase32)
+	params.Add("issuer", issuer)
+
+	URL.RawQuery = params.Encode()
+
+	return URL.String(), nil
+}
+
+func getQrCode(url string) ([]byte, error) {
+	code, err := qr.Encode(url, qr.Q)
+	if err != nil {
+		return nil, err
+	}
+	return code.PNG(), nil
 }

@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/Soneso/lumenshine-backend/pb"
 	"strings"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/pb"
 
 	"github.com/Soneso/lumenshine-backend/services/db/models"
 
@@ -71,7 +72,7 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		MailConfirmationKey:    u.MailConfirmationKey,
 		MailConfirmationExpiry: int64(u.MailConfirmationExpiryDate.Unix()),
 		TfaSecret:              u.TfaSecret,
-		TfaQrcode:              u.TfaQrcode,
+		TfaTempSecret:          u.TfaTempSecret,
 		TfaUrl:                 u.TfaURL,
 		TfaConfirmed:           u.TfaConfirmed,
 		MnemonicConfirmed:      u.MnemonicConfirmed,
@@ -136,9 +137,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.MailConfirmed = false
 	u.MailConfirmationKey = r.MailConfirmationKey
 	u.MailConfirmationExpiryDate = time.Unix(r.MailConfirmationExpiry, 0)
-	u.TfaSecret = r.TfaSecret
-	u.TfaQrcode = r.TfaQrcode
-	u.TfaURL = r.TfaUrl
+	u.TfaTempSecret = r.TfaTempSecret
 	u.TfaConfirmed = false
 
 	u.Salutation = r.Salutation
@@ -257,15 +256,25 @@ func (s *server) GetSalutationList(ctx context.Context, r *pb.LanguageCodeReques
 	return ret, nil
 }
 
-func (s *server) SetUserTFARegistered(ctx context.Context, r *pb.IDRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where("id=?", r.Id)).One()
+func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfirmedRequest) (*pb.Empty, error) {
+	u, err := models.UserProfiles(db, qm.Where("id=?", r.UserId)).One()
 	if err != nil {
 		return nil, err
 	}
 
+	u.TfaQrcode = r.TfaQrcode
+	u.TfaURL = r.TfaUrl
+	u.TfaSecret = u.TfaTempSecret
+	u.TfaTempSecret = ""
 	u.TfaConfirmed = true
+	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
+
 	err = u.Update(db,
+		models.UserProfileColumns.TfaQrcode,
+		models.UserProfileColumns.TfaURL,
+		models.UserProfileColumns.TfaSecret,
+		models.UserProfileColumns.TfaTempSecret,
 		models.UserProfileColumns.TfaConfirmed,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
@@ -469,23 +478,18 @@ func (s *server) UpdateUserSecurityPassword(ctx context.Context, r *pb.UserSecur
 	)
 }
 
-func (s *server) SetTfaData(ctx context.Context, r *pb.SetTfaDataRequest) (*pb.Empty, error) {
+func (s *server) SetTempTfaSecret(ctx context.Context, r *pb.SetTempTfaSecretRequest) (*pb.Empty, error) {
 	u, err := models.UserProfiles(db, qm.Where("id=?", r.UserId)).One()
 	if err != nil {
 		return nil, err
 	}
 
-	u.TfaQrcode = r.TfaQrcode
-	u.TfaSecret = r.TfaSecret
-	u.TfaURL = r.TfaUrl
-	u.TfaConfirmed = false
+	u.TfaTempSecret = r.TfaSecret
+	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
 
 	return &pb.Empty{}, u.Update(db,
-		models.UserProfileColumns.TfaQrcode,
-		models.UserProfileColumns.TfaSecret,
-		models.UserProfileColumns.TfaURL,
-		models.UserProfileColumns.TfaConfirmed,
+		models.UserProfileColumns.TfaTempSecret,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
 	)

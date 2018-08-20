@@ -3,12 +3,18 @@ import "global.proto";
 
 package pb;
 
-message ConstructUserRequest {
+message NewSecretRequest {
   BaseRequest base = 1;  
   string email = 2;  
 }
 
-message ConstructUserResponse {
+message FromSecretRequest {
+  BaseRequest base = 1;  
+  string email = 2;  
+  string secret = 3;
+}
+
+message QrCodeResponse {
   string url = 1;
   bytes bitmap = 2;
   string secret = 3;
@@ -25,6 +31,7 @@ message AuthenticateResponse {
 }
 
 service TwoFactorAuthService {
-  rpc ConstructUser (ConstructUserRequest) returns (ConstructUserResponse) {}
+  rpc NewSecret (NewSecretRequest) returns (QrCodeResponse) {}
+  rpc FromSecret (FromSecretRequest) returns (QrCodeResponse) {}
   rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse) {}
 }

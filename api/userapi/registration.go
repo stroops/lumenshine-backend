@@ -90,11 +90,11 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 	//TODO: do additional checks
 
 	//get 2fa data for email
-	req2FA := &pb.ConstructUserRequest{
+	req2FA := &pb.NewSecretRequest{
 		Base:  NewBaseRequest(uc),
 		Email: ur.Email,
 	}
-	twoFaResp, err := twoFAClient.ConstructUser(c, req2FA)
+	twoFaResp, err := twoFAClient.NewSecret(c, req2FA)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error generating 2FAcode", cerr.GeneralError))
 		return
@@ -119,9 +119,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		Email:                  ur.Email,
 		MailConfirmationKey:    helpers.RandomString(constants.DefaultMailkeyLength),
 		MailConfirmationExpiry: time.Now().AddDate(0, 0, constants.DefaultMailkeyExpiryDays).Unix(),
-		TfaSecret:              twoFaResp.Secret,
-		TfaQrcode:              twoFaResp.Bitmap,
-		TfaUrl:                 twoFaResp.Url,
+		TfaTempSecret:              twoFaResp.Secret,
 		Salutation:             ur.Salutation,
 		Title:                  ur.Title,
 		Forename:               ur.Forename,
@@ -231,9 +229,9 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if user.TfaConfirmed {
+	if user.TfaTempSecret == "" {
 		//user already did 2fa registration
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.TfaAlreadyConfirmed, "already registered", "confirm_2FAregsitration.2FACode.already_done"))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.TfaAlreadyConfirmed, "already confirmed", "confirm_2FAregsitration.2FACode.already_done"))
 		return
 	}
 
@@ -241,11 +239,11 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 	req2FA := &pb.AuthenticateRequest{
 		Base:   NewBaseRequest(uc),
 		Code:   cd.TfaCode,
-		Secret: user.TfaSecret,
+		Secret: user.TfaTempSecret,
 	}
 	resp2FA, err := twoFAClient.Authenticate(c, req2FA)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error doing 2FA", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error doing 2FA authenticate", cerr.GeneralError))
 		return
 	}
 
@@ -254,12 +252,26 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	_, err = dbClient.SetUserTFARegistered(c, &pb.IDRequest{
-		Base: NewBaseRequest(uc),
-		Id:   userID,
+	reqQRCode := &pb.FromSecretRequest{
+		Base:   NewBaseRequest(uc),
+		Email:  user.Email,
+		Secret: user.TfaTempSecret,
+	}
+	respQRCode, err := twoFAClient.FromSecret(c, reqQRCode)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error doing 2FA qr code", cerr.GeneralError))
+		return
+	}
+
+	_, err = dbClient.SetUserTFAConfirmed(c, &pb.SetUserTfaConfirmedRequest{
+		Base:      NewBaseRequest(uc),
+		UserId:    userID,
+		TfaSecret: respQRCode.Secret,
+		TfaQrcode: respQRCode.Bitmap,
+		TfaUrl:    respQRCode.Url,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting user 2fa registered", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting user 2fa confirmed", cerr.GeneralError))
 		return
 	}
 
