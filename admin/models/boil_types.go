@@ -58,3 +58,9 @@ const (
 	StellarSignerTypeAllowTrust = "allow_trust"
 	StellarSignerTypeOther      = "other"
 )
+
+// Enum values for stellar_trustline_status
+const (
+	StellarTrustlineStatusDenied  = "denied"
+	StellarTrustlineStatusRevoked = "revoked"
+)

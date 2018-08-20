@@ -10,6 +10,7 @@ var TableNames = struct {
 	AdminStellarAccount             string
 	AdminStellarAsset               string
 	AdminStellarSigner              string
+	AdminUnauthorizedTrustline      string
 	AdminUser                       string
 	AdminUsergroup                  string
 }{
@@ -19,6 +20,7 @@ var TableNames = struct {
 	AdminStellarAccount:             "admin_stellar_account",
 	AdminStellarAsset:               "admin_stellar_asset",
 	AdminStellarSigner:              "admin_stellar_signer",
+	AdminUnauthorizedTrustline:      "admin_unauthorized_trustline",
 	AdminUser:                       "admin_user",
 	AdminUsergroup:                  "admin_usergroup",
 }

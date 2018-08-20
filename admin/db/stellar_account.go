@@ -2,8 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Soneso/lumenshine-backend/admin/models"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/admin/models"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -50,6 +51,18 @@ func GetStellarAccount(publicKey string) (*models.AdminStellarAccount, error) {
 	account, err := models.AdminStellarAccountsG(
 		qm.Load("IssuerPublicKeyAdminStellarAssets"),
 		qm.Load("StellarAccountPublicKeyAdminStellarSigners"),
+		qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).One()
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return account, nil
+}
+
+//GetStellarAccountLight - returns the stellar account
+func GetStellarAccountLight(publicKey string) (*models.AdminStellarAccount, error) {
+	account, err := models.AdminStellarAccountsG(
 		qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).One()
 
 	if err != nil && err != sql.ErrNoRows {
@@ -223,6 +236,18 @@ func UpdateSigner(signer *models.AdminStellarSigner, updatedBy string) error {
 	signer.UpdatedAt = time.Now()
 
 	err := signer.UpdateG()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//AddTrustline adds a new trustline
+func AddTrustline(trustline *models.AdminUnauthorizedTrustline, updatedBy string) error {
+	trustline.UpdatedBy = updatedBy
+
+	err := trustline.InsertG()
 	if err != nil {
 		return err
 	}

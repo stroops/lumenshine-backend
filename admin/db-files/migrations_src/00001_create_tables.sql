@@ -126,6 +126,26 @@ CREATE TABLE admin_known_inflation_destinations
 	CONSTRAINT known_inflation_destination_unique UNIQUE(issuer_public_key)
 );
 
+/*stellar_trustline_status*/
+CREATE TYPE stellar_trustline_status AS ENUM ('denied','revoked');
+
+/* admin_unauthorized_trustline table */
+CREATE TABLE admin_unauthorized_trustline
+(
+	id SERIAL PRIMARY KEY NOT NULL,
+    stellar_account_public_key_id character varying(56) NOT NULL,
+	issuer_public_key_id character varying(56) NOT NULL,
+	asset_code character varying(12) NOT NULL,
+	status stellar_trustline_status NOT NULL,
+	reason character varying(1000) NOT NULL,
+	created_at timestamp with time zone NOT NULL default current_timestamp,
+    updated_at timestamp with time zone NOT NULL default current_timestamp,
+	updated_by character varying NOT NULL,
+	CONSTRAINT trustline_asset_code_unique UNIQUE(stellar_account_public_key_id, issuer_public_key_id, asset_code),
+	CONSTRAINT "fk_unauthorized_trustline_public_key" FOREIGN KEY (stellar_account_public_key_id) REFERENCES admin_stellar_account (public_key),
+	CONSTRAINT "fk_unauthorized_trustline_issuer_public_key" FOREIGN KEY (issuer_public_key_id) REFERENCES admin_stellar_account (public_key)
+);
+
 -- +goose Down
 -- SQL in this section1 is executed when the migration is rolled back.
 drop table IF EXISTS admin_usergroup;
@@ -139,5 +159,9 @@ drop table IF EXISTS admin_stellar_account;
 drop table IF EXISTS admin_known_currencies;
 drop table IF EXISTS admin_known_inflation_destination;
 
+drop table IF EXISTS admin_unauthorized_trustline;
+
 drop type IF EXISTS stellar_account_type;
 drop type IF EXISTS stellar_signer_type;
+
+drop type IF EXISTS stellar_trustline_status;
