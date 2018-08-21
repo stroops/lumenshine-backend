@@ -60,18 +60,6 @@ func GetStellarAccount(publicKey string) (*models.AdminStellarAccount, error) {
 	return account, nil
 }
 
-//GetStellarAccountLight - returns the stellar account
-func GetStellarAccountLight(publicKey string) (*models.AdminStellarAccount, error) {
-	account, err := models.AdminStellarAccountsG(
-		qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).One()
-
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
-	}
-
-	return account, nil
-}
-
 //AllStellarAccounts - returns all stellar accounts
 func AllStellarAccounts() (models.AdminStellarAccountSlice, error) {
 	accounts, err := models.AdminStellarAccountsG().All()
@@ -253,4 +241,22 @@ func AddTrustline(trustline *models.AdminUnauthorizedTrustline, updatedBy string
 	}
 
 	return nil
+}
+
+//ExistsUnauthorizedTrustline - true if trustline already exists
+func ExistsUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) (bool, error) {
+	trustline, err := models.AdminUnauthorizedTrustlinesG(
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.StellarAccountPublicKeyID+"=?", trustorPublicKey),
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).One()
+
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	if trustline == nil {
+		return false, nil
+	}
+
+	return true, nil
 }

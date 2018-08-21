@@ -52,7 +52,7 @@ func AddTrustline(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "trusting_account_public_key", cerr.InvalidArgument, "Trustor account does not exists", ""))
 		return
 	}
-	issuer, err := db.GetStellarAccountLight(rr.IssuingPublicKey)
+	issuer, err := db.GetStellarAccount(rr.IssuingPublicKey)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing account", cerr.GeneralError))
 		return
@@ -65,6 +65,27 @@ func AddTrustline(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "issuing_account_public_key", cerr.InvalidArgument, "Issuing public key does not belong to an issuing account", ""))
 		return
 	}
+	existsAssetCode := false
+	for _, assetCode := range issuer.R.IssuerPublicKeyAdminStellarAssets {
+		if strings.EqualFold(assetCode.AssetCode, rr.AssetCode) {
+			existsAssetCode = true
+			break
+		}
+	}
+	if !existsAssetCode {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "asset_code", cerr.InvalidArgument, "Asset code does not exist for this issuing account", ""))
+		return
+	}
+	existsTrustline, err := db.ExistsUnauthorizedTrustline(rr.TrustorPublicKey, rr.IssuingPublicKey, rr.AssetCode)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing trustline", cerr.GeneralError))
+		return
+	}
+	if existsTrustline {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "asset_code", cerr.InvalidArgument, "Trustline already exists for this issuer and asset code.", ""))
+		return
+	}
+
 	trustline := &models.AdminUnauthorizedTrustline{
 		StellarAccountPublicKeyID: rr.TrustorPublicKey,
 		IssuerPublicKeyID:         rr.IssuingPublicKey,
