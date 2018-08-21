@@ -246,7 +246,7 @@ func AddTrustline(trustline *models.AdminUnauthorizedTrustline, updatedBy string
 //ExistsUnauthorizedTrustline - true if trustline already exists
 func ExistsUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) (bool, error) {
 	trustline, err := models.AdminUnauthorizedTrustlinesG(
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.StellarAccountPublicKeyID+"=?", trustorPublicKey),
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.TrustorPublicKey+"=?", trustorPublicKey),
 		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
 		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).One()
 
@@ -259,4 +259,26 @@ func ExistsUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey strin
 	}
 
 	return true, nil
+}
+
+func DeleteUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) error {
+	trustline, err := models.AdminUnauthorizedTrustlinesG(
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.TrustorPublicKey+"=?", trustorPublicKey),
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).One()
+
+	if err == sql.ErrNoRows {
+		return nil
+	}
+
+	if trustline == nil {
+		return nil
+	}
+
+	err = trustline.DeleteG()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

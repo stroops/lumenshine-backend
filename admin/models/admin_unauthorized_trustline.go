@@ -21,54 +21,53 @@ import (
 
 // AdminUnauthorizedTrustline is an object representing the database table.
 type AdminUnauthorizedTrustline struct {
-	ID                        int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	StellarAccountPublicKeyID string    `boil:"stellar_account_public_key_id" json:"stellar_account_public_key_id" toml:"stellar_account_public_key_id" yaml:"stellar_account_public_key_id"`
-	IssuerPublicKeyID         string    `boil:"issuer_public_key_id" json:"issuer_public_key_id" toml:"issuer_public_key_id" yaml:"issuer_public_key_id"`
-	AssetCode                 string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
-	Status                    string    `boil:"status" json:"status" toml:"status" yaml:"status"`
-	Reason                    string    `boil:"reason" json:"reason" toml:"reason" yaml:"reason"`
-	CreatedAt                 time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt                 time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	UpdatedBy                 string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	ID                int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	IssuerPublicKeyID string    `boil:"issuer_public_key_id" json:"issuer_public_key_id" toml:"issuer_public_key_id" yaml:"issuer_public_key_id"`
+	TrustorPublicKey  string    `boil:"trustor_public_key" json:"trustor_public_key" toml:"trustor_public_key" yaml:"trustor_public_key"`
+	AssetCode         string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
+	Status            string    `boil:"status" json:"status" toml:"status" yaml:"status"`
+	Reason            string    `boil:"reason" json:"reason" toml:"reason" yaml:"reason"`
+	CreatedAt         time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt         time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy         string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *adminUnauthorizedTrustlineR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L adminUnauthorizedTrustlineL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var AdminUnauthorizedTrustlineColumns = struct {
-	ID                        string
-	StellarAccountPublicKeyID string
-	IssuerPublicKeyID         string
-	AssetCode                 string
-	Status                    string
-	Reason                    string
-	CreatedAt                 string
-	UpdatedAt                 string
-	UpdatedBy                 string
+	ID                string
+	IssuerPublicKeyID string
+	TrustorPublicKey  string
+	AssetCode         string
+	Status            string
+	Reason            string
+	CreatedAt         string
+	UpdatedAt         string
+	UpdatedBy         string
 }{
-	ID: "id",
-	StellarAccountPublicKeyID: "stellar_account_public_key_id",
-	IssuerPublicKeyID:         "issuer_public_key_id",
-	AssetCode:                 "asset_code",
-	Status:                    "status",
-	Reason:                    "reason",
-	CreatedAt:                 "created_at",
-	UpdatedAt:                 "updated_at",
-	UpdatedBy:                 "updated_by",
+	ID:                "id",
+	IssuerPublicKeyID: "issuer_public_key_id",
+	TrustorPublicKey:  "trustor_public_key",
+	AssetCode:         "asset_code",
+	Status:            "status",
+	Reason:            "reason",
+	CreatedAt:         "created_at",
+	UpdatedAt:         "updated_at",
+	UpdatedBy:         "updated_by",
 }
 
 // adminUnauthorizedTrustlineR is where relationships are stored.
 type adminUnauthorizedTrustlineR struct {
-	StellarAccountPublicKey *AdminStellarAccount
-	IssuerPublicKey         *AdminStellarAccount
+	IssuerPublicKey *AdminStellarAccount
 }
 
 // adminUnauthorizedTrustlineL is where Load methods for each relationship are stored.
 type adminUnauthorizedTrustlineL struct{}
 
 var (
-	adminUnauthorizedTrustlineColumns               = []string{"id", "stellar_account_public_key_id", "issuer_public_key_id", "asset_code", "status", "reason", "created_at", "updated_at", "updated_by"}
-	adminUnauthorizedTrustlineColumnsWithoutDefault = []string{"stellar_account_public_key_id", "issuer_public_key_id", "asset_code", "status", "reason", "updated_by"}
+	adminUnauthorizedTrustlineColumns               = []string{"id", "issuer_public_key_id", "trustor_public_key", "asset_code", "status", "reason", "created_at", "updated_at", "updated_by"}
+	adminUnauthorizedTrustlineColumnsWithoutDefault = []string{"issuer_public_key_id", "trustor_public_key", "asset_code", "status", "reason", "updated_by"}
 	adminUnauthorizedTrustlineColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	adminUnauthorizedTrustlinePrimaryKeyColumns     = []string{"id"}
 )
@@ -349,25 +348,6 @@ func (q adminUnauthorizedTrustlineQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// StellarAccountPublicKeyG pointed to by the foreign key.
-func (o *AdminUnauthorizedTrustline) StellarAccountPublicKeyG(mods ...qm.QueryMod) adminStellarAccountQuery {
-	return o.StellarAccountPublicKey(boil.GetDB(), mods...)
-}
-
-// StellarAccountPublicKey pointed to by the foreign key.
-func (o *AdminUnauthorizedTrustline) StellarAccountPublicKey(exec boil.Executor, mods ...qm.QueryMod) adminStellarAccountQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("public_key=?", o.StellarAccountPublicKeyID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := AdminStellarAccounts(exec, queryMods...)
-	queries.SetFrom(query.Query, "\"admin_stellar_account\"")
-
-	return query
-}
-
 // IssuerPublicKeyG pointed to by the foreign key.
 func (o *AdminUnauthorizedTrustline) IssuerPublicKeyG(mods ...qm.QueryMod) adminStellarAccountQuery {
 	return o.IssuerPublicKey(boil.GetDB(), mods...)
@@ -385,85 +365,7 @@ func (o *AdminUnauthorizedTrustline) IssuerPublicKey(exec boil.Executor, mods ..
 	queries.SetFrom(query.Query, "\"admin_stellar_account\"")
 
 	return query
-} // LoadStellarAccountPublicKey allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (adminUnauthorizedTrustlineL) LoadStellarAccountPublicKey(e boil.Executor, singular bool, maybeAdminUnauthorizedTrustline interface{}) error {
-	var slice []*AdminUnauthorizedTrustline
-	var object *AdminUnauthorizedTrustline
-
-	count := 1
-	if singular {
-		object = maybeAdminUnauthorizedTrustline.(*AdminUnauthorizedTrustline)
-	} else {
-		slice = *maybeAdminUnauthorizedTrustline.(*[]*AdminUnauthorizedTrustline)
-		count = len(slice)
-	}
-
-	args := make([]interface{}, count)
-	if singular {
-		if object.R == nil {
-			object.R = &adminUnauthorizedTrustlineR{}
-		}
-		args[0] = object.StellarAccountPublicKeyID
-	} else {
-		for i, obj := range slice {
-			if obj.R == nil {
-				obj.R = &adminUnauthorizedTrustlineR{}
-			}
-			args[i] = obj.StellarAccountPublicKeyID
-		}
-	}
-
-	query := fmt.Sprintf(
-		"select * from \"admin_stellar_account\" where \"public_key\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
-	}
-
-	results, err := e.Query(query, args...)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load AdminStellarAccount")
-	}
-	defer results.Close()
-
-	var resultSlice []*AdminStellarAccount
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice AdminStellarAccount")
-	}
-
-	if len(adminUnauthorizedTrustlineAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		object.R.StellarAccountPublicKey = resultSlice[0]
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.StellarAccountPublicKeyID == foreign.PublicKey {
-				local.R.StellarAccountPublicKey = foreign
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadIssuerPublicKey allows an eager lookup of values, cached into the
+} // LoadIssuerPublicKey allows an eager lookup of values, cached into the
 // loaded structs of the objects.
 func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular bool, maybeAdminUnauthorizedTrustline interface{}) error {
 	var slice []*AdminUnauthorizedTrustline
@@ -536,82 +438,6 @@ func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular
 				break
 			}
 		}
-	}
-
-	return nil
-}
-
-// SetStellarAccountPublicKeyG of the admin_unauthorized_trustline to the related item.
-// Sets o.R.StellarAccountPublicKey to related.
-// Adds o to related.R.StellarAccountPublicKeyAdminUnauthorizedTrustlines.
-// Uses the global database handle.
-func (o *AdminUnauthorizedTrustline) SetStellarAccountPublicKeyG(insert bool, related *AdminStellarAccount) error {
-	return o.SetStellarAccountPublicKey(boil.GetDB(), insert, related)
-}
-
-// SetStellarAccountPublicKeyP of the admin_unauthorized_trustline to the related item.
-// Sets o.R.StellarAccountPublicKey to related.
-// Adds o to related.R.StellarAccountPublicKeyAdminUnauthorizedTrustlines.
-// Panics on error.
-func (o *AdminUnauthorizedTrustline) SetStellarAccountPublicKeyP(exec boil.Executor, insert bool, related *AdminStellarAccount) {
-	if err := o.SetStellarAccountPublicKey(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetStellarAccountPublicKeyGP of the admin_unauthorized_trustline to the related item.
-// Sets o.R.StellarAccountPublicKey to related.
-// Adds o to related.R.StellarAccountPublicKeyAdminUnauthorizedTrustlines.
-// Uses the global database handle and panics on error.
-func (o *AdminUnauthorizedTrustline) SetStellarAccountPublicKeyGP(insert bool, related *AdminStellarAccount) {
-	if err := o.SetStellarAccountPublicKey(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetStellarAccountPublicKey of the admin_unauthorized_trustline to the related item.
-// Sets o.R.StellarAccountPublicKey to related.
-// Adds o to related.R.StellarAccountPublicKeyAdminUnauthorizedTrustlines.
-func (o *AdminUnauthorizedTrustline) SetStellarAccountPublicKey(exec boil.Executor, insert bool, related *AdminStellarAccount) error {
-	var err error
-	if insert {
-		if err = related.Insert(exec); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"admin_unauthorized_trustline\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"stellar_account_public_key_id"}),
-		strmangle.WhereClause("\"", "\"", 2, adminUnauthorizedTrustlinePrimaryKeyColumns),
-	)
-	values := []interface{}{related.PublicKey, o.ID}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, updateQuery)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	if _, err = exec.Exec(updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.StellarAccountPublicKeyID = related.PublicKey
-
-	if o.R == nil {
-		o.R = &adminUnauthorizedTrustlineR{
-			StellarAccountPublicKey: related,
-		}
-	} else {
-		o.R.StellarAccountPublicKey = related
-	}
-
-	if related.R == nil {
-		related.R = &adminStellarAccountR{
-			StellarAccountPublicKeyAdminUnauthorizedTrustlines: AdminUnauthorizedTrustlineSlice{o},
-		}
-	} else {
-		related.R.StellarAccountPublicKeyAdminUnauthorizedTrustlines = append(related.R.StellarAccountPublicKeyAdminUnauthorizedTrustlines, o)
 	}
 
 	return nil
