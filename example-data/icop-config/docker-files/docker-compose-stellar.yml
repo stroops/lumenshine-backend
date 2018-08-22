@@ -3,9 +3,11 @@ version: '3.6'
 services:
   
   stellar:
-    # in order to run this container you must do a 'docker-compose.exe run stellar' to run the image in interactive mode
+    # in order to run this container you must do a 'docker-compose -f docker-compose-stellar.yml run stellar' to run the image in interactive mode
     # this will create the database. You must specify a pwd for the db
     # when setting up this image, you have to empty the stellar-config directory, in order to force the db creation
+    # after db creation, stop the image ctrl+c and restart it 'docker-compose -f docker-compose-stellar.yml up/start stellar'
+    # one can then connect to the db via port 5434 with user stellar and password provided
     stdin_open: true
     tty: true
     # build:
@@ -24,10 +26,10 @@ services:
       - "11626:11626"
   
   #this setup is used for the stellar service: friendbot, foundationserver   
-  stellaraddons:
-    build:
-      context: .
-      dockerfile: DockerfileStellarAddons
+  #stellaraddons:
+  #  build:
+  #    context: .
+  #    dockerfile: DockerfileStellarAddons
       
     #volumes:      
     #  - .\stellaraddons-config:/stellaraddons-config       
