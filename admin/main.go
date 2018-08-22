@@ -4,11 +4,16 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/Soneso/lumenshine-backend/admin/api"
 	"github.com/Soneso/lumenshine-backend/admin/cmd"
 	"github.com/Soneso/lumenshine-backend/helpers"
+	"github.com/Soneso/lumenshine-backend/pb"
+	"github.com/gin-contrib/cors"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/Soneso/lumenshine-backend/admin/config"
 	"github.com/Soneso/lumenshine-backend/admin/db"
@@ -17,10 +22,11 @@ import (
 
 	rice "github.com/GeertJohan/go.rice"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
+
+type server interface{}
 
 const (
 	//ServiceName name of this service
@@ -98,6 +104,30 @@ func main() {
 	//run the api
 	if err := r.Run(fmt.Sprintf(":%d", config.Cnf.Port)); err != nil {
 		log.WithError(err).Fatalf("Failed to run server")
+	}
+
+	go startGRPC()
+}
+
+func startGRPC() {
+
+	log := helpers.GetDefaultLog(ServiceName, "Startup")
+
+	//start the grpc server for api endpoints accessible from outside admin
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Cnf.GRPCPort))
+	if err != nil {
+		log.WithError(err).WithFields(logrus.Fields{"port": config.Cnf.GRPCPort}).Fatalf("Failed to listen")
+		panic(err)
+	}
+	log.WithFields(logrus.Fields{"port": config.Cnf.GRPCPort}).Print("2FA-Service listening")
+
+	s := grpc.NewServer()
+	var sv pb.AdminApiServiceServer
+	pb.RegisterAdminApiServiceServer(s, sv)
+	reflection.Register(s)
+	if err := s.Serve(lis); err != nil {
+		log.WithError(err).Fatalf("Failed to serve")
+		panic(err)
 	}
 }
 

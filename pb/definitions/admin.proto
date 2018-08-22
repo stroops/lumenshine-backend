@@ -22,7 +22,28 @@ message GetKnownCurrenciesResponse {
   repeated GetKnownCurrencyResponse currencies = 1;
 }
 
+message GetKnownInflationDestinationRequest {
+  BaseRequest base = 1;  
+  int64 id = 2;  
+}
+
+message GetKnownInflationDestinationResponse {
+  int64 id = 1;
+  string name = 2;
+  string issuer_public_key = 3;
+  string asset_code = 4;
+  string short_description = 5;
+  string long_description = 6;
+  int64 order_index = 7;
+}
+
+message GetKnownInflationDestinationsResponse {
+  repeated GetKnownInflationDestinationResponse destinations = 1;
+}
+
 service AdminApiService {
   rpc GetKnownCurrency (GetKnownCurrencyRequest) returns (GetKnownCurrencyResponse) {}
   rpc GetKnownCurrencies (Empty) returns (GetKnownCurrenciesResponse) {}
+  rpc GetKnownInflationDestination (GetKnownInflationDestinationRequest) returns (GetKnownInflationDestinationResponse) {}
+  rpc GetKnownInflationDestinations (Empty) returns (GetKnownInflationDestinationsResponse) {}
 }

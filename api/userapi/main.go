@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"runtime"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
-	"runtime"
 
 	"net/http"
 	"time"
@@ -25,10 +26,11 @@ const (
 )
 
 var (
-	twoFAClient pb.TwoFactorAuthServiceClient
-	dbClient    pb.DBServiceClient
-	jwtClient   pb.JwtServiceClient
-	mailClient  pb.MailServiceClient
+	twoFAClient    pb.TwoFactorAuthServiceClient
+	dbClient       pb.DBServiceClient
+	jwtClient      pb.JwtServiceClient
+	mailClient     pb.MailServiceClient
+	adminAPIClient pb.AdminApiServiceClient
 )
 
 func main() {
@@ -139,6 +141,12 @@ func main() {
 		authDash.POST("/unsubscribe_push_token", mw.UseIcopContext(UnsubscribeFromPushNotifications))
 		authDash.POST("/unsubscribe_previous_user_push_token", mw.UseIcopContext(UnsubscribePreviousUserFromPushNotifications))
 		authDash.POST("/update_push_token", mw.UseIcopContext(UpdatePushToken))
+
+		authDash.POST("/get_known_currency", mw.UseIcopContext(GetKnownCurrency))
+		authDash.POST("/get_known_currencies", mw.UseIcopContext(GetKnownCurrencies))
+
+		authDash.POST("/get_known_inflation_destination", mw.UseIcopContext(GetKnownInflationDestination))
+		authDash.POST("/get_known_inflation_destinations", mw.UseIcopContext(GetKnownInflationDestinations))
 	}
 
 	//this group is used only for the change password functionality. It is a special key, which is received from
