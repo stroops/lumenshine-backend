@@ -2,14 +2,15 @@ package account
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
-	"net/http"
-	"os"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -23,6 +24,12 @@ import (
 	"github.com/stellar/go/support/log"
 	"github.com/stellar/go/xdr"
 )
+
+// General information on run-down
+// 1) The client calls GetTrustStatus. If trust not set, the client creates the trustline to the coin
+// 2) The client calls GetPaymentTransaction. The transaction is created on the server and signed with the distribution seed and then sent to the client.
+//    The client will then sign transaction with the user seed. This is needed, because we use the users-auto-sequence for the payment
+// 3) The client sends the signed transaction to the server (ExecuteTransaction). The server does some checks and then executes the transaction
 
 // Configurator is responsible for configuring new Stellar accounts that
 // participate in ICO.
@@ -160,6 +167,13 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 		return "", 0, errors.Wrap(err, "Could not create TransactionEnvelopeBuilder")
 	}
 
+	//sign the transaxtion with the dest seed
+	s := build.Sign{Seed: c.cnf.Stellar.DistributionSeed}
+	err = s.MutateTransactionEnvelope(&txe)
+	if err != nil {
+		return "", 0, errors.Wrap(err, "Could not sign transaction")
+	}
+
 	txes, err := txe.Base64()
 	if err != nil {
 		return "", 0, errors.Wrap(err, "Could not bas64 encode TransactionEnvelopeBuilder")
@@ -170,14 +184,11 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 
 //ExecuteTransaction checks the transaction, signs it and executes it
 func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
-	/*var acc horizon.Account
-	var err error
-	var exists bool*/
-
 	txe, err := c.decodeFromBase64(tx)
 	if err != nil {
 		return errors.Wrap(err, "Could not decode transaction")
 	}
+
 	//check the operations inside the transaction
 	if txe.E.Tx.SourceAccount.Address() != o.UserStellarPublicKey {
 		return errors.New("Source not like order")
@@ -230,19 +241,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
 		return errors.Wrap(err, "Transaction does not match saved transaction")
 	}*/
 
-	//sign the transaxtion with the dest seed
-	s := build.Sign{Seed: c.cnf.Stellar.DistributionSeed}
-	err = s.MutateTransactionEnvelope(txe)
-	if err != nil {
-		return errors.Wrap(err, "Could not sign")
-	}
-
-	txeBase64, err := txe.Base64()
-	if err != nil {
-		return errors.Wrap(err, "Could not base64 decode txe")
-	}
-
-	return c.submitTransaction(txeBase64)
+	return c.submitTransaction(tx)
 }
 
 //createAccount create the user stellar account
