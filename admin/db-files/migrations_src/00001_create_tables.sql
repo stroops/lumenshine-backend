@@ -133,16 +133,15 @@ CREATE TYPE stellar_trustline_status AS ENUM ('denied','revoked');
 CREATE TABLE admin_unauthorized_trustline
 (
 	id SERIAL PRIMARY KEY NOT NULL,
-    stellar_account_public_key_id character varying(56) NOT NULL,
-	issuer_public_key_id character varying(56) NOT NULL,
+    issuer_public_key_id character varying(56) NOT NULL,
+	trustor_public_key character varying(56) NOT NULL,	
 	asset_code character varying(12) NOT NULL,
 	status stellar_trustline_status NOT NULL,
 	reason character varying(1000) NOT NULL,
 	created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp,
 	updated_by character varying NOT NULL,
-	CONSTRAINT trustline_asset_code_unique UNIQUE(stellar_account_public_key_id, issuer_public_key_id, asset_code),
-	CONSTRAINT "fk_unauthorized_trustline_public_key" FOREIGN KEY (stellar_account_public_key_id) REFERENCES admin_stellar_account (public_key),
+	CONSTRAINT trustline_asset_code_unique UNIQUE(trustor_public_key, issuer_public_key_id, asset_code),	
 	CONSTRAINT "fk_unauthorized_trustline_issuer_public_key" FOREIGN KEY (issuer_public_key_id) REFERENCES admin_stellar_account (public_key)
 );
 
