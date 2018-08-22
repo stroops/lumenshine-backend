@@ -61,8 +61,8 @@ func main() {
 	r := gin.New()
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		// AllowOrigins: config.Cnf.CORSHosts,
+		//AllowAllOrigins: true,
+		AllowOrigins: config.Cnf.CORSHosts,
 		AllowMethods: []string{"POST", "GET", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type", "Content-Length",
 			"Accept-Encoding", "X-CSRF-Token", "Authorization", "Access-Control-Allow-Credentials",
