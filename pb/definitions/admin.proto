@@ -3,12 +3,12 @@ import "global.proto";
 
 package pb;
 
-message GetKnownCurrenciesRequest {
+message GetKnownCurrencyRequest {
   BaseRequest base = 1;  
   int id = 2;  
 }
 
-message GetKnownCurrenciesResponse {
+message GetKnownCurrencyResponse {
   int id = 1;
   string name = 2;
   string issuer_public_key = 3;
@@ -18,7 +18,11 @@ message GetKnownCurrenciesResponse {
   int order_index = 7;
 }
 
+message GetKnownCurrenciesResponse {
+  repeated GetKnownCurrencyResponse currencies = 1;
+}
+
 service AdminApiService {
-  rpc GetKnownCurrency (GetKnownCurrenciesRequest) returns (GetKnownCurrenciesResponse) {}
-  rpc GetKnownCurrencies () returns ([]GetKnownCurrenciesResponse) {}
+  rpc GetKnownCurrency (GetKnownCurrencyRequest) returns (GetKnownCurrencyResponse) {}
+  rpc GetKnownCurrencies (Empty) returns ([]GetKnownCurrenciesResponse) {}
 }
