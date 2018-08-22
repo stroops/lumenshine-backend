@@ -382,7 +382,7 @@ func GetKnownCurrency(uc *mw.IcopContext, c *gin.Context) {
 func GetKnownCurrencies(uc *mw.IcopContext, c *gin.Context) {
 
 	//get the currency
-	res, err := adminAPIClient.GetKnownCurrencies(c, nil)
+	res, err := adminAPIClient.GetKnownCurrencies(c, &pb.Empty{Base: NewBaseRequest(uc)})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting known currencies", cerr.GeneralError))
 		return
@@ -458,7 +458,7 @@ func GetKnownInflationDestination(uc *mw.IcopContext, c *gin.Context) {
 func GetKnownInflationDestinations(uc *mw.IcopContext, c *gin.Context) {
 
 	//get the destinations
-	res, err := adminAPIClient.GetKnownInflationDestinations(c, nil)
+	res, err := adminAPIClient.GetKnownInflationDestinations(c, &pb.Empty{Base: NewBaseRequest(uc)})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting known inflation destinations", cerr.GeneralError))
 		return
