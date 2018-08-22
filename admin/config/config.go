@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -21,6 +22,7 @@ type DBConfig struct {
 type Config struct {
 	AppName   string
 	Port      int64
+	GRPCPort  int64
 	CORSHosts []string
 
 	AdminDB    DBConfig

@@ -35,7 +35,7 @@ func (m *GetKnownCurrencyRequest) Reset()         { *m = GetKnownCurrencyRequest
 func (m *GetKnownCurrencyRequest) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrencyRequest) ProtoMessage()    {}
 func (*GetKnownCurrencyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_fa42f3cd8e7c79bf, []int{0}
+	return fileDescriptor_admin_ef261e11a80ee28b, []int{0}
 }
 func (m *GetKnownCurrencyRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Unmarshal(m, b)
@@ -86,7 +86,7 @@ func (m *GetKnownCurrencyResponse) Reset()         { *m = GetKnownCurrencyRespon
 func (m *GetKnownCurrencyResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrencyResponse) ProtoMessage()    {}
 func (*GetKnownCurrencyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_fa42f3cd8e7c79bf, []int{1}
+	return fileDescriptor_admin_ef261e11a80ee28b, []int{1}
 }
 func (m *GetKnownCurrencyResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Unmarshal(m, b)
@@ -166,7 +166,7 @@ func (m *GetKnownCurrenciesResponse) Reset()         { *m = GetKnownCurrenciesRe
 func (m *GetKnownCurrenciesResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrenciesResponse) ProtoMessage()    {}
 func (*GetKnownCurrenciesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_fa42f3cd8e7c79bf, []int{2}
+	return fileDescriptor_admin_ef261e11a80ee28b, []int{2}
 }
 func (m *GetKnownCurrenciesResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Unmarshal(m, b)
@@ -193,10 +193,183 @@ func (m *GetKnownCurrenciesResponse) GetCurrencies() []*GetKnownCurrencyResponse
 	return nil
 }
 
+type GetKnownInflationDestinationRequest struct {
+	Base                 *BaseRequest `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	Id                   int64        `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *GetKnownInflationDestinationRequest) Reset()         { *m = GetKnownInflationDestinationRequest{} }
+func (m *GetKnownInflationDestinationRequest) String() string { return proto.CompactTextString(m) }
+func (*GetKnownInflationDestinationRequest) ProtoMessage()    {}
+func (*GetKnownInflationDestinationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_ef261e11a80ee28b, []int{3}
+}
+func (m *GetKnownInflationDestinationRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetKnownInflationDestinationRequest.Unmarshal(m, b)
+}
+func (m *GetKnownInflationDestinationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetKnownInflationDestinationRequest.Marshal(b, m, deterministic)
+}
+func (dst *GetKnownInflationDestinationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationRequest.Merge(dst, src)
+}
+func (m *GetKnownInflationDestinationRequest) XXX_Size() int {
+	return xxx_messageInfo_GetKnownInflationDestinationRequest.Size(m)
+}
+func (m *GetKnownInflationDestinationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetKnownInflationDestinationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetKnownInflationDestinationRequest proto.InternalMessageInfo
+
+func (m *GetKnownInflationDestinationRequest) GetBase() *BaseRequest {
+	if m != nil {
+		return m.Base
+	}
+	return nil
+}
+
+func (m *GetKnownInflationDestinationRequest) GetId() int64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type GetKnownInflationDestinationResponse struct {
+	Id                   int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	IssuerPublicKey      string   `protobuf:"bytes,3,opt,name=issuer_public_key,json=issuerPublicKey,proto3" json:"issuer_public_key,omitempty"`
+	AssetCode            string   `protobuf:"bytes,4,opt,name=asset_code,json=assetCode,proto3" json:"asset_code,omitempty"`
+	ShortDescription     string   `protobuf:"bytes,5,opt,name=short_description,json=shortDescription,proto3" json:"short_description,omitempty"`
+	LongDescription      string   `protobuf:"bytes,6,opt,name=long_description,json=longDescription,proto3" json:"long_description,omitempty"`
+	OrderIndex           int64    `protobuf:"varint,7,opt,name=order_index,json=orderIndex,proto3" json:"order_index,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetKnownInflationDestinationResponse) Reset()         { *m = GetKnownInflationDestinationResponse{} }
+func (m *GetKnownInflationDestinationResponse) String() string { return proto.CompactTextString(m) }
+func (*GetKnownInflationDestinationResponse) ProtoMessage()    {}
+func (*GetKnownInflationDestinationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_ef261e11a80ee28b, []int{4}
+}
+func (m *GetKnownInflationDestinationResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetKnownInflationDestinationResponse.Unmarshal(m, b)
+}
+func (m *GetKnownInflationDestinationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetKnownInflationDestinationResponse.Marshal(b, m, deterministic)
+}
+func (dst *GetKnownInflationDestinationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationResponse.Merge(dst, src)
+}
+func (m *GetKnownInflationDestinationResponse) XXX_Size() int {
+	return xxx_messageInfo_GetKnownInflationDestinationResponse.Size(m)
+}
+func (m *GetKnownInflationDestinationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetKnownInflationDestinationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetKnownInflationDestinationResponse proto.InternalMessageInfo
+
+func (m *GetKnownInflationDestinationResponse) GetId() int64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *GetKnownInflationDestinationResponse) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *GetKnownInflationDestinationResponse) GetIssuerPublicKey() string {
+	if m != nil {
+		return m.IssuerPublicKey
+	}
+	return ""
+}
+
+func (m *GetKnownInflationDestinationResponse) GetAssetCode() string {
+	if m != nil {
+		return m.AssetCode
+	}
+	return ""
+}
+
+func (m *GetKnownInflationDestinationResponse) GetShortDescription() string {
+	if m != nil {
+		return m.ShortDescription
+	}
+	return ""
+}
+
+func (m *GetKnownInflationDestinationResponse) GetLongDescription() string {
+	if m != nil {
+		return m.LongDescription
+	}
+	return ""
+}
+
+func (m *GetKnownInflationDestinationResponse) GetOrderIndex() int64 {
+	if m != nil {
+		return m.OrderIndex
+	}
+	return 0
+}
+
+type GetKnownInflationDestinationsResponse struct {
+	Destinations         []*GetKnownInflationDestinationResponse `protobuf:"bytes,1,rep,name=destinations,proto3" json:"destinations,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                `json:"-"`
+	XXX_unrecognized     []byte                                  `json:"-"`
+	XXX_sizecache        int32                                   `json:"-"`
+}
+
+func (m *GetKnownInflationDestinationsResponse) Reset()         { *m = GetKnownInflationDestinationsResponse{} }
+func (m *GetKnownInflationDestinationsResponse) String() string { return proto.CompactTextString(m) }
+func (*GetKnownInflationDestinationsResponse) ProtoMessage()    {}
+func (*GetKnownInflationDestinationsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_ef261e11a80ee28b, []int{5}
+}
+func (m *GetKnownInflationDestinationsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Unmarshal(m, b)
+}
+func (m *GetKnownInflationDestinationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Marshal(b, m, deterministic)
+}
+func (dst *GetKnownInflationDestinationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationsResponse.Merge(dst, src)
+}
+func (m *GetKnownInflationDestinationsResponse) XXX_Size() int {
+	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Size(m)
+}
+func (m *GetKnownInflationDestinationsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetKnownInflationDestinationsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetKnownInflationDestinationsResponse proto.InternalMessageInfo
+
+func (m *GetKnownInflationDestinationsResponse) GetDestinations() []*GetKnownInflationDestinationResponse {
+	if m != nil {
+		return m.Destinations
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GetKnownCurrencyRequest)(nil), "pb.GetKnownCurrencyRequest")
 	proto.RegisterType((*GetKnownCurrencyResponse)(nil), "pb.GetKnownCurrencyResponse")
 	proto.RegisterType((*GetKnownCurrenciesResponse)(nil), "pb.GetKnownCurrenciesResponse")
+	proto.RegisterType((*GetKnownInflationDestinationRequest)(nil), "pb.GetKnownInflationDestinationRequest")
+	proto.RegisterType((*GetKnownInflationDestinationResponse)(nil), "pb.GetKnownInflationDestinationResponse")
+	proto.RegisterType((*GetKnownInflationDestinationsResponse)(nil), "pb.GetKnownInflationDestinationsResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -213,6 +386,8 @@ const _ = grpc.SupportPackageIsVersion4
 type AdminApiServiceClient interface {
 	GetKnownCurrency(ctx context.Context, in *GetKnownCurrencyRequest, opts ...grpc.CallOption) (*GetKnownCurrencyResponse, error)
 	GetKnownCurrencies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownCurrenciesResponse, error)
+	GetKnownInflationDestination(ctx context.Context, in *GetKnownInflationDestinationRequest, opts ...grpc.CallOption) (*GetKnownInflationDestinationResponse, error)
+	GetKnownInflationDestinations(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownInflationDestinationsResponse, error)
 }
 
 type adminApiServiceClient struct {
@@ -241,10 +416,30 @@ func (c *adminApiServiceClient) GetKnownCurrencies(ctx context.Context, in *Empt
 	return out, nil
 }
 
+func (c *adminApiServiceClient) GetKnownInflationDestination(ctx context.Context, in *GetKnownInflationDestinationRequest, opts ...grpc.CallOption) (*GetKnownInflationDestinationResponse, error) {
+	out := new(GetKnownInflationDestinationResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminApiService/GetKnownInflationDestination", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminApiServiceClient) GetKnownInflationDestinations(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownInflationDestinationsResponse, error) {
+	out := new(GetKnownInflationDestinationsResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminApiService/GetKnownInflationDestinations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminApiServiceServer is the server API for AdminApiService service.
 type AdminApiServiceServer interface {
 	GetKnownCurrency(context.Context, *GetKnownCurrencyRequest) (*GetKnownCurrencyResponse, error)
 	GetKnownCurrencies(context.Context, *Empty) (*GetKnownCurrenciesResponse, error)
+	GetKnownInflationDestination(context.Context, *GetKnownInflationDestinationRequest) (*GetKnownInflationDestinationResponse, error)
+	GetKnownInflationDestinations(context.Context, *Empty) (*GetKnownInflationDestinationsResponse, error)
 }
 
 func RegisterAdminApiServiceServer(s *grpc.Server, srv AdminApiServiceServer) {
@@ -287,6 +482,42 @@ func _AdminApiService_GetKnownCurrencies_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminApiService_GetKnownInflationDestination_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetKnownInflationDestinationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminApiServiceServer).GetKnownInflationDestination(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AdminApiService/GetKnownInflationDestination",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminApiServiceServer).GetKnownInflationDestination(ctx, req.(*GetKnownInflationDestinationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminApiService_GetKnownInflationDestinations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminApiServiceServer).GetKnownInflationDestinations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AdminApiService/GetKnownInflationDestinations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminApiServiceServer).GetKnownInflationDestinations(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _AdminApiService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.AdminApiService",
 	HandlerType: (*AdminApiServiceServer)(nil),
@@ -299,36 +530,50 @@ var _AdminApiService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "GetKnownCurrencies",
 			Handler:    _AdminApiService_GetKnownCurrencies_Handler,
 		},
+		{
+			MethodName: "GetKnownInflationDestination",
+			Handler:    _AdminApiService_GetKnownInflationDestination_Handler,
+		},
+		{
+			MethodName: "GetKnownInflationDestinations",
+			Handler:    _AdminApiService_GetKnownInflationDestinations_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "admin.proto",
 }
 
-func init() { proto.RegisterFile("admin.proto", fileDescriptor_admin_fa42f3cd8e7c79bf) }
+func init() { proto.RegisterFile("admin.proto", fileDescriptor_admin_ef261e11a80ee28b) }
 
-var fileDescriptor_admin_fa42f3cd8e7c79bf = []byte{
-	// 359 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xcf, 0x4f, 0xea, 0x40,
-	0x10, 0xc7, 0x69, 0xe1, 0xf1, 0xc2, 0xf4, 0xe5, 0x01, 0x7b, 0x79, 0x9b, 0x3e, 0x7f, 0x90, 0x7a,
-	0x41, 0x4d, 0x38, 0xe0, 0xd5, 0x0b, 0xa2, 0x31, 0x86, 0x44, 0x4d, 0xbd, 0x79, 0x69, 0xda, 0xee,
-	0x04, 0x37, 0x96, 0xdd, 0x75, 0xb7, 0x55, 0x7b, 0xf5, 0x7f, 0xf1, 0xff, 0x34, 0x5d, 0x14, 0x11,
-	0xd0, 0x5b, 0xf3, 0x99, 0xcf, 0xcc, 0x66, 0xbe, 0x53, 0xf0, 0x62, 0x36, 0xe3, 0x62, 0xa0, 0xb4,
-	0xcc, 0x25, 0x71, 0x55, 0xe2, 0xff, 0x99, 0x66, 0x32, 0x89, 0xb3, 0x39, 0x09, 0x2e, 0xe1, 0xdf,
-	0x39, 0xe6, 0x13, 0x21, 0x9f, 0xc4, 0xb8, 0xd0, 0x1a, 0x45, 0x5a, 0x86, 0xf8, 0x50, 0xa0, 0xc9,
-	0xc9, 0x1e, 0x34, 0x92, 0xd8, 0x20, 0x75, 0x7a, 0x4e, 0xdf, 0x1b, 0xb6, 0x07, 0x2a, 0x19, 0x9c,
-	0xc4, 0x06, 0xdf, 0xcb, 0xa1, 0x2d, 0x92, 0xbf, 0xe0, 0x72, 0x46, 0xdd, 0x9e, 0xd3, 0xaf, 0x87,
-	0x2e, 0x67, 0xc1, 0x8b, 0x0b, 0x74, 0x7d, 0xa0, 0x51, 0x52, 0x2c, 0x64, 0xe7, 0x43, 0x26, 0x04,
-	0x1a, 0x22, 0x9e, 0xa1, 0x6d, 0x6f, 0x85, 0xf6, 0x9b, 0x1c, 0x40, 0x97, 0x1b, 0x53, 0xa0, 0x8e,
-	0x54, 0x91, 0x64, 0x3c, 0x8d, 0xee, 0xb1, 0xa4, 0x75, 0x2b, 0xb4, 0xe7, 0x85, 0x6b, 0xcb, 0x27,
-	0x58, 0x92, 0x6d, 0x80, 0xd8, 0x18, 0xcc, 0xa3, 0x54, 0x32, 0xa4, 0x0d, 0x2b, 0xb5, 0x2c, 0x19,
-	0x4b, 0x86, 0xe4, 0x10, 0xba, 0xe6, 0x4e, 0xea, 0x3c, 0x62, 0x68, 0x52, 0xcd, 0x55, 0xce, 0xa5,
-	0xa0, 0xbf, 0xac, 0xd5, 0xb1, 0x85, 0xd3, 0x4f, 0x4e, 0xf6, 0xa1, 0x93, 0x49, 0x31, 0xfd, 0xe2,
-	0x36, 0xe7, 0xcf, 0x56, 0x7c, 0x59, 0xdd, 0x05, 0x4f, 0x6a, 0x86, 0x3a, 0xe2, 0x82, 0xe1, 0x33,
-	0xfd, 0x6d, 0xf7, 0x01, 0x8b, 0x2e, 0x2a, 0x12, 0xdc, 0x82, 0xbf, 0x92, 0x01, 0x47, 0xb3, 0x48,
-	0xe1, 0x18, 0x20, 0x5d, 0x50, 0xea, 0xf4, 0xea, 0x7d, 0x6f, 0xb8, 0x55, 0xa5, 0xfb, 0x5d, 0x6e,
-	0xe1, 0x92, 0x3f, 0x7c, 0x75, 0xa0, 0x3d, 0xaa, 0x4e, 0x3a, 0x52, 0xfc, 0x06, 0xf5, 0x23, 0x4f,
-	0x91, 0x5c, 0x41, 0x67, 0xb5, 0x97, 0xfc, 0xdf, 0x3c, 0xd1, 0xde, 0xce, 0xff, 0xf1, 0xb9, 0xa0,
-	0x46, 0x46, 0x40, 0xd6, 0x17, 0x20, 0xad, 0xaa, 0xeb, 0x6c, 0xa6, 0xf2, 0xd2, 0xdf, 0xd9, 0x30,
-	0x60, 0x69, 0xc7, 0xa0, 0x96, 0x34, 0xed, 0xff, 0x75, 0xf4, 0x16, 0x00, 0x00, 0xff, 0xff, 0x00,
-	0xf3, 0xe5, 0x00, 0x80, 0x02, 0x00, 0x00,
+var fileDescriptor_admin_ef261e11a80ee28b = []byte{
+	// 451 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
+	0x10, 0x8d, 0x9d, 0x50, 0x94, 0x49, 0x45, 0xd2, 0xb9, 0xb0, 0x0a, 0x2d, 0x44, 0x2e, 0x88, 0x14,
+	0xa4, 0x1c, 0xc2, 0x95, 0x4b, 0x68, 0x11, 0xaa, 0x8a, 0x00, 0x99, 0x03, 0x52, 0x2f, 0x96, 0xed,
+	0x1d, 0xca, 0x0a, 0x67, 0x77, 0xd9, 0x5d, 0x03, 0xb9, 0xf2, 0x03, 0xf8, 0xb3, 0xfc, 0x01, 0xe4,
+	0x75, 0x9b, 0xba, 0x1f, 0xb8, 0x48, 0x1c, 0xb9, 0xad, 0xde, 0xbc, 0x19, 0xef, 0xbc, 0xf7, 0xbc,
+	0x30, 0x48, 0xf9, 0x52, 0xc8, 0x99, 0x36, 0xca, 0x29, 0x0c, 0x75, 0x36, 0xde, 0x3c, 0x29, 0x54,
+	0x96, 0x16, 0x35, 0x12, 0xbd, 0x81, 0xbb, 0xaf, 0xc8, 0x1d, 0x49, 0xf5, 0x4d, 0xee, 0x97, 0xc6,
+	0x90, 0xcc, 0x57, 0x31, 0x7d, 0x29, 0xc9, 0x3a, 0xdc, 0x85, 0x5e, 0x96, 0x5a, 0x62, 0xc1, 0x24,
+	0x98, 0x0e, 0xe6, 0xc3, 0x99, 0xce, 0x66, 0x2f, 0x52, 0x4b, 0xa7, 0xe5, 0xd8, 0x17, 0xf1, 0x0e,
+	0x84, 0x82, 0xb3, 0x70, 0x12, 0x4c, 0xbb, 0x71, 0x28, 0x78, 0xf4, 0x23, 0x04, 0x76, 0x75, 0xa0,
+	0xd5, 0x4a, 0xae, 0xc9, 0xc1, 0x19, 0x19, 0x11, 0x7a, 0x32, 0x5d, 0x92, 0x6f, 0xef, 0xc7, 0xfe,
+	0x8c, 0x4f, 0x60, 0x4b, 0x58, 0x5b, 0x92, 0x49, 0x74, 0x99, 0x15, 0x22, 0x4f, 0x3e, 0xd3, 0x8a,
+	0x75, 0x3d, 0x61, 0x58, 0x17, 0xde, 0x79, 0xfc, 0x88, 0x56, 0xb8, 0x03, 0x90, 0x5a, 0x4b, 0x2e,
+	0xc9, 0x15, 0x27, 0xd6, 0xf3, 0xa4, 0xbe, 0x47, 0xf6, 0x15, 0x27, 0x7c, 0x0a, 0x5b, 0xf6, 0x93,
+	0x32, 0x2e, 0xe1, 0x64, 0x73, 0x23, 0xb4, 0x13, 0x4a, 0xb2, 0x5b, 0x9e, 0x35, 0xf2, 0x85, 0x83,
+	0x73, 0x1c, 0xf7, 0x60, 0x54, 0x28, 0x79, 0x72, 0x81, 0xbb, 0x51, 0x7f, 0xb6, 0xc2, 0x9b, 0xd4,
+	0x07, 0x30, 0x50, 0x86, 0x93, 0x49, 0x84, 0xe4, 0xf4, 0x9d, 0xdd, 0xf6, 0xfb, 0x80, 0x87, 0x0e,
+	0x2b, 0x24, 0x3a, 0x86, 0xf1, 0x25, 0x0d, 0x04, 0xd9, 0xb5, 0x0a, 0xcf, 0x01, 0xf2, 0x35, 0xca,
+	0x82, 0x49, 0x77, 0x3a, 0x98, 0x6f, 0x57, 0xea, 0xfe, 0x49, 0xb7, 0xb8, 0xc1, 0x8f, 0x8e, 0x61,
+	0xf7, 0x8c, 0x77, 0x28, 0x3f, 0x16, 0x69, 0x75, 0xa3, 0x03, 0xb2, 0x4e, 0x48, 0x7f, 0xfc, 0x27,
+	0xf3, 0x7e, 0x86, 0xf0, 0xb0, 0x7d, 0xf8, 0x7f, 0x66, 0x64, 0x09, 0x8f, 0xda, 0xf4, 0x38, 0xf7,
+	0xf4, 0x35, 0x6c, 0xf2, 0x06, 0x7e, 0xea, 0xea, 0xb4, 0xe9, 0x6a, 0x9b, 0xa0, 0xf1, 0x85, 0xee,
+	0xf9, 0xaf, 0x10, 0x86, 0x8b, 0xea, 0xb7, 0x5d, 0x68, 0xf1, 0x9e, 0xcc, 0x57, 0x91, 0x13, 0xbe,
+	0x85, 0xd1, 0xe5, 0x7c, 0xe0, 0xbd, 0xeb, 0x53, 0xe3, 0x2d, 0x1e, 0xb7, 0x46, 0x2a, 0xea, 0xe0,
+	0x02, 0xf0, 0x6a, 0x48, 0xb1, 0x5f, 0x75, 0xbd, 0x5c, 0x6a, 0xb7, 0x1a, 0xdf, 0xbf, 0x66, 0x40,
+	0x23, 0xc7, 0x51, 0x07, 0x2d, 0x6c, 0xb7, 0x6d, 0x87, 0x8f, 0x6f, 0xde, 0xbf, 0xbe, 0xeb, 0x5f,
+	0x0b, 0x15, 0x75, 0xf0, 0x03, 0xec, 0xb4, 0x7a, 0xd2, 0x5c, 0x61, 0xef, 0xa6, 0xb9, 0x8d, 0x6d,
+	0xb2, 0x0d, 0xff, 0x22, 0x3e, 0xfb, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x6b, 0x37, 0xee, 0x73, 0x32,
+	0x05, 0x00, 0x00,
 }
