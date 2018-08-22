@@ -5,17 +5,17 @@ package pb;
 
 message GetKnownCurrencyRequest {
   BaseRequest base = 1;  
-  int id = 2;  
+  int64 id = 2;  
 }
 
 message GetKnownCurrencyResponse {
-  int id = 1;
+  int64 id = 1;
   string name = 2;
   string issuer_public_key = 3;
   string asset_code = 4;
   string short_description = 5;
   string long_description = 6;
-  int order_index = 7;
+  int64 order_index = 7;
 }
 
 message GetKnownCurrenciesResponse {
@@ -24,5 +24,5 @@ message GetKnownCurrenciesResponse {
 
 service AdminApiService {
   rpc GetKnownCurrency (GetKnownCurrencyRequest) returns (GetKnownCurrencyResponse) {}
-  rpc GetKnownCurrencies (Empty) returns ([]GetKnownCurrenciesResponse) {}
+  rpc GetKnownCurrencies (Empty) returns (GetKnownCurrenciesResponse) {}
 }
