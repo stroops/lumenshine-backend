@@ -3,6 +3,7 @@ package main
 //go:generate sqlboiler --wipe -b goose_db_version --no-tests --tinyint-as-bool=true --config $HOME/.config/sqlboiler/sqlboiler_admin.toml postgres
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -26,7 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type server interface{}
+type server struct{}
 
 const (
 	//ServiceName name of this service
@@ -54,6 +55,8 @@ func main() {
 	}
 
 	initBoxes()
+
+	go startGRPC()
 
 	r := gin.New()
 	// Add CORS middleware
@@ -106,7 +109,6 @@ func main() {
 		log.WithError(err).Fatalf("Failed to run server")
 	}
 
-	go startGRPC()
 }
 
 func startGRPC() {
@@ -119,16 +121,114 @@ func startGRPC() {
 		log.WithError(err).WithFields(logrus.Fields{"port": config.Cnf.GRPCPort}).Fatalf("Failed to listen")
 		panic(err)
 	}
-	log.WithFields(logrus.Fields{"port": config.Cnf.GRPCPort}).Print("2FA-Service listening")
+	log.WithFields(logrus.Fields{"port": config.Cnf.GRPCPort}).Print("AdminAPI-Service listening")
 
 	s := grpc.NewServer()
-	var sv pb.AdminApiServiceServer
-	pb.RegisterAdminApiServiceServer(s, sv)
+	pb.RegisterAdminApiServiceServer(s, &server{})
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
 		log.WithError(err).Fatalf("Failed to serve")
 		panic(err)
 	}
+}
+
+//GetKnownCurrency returns the currency for the id
+func (s *server) GetKnownCurrency(c context.Context, r *pb.GetKnownCurrencyRequest) (*pb.GetKnownCurrencyResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	currency, err := db.GetKnownCurrencyByID(int(r.Id))
+	if err != nil {
+		log.WithError(err).WithField("ID", r.Id).Error("Error getting known currency by id")
+		return nil, err
+	}
+
+	return &pb.GetKnownCurrencyResponse{
+		Id:               int64(currency.ID),
+		Name:             currency.Name,
+		IssuerPublicKey:  currency.IssuerPublicKey,
+		AssetCode:        currency.AssetCode,
+		ShortDescription: currency.ShortDescription,
+		LongDescription:  currency.LongDescription,
+		OrderIndex:       int64(currency.OrderIndex),
+	}, nil
+
+}
+
+//GetKnownCurrencies returns all currencies
+func (s *server) GetKnownCurrencies(c context.Context, r *pb.Empty) (*pb.GetKnownCurrenciesResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	currencies, err := db.GetKnownCurrencies()
+	if err != nil {
+		log.WithError(err).Error("Error getting known currencies")
+		return nil, err
+	}
+
+	var res pb.GetKnownCurrenciesResponse
+	res.Currencies = make([]*pb.GetKnownCurrencyResponse, len(currencies))
+	for i, cr := range currencies {
+		c := pb.GetKnownCurrencyResponse{
+			Id:               int64(cr.ID),
+			Name:             cr.Name,
+			IssuerPublicKey:  cr.IssuerPublicKey,
+			ShortDescription: cr.ShortDescription,
+			LongDescription:  cr.LongDescription,
+			OrderIndex:       int64(cr.OrderIndex),
+		}
+		*res.Currencies[i] = c
+	}
+
+	return &res, nil
+
+}
+
+//GetKnownInflationDestination returns the destination for the id
+func (s *server) GetKnownInflationDestination(c context.Context, r *pb.GetKnownInflationDestinationRequest) (*pb.GetKnownInflationDestinationResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	dest, err := db.GetKnownInflationDestinationByID(int(r.Id))
+	if err != nil {
+		log.WithError(err).WithField("ID", r.Id).Error("Error getting known inflation destination by id")
+		return nil, err
+	}
+
+	return &pb.GetKnownInflationDestinationResponse{
+		Id:               int64(dest.ID),
+		Name:             dest.Name,
+		IssuerPublicKey:  dest.IssuerPublicKey,
+		ShortDescription: dest.ShortDescription,
+		LongDescription:  dest.LongDescription,
+		OrderIndex:       int64(dest.OrderIndex),
+	}, nil
+
+}
+
+//GetKnownInflationDestinations returns all destinations
+func (s *server) GetKnownInflationDestinations(c context.Context, r *pb.Empty) (*pb.GetKnownInflationDestinationsResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	dest, err := db.GetKnownInflationDestinations()
+	if err != nil {
+		log.WithError(err).Error("Error getting known inflation destinations")
+		return nil, err
+	}
+
+	var res pb.GetKnownInflationDestinationsResponse
+	res.Destinations = make([]*pb.GetKnownInflationDestinationResponse, len(dest))
+	for i, cr := range dest {
+		c := pb.GetKnownInflationDestinationResponse{
+			Id:               int64(cr.ID),
+			Name:             cr.Name,
+			IssuerPublicKey:  cr.IssuerPublicKey,
+			ShortDescription: cr.ShortDescription,
+			LongDescription:  cr.LongDescription,
+			OrderIndex:       int64(cr.OrderIndex),
+		}
+		*res.Destinations[i] = c
+	}
+
+	return &res, nil
+
 }
 
 //we need this, because rice will not look for subfunctions/packages yet ...
