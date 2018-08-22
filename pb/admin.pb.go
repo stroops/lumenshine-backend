@@ -7,6 +7,11 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
@@ -192,6 +197,111 @@ func init() {
 	proto.RegisterType((*GetKnownCurrencyRequest)(nil), "pb.GetKnownCurrencyRequest")
 	proto.RegisterType((*GetKnownCurrencyResponse)(nil), "pb.GetKnownCurrencyResponse")
 	proto.RegisterType((*GetKnownCurrenciesResponse)(nil), "pb.GetKnownCurrenciesResponse")
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// AdminApiServiceClient is the client API for AdminApiService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type AdminApiServiceClient interface {
+	GetKnownCurrency(ctx context.Context, in *GetKnownCurrencyRequest, opts ...grpc.CallOption) (*GetKnownCurrencyResponse, error)
+	GetKnownCurrencies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownCurrenciesResponse, error)
+}
+
+type adminApiServiceClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAdminApiServiceClient(cc *grpc.ClientConn) AdminApiServiceClient {
+	return &adminApiServiceClient{cc}
+}
+
+func (c *adminApiServiceClient) GetKnownCurrency(ctx context.Context, in *GetKnownCurrencyRequest, opts ...grpc.CallOption) (*GetKnownCurrencyResponse, error) {
+	out := new(GetKnownCurrencyResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminApiService/GetKnownCurrency", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminApiServiceClient) GetKnownCurrencies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownCurrenciesResponse, error) {
+	out := new(GetKnownCurrenciesResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminApiService/GetKnownCurrencies", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AdminApiServiceServer is the server API for AdminApiService service.
+type AdminApiServiceServer interface {
+	GetKnownCurrency(context.Context, *GetKnownCurrencyRequest) (*GetKnownCurrencyResponse, error)
+	GetKnownCurrencies(context.Context, *Empty) (*GetKnownCurrenciesResponse, error)
+}
+
+func RegisterAdminApiServiceServer(s *grpc.Server, srv AdminApiServiceServer) {
+	s.RegisterService(&_AdminApiService_serviceDesc, srv)
+}
+
+func _AdminApiService_GetKnownCurrency_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetKnownCurrencyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminApiServiceServer).GetKnownCurrency(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AdminApiService/GetKnownCurrency",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminApiServiceServer).GetKnownCurrency(ctx, req.(*GetKnownCurrencyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminApiService_GetKnownCurrencies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminApiServiceServer).GetKnownCurrencies(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AdminApiService/GetKnownCurrencies",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminApiServiceServer).GetKnownCurrencies(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _AdminApiService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "pb.AdminApiService",
+	HandlerType: (*AdminApiServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetKnownCurrency",
+			Handler:    _AdminApiService_GetKnownCurrency_Handler,
+		},
+		{
+			MethodName: "GetKnownCurrencies",
+			Handler:    _AdminApiService_GetKnownCurrencies_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "admin.proto",
 }
 
 func init() { proto.RegisterFile("admin.proto", fileDescriptor_admin_fa42f3cd8e7c79bf) }
