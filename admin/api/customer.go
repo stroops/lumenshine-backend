@@ -8,6 +8,7 @@ import (
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/gin-gonic/gin"
@@ -133,7 +134,7 @@ func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 	r := new(CustomerListResponse)
 
 	//we need to get the total count before sorting and applying the pagination
-	r.TotalCount, err = m.UserProfiles(db.DBC, q...).Count()
+	r.TotalCount, err = m.UserProfiles(q...).Count(db.DBC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting total count", cerr.GeneralError))
 		return
@@ -147,7 +148,7 @@ func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 	q = qq.AddSorting(rr.SortRegistrationDate, m.UserProfileColumns.CreatedAt, q)
 
 	qP := pageinate.Paginate(q, &rr.PaginationRequestStruct, &r.PaginationResponseStruct)
-	customers, err := m.UserProfiles(db.DBC, qP...).All()
+	customers, err := m.UserProfiles(qP...).All(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting users", cerr.GeneralError))
 		return
@@ -195,7 +196,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	u, err := m.UserProfiles(db.DBC,
+	u, err := m.UserProfiles(
 		qm.Where("id=?", id),
 		qm.Select(
 			m.UserProfileColumns.ID,
@@ -214,7 +215,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 			m.UserProfileColumns.BirthDay,
 			m.UserProfileColumns.BirthPlace,
 		),
-	).One()
+	).One(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
 		return
@@ -273,7 +274,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	u, err := m.UserProfiles(db.DBC,
+	u, err := m.UserProfiles(
 		qm.Where("id=?", rr.ID),
 		qm.Select(
 			m.UserProfileColumns.ID,
@@ -292,7 +293,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 			m.UserProfileColumns.BirthDay,
 			m.UserProfileColumns.BirthPlace,
 		),
-	).One()
+	).One(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
 		return
@@ -315,7 +316,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	u.Nationality = rr.Nationality
 	u.BirthPlace = rr.BirthPlace
 
-	err = u.Update(db.DBC, m.UserProfileColumns.ID,
+	_, err = u.Update(db.DBC, boil.Whitelist(m.UserProfileColumns.ID,
 		m.UserProfileColumns.Forename,
 		m.UserProfileColumns.Lastname,
 		m.UserProfileColumns.MobileNR,
@@ -326,7 +327,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		m.UserProfileColumns.State,
 		m.UserProfileColumns.CountryCode,
 		m.UserProfileColumns.Nationality,
-		m.UserProfileColumns.BirthPlace)
+		m.UserProfileColumns.BirthPlace))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
@@ -407,7 +408,7 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 	r := new(OrderListResponse)
 
 	//we need to get the total count before sorting and applying the pagination
-	r.TotalCount, err = m.UserOrders(db.DBC, q...).Count()
+	r.TotalCount, err = m.UserOrders(q...).Count(db.DBC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting total count", cerr.GeneralError))
 		return
@@ -416,7 +417,7 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 	q = append(q, qm.OrderBy(m.UserOrderColumns.CreatedAt))
 
 	qP := pageinate.Paginate(q, &rr.PaginationRequestStruct, &r.PaginationResponseStruct)
-	orders, err := m.UserOrders(db.DBC, qP...).All()
+	orders, err := m.UserOrders(qP...).All(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting orders", cerr.GeneralError))
 		return
@@ -424,11 +425,15 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 
 	r.Items = make([]OrderListItem, len(orders))
 	for i, o := range orders {
+		v, ok := o.ChainAmount.Float64()
+		if !ok {
+			v = 0
+		}
 		r.Items[i] = OrderListItem{
 			ID:     o.ID,
 			Date:   o.CreatedAt,
 			Amount: o.CoinAmount,
-			Price:  o.ChainAmount,
+			Price:  v,
 			Chain:  o.Chain,
 			Status: o.OrderStatus,
 		}
@@ -483,7 +488,7 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 	r := new(WalletListResponse)
 
 	//we need to get the total count before sorting and applying the pagination
-	r.TotalCount, err = m.UserWallets(db.DBC, q...).Count()
+	r.TotalCount, err = m.UserWallets(q...).Count(db.DBC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting total count", cerr.GeneralError))
 		return
@@ -492,7 +497,7 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 	q = append(q, qm.OrderBy(m.UserWalletColumns.CreatedAt))
 
 	qP := pageinate.Paginate(q, &rr.PaginationRequestStruct, &r.PaginationResponseStruct)
-	wallets, err := m.UserWallets(db.DBC, qP...).All()
+	wallets, err := m.UserWallets(qP...).All(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting wallets", cerr.GeneralError))
 		return

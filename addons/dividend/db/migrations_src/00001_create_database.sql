@@ -1,1 +1,0 @@
-CREATE DATABASE cali_dividend

@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -57,9 +57,21 @@ var AdminUnauthorizedTrustlineColumns = struct {
 	UpdatedBy:         "updated_by",
 }
 
+// AdminUnauthorizedTrustlineRels is where relationship names are stored.
+var AdminUnauthorizedTrustlineRels = struct {
+	IssuerPublicKey string
+}{
+	IssuerPublicKey: "IssuerPublicKey",
+}
+
 // adminUnauthorizedTrustlineR is where relationships are stored.
 type adminUnauthorizedTrustlineR struct {
 	IssuerPublicKey *AdminStellarAccount
+}
+
+// NewStruct creates a new relationship struct
+func (*adminUnauthorizedTrustlineR) NewStruct() *adminUnauthorizedTrustlineR {
+	return &adminUnauthorizedTrustlineR{}
 }
 
 // adminUnauthorizedTrustlineL is where Load methods for each relationship are stored.
@@ -100,9 +112,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var adminUnauthorizedTrustlineBeforeInsertHooks []AdminUnauthorizedTrustlineHook
 var adminUnauthorizedTrustlineBeforeUpdateHooks []AdminUnauthorizedTrustlineHook
 var adminUnauthorizedTrustlineBeforeDeleteHooks []AdminUnauthorizedTrustlineHook
@@ -237,23 +248,18 @@ func AddAdminUnauthorizedTrustlineHook(hookPoint boil.HookPoint, adminUnauthoriz
 	}
 }
 
-// OneP returns a single adminUnauthorizedTrustline record from the query, and panics on error.
-func (q adminUnauthorizedTrustlineQuery) OneP() *AdminUnauthorizedTrustline {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single adminUnauthorizedTrustline record from the query using the global executor.
+func (q adminUnauthorizedTrustlineQuery) OneG() (*AdminUnauthorizedTrustline, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single adminUnauthorizedTrustline record from the query.
-func (q adminUnauthorizedTrustlineQuery) One() (*AdminUnauthorizedTrustline, error) {
+func (q adminUnauthorizedTrustlineQuery) One(exec boil.Executor) (*AdminUnauthorizedTrustline, error) {
 	o := &AdminUnauthorizedTrustline{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -261,35 +267,30 @@ func (q adminUnauthorizedTrustlineQuery) One() (*AdminUnauthorizedTrustline, err
 		return nil, errors.Wrap(err, "models: failed to execute a one query for admin_unauthorized_trustline")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all AdminUnauthorizedTrustline records from the query, and panics on error.
-func (q adminUnauthorizedTrustlineQuery) AllP() AdminUnauthorizedTrustlineSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all AdminUnauthorizedTrustline records from the query using the global executor.
+func (q adminUnauthorizedTrustlineQuery) AllG() (AdminUnauthorizedTrustlineSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all AdminUnauthorizedTrustline records from the query.
-func (q adminUnauthorizedTrustlineQuery) All() (AdminUnauthorizedTrustlineSlice, error) {
+func (q adminUnauthorizedTrustlineQuery) All(exec boil.Executor) (AdminUnauthorizedTrustlineSlice, error) {
 	var o []*AdminUnauthorizedTrustline
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to AdminUnauthorizedTrustline slice")
 	}
 
 	if len(adminUnauthorizedTrustlineAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -298,24 +299,19 @@ func (q adminUnauthorizedTrustlineQuery) All() (AdminUnauthorizedTrustlineSlice,
 	return o, nil
 }
 
-// CountP returns the count of all AdminUnauthorizedTrustline records in the query, and panics on error.
-func (q adminUnauthorizedTrustlineQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all AdminUnauthorizedTrustline records in the query, and panics on error.
+func (q adminUnauthorizedTrustlineQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all AdminUnauthorizedTrustline records in the query.
-func (q adminUnauthorizedTrustlineQuery) Count() (int64, error) {
+func (q adminUnauthorizedTrustlineQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count admin_unauthorized_trustline rows")
 	}
@@ -323,24 +319,19 @@ func (q adminUnauthorizedTrustlineQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q adminUnauthorizedTrustlineQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q adminUnauthorizedTrustlineQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q adminUnauthorizedTrustlineQuery) Exists() (bool, error) {
+func (q adminUnauthorizedTrustlineQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if admin_unauthorized_trustline exists")
 	}
@@ -348,70 +339,75 @@ func (q adminUnauthorizedTrustlineQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// IssuerPublicKeyG pointed to by the foreign key.
-func (o *AdminUnauthorizedTrustline) IssuerPublicKeyG(mods ...qm.QueryMod) adminStellarAccountQuery {
-	return o.IssuerPublicKey(boil.GetDB(), mods...)
-}
-
 // IssuerPublicKey pointed to by the foreign key.
-func (o *AdminUnauthorizedTrustline) IssuerPublicKey(exec boil.Executor, mods ...qm.QueryMod) adminStellarAccountQuery {
+func (o *AdminUnauthorizedTrustline) IssuerPublicKey(mods ...qm.QueryMod) adminStellarAccountQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("public_key=?", o.IssuerPublicKeyID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := AdminStellarAccounts(exec, queryMods...)
+	query := AdminStellarAccounts(queryMods...)
 	queries.SetFrom(query.Query, "\"admin_stellar_account\"")
 
 	return query
-} // LoadIssuerPublicKey allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular bool, maybeAdminUnauthorizedTrustline interface{}) error {
+}
+
+// LoadIssuerPublicKey allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular bool, maybeAdminUnauthorizedTrustline interface{}, mods queries.Applicator) error {
 	var slice []*AdminUnauthorizedTrustline
 	var object *AdminUnauthorizedTrustline
 
-	count := 1
 	if singular {
 		object = maybeAdminUnauthorizedTrustline.(*AdminUnauthorizedTrustline)
 	} else {
 		slice = *maybeAdminUnauthorizedTrustline.(*[]*AdminUnauthorizedTrustline)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &adminUnauthorizedTrustlineR{}
 		}
-		args[0] = object.IssuerPublicKeyID
+		args = append(args, object.IssuerPublicKeyID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &adminUnauthorizedTrustlineR{}
 			}
-			args[i] = obj.IssuerPublicKeyID
+
+			for _, a := range args {
+				if a == obj.IssuerPublicKeyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.IssuerPublicKeyID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"admin_stellar_account\" where \"public_key\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`admin_stellar_account`), qm.WhereIn(`public_key in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load AdminStellarAccount")
 	}
-	defer results.Close()
 
 	var resultSlice []*AdminStellarAccount
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice AdminStellarAccount")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for admin_stellar_account")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for admin_stellar_account")
 	}
 
 	if len(adminUnauthorizedTrustlineAfterSelectHooks) != 0 {
@@ -427,7 +423,12 @@ func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular
 	}
 
 	if singular {
-		object.R.IssuerPublicKey = resultSlice[0]
+		foreign := resultSlice[0]
+		object.R.IssuerPublicKey = foreign
+		if foreign.R == nil {
+			foreign.R = &adminStellarAccountR{}
+		}
+		foreign.R.IssuerPublicKeyAdminUnauthorizedTrustlines = append(foreign.R.IssuerPublicKeyAdminUnauthorizedTrustlines, object)
 		return nil
 	}
 
@@ -435,6 +436,10 @@ func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular
 		for _, foreign := range resultSlice {
 			if local.IssuerPublicKeyID == foreign.PublicKey {
 				local.R.IssuerPublicKey = foreign
+				if foreign.R == nil {
+					foreign.R = &adminStellarAccountR{}
+				}
+				foreign.R.IssuerPublicKeyAdminUnauthorizedTrustlines = append(foreign.R.IssuerPublicKeyAdminUnauthorizedTrustlines, local)
 				break
 			}
 		}
@@ -443,7 +448,7 @@ func (adminUnauthorizedTrustlineL) LoadIssuerPublicKey(e boil.Executor, singular
 	return nil
 }
 
-// SetIssuerPublicKeyG of the admin_unauthorized_trustline to the related item.
+// SetIssuerPublicKeyG of the adminUnauthorizedTrustline to the related item.
 // Sets o.R.IssuerPublicKey to related.
 // Adds o to related.R.IssuerPublicKeyAdminUnauthorizedTrustlines.
 // Uses the global database handle.
@@ -451,33 +456,13 @@ func (o *AdminUnauthorizedTrustline) SetIssuerPublicKeyG(insert bool, related *A
 	return o.SetIssuerPublicKey(boil.GetDB(), insert, related)
 }
 
-// SetIssuerPublicKeyP of the admin_unauthorized_trustline to the related item.
-// Sets o.R.IssuerPublicKey to related.
-// Adds o to related.R.IssuerPublicKeyAdminUnauthorizedTrustlines.
-// Panics on error.
-func (o *AdminUnauthorizedTrustline) SetIssuerPublicKeyP(exec boil.Executor, insert bool, related *AdminStellarAccount) {
-	if err := o.SetIssuerPublicKey(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetIssuerPublicKeyGP of the admin_unauthorized_trustline to the related item.
-// Sets o.R.IssuerPublicKey to related.
-// Adds o to related.R.IssuerPublicKeyAdminUnauthorizedTrustlines.
-// Uses the global database handle and panics on error.
-func (o *AdminUnauthorizedTrustline) SetIssuerPublicKeyGP(insert bool, related *AdminStellarAccount) {
-	if err := o.SetIssuerPublicKey(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetIssuerPublicKey of the admin_unauthorized_trustline to the related item.
+// SetIssuerPublicKey of the adminUnauthorizedTrustline to the related item.
 // Sets o.R.IssuerPublicKey to related.
 // Adds o to related.R.IssuerPublicKeyAdminUnauthorizedTrustlines.
 func (o *AdminUnauthorizedTrustline) SetIssuerPublicKey(exec boil.Executor, insert bool, related *AdminStellarAccount) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -499,7 +484,6 @@ func (o *AdminUnauthorizedTrustline) SetIssuerPublicKey(exec boil.Executor, inse
 	}
 
 	o.IssuerPublicKeyID = related.PublicKey
-
 	if o.R == nil {
 		o.R = &adminUnauthorizedTrustlineR{
 			IssuerPublicKey: related,
@@ -519,35 +503,20 @@ func (o *AdminUnauthorizedTrustline) SetIssuerPublicKey(exec boil.Executor, inse
 	return nil
 }
 
-// AdminUnauthorizedTrustlinesG retrieves all records.
-func AdminUnauthorizedTrustlinesG(mods ...qm.QueryMod) adminUnauthorizedTrustlineQuery {
-	return AdminUnauthorizedTrustlines(boil.GetDB(), mods...)
-}
-
 // AdminUnauthorizedTrustlines retrieves all the records using an executor.
-func AdminUnauthorizedTrustlines(exec boil.Executor, mods ...qm.QueryMod) adminUnauthorizedTrustlineQuery {
+func AdminUnauthorizedTrustlines(mods ...qm.QueryMod) adminUnauthorizedTrustlineQuery {
 	mods = append(mods, qm.From("\"admin_unauthorized_trustline\""))
-	return adminUnauthorizedTrustlineQuery{NewQuery(exec, mods...)}
+	return adminUnauthorizedTrustlineQuery{NewQuery(mods...)}
 }
 
 // FindAdminUnauthorizedTrustlineG retrieves a single record by ID.
-func FindAdminUnauthorizedTrustlineG(id int, selectCols ...string) (*AdminUnauthorizedTrustline, error) {
-	return FindAdminUnauthorizedTrustline(boil.GetDB(), id, selectCols...)
-}
-
-// FindAdminUnauthorizedTrustlineGP retrieves a single record by ID, and panics on error.
-func FindAdminUnauthorizedTrustlineGP(id int, selectCols ...string) *AdminUnauthorizedTrustline {
-	retobj, err := FindAdminUnauthorizedTrustline(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindAdminUnauthorizedTrustlineG(iD int, selectCols ...string) (*AdminUnauthorizedTrustline, error) {
+	return FindAdminUnauthorizedTrustline(boil.GetDB(), iD, selectCols...)
 }
 
 // FindAdminUnauthorizedTrustline retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindAdminUnauthorizedTrustline(exec boil.Executor, id int, selectCols ...string) (*AdminUnauthorizedTrustline, error) {
+func FindAdminUnauthorizedTrustline(exec boil.Executor, iD int, selectCols ...string) (*AdminUnauthorizedTrustline, error) {
 	adminUnauthorizedTrustlineObj := &AdminUnauthorizedTrustline{}
 
 	sel := "*"
@@ -558,9 +527,9 @@ func FindAdminUnauthorizedTrustline(exec boil.Executor, id int, selectCols ...st
 		"select %s from \"admin_unauthorized_trustline\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(adminUnauthorizedTrustlineObj)
+	err := q.Bind(nil, exec, adminUnauthorizedTrustlineObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -571,43 +540,14 @@ func FindAdminUnauthorizedTrustline(exec boil.Executor, id int, selectCols ...st
 	return adminUnauthorizedTrustlineObj, nil
 }
 
-// FindAdminUnauthorizedTrustlineP retrieves a single record by ID with an executor, and panics on error.
-func FindAdminUnauthorizedTrustlineP(exec boil.Executor, id int, selectCols ...string) *AdminUnauthorizedTrustline {
-	retobj, err := FindAdminUnauthorizedTrustline(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *AdminUnauthorizedTrustline) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *AdminUnauthorizedTrustline) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *AdminUnauthorizedTrustline) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminUnauthorizedTrustline) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *AdminUnauthorizedTrustline) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *AdminUnauthorizedTrustline) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_unauthorized_trustline provided for insertion")
 	}
@@ -628,18 +568,17 @@ func (o *AdminUnauthorizedTrustline) Insert(exec boil.Executor, whitelist ...str
 
 	nzDefaults := queries.NonZeroDefaultSet(adminUnauthorizedTrustlineColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	adminUnauthorizedTrustlineInsertCacheMut.RLock()
 	cache, cached := adminUnauthorizedTrustlineInsertCache[key]
 	adminUnauthorizedTrustlineInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			adminUnauthorizedTrustlineColumns,
 			adminUnauthorizedTrustlineColumnsWithDefault,
 			adminUnauthorizedTrustlineColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(adminUnauthorizedTrustlineType, adminUnauthorizedTrustlineMapping, wl)
@@ -651,9 +590,9 @@ func (o *AdminUnauthorizedTrustline) Insert(exec boil.Executor, whitelist ...str
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"admin_unauthorized_trustline\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"admin_unauthorized_trustline\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"admin_unauthorized_trustline\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"admin_unauthorized_trustline\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -662,9 +601,7 @@ func (o *AdminUnauthorizedTrustline) Insert(exec boil.Executor, whitelist ...str
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -694,63 +631,40 @@ func (o *AdminUnauthorizedTrustline) Insert(exec boil.Executor, whitelist ...str
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single AdminUnauthorizedTrustline record. See Update for
-// whitelist behavior description.
-func (o *AdminUnauthorizedTrustline) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single AdminUnauthorizedTrustline record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *AdminUnauthorizedTrustline) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the AdminUnauthorizedTrustline, and panics on error.
-// See Update for whitelist behavior description.
-func (o *AdminUnauthorizedTrustline) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single AdminUnauthorizedTrustline record using the global executor.
+// See Update for more documentation.
+func (o *AdminUnauthorizedTrustline) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the AdminUnauthorizedTrustline.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *AdminUnauthorizedTrustline) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *AdminUnauthorizedTrustline) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	adminUnauthorizedTrustlineUpdateCacheMut.RLock()
 	cache, cached := adminUnauthorizedTrustlineUpdateCache[key]
 	adminUnauthorizedTrustlineUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			adminUnauthorizedTrustlineColumns,
 			adminUnauthorizedTrustlinePrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update admin_unauthorized_trustline, could not build whitelist")
+			return 0, errors.New("models: unable to update admin_unauthorized_trustline, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"admin_unauthorized_trustline\" SET %s WHERE %s",
@@ -759,7 +673,7 @@ func (o *AdminUnauthorizedTrustline) Update(exec boil.Executor, whitelist ...str
 		)
 		cache.valueMapping, err = queries.BindMapping(adminUnauthorizedTrustlineType, adminUnauthorizedTrustlineMapping, append(wl, adminUnauthorizedTrustlinePrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -770,9 +684,15 @@ func (o *AdminUnauthorizedTrustline) Update(exec boil.Executor, whitelist ...str
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update admin_unauthorized_trustline row")
+		return 0, errors.Wrap(err, "models: unable to update admin_unauthorized_trustline row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for admin_unauthorized_trustline")
 	}
 
 	if !cached {
@@ -781,56 +701,40 @@ func (o *AdminUnauthorizedTrustline) Update(exec boil.Executor, whitelist ...str
 		adminUnauthorizedTrustlineUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q adminUnauthorizedTrustlineQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q adminUnauthorizedTrustlineQuery) UpdateAll(cols M) error {
+func (q adminUnauthorizedTrustlineQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for admin_unauthorized_trustline")
+		return 0, errors.Wrap(err, "models: unable to update all for admin_unauthorized_trustline")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for admin_unauthorized_trustline")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o AdminUnauthorizedTrustlineSlice) UpdateAllG(cols M) error {
+func (o AdminUnauthorizedTrustlineSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o AdminUnauthorizedTrustlineSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o AdminUnauthorizedTrustlineSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o AdminUnauthorizedTrustlineSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o AdminUnauthorizedTrustlineSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -858,36 +762,26 @@ func (o AdminUnauthorizedTrustlineSlice) UpdateAll(exec boil.Executor, cols M) e
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in adminUnauthorizedTrustline slice")
+		return 0, errors.Wrap(err, "models: unable to update all in adminUnauthorizedTrustline slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all adminUnauthorizedTrustline")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *AdminUnauthorizedTrustline) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *AdminUnauthorizedTrustline) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *AdminUnauthorizedTrustline) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminUnauthorizedTrustline) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_unauthorized_trustline provided for upsert")
 	}
@@ -904,9 +798,8 @@ func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict
 
 	nzDefaults := queries.NonZeroDefaultSet(adminUnauthorizedTrustlineColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -917,11 +810,13 @@ func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -938,19 +833,17 @@ func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			adminUnauthorizedTrustlineColumns,
 			adminUnauthorizedTrustlineColumnsWithDefault,
 			adminUnauthorizedTrustlineColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			adminUnauthorizedTrustlineColumns,
 			adminUnauthorizedTrustlinePrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert admin_unauthorized_trustline, could not build update column list")
 		}
@@ -960,7 +853,7 @@ func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict
 			conflict = make([]string, len(adminUnauthorizedTrustlinePrimaryKeyColumns))
 			copy(conflict, adminUnauthorizedTrustlinePrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"admin_unauthorized_trustline\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"admin_unauthorized_trustline\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(adminUnauthorizedTrustlineType, adminUnauthorizedTrustlineMapping, insert)
 		if err != nil {
@@ -1007,43 +900,21 @@ func (o *AdminUnauthorizedTrustline) Upsert(exec boil.Executor, updateOnConflict
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single AdminUnauthorizedTrustline record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminUnauthorizedTrustline) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single AdminUnauthorizedTrustline record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *AdminUnauthorizedTrustline) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no AdminUnauthorizedTrustline provided for deletion")
-	}
-
+func (o *AdminUnauthorizedTrustline) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single AdminUnauthorizedTrustline record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminUnauthorizedTrustline) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single AdminUnauthorizedTrustline record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *AdminUnauthorizedTrustline) Delete(exec boil.Executor) error {
+func (o *AdminUnauthorizedTrustline) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminUnauthorizedTrustline provided for delete")
+		return 0, errors.New("models: no AdminUnauthorizedTrustline provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), adminUnauthorizedTrustlinePrimaryKeyMapping)
@@ -1054,77 +925,63 @@ func (o *AdminUnauthorizedTrustline) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from admin_unauthorized_trustline")
+		return 0, errors.Wrap(err, "models: unable to delete from admin_unauthorized_trustline")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for admin_unauthorized_trustline")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q adminUnauthorizedTrustlineQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q adminUnauthorizedTrustlineQuery) DeleteAll() error {
+func (q adminUnauthorizedTrustlineQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no adminUnauthorizedTrustlineQuery provided for delete all")
+		return 0, errors.New("models: no adminUnauthorizedTrustlineQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from admin_unauthorized_trustline")
+		return 0, errors.Wrap(err, "models: unable to delete all from admin_unauthorized_trustline")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o AdminUnauthorizedTrustlineSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_unauthorized_trustline")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o AdminUnauthorizedTrustlineSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no AdminUnauthorizedTrustline slice provided for delete all")
-	}
+func (o AdminUnauthorizedTrustlineSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o AdminUnauthorizedTrustlineSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o AdminUnauthorizedTrustlineSlice) DeleteAll(exec boil.Executor) error {
+func (o AdminUnauthorizedTrustlineSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminUnauthorizedTrustline slice provided for delete all")
+		return 0, errors.New("models: no AdminUnauthorizedTrustline slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(adminUnauthorizedTrustlineBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -1143,34 +1000,25 @@ func (o AdminUnauthorizedTrustlineSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from adminUnauthorizedTrustline slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from adminUnauthorizedTrustline slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_unauthorized_trustline")
 	}
 
 	if len(adminUnauthorizedTrustlineAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *AdminUnauthorizedTrustline) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *AdminUnauthorizedTrustline) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1194,24 +1042,6 @@ func (o *AdminUnauthorizedTrustline) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminUnauthorizedTrustlineSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminUnauthorizedTrustlineSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *AdminUnauthorizedTrustlineSlice) ReloadAllG() error {
@@ -1229,7 +1059,7 @@ func (o *AdminUnauthorizedTrustlineSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	adminUnauthorizedTrustlines := AdminUnauthorizedTrustlineSlice{}
+	slice := AdminUnauthorizedTrustlineSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), adminUnauthorizedTrustlinePrimaryKeyMapping)
@@ -1239,29 +1069,34 @@ func (o *AdminUnauthorizedTrustlineSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"admin_unauthorized_trustline\".* FROM \"admin_unauthorized_trustline\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, adminUnauthorizedTrustlinePrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&adminUnauthorizedTrustlines)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in AdminUnauthorizedTrustlineSlice")
 	}
 
-	*o = adminUnauthorizedTrustlines
+	*o = slice
 
 	return nil
 }
 
+// AdminUnauthorizedTrustlineExistsG checks if the AdminUnauthorizedTrustline row exists.
+func AdminUnauthorizedTrustlineExistsG(iD int) (bool, error) {
+	return AdminUnauthorizedTrustlineExists(boil.GetDB(), iD)
+}
+
 // AdminUnauthorizedTrustlineExists checks if the AdminUnauthorizedTrustline row exists.
-func AdminUnauthorizedTrustlineExists(exec boil.Executor, id int) (bool, error) {
+func AdminUnauthorizedTrustlineExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"admin_unauthorized_trustline\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1269,29 +1104,4 @@ func AdminUnauthorizedTrustlineExists(exec boil.Executor, id int) (bool, error) 
 	}
 
 	return exists, nil
-}
-
-// AdminUnauthorizedTrustlineExistsG checks if the AdminUnauthorizedTrustline row exists.
-func AdminUnauthorizedTrustlineExistsG(id int) (bool, error) {
-	return AdminUnauthorizedTrustlineExists(boil.GetDB(), id)
-}
-
-// AdminUnauthorizedTrustlineExistsGP checks if the AdminUnauthorizedTrustline row exists. Panics on error.
-func AdminUnauthorizedTrustlineExistsGP(id int) bool {
-	e, err := AdminUnauthorizedTrustlineExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// AdminUnauthorizedTrustlineExistsP checks if the AdminUnauthorizedTrustline row exists. Panics on error.
-func AdminUnauthorizedTrustlineExistsP(exec boil.Executor, id int) bool {
-	e, err := AdminUnauthorizedTrustlineExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

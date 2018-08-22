@@ -2,15 +2,17 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Soneso/lumenshine-backend/admin/models"
 	"time"
 
+	"github.com/Soneso/lumenshine-backend/admin/models"
+
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 //AddKnownCurrency adds new currency to known currencies
 func AddKnownCurrency(currency *models.AdminKnownCurrency) error {
-	err := currency.InsertG()
+	err := currency.InsertG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -20,7 +22,7 @@ func AddKnownCurrency(currency *models.AdminKnownCurrency) error {
 
 //ExistsKnownCurrency - true if a currency with the same public key and asset code exists
 func ExistsKnownCurrency(issuerPublicKey, assetCode string) (bool, error) {
-	currency, err := models.AdminKnownCurrenciesG(qm.Where(models.AdminKnownCurrencyColumns.IssuerPublicKey+"=?  AND "+models.AdminKnownCurrencyColumns.AssetCode+"=?", issuerPublicKey, assetCode)).One()
+	currency, err := models.AdminKnownCurrencies(qm.Where(models.AdminKnownCurrencyColumns.IssuerPublicKey+"=?  AND "+models.AdminKnownCurrencyColumns.AssetCode+"=?", issuerPublicKey, assetCode)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
@@ -35,7 +37,7 @@ func ExistsKnownCurrency(issuerPublicKey, assetCode string) (bool, error) {
 
 //GetKnownCurrency - returns the known currency
 func GetKnownCurrency(issuerPublicKey, assetCode string) (*models.AdminKnownCurrency, error) {
-	currency, err := models.AdminKnownCurrenciesG(qm.Where(models.AdminKnownCurrencyColumns.IssuerPublicKey+"=?  AND "+models.AdminKnownCurrencyColumns.AssetCode+"=?", issuerPublicKey, assetCode)).One()
+	currency, err := models.AdminKnownCurrencies(qm.Where(models.AdminKnownCurrencyColumns.IssuerPublicKey+"=?  AND "+models.AdminKnownCurrencyColumns.AssetCode+"=?", issuerPublicKey, assetCode)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
@@ -46,7 +48,7 @@ func GetKnownCurrency(issuerPublicKey, assetCode string) (*models.AdminKnownCurr
 
 //GetKnownCurrencyByID - returns the known currency associated to the id
 func GetKnownCurrencyByID(ID int) (*models.AdminKnownCurrency, error) {
-	currency, err := models.AdminKnownCurrenciesG(qm.Where(models.AdminKnownCurrencyColumns.ID+"=?", ID)).One()
+	currency, err := models.AdminKnownCurrencies(qm.Where(models.AdminKnownCurrencyColumns.ID+"=?", ID)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
@@ -57,7 +59,7 @@ func GetKnownCurrencyByID(ID int) (*models.AdminKnownCurrency, error) {
 
 //GetKnownCurrencies - returns all known currencies
 func GetKnownCurrencies() (models.AdminKnownCurrencySlice, error) {
-	currencies, err := models.AdminKnownCurrenciesG().All()
+	currencies, err := models.AdminKnownCurrencies().AllG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
@@ -71,7 +73,7 @@ func UpdateKnownCurrency(currency *models.AdminKnownCurrency, updatedBy string) 
 	currency.UpdatedBy = updatedBy
 	currency.UpdatedAt = time.Now()
 
-	err := currency.UpdateG()
+	_, err := currency.UpdateG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -88,13 +90,13 @@ func DeleteKnownCurrency(currency *models.AdminKnownCurrency) error {
 		return err
 	}
 
-	err = currency.DeleteG()
+	_, err = currency.Delete(tx)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	currencies, err := models.AdminKnownCurrenciesG(qm.Where(models.AdminKnownCurrencyColumns.OrderIndex+">?", orderIndex)).All()
+	currencies, err := models.AdminKnownCurrencies(qm.Where(models.AdminKnownCurrencyColumns.OrderIndex+">?", orderIndex)).AllG()
 	if err != nil && err != sql.ErrNoRows {
 		tx.Rollback()
 		return err
@@ -102,7 +104,7 @@ func DeleteKnownCurrency(currency *models.AdminKnownCurrency) error {
 
 	for _, c := range currencies {
 		c.OrderIndex--
-		err := c.UpdateG()
+		_, err := c.Update(tx, boil.Infer())
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -120,7 +122,7 @@ func ChangeKnownCurrencyOrder(currency *models.AdminKnownCurrency, OrderModifier
 	currency.OrderIndex += OrderModifier
 	currency.UpdatedBy = updatedBy
 
-	currency2, err := models.AdminKnownCurrenciesG(qm.Where(models.AdminKnownCurrencyColumns.OrderIndex+"=?", currency.OrderIndex)).One()
+	currency2, err := models.AdminKnownCurrencies(qm.Where(models.AdminKnownCurrencyColumns.OrderIndex+"=?", currency.OrderIndex)).OneG()
 	if err != nil {
 		return err
 	}
@@ -133,13 +135,13 @@ func ChangeKnownCurrencyOrder(currency *models.AdminKnownCurrency, OrderModifier
 		return err
 	}
 
-	err = currency.UpdateG()
+	_, err = currency.Update(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	err = currency2.UpdateG()
+	_, err = currency2.Update(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -152,7 +154,7 @@ func ChangeKnownCurrencyOrder(currency *models.AdminKnownCurrency, OrderModifier
 
 // KnownCurrencyNewOrderIndex returns the greatest order from the db + 1, used when inserting a new currency
 func KnownCurrencyNewOrderIndex() (int, error) {
-	currency, err := models.AdminKnownCurrenciesG(qm.OrderBy("order_index DESC")).One()
+	currency, err := models.AdminKnownCurrencies(qm.OrderBy("order_index DESC")).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return 0, err

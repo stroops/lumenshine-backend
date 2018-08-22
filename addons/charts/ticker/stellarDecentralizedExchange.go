@@ -2,13 +2,14 @@ package ticker
 
 import (
 	"encoding/json"
-	"github.com/Soneso/lumenshine-backend/addons/charts/config"
-	"github.com/Soneso/lumenshine-backend/addons/charts/models"
-	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/addons/charts/config"
+	"github.com/Soneso/lumenshine-backend/addons/charts/models"
+	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -100,12 +101,12 @@ func handleDecentralizedExchangeData(ex exchange) error {
 	}
 
 	schema := utils.GetSchemaForQuery()
-	externalCurrencies, err := models.Currencies(utils.DB,
+	externalCurrencies, err := models.Currencies(
 		qm.Select(schema+"currency.*"),
 		qm.InnerJoin(schema+"history_chart_data h on h.destination_currency_id = "+schema+"currency.id"),
 		qm.Where("h.source_currency_id =? AND "+schema+"currency.currency_issuer =?", baseCurrency.ID, config.ExternalCurrencyIssuer),
 		qm.GroupBy(schema+"currency.id"),
-	).All()
+	).All(utils.DB)
 	if err != nil {
 		return err
 	}

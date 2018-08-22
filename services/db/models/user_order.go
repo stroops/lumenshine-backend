@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -17,27 +17,28 @@ import (
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"github.com/volatiletech/sqlboiler/strmangle"
+	"github.com/volatiletech/sqlboiler/types"
 )
 
 // UserOrder is an object representing the database table.
 type UserOrder struct {
-	ID                   int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	UserID               int       `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	OrderPhaseID         string    `boil:"order_phase_id" json:"order_phase_id" toml:"order_phase_id" yaml:"order_phase_id"`
-	OrderStatus          string    `boil:"order_status" json:"order_status" toml:"order_status" yaml:"order_status"`
-	CoinAmount           int64     `boil:"coin_amount" json:"coin_amount" toml:"coin_amount" yaml:"coin_amount"`
-	ChainAmount          float64   `boil:"chain_amount" json:"chain_amount" toml:"chain_amount" yaml:"chain_amount"`
-	ChainAmountDenom     string    `boil:"chain_amount_denom" json:"chain_amount_denom" toml:"chain_amount_denom" yaml:"chain_amount_denom"`
-	Chain                string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
-	AddressIndex         int64     `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
-	ChainAddress         string    `boil:"chain_address" json:"chain_address" toml:"chain_address" yaml:"chain_address"`
-	ChainAddressSeed     string    `boil:"chain_address_seed" json:"chain_address_seed" toml:"chain_address_seed" yaml:"chain_address_seed"`
-	UserStellarPublicKey string    `boil:"user_stellar_public_key" json:"user_stellar_public_key" toml:"user_stellar_public_key" yaml:"user_stellar_public_key"`
-	PaymentErrorMessage  string    `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
-	PaymentTX            string    `boil:"payment_tx" json:"payment_tx" toml:"payment_tx" yaml:"payment_tx"`
-	CreatedAt            time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt            time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	UpdatedBy            string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	ID                   int           `boil:"id" json:"id" toml:"id" yaml:"id"`
+	UserID               int           `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	OrderPhaseID         string        `boil:"order_phase_id" json:"order_phase_id" toml:"order_phase_id" yaml:"order_phase_id"`
+	OrderStatus          string        `boil:"order_status" json:"order_status" toml:"order_status" yaml:"order_status"`
+	CoinAmount           int64         `boil:"coin_amount" json:"coin_amount" toml:"coin_amount" yaml:"coin_amount"`
+	ChainAmount          types.Decimal `boil:"chain_amount" json:"chain_amount" toml:"chain_amount" yaml:"chain_amount"`
+	ChainAmountDenom     string        `boil:"chain_amount_denom" json:"chain_amount_denom" toml:"chain_amount_denom" yaml:"chain_amount_denom"`
+	Chain                string        `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
+	AddressIndex         int64         `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
+	ChainAddress         string        `boil:"chain_address" json:"chain_address" toml:"chain_address" yaml:"chain_address"`
+	ChainAddressSeed     string        `boil:"chain_address_seed" json:"chain_address_seed" toml:"chain_address_seed" yaml:"chain_address_seed"`
+	UserStellarPublicKey string        `boil:"user_stellar_public_key" json:"user_stellar_public_key" toml:"user_stellar_public_key" yaml:"user_stellar_public_key"`
+	PaymentErrorMessage  string        `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
+	PaymentTX            string        `boil:"payment_tx" json:"payment_tx" toml:"payment_tx" yaml:"payment_tx"`
+	CreatedAt            time.Time     `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt            time.Time     `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy            string        `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *userOrderR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userOrderL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -81,12 +82,30 @@ var UserOrderColumns = struct {
 	UpdatedBy:            "updated_by",
 }
 
+// UserOrderRels is where relationship names are stored.
+var UserOrderRels = struct {
+	User                 string
+	OrderPhase           string
+	MultipleTransaction  string
+	ProcessedTransaction string
+}{
+	User:                 "User",
+	OrderPhase:           "OrderPhase",
+	MultipleTransaction:  "MultipleTransaction",
+	ProcessedTransaction: "ProcessedTransaction",
+}
+
 // userOrderR is where relationships are stored.
 type userOrderR struct {
 	User                 *UserProfile
 	OrderPhase           *IcoPhase
 	MultipleTransaction  *MultipleTransaction
 	ProcessedTransaction *ProcessedTransaction
+}
+
+// NewStruct creates a new relationship struct
+func (*userOrderR) NewStruct() *userOrderR {
+	return &userOrderR{}
 }
 
 // userOrderL is where Load methods for each relationship are stored.
@@ -127,9 +146,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var userOrderBeforeInsertHooks []UserOrderHook
 var userOrderBeforeUpdateHooks []UserOrderHook
 var userOrderBeforeDeleteHooks []UserOrderHook
@@ -264,23 +282,18 @@ func AddUserOrderHook(hookPoint boil.HookPoint, userOrderHook UserOrderHook) {
 	}
 }
 
-// OneP returns a single userOrder record from the query, and panics on error.
-func (q userOrderQuery) OneP() *UserOrder {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single userOrder record from the query using the global executor.
+func (q userOrderQuery) OneG() (*UserOrder, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single userOrder record from the query.
-func (q userOrderQuery) One() (*UserOrder, error) {
+func (q userOrderQuery) One(exec boil.Executor) (*UserOrder, error) {
 	o := &UserOrder{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -288,35 +301,30 @@ func (q userOrderQuery) One() (*UserOrder, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for user_order")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all UserOrder records from the query, and panics on error.
-func (q userOrderQuery) AllP() UserOrderSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all UserOrder records from the query using the global executor.
+func (q userOrderQuery) AllG() (UserOrderSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all UserOrder records from the query.
-func (q userOrderQuery) All() (UserOrderSlice, error) {
+func (q userOrderQuery) All(exec boil.Executor) (UserOrderSlice, error) {
 	var o []*UserOrder
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to UserOrder slice")
 	}
 
 	if len(userOrderAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -325,24 +333,19 @@ func (q userOrderQuery) All() (UserOrderSlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all UserOrder records in the query, and panics on error.
-func (q userOrderQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all UserOrder records in the query, and panics on error.
+func (q userOrderQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all UserOrder records in the query.
-func (q userOrderQuery) Count() (int64, error) {
+func (q userOrderQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count user_order rows")
 	}
@@ -350,24 +353,19 @@ func (q userOrderQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q userOrderQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q userOrderQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q userOrderQuery) Exists() (bool, error) {
+func (q userOrderQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if user_order exists")
 	}
@@ -375,127 +373,117 @@ func (q userOrderQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// UserG pointed to by the foreign key.
-func (o *UserOrder) UserG(mods ...qm.QueryMod) userProfileQuery {
-	return o.User(boil.GetDB(), mods...)
-}
-
 // User pointed to by the foreign key.
-func (o *UserOrder) User(exec boil.Executor, mods ...qm.QueryMod) userProfileQuery {
+func (o *UserOrder) User(mods ...qm.QueryMod) userProfileQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("id=?", o.UserID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := UserProfiles(exec, queryMods...)
+	query := UserProfiles(queryMods...)
 	queries.SetFrom(query.Query, "\"user_profile\"")
 
 	return query
 }
 
-// OrderPhaseG pointed to by the foreign key.
-func (o *UserOrder) OrderPhaseG(mods ...qm.QueryMod) icoPhaseQuery {
-	return o.OrderPhase(boil.GetDB(), mods...)
-}
-
 // OrderPhase pointed to by the foreign key.
-func (o *UserOrder) OrderPhase(exec boil.Executor, mods ...qm.QueryMod) icoPhaseQuery {
+func (o *UserOrder) OrderPhase(mods ...qm.QueryMod) icoPhaseQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("phase_name=?", o.OrderPhaseID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := IcoPhases(exec, queryMods...)
+	query := IcoPhases(queryMods...)
 	queries.SetFrom(query.Query, "\"ico_phase\"")
 
 	return query
 }
 
-// MultipleTransactionG pointed to by the foreign key.
-func (o *UserOrder) MultipleTransactionG(mods ...qm.QueryMod) multipleTransactionQuery {
-	return o.MultipleTransaction(boil.GetDB(), mods...)
-}
-
 // MultipleTransaction pointed to by the foreign key.
-func (o *UserOrder) MultipleTransaction(exec boil.Executor, mods ...qm.QueryMod) multipleTransactionQuery {
+func (o *UserOrder) MultipleTransaction(mods ...qm.QueryMod) multipleTransactionQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("user_order_id=?", o.ID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := MultipleTransactions(exec, queryMods...)
+	query := MultipleTransactions(queryMods...)
 	queries.SetFrom(query.Query, "\"multiple_transaction\"")
 
 	return query
 }
 
-// ProcessedTransactionG pointed to by the foreign key.
-func (o *UserOrder) ProcessedTransactionG(mods ...qm.QueryMod) processedTransactionQuery {
-	return o.ProcessedTransaction(boil.GetDB(), mods...)
-}
-
 // ProcessedTransaction pointed to by the foreign key.
-func (o *UserOrder) ProcessedTransaction(exec boil.Executor, mods ...qm.QueryMod) processedTransactionQuery {
+func (o *UserOrder) ProcessedTransaction(mods ...qm.QueryMod) processedTransactionQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("user_order_id=?", o.ID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := ProcessedTransactions(exec, queryMods...)
+	query := ProcessedTransactions(queryMods...)
 	queries.SetFrom(query.Query, "\"processed_transaction\"")
 
 	return query
-} // LoadUser allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interface{}) error {
+}
+
+// LoadUser allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
 	var slice []*UserOrder
 	var object *UserOrder
 
-	count := 1
 	if singular {
 		object = maybeUserOrder.(*UserOrder)
 	} else {
 		slice = *maybeUserOrder.(*[]*UserOrder)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userOrderR{}
 		}
-		args[0] = object.UserID
+		args = append(args, object.UserID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userOrderR{}
 			}
-			args[i] = obj.UserID
+
+			for _, a := range args {
+				if a == obj.UserID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.UserID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_profile\" where \"id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_profile`), qm.WhereIn(`id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load UserProfile")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserProfile
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice UserProfile")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for user_profile")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_profile")
 	}
 
 	if len(userOrderAfterSelectHooks) != 0 {
@@ -511,7 +499,12 @@ func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interf
 	}
 
 	if singular {
-		object.R.User = resultSlice[0]
+		foreign := resultSlice[0]
+		object.R.User = foreign
+		if foreign.R == nil {
+			foreign.R = &userProfileR{}
+		}
+		foreign.R.UserUserOrders = append(foreign.R.UserUserOrders, object)
 		return nil
 	}
 
@@ -519,6 +512,10 @@ func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interf
 		for _, foreign := range resultSlice {
 			if local.UserID == foreign.ID {
 				local.R.User = foreign
+				if foreign.R == nil {
+					foreign.R = &userProfileR{}
+				}
+				foreign.R.UserUserOrders = append(foreign.R.UserUserOrders, local)
 				break
 			}
 		}
@@ -528,52 +525,60 @@ func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interf
 }
 
 // LoadOrderPhase allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder interface{}) error {
+// loaded structs of the objects. This is for an N-1 relationship.
+func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
 	var slice []*UserOrder
 	var object *UserOrder
 
-	count := 1
 	if singular {
 		object = maybeUserOrder.(*UserOrder)
 	} else {
 		slice = *maybeUserOrder.(*[]*UserOrder)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userOrderR{}
 		}
-		args[0] = object.OrderPhaseID
+		args = append(args, object.OrderPhaseID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userOrderR{}
 			}
-			args[i] = obj.OrderPhaseID
+
+			for _, a := range args {
+				if a == obj.OrderPhaseID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.OrderPhaseID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"ico_phase\" where \"phase_name\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`ico_phase`), qm.WhereIn(`phase_name in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load IcoPhase")
 	}
-	defer results.Close()
 
 	var resultSlice []*IcoPhase
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice IcoPhase")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for ico_phase")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for ico_phase")
 	}
 
 	if len(userOrderAfterSelectHooks) != 0 {
@@ -589,7 +594,12 @@ func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder 
 	}
 
 	if singular {
-		object.R.OrderPhase = resultSlice[0]
+		foreign := resultSlice[0]
+		object.R.OrderPhase = foreign
+		if foreign.R == nil {
+			foreign.R = &icoPhaseR{}
+		}
+		foreign.R.OrderPhaseUserOrders = append(foreign.R.OrderPhaseUserOrders, object)
 		return nil
 	}
 
@@ -597,6 +607,10 @@ func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder 
 		for _, foreign := range resultSlice {
 			if local.OrderPhaseID == foreign.PhaseName {
 				local.R.OrderPhase = foreign
+				if foreign.R == nil {
+					foreign.R = &icoPhaseR{}
+				}
+				foreign.R.OrderPhaseUserOrders = append(foreign.R.OrderPhaseUserOrders, local)
 				break
 			}
 		}
@@ -606,52 +620,60 @@ func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder 
 }
 
 // LoadMultipleTransaction allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userOrderL) LoadMultipleTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}) error {
+// loaded structs of the objects. This is for a 1-1 relationship.
+func (userOrderL) LoadMultipleTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
 	var slice []*UserOrder
 	var object *UserOrder
 
-	count := 1
 	if singular {
 		object = maybeUserOrder.(*UserOrder)
 	} else {
 		slice = *maybeUserOrder.(*[]*UserOrder)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userOrderR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userOrderR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"multiple_transaction\" where \"user_order_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`multiple_transaction`), qm.WhereIn(`user_order_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load MultipleTransaction")
 	}
-	defer results.Close()
 
 	var resultSlice []*MultipleTransaction
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice MultipleTransaction")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for multiple_transaction")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for multiple_transaction")
 	}
 
 	if len(userOrderAfterSelectHooks) != 0 {
@@ -667,14 +689,22 @@ func (userOrderL) LoadMultipleTransaction(e boil.Executor, singular bool, maybeU
 	}
 
 	if singular {
-		object.R.MultipleTransaction = resultSlice[0]
-		return nil
+		foreign := resultSlice[0]
+		object.R.MultipleTransaction = foreign
+		if foreign.R == nil {
+			foreign.R = &multipleTransactionR{}
+		}
+		foreign.R.UserOrder = object
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
 			if local.ID == foreign.UserOrderID {
 				local.R.MultipleTransaction = foreign
+				if foreign.R == nil {
+					foreign.R = &multipleTransactionR{}
+				}
+				foreign.R.UserOrder = local
 				break
 			}
 		}
@@ -684,52 +714,60 @@ func (userOrderL) LoadMultipleTransaction(e boil.Executor, singular bool, maybeU
 }
 
 // LoadProcessedTransaction allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}) error {
+// loaded structs of the objects. This is for a 1-1 relationship.
+func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
 	var slice []*UserOrder
 	var object *UserOrder
 
-	count := 1
 	if singular {
 		object = maybeUserOrder.(*UserOrder)
 	} else {
 		slice = *maybeUserOrder.(*[]*UserOrder)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userOrderR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userOrderR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"processed_transaction\" where \"user_order_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`processed_transaction`), qm.WhereIn(`user_order_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load ProcessedTransaction")
 	}
-	defer results.Close()
 
 	var resultSlice []*ProcessedTransaction
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice ProcessedTransaction")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for processed_transaction")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for processed_transaction")
 	}
 
 	if len(userOrderAfterSelectHooks) != 0 {
@@ -745,14 +783,22 @@ func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybe
 	}
 
 	if singular {
-		object.R.ProcessedTransaction = resultSlice[0]
-		return nil
+		foreign := resultSlice[0]
+		object.R.ProcessedTransaction = foreign
+		if foreign.R == nil {
+			foreign.R = &processedTransactionR{}
+		}
+		foreign.R.UserOrder = object
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
 			if local.ID == foreign.UserOrderID {
 				local.R.ProcessedTransaction = foreign
+				if foreign.R == nil {
+					foreign.R = &processedTransactionR{}
+				}
+				foreign.R.UserOrder = local
 				break
 			}
 		}
@@ -761,7 +807,7 @@ func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybe
 	return nil
 }
 
-// SetUserG of the user_order to the related item.
+// SetUserG of the userOrder to the related item.
 // Sets o.R.User to related.
 // Adds o to related.R.UserUserOrders.
 // Uses the global database handle.
@@ -769,33 +815,13 @@ func (o *UserOrder) SetUserG(insert bool, related *UserProfile) error {
 	return o.SetUser(boil.GetDB(), insert, related)
 }
 
-// SetUserP of the user_order to the related item.
-// Sets o.R.User to related.
-// Adds o to related.R.UserUserOrders.
-// Panics on error.
-func (o *UserOrder) SetUserP(exec boil.Executor, insert bool, related *UserProfile) {
-	if err := o.SetUser(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetUserGP of the user_order to the related item.
-// Sets o.R.User to related.
-// Adds o to related.R.UserUserOrders.
-// Uses the global database handle and panics on error.
-func (o *UserOrder) SetUserGP(insert bool, related *UserProfile) {
-	if err := o.SetUser(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetUser of the user_order to the related item.
+// SetUser of the userOrder to the related item.
 // Sets o.R.User to related.
 // Adds o to related.R.UserUserOrders.
 func (o *UserOrder) SetUser(exec boil.Executor, insert bool, related *UserProfile) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -817,7 +843,6 @@ func (o *UserOrder) SetUser(exec boil.Executor, insert bool, related *UserProfil
 	}
 
 	o.UserID = related.ID
-
 	if o.R == nil {
 		o.R = &userOrderR{
 			User: related,
@@ -837,7 +862,7 @@ func (o *UserOrder) SetUser(exec boil.Executor, insert bool, related *UserProfil
 	return nil
 }
 
-// SetOrderPhaseG of the user_order to the related item.
+// SetOrderPhaseG of the userOrder to the related item.
 // Sets o.R.OrderPhase to related.
 // Adds o to related.R.OrderPhaseUserOrders.
 // Uses the global database handle.
@@ -845,33 +870,13 @@ func (o *UserOrder) SetOrderPhaseG(insert bool, related *IcoPhase) error {
 	return o.SetOrderPhase(boil.GetDB(), insert, related)
 }
 
-// SetOrderPhaseP of the user_order to the related item.
-// Sets o.R.OrderPhase to related.
-// Adds o to related.R.OrderPhaseUserOrders.
-// Panics on error.
-func (o *UserOrder) SetOrderPhaseP(exec boil.Executor, insert bool, related *IcoPhase) {
-	if err := o.SetOrderPhase(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetOrderPhaseGP of the user_order to the related item.
-// Sets o.R.OrderPhase to related.
-// Adds o to related.R.OrderPhaseUserOrders.
-// Uses the global database handle and panics on error.
-func (o *UserOrder) SetOrderPhaseGP(insert bool, related *IcoPhase) {
-	if err := o.SetOrderPhase(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetOrderPhase of the user_order to the related item.
+// SetOrderPhase of the userOrder to the related item.
 // Sets o.R.OrderPhase to related.
 // Adds o to related.R.OrderPhaseUserOrders.
 func (o *UserOrder) SetOrderPhase(exec boil.Executor, insert bool, related *IcoPhase) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -893,7 +898,6 @@ func (o *UserOrder) SetOrderPhase(exec boil.Executor, insert bool, related *IcoP
 	}
 
 	o.OrderPhaseID = related.PhaseName
-
 	if o.R == nil {
 		o.R = &userOrderR{
 			OrderPhase: related,
@@ -913,7 +917,7 @@ func (o *UserOrder) SetOrderPhase(exec boil.Executor, insert bool, related *IcoP
 	return nil
 }
 
-// SetMultipleTransactionG of the user_order to the related item.
+// SetMultipleTransactionG of the userOrder to the related item.
 // Sets o.R.MultipleTransaction to related.
 // Adds o to related.R.UserOrder.
 // Uses the global database handle.
@@ -921,27 +925,7 @@ func (o *UserOrder) SetMultipleTransactionG(insert bool, related *MultipleTransa
 	return o.SetMultipleTransaction(boil.GetDB(), insert, related)
 }
 
-// SetMultipleTransactionP of the user_order to the related item.
-// Sets o.R.MultipleTransaction to related.
-// Adds o to related.R.UserOrder.
-// Panics on error.
-func (o *UserOrder) SetMultipleTransactionP(exec boil.Executor, insert bool, related *MultipleTransaction) {
-	if err := o.SetMultipleTransaction(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetMultipleTransactionGP of the user_order to the related item.
-// Sets o.R.MultipleTransaction to related.
-// Adds o to related.R.UserOrder.
-// Uses the global database handle and panics on error.
-func (o *UserOrder) SetMultipleTransactionGP(insert bool, related *MultipleTransaction) {
-	if err := o.SetMultipleTransaction(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetMultipleTransaction of the user_order to the related item.
+// SetMultipleTransaction of the userOrder to the related item.
 // Sets o.R.MultipleTransaction to related.
 // Adds o to related.R.UserOrder.
 func (o *UserOrder) SetMultipleTransaction(exec boil.Executor, insert bool, related *MultipleTransaction) error {
@@ -950,7 +934,7 @@ func (o *UserOrder) SetMultipleTransaction(exec boil.Executor, insert bool, rela
 	if insert {
 		related.UserOrderID = o.ID
 
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	} else {
@@ -992,7 +976,7 @@ func (o *UserOrder) SetMultipleTransaction(exec boil.Executor, insert bool, rela
 	return nil
 }
 
-// SetProcessedTransactionG of the user_order to the related item.
+// SetProcessedTransactionG of the userOrder to the related item.
 // Sets o.R.ProcessedTransaction to related.
 // Adds o to related.R.UserOrder.
 // Uses the global database handle.
@@ -1000,27 +984,7 @@ func (o *UserOrder) SetProcessedTransactionG(insert bool, related *ProcessedTran
 	return o.SetProcessedTransaction(boil.GetDB(), insert, related)
 }
 
-// SetProcessedTransactionP of the user_order to the related item.
-// Sets o.R.ProcessedTransaction to related.
-// Adds o to related.R.UserOrder.
-// Panics on error.
-func (o *UserOrder) SetProcessedTransactionP(exec boil.Executor, insert bool, related *ProcessedTransaction) {
-	if err := o.SetProcessedTransaction(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetProcessedTransactionGP of the user_order to the related item.
-// Sets o.R.ProcessedTransaction to related.
-// Adds o to related.R.UserOrder.
-// Uses the global database handle and panics on error.
-func (o *UserOrder) SetProcessedTransactionGP(insert bool, related *ProcessedTransaction) {
-	if err := o.SetProcessedTransaction(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetProcessedTransaction of the user_order to the related item.
+// SetProcessedTransaction of the userOrder to the related item.
 // Sets o.R.ProcessedTransaction to related.
 // Adds o to related.R.UserOrder.
 func (o *UserOrder) SetProcessedTransaction(exec boil.Executor, insert bool, related *ProcessedTransaction) error {
@@ -1029,7 +993,7 @@ func (o *UserOrder) SetProcessedTransaction(exec boil.Executor, insert bool, rel
 	if insert {
 		related.UserOrderID = o.ID
 
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	} else {
@@ -1071,35 +1035,20 @@ func (o *UserOrder) SetProcessedTransaction(exec boil.Executor, insert bool, rel
 	return nil
 }
 
-// UserOrdersG retrieves all records.
-func UserOrdersG(mods ...qm.QueryMod) userOrderQuery {
-	return UserOrders(boil.GetDB(), mods...)
-}
-
 // UserOrders retrieves all the records using an executor.
-func UserOrders(exec boil.Executor, mods ...qm.QueryMod) userOrderQuery {
+func UserOrders(mods ...qm.QueryMod) userOrderQuery {
 	mods = append(mods, qm.From("\"user_order\""))
-	return userOrderQuery{NewQuery(exec, mods...)}
+	return userOrderQuery{NewQuery(mods...)}
 }
 
 // FindUserOrderG retrieves a single record by ID.
-func FindUserOrderG(id int, selectCols ...string) (*UserOrder, error) {
-	return FindUserOrder(boil.GetDB(), id, selectCols...)
-}
-
-// FindUserOrderGP retrieves a single record by ID, and panics on error.
-func FindUserOrderGP(id int, selectCols ...string) *UserOrder {
-	retobj, err := FindUserOrder(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindUserOrderG(iD int, selectCols ...string) (*UserOrder, error) {
+	return FindUserOrder(boil.GetDB(), iD, selectCols...)
 }
 
 // FindUserOrder retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindUserOrder(exec boil.Executor, id int, selectCols ...string) (*UserOrder, error) {
+func FindUserOrder(exec boil.Executor, iD int, selectCols ...string) (*UserOrder, error) {
 	userOrderObj := &UserOrder{}
 
 	sel := "*"
@@ -1110,9 +1059,9 @@ func FindUserOrder(exec boil.Executor, id int, selectCols ...string) (*UserOrder
 		"select %s from \"user_order\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(userOrderObj)
+	err := q.Bind(nil, exec, userOrderObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -1123,43 +1072,14 @@ func FindUserOrder(exec boil.Executor, id int, selectCols ...string) (*UserOrder
 	return userOrderObj, nil
 }
 
-// FindUserOrderP retrieves a single record by ID with an executor, and panics on error.
-func FindUserOrderP(exec boil.Executor, id int, selectCols ...string) *UserOrder {
-	retobj, err := FindUserOrder(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *UserOrder) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *UserOrder) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *UserOrder) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *UserOrder) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *UserOrder) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *UserOrder) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no user_order provided for insertion")
 	}
@@ -1180,18 +1100,17 @@ func (o *UserOrder) Insert(exec boil.Executor, whitelist ...string) error {
 
 	nzDefaults := queries.NonZeroDefaultSet(userOrderColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	userOrderInsertCacheMut.RLock()
 	cache, cached := userOrderInsertCache[key]
 	userOrderInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			userOrderColumns,
 			userOrderColumnsWithDefault,
 			userOrderColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(userOrderType, userOrderMapping, wl)
@@ -1203,9 +1122,9 @@ func (o *UserOrder) Insert(exec boil.Executor, whitelist ...string) error {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"user_order\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"user_order\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"user_order\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"user_order\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -1214,9 +1133,7 @@ func (o *UserOrder) Insert(exec boil.Executor, whitelist ...string) error {
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -1246,63 +1163,40 @@ func (o *UserOrder) Insert(exec boil.Executor, whitelist ...string) error {
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single UserOrder record. See Update for
-// whitelist behavior description.
-func (o *UserOrder) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single UserOrder record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *UserOrder) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the UserOrder, and panics on error.
-// See Update for whitelist behavior description.
-func (o *UserOrder) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single UserOrder record using the global executor.
+// See Update for more documentation.
+func (o *UserOrder) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the UserOrder.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *UserOrder) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *UserOrder) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	userOrderUpdateCacheMut.RLock()
 	cache, cached := userOrderUpdateCache[key]
 	userOrderUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			userOrderColumns,
 			userOrderPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update user_order, could not build whitelist")
+			return 0, errors.New("models: unable to update user_order, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"user_order\" SET %s WHERE %s",
@@ -1311,7 +1205,7 @@ func (o *UserOrder) Update(exec boil.Executor, whitelist ...string) error {
 		)
 		cache.valueMapping, err = queries.BindMapping(userOrderType, userOrderMapping, append(wl, userOrderPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -1322,9 +1216,15 @@ func (o *UserOrder) Update(exec boil.Executor, whitelist ...string) error {
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update user_order row")
+		return 0, errors.Wrap(err, "models: unable to update user_order row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for user_order")
 	}
 
 	if !cached {
@@ -1333,56 +1233,40 @@ func (o *UserOrder) Update(exec boil.Executor, whitelist ...string) error {
 		userOrderUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q userOrderQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q userOrderQuery) UpdateAll(cols M) error {
+func (q userOrderQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for user_order")
+		return 0, errors.Wrap(err, "models: unable to update all for user_order")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for user_order")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o UserOrderSlice) UpdateAllG(cols M) error {
+func (o UserOrderSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o UserOrderSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o UserOrderSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o UserOrderSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o UserOrderSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -1410,36 +1294,26 @@ func (o UserOrderSlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in userOrder slice")
+		return 0, errors.Wrap(err, "models: unable to update all in userOrder slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all userOrder")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *UserOrder) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *UserOrder) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *UserOrder) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *UserOrder) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no user_order provided for upsert")
 	}
@@ -1456,9 +1330,8 @@ func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 
 	nzDefaults := queries.NonZeroDefaultSet(userOrderColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -1469,11 +1342,13 @@ func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -1490,19 +1365,17 @@ func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			userOrderColumns,
 			userOrderColumnsWithDefault,
 			userOrderColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			userOrderColumns,
 			userOrderPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert user_order, could not build update column list")
 		}
@@ -1512,7 +1385,7 @@ func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 			conflict = make([]string, len(userOrderPrimaryKeyColumns))
 			copy(conflict, userOrderPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"user_order\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"user_order\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(userOrderType, userOrderMapping, insert)
 		if err != nil {
@@ -1559,43 +1432,21 @@ func (o *UserOrder) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single UserOrder record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *UserOrder) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single UserOrder record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *UserOrder) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no UserOrder provided for deletion")
-	}
-
+func (o *UserOrder) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single UserOrder record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *UserOrder) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single UserOrder record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *UserOrder) Delete(exec boil.Executor) error {
+func (o *UserOrder) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no UserOrder provided for delete")
+		return 0, errors.New("models: no UserOrder provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), userOrderPrimaryKeyMapping)
@@ -1606,77 +1457,63 @@ func (o *UserOrder) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from user_order")
+		return 0, errors.Wrap(err, "models: unable to delete from user_order")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for user_order")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q userOrderQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q userOrderQuery) DeleteAll() error {
+func (q userOrderQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no userOrderQuery provided for delete all")
+		return 0, errors.New("models: no userOrderQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from user_order")
+		return 0, errors.Wrap(err, "models: unable to delete all from user_order")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o UserOrderSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for user_order")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o UserOrderSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no UserOrder slice provided for delete all")
-	}
+func (o UserOrderSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o UserOrderSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o UserOrderSlice) DeleteAll(exec boil.Executor) error {
+func (o UserOrderSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no UserOrder slice provided for delete all")
+		return 0, errors.New("models: no UserOrder slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(userOrderBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -1695,34 +1532,25 @@ func (o UserOrderSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from userOrder slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from userOrder slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for user_order")
 	}
 
 	if len(userOrderAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *UserOrder) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *UserOrder) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1746,24 +1574,6 @@ func (o *UserOrder) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *UserOrderSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *UserOrderSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *UserOrderSlice) ReloadAllG() error {
@@ -1781,7 +1591,7 @@ func (o *UserOrderSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	userOrders := UserOrderSlice{}
+	slice := UserOrderSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), userOrderPrimaryKeyMapping)
@@ -1791,29 +1601,34 @@ func (o *UserOrderSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"user_order\".* FROM \"user_order\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, userOrderPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&userOrders)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in UserOrderSlice")
 	}
 
-	*o = userOrders
+	*o = slice
 
 	return nil
 }
 
+// UserOrderExistsG checks if the UserOrder row exists.
+func UserOrderExistsG(iD int) (bool, error) {
+	return UserOrderExists(boil.GetDB(), iD)
+}
+
 // UserOrderExists checks if the UserOrder row exists.
-func UserOrderExists(exec boil.Executor, id int) (bool, error) {
+func UserOrderExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"user_order\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1821,29 +1636,4 @@ func UserOrderExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// UserOrderExistsG checks if the UserOrder row exists.
-func UserOrderExistsG(id int) (bool, error) {
-	return UserOrderExists(boil.GetDB(), id)
-}
-
-// UserOrderExistsGP checks if the UserOrder row exists. Panics on error.
-func UserOrderExistsGP(id int) bool {
-	e, err := UserOrderExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// UserOrderExistsP checks if the UserOrder row exists. Panics on error.
-func UserOrderExistsP(exec boil.Executor, id int) bool {
-	e, err := UserOrderExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

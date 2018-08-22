@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -60,8 +60,17 @@ var MailColumns = struct {
 	UpdatedBy:        "updated_by",
 }
 
+// MailRels is where relationship names are stored.
+var MailRels = struct {
+}{}
+
 // mailR is where relationships are stored.
 type mailR struct {
+}
+
+// NewStruct creates a new relationship struct
+func (*mailR) NewStruct() *mailR {
+	return &mailR{}
 }
 
 // mailL is where Load methods for each relationship are stored.
@@ -102,9 +111,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var mailBeforeInsertHooks []MailHook
 var mailBeforeUpdateHooks []MailHook
 var mailBeforeDeleteHooks []MailHook
@@ -239,23 +247,18 @@ func AddMailHook(hookPoint boil.HookPoint, mailHook MailHook) {
 	}
 }
 
-// OneP returns a single mail record from the query, and panics on error.
-func (q mailQuery) OneP() *Mail {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single mail record from the query using the global executor.
+func (q mailQuery) OneG() (*Mail, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single mail record from the query.
-func (q mailQuery) One() (*Mail, error) {
+func (q mailQuery) One(exec boil.Executor) (*Mail, error) {
 	o := &Mail{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -263,35 +266,30 @@ func (q mailQuery) One() (*Mail, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for mail")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all Mail records from the query, and panics on error.
-func (q mailQuery) AllP() MailSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all Mail records from the query using the global executor.
+func (q mailQuery) AllG() (MailSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all Mail records from the query.
-func (q mailQuery) All() (MailSlice, error) {
+func (q mailQuery) All(exec boil.Executor) (MailSlice, error) {
 	var o []*Mail
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to Mail slice")
 	}
 
 	if len(mailAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -300,24 +298,19 @@ func (q mailQuery) All() (MailSlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all Mail records in the query, and panics on error.
-func (q mailQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all Mail records in the query, and panics on error.
+func (q mailQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all Mail records in the query.
-func (q mailQuery) Count() (int64, error) {
+func (q mailQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count mail rows")
 	}
@@ -325,24 +318,19 @@ func (q mailQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q mailQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q mailQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q mailQuery) Exists() (bool, error) {
+func (q mailQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if mail exists")
 	}
@@ -350,35 +338,20 @@ func (q mailQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// MailsG retrieves all records.
-func MailsG(mods ...qm.QueryMod) mailQuery {
-	return Mails(boil.GetDB(), mods...)
-}
-
 // Mails retrieves all the records using an executor.
-func Mails(exec boil.Executor, mods ...qm.QueryMod) mailQuery {
+func Mails(mods ...qm.QueryMod) mailQuery {
 	mods = append(mods, qm.From("\"mail\""))
-	return mailQuery{NewQuery(exec, mods...)}
+	return mailQuery{NewQuery(mods...)}
 }
 
 // FindMailG retrieves a single record by ID.
-func FindMailG(id int, selectCols ...string) (*Mail, error) {
-	return FindMail(boil.GetDB(), id, selectCols...)
-}
-
-// FindMailGP retrieves a single record by ID, and panics on error.
-func FindMailGP(id int, selectCols ...string) *Mail {
-	retobj, err := FindMail(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindMailG(iD int, selectCols ...string) (*Mail, error) {
+	return FindMail(boil.GetDB(), iD, selectCols...)
 }
 
 // FindMail retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindMail(exec boil.Executor, id int, selectCols ...string) (*Mail, error) {
+func FindMail(exec boil.Executor, iD int, selectCols ...string) (*Mail, error) {
 	mailObj := &Mail{}
 
 	sel := "*"
@@ -389,9 +362,9 @@ func FindMail(exec boil.Executor, id int, selectCols ...string) (*Mail, error) {
 		"select %s from \"mail\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(mailObj)
+	err := q.Bind(nil, exec, mailObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -402,43 +375,14 @@ func FindMail(exec boil.Executor, id int, selectCols ...string) (*Mail, error) {
 	return mailObj, nil
 }
 
-// FindMailP retrieves a single record by ID with an executor, and panics on error.
-func FindMailP(exec boil.Executor, id int, selectCols ...string) *Mail {
-	retobj, err := FindMail(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *Mail) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *Mail) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *Mail) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *Mail) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *Mail) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *Mail) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no mail provided for insertion")
 	}
@@ -456,18 +400,17 @@ func (o *Mail) Insert(exec boil.Executor, whitelist ...string) error {
 
 	nzDefaults := queries.NonZeroDefaultSet(mailColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	mailInsertCacheMut.RLock()
 	cache, cached := mailInsertCache[key]
 	mailInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			mailColumns,
 			mailColumnsWithDefault,
 			mailColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(mailType, mailMapping, wl)
@@ -479,9 +422,9 @@ func (o *Mail) Insert(exec boil.Executor, whitelist ...string) error {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"mail\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"mail\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"mail\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"mail\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -490,9 +433,7 @@ func (o *Mail) Insert(exec boil.Executor, whitelist ...string) error {
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -522,59 +463,36 @@ func (o *Mail) Insert(exec boil.Executor, whitelist ...string) error {
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single Mail record. See Update for
-// whitelist behavior description.
-func (o *Mail) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single Mail record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *Mail) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the Mail, and panics on error.
-// See Update for whitelist behavior description.
-func (o *Mail) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single Mail record using the global executor.
+// See Update for more documentation.
+func (o *Mail) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the Mail.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *Mail) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *Mail) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	mailUpdateCacheMut.RLock()
 	cache, cached := mailUpdateCache[key]
 	mailUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			mailColumns,
 			mailPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update mail, could not build whitelist")
+			return 0, errors.New("models: unable to update mail, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"mail\" SET %s WHERE %s",
@@ -583,7 +501,7 @@ func (o *Mail) Update(exec boil.Executor, whitelist ...string) error {
 		)
 		cache.valueMapping, err = queries.BindMapping(mailType, mailMapping, append(wl, mailPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -594,9 +512,15 @@ func (o *Mail) Update(exec boil.Executor, whitelist ...string) error {
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update mail row")
+		return 0, errors.Wrap(err, "models: unable to update mail row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for mail")
 	}
 
 	if !cached {
@@ -605,56 +529,40 @@ func (o *Mail) Update(exec boil.Executor, whitelist ...string) error {
 		mailUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q mailQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q mailQuery) UpdateAll(cols M) error {
+func (q mailQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for mail")
+		return 0, errors.Wrap(err, "models: unable to update all for mail")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for mail")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o MailSlice) UpdateAllG(cols M) error {
+func (o MailSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o MailSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o MailSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o MailSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o MailSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -682,36 +590,26 @@ func (o MailSlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in mail slice")
+		return 0, errors.Wrap(err, "models: unable to update all in mail slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all mail")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *Mail) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *Mail) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *Mail) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *Mail) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no mail provided for upsert")
 	}
@@ -727,9 +625,8 @@ func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns
 
 	nzDefaults := queries.NonZeroDefaultSet(mailColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -740,11 +637,13 @@ func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -761,19 +660,17 @@ func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			mailColumns,
 			mailColumnsWithDefault,
 			mailColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			mailColumns,
 			mailPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert mail, could not build update column list")
 		}
@@ -783,7 +680,7 @@ func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns
 			conflict = make([]string, len(mailPrimaryKeyColumns))
 			copy(conflict, mailPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"mail\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"mail\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(mailType, mailMapping, insert)
 		if err != nil {
@@ -830,43 +727,21 @@ func (o *Mail) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single Mail record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *Mail) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single Mail record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *Mail) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no Mail provided for deletion")
-	}
-
+func (o *Mail) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single Mail record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *Mail) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single Mail record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Mail) Delete(exec boil.Executor) error {
+func (o *Mail) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no Mail provided for delete")
+		return 0, errors.New("models: no Mail provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), mailPrimaryKeyMapping)
@@ -877,77 +752,63 @@ func (o *Mail) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from mail")
+		return 0, errors.Wrap(err, "models: unable to delete from mail")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for mail")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q mailQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q mailQuery) DeleteAll() error {
+func (q mailQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no mailQuery provided for delete all")
+		return 0, errors.New("models: no mailQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from mail")
+		return 0, errors.Wrap(err, "models: unable to delete all from mail")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o MailSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for mail")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o MailSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no Mail slice provided for delete all")
-	}
+func (o MailSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o MailSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o MailSlice) DeleteAll(exec boil.Executor) error {
+func (o MailSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no Mail slice provided for delete all")
+		return 0, errors.New("models: no Mail slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(mailBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -966,34 +827,25 @@ func (o MailSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from mail slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from mail slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for mail")
 	}
 
 	if len(mailAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *Mail) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *Mail) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1017,24 +869,6 @@ func (o *Mail) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *MailSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *MailSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *MailSlice) ReloadAllG() error {
@@ -1052,7 +886,7 @@ func (o *MailSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	mails := MailSlice{}
+	slice := MailSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), mailPrimaryKeyMapping)
@@ -1062,29 +896,34 @@ func (o *MailSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"mail\".* FROM \"mail\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, mailPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&mails)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in MailSlice")
 	}
 
-	*o = mails
+	*o = slice
 
 	return nil
 }
 
+// MailExistsG checks if the Mail row exists.
+func MailExistsG(iD int) (bool, error) {
+	return MailExists(boil.GetDB(), iD)
+}
+
 // MailExists checks if the Mail row exists.
-func MailExists(exec boil.Executor, id int) (bool, error) {
+func MailExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"mail\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1092,29 +931,4 @@ func MailExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// MailExistsG checks if the Mail row exists.
-func MailExistsG(id int) (bool, error) {
-	return MailExists(boil.GetDB(), id)
-}
-
-// MailExistsGP checks if the Mail row exists. Panics on error.
-func MailExistsGP(id int) bool {
-	e, err := MailExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// MailExistsP checks if the Mail row exists. Panics on error.
-func MailExistsP(exec boil.Executor, id int) bool {
-	e, err := MailExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

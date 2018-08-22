@@ -1,11 +1,12 @@
 package cleanup
 
 import (
+	"log"
+	"time"
+
 	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 	"github.com/Soneso/lumenshine-backend/addons/charts/models"
 	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
-	"log"
-	"time"
 
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -33,11 +34,13 @@ func Cleanup() {
 
 func cleanupMinutelyData() error {
 	// DELETE FROM current_chart_data_minutely where exchange_rate_time older than 1 hour
-	return models.CurrentChartDataMinutelies(utils.DB, qm.Where("exchange_rate_time<?", time.Now().Add(-time.Hour*time.Duration(config.Cnf.Cleanup.HoursToKeepMinutelyData)))).DeleteAll()
+	_, err := models.CurrentChartDataMinutelies(qm.Where("exchange_rate_time<?", time.Now().Add(-time.Hour*time.Duration(config.Cnf.Cleanup.HoursToKeepMinutelyData)))).DeleteAll(utils.DB)
+	return err
 }
 
 func cleanupHourlyData() error {
 
 	// DELETE FROM current_chart_data_hourly where exchange_rate_time older than 1 day
-	return models.CurrentChartDataHourlies(utils.DB, qm.Where("exchange_rate_time<?", time.Now().Add(-time.Hour*time.Duration(config.Cnf.Cleanup.HoursToKeepHourlyData)))).DeleteAll()
+	_, err := models.CurrentChartDataHourlies(qm.Where("exchange_rate_time<?", time.Now().Add(-time.Hour*time.Duration(config.Cnf.Cleanup.HoursToKeepHourlyData)))).DeleteAll(utils.DB)
+	return err
 }

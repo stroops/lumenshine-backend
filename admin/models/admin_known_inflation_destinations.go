@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -57,8 +57,17 @@ var AdminKnownInflationDestinationColumns = struct {
 	UpdatedBy:        "updated_by",
 }
 
+// AdminKnownInflationDestinationRels is where relationship names are stored.
+var AdminKnownInflationDestinationRels = struct {
+}{}
+
 // adminKnownInflationDestinationR is where relationships are stored.
 type adminKnownInflationDestinationR struct {
+}
+
+// NewStruct creates a new relationship struct
+func (*adminKnownInflationDestinationR) NewStruct() *adminKnownInflationDestinationR {
+	return &adminKnownInflationDestinationR{}
 }
 
 // adminKnownInflationDestinationL is where Load methods for each relationship are stored.
@@ -99,9 +108,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var adminKnownInflationDestinationBeforeInsertHooks []AdminKnownInflationDestinationHook
 var adminKnownInflationDestinationBeforeUpdateHooks []AdminKnownInflationDestinationHook
 var adminKnownInflationDestinationBeforeDeleteHooks []AdminKnownInflationDestinationHook
@@ -236,23 +244,18 @@ func AddAdminKnownInflationDestinationHook(hookPoint boil.HookPoint, adminKnownI
 	}
 }
 
-// OneP returns a single adminKnownInflationDestination record from the query, and panics on error.
-func (q adminKnownInflationDestinationQuery) OneP() *AdminKnownInflationDestination {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single adminKnownInflationDestination record from the query using the global executor.
+func (q adminKnownInflationDestinationQuery) OneG() (*AdminKnownInflationDestination, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single adminKnownInflationDestination record from the query.
-func (q adminKnownInflationDestinationQuery) One() (*AdminKnownInflationDestination, error) {
+func (q adminKnownInflationDestinationQuery) One(exec boil.Executor) (*AdminKnownInflationDestination, error) {
 	o := &AdminKnownInflationDestination{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -260,35 +263,30 @@ func (q adminKnownInflationDestinationQuery) One() (*AdminKnownInflationDestinat
 		return nil, errors.Wrap(err, "models: failed to execute a one query for admin_known_inflation_destinations")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all AdminKnownInflationDestination records from the query, and panics on error.
-func (q adminKnownInflationDestinationQuery) AllP() AdminKnownInflationDestinationSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all AdminKnownInflationDestination records from the query using the global executor.
+func (q adminKnownInflationDestinationQuery) AllG() (AdminKnownInflationDestinationSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all AdminKnownInflationDestination records from the query.
-func (q adminKnownInflationDestinationQuery) All() (AdminKnownInflationDestinationSlice, error) {
+func (q adminKnownInflationDestinationQuery) All(exec boil.Executor) (AdminKnownInflationDestinationSlice, error) {
 	var o []*AdminKnownInflationDestination
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to AdminKnownInflationDestination slice")
 	}
 
 	if len(adminKnownInflationDestinationAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -297,24 +295,19 @@ func (q adminKnownInflationDestinationQuery) All() (AdminKnownInflationDestinati
 	return o, nil
 }
 
-// CountP returns the count of all AdminKnownInflationDestination records in the query, and panics on error.
-func (q adminKnownInflationDestinationQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all AdminKnownInflationDestination records in the query, and panics on error.
+func (q adminKnownInflationDestinationQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all AdminKnownInflationDestination records in the query.
-func (q adminKnownInflationDestinationQuery) Count() (int64, error) {
+func (q adminKnownInflationDestinationQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count admin_known_inflation_destinations rows")
 	}
@@ -322,24 +315,19 @@ func (q adminKnownInflationDestinationQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q adminKnownInflationDestinationQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q adminKnownInflationDestinationQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q adminKnownInflationDestinationQuery) Exists() (bool, error) {
+func (q adminKnownInflationDestinationQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if admin_known_inflation_destinations exists")
 	}
@@ -347,35 +335,20 @@ func (q adminKnownInflationDestinationQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// AdminKnownInflationDestinationsG retrieves all records.
-func AdminKnownInflationDestinationsG(mods ...qm.QueryMod) adminKnownInflationDestinationQuery {
-	return AdminKnownInflationDestinations(boil.GetDB(), mods...)
-}
-
 // AdminKnownInflationDestinations retrieves all the records using an executor.
-func AdminKnownInflationDestinations(exec boil.Executor, mods ...qm.QueryMod) adminKnownInflationDestinationQuery {
+func AdminKnownInflationDestinations(mods ...qm.QueryMod) adminKnownInflationDestinationQuery {
 	mods = append(mods, qm.From("\"admin_known_inflation_destinations\""))
-	return adminKnownInflationDestinationQuery{NewQuery(exec, mods...)}
+	return adminKnownInflationDestinationQuery{NewQuery(mods...)}
 }
 
 // FindAdminKnownInflationDestinationG retrieves a single record by ID.
-func FindAdminKnownInflationDestinationG(id int, selectCols ...string) (*AdminKnownInflationDestination, error) {
-	return FindAdminKnownInflationDestination(boil.GetDB(), id, selectCols...)
-}
-
-// FindAdminKnownInflationDestinationGP retrieves a single record by ID, and panics on error.
-func FindAdminKnownInflationDestinationGP(id int, selectCols ...string) *AdminKnownInflationDestination {
-	retobj, err := FindAdminKnownInflationDestination(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindAdminKnownInflationDestinationG(iD int, selectCols ...string) (*AdminKnownInflationDestination, error) {
+	return FindAdminKnownInflationDestination(boil.GetDB(), iD, selectCols...)
 }
 
 // FindAdminKnownInflationDestination retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindAdminKnownInflationDestination(exec boil.Executor, id int, selectCols ...string) (*AdminKnownInflationDestination, error) {
+func FindAdminKnownInflationDestination(exec boil.Executor, iD int, selectCols ...string) (*AdminKnownInflationDestination, error) {
 	adminKnownInflationDestinationObj := &AdminKnownInflationDestination{}
 
 	sel := "*"
@@ -386,9 +359,9 @@ func FindAdminKnownInflationDestination(exec boil.Executor, id int, selectCols .
 		"select %s from \"admin_known_inflation_destinations\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(adminKnownInflationDestinationObj)
+	err := q.Bind(nil, exec, adminKnownInflationDestinationObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -399,43 +372,14 @@ func FindAdminKnownInflationDestination(exec boil.Executor, id int, selectCols .
 	return adminKnownInflationDestinationObj, nil
 }
 
-// FindAdminKnownInflationDestinationP retrieves a single record by ID with an executor, and panics on error.
-func FindAdminKnownInflationDestinationP(exec boil.Executor, id int, selectCols ...string) *AdminKnownInflationDestination {
-	retobj, err := FindAdminKnownInflationDestination(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *AdminKnownInflationDestination) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *AdminKnownInflationDestination) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *AdminKnownInflationDestination) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminKnownInflationDestination) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *AdminKnownInflationDestination) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *AdminKnownInflationDestination) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_known_inflation_destinations provided for insertion")
 	}
@@ -456,18 +400,17 @@ func (o *AdminKnownInflationDestination) Insert(exec boil.Executor, whitelist ..
 
 	nzDefaults := queries.NonZeroDefaultSet(adminKnownInflationDestinationColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	adminKnownInflationDestinationInsertCacheMut.RLock()
 	cache, cached := adminKnownInflationDestinationInsertCache[key]
 	adminKnownInflationDestinationInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			adminKnownInflationDestinationColumns,
 			adminKnownInflationDestinationColumnsWithDefault,
 			adminKnownInflationDestinationColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(adminKnownInflationDestinationType, adminKnownInflationDestinationMapping, wl)
@@ -479,9 +422,9 @@ func (o *AdminKnownInflationDestination) Insert(exec boil.Executor, whitelist ..
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"admin_known_inflation_destinations\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"admin_known_inflation_destinations\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"admin_known_inflation_destinations\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"admin_known_inflation_destinations\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -490,9 +433,7 @@ func (o *AdminKnownInflationDestination) Insert(exec boil.Executor, whitelist ..
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -522,63 +463,40 @@ func (o *AdminKnownInflationDestination) Insert(exec boil.Executor, whitelist ..
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single AdminKnownInflationDestination record. See Update for
-// whitelist behavior description.
-func (o *AdminKnownInflationDestination) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single AdminKnownInflationDestination record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *AdminKnownInflationDestination) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the AdminKnownInflationDestination, and panics on error.
-// See Update for whitelist behavior description.
-func (o *AdminKnownInflationDestination) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single AdminKnownInflationDestination record using the global executor.
+// See Update for more documentation.
+func (o *AdminKnownInflationDestination) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the AdminKnownInflationDestination.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *AdminKnownInflationDestination) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *AdminKnownInflationDestination) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	adminKnownInflationDestinationUpdateCacheMut.RLock()
 	cache, cached := adminKnownInflationDestinationUpdateCache[key]
 	adminKnownInflationDestinationUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			adminKnownInflationDestinationColumns,
 			adminKnownInflationDestinationPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update admin_known_inflation_destinations, could not build whitelist")
+			return 0, errors.New("models: unable to update admin_known_inflation_destinations, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"admin_known_inflation_destinations\" SET %s WHERE %s",
@@ -587,7 +505,7 @@ func (o *AdminKnownInflationDestination) Update(exec boil.Executor, whitelist ..
 		)
 		cache.valueMapping, err = queries.BindMapping(adminKnownInflationDestinationType, adminKnownInflationDestinationMapping, append(wl, adminKnownInflationDestinationPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -598,9 +516,15 @@ func (o *AdminKnownInflationDestination) Update(exec boil.Executor, whitelist ..
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update admin_known_inflation_destinations row")
+		return 0, errors.Wrap(err, "models: unable to update admin_known_inflation_destinations row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for admin_known_inflation_destinations")
 	}
 
 	if !cached {
@@ -609,56 +533,40 @@ func (o *AdminKnownInflationDestination) Update(exec boil.Executor, whitelist ..
 		adminKnownInflationDestinationUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q adminKnownInflationDestinationQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q adminKnownInflationDestinationQuery) UpdateAll(cols M) error {
+func (q adminKnownInflationDestinationQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for admin_known_inflation_destinations")
+		return 0, errors.Wrap(err, "models: unable to update all for admin_known_inflation_destinations")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for admin_known_inflation_destinations")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o AdminKnownInflationDestinationSlice) UpdateAllG(cols M) error {
+func (o AdminKnownInflationDestinationSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o AdminKnownInflationDestinationSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o AdminKnownInflationDestinationSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o AdminKnownInflationDestinationSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o AdminKnownInflationDestinationSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -686,36 +594,26 @@ func (o AdminKnownInflationDestinationSlice) UpdateAll(exec boil.Executor, cols 
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in adminKnownInflationDestination slice")
+		return 0, errors.Wrap(err, "models: unable to update all in adminKnownInflationDestination slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all adminKnownInflationDestination")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *AdminKnownInflationDestination) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *AdminKnownInflationDestination) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *AdminKnownInflationDestination) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminKnownInflationDestination) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_known_inflation_destinations provided for upsert")
 	}
@@ -732,9 +630,8 @@ func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConf
 
 	nzDefaults := queries.NonZeroDefaultSet(adminKnownInflationDestinationColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -745,11 +642,13 @@ func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConf
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -766,19 +665,17 @@ func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConf
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			adminKnownInflationDestinationColumns,
 			adminKnownInflationDestinationColumnsWithDefault,
 			adminKnownInflationDestinationColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			adminKnownInflationDestinationColumns,
 			adminKnownInflationDestinationPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert admin_known_inflation_destinations, could not build update column list")
 		}
@@ -788,7 +685,7 @@ func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConf
 			conflict = make([]string, len(adminKnownInflationDestinationPrimaryKeyColumns))
 			copy(conflict, adminKnownInflationDestinationPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"admin_known_inflation_destinations\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"admin_known_inflation_destinations\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(adminKnownInflationDestinationType, adminKnownInflationDestinationMapping, insert)
 		if err != nil {
@@ -835,43 +732,21 @@ func (o *AdminKnownInflationDestination) Upsert(exec boil.Executor, updateOnConf
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single AdminKnownInflationDestination record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminKnownInflationDestination) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single AdminKnownInflationDestination record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *AdminKnownInflationDestination) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no AdminKnownInflationDestination provided for deletion")
-	}
-
+func (o *AdminKnownInflationDestination) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single AdminKnownInflationDestination record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminKnownInflationDestination) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single AdminKnownInflationDestination record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *AdminKnownInflationDestination) Delete(exec boil.Executor) error {
+func (o *AdminKnownInflationDestination) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminKnownInflationDestination provided for delete")
+		return 0, errors.New("models: no AdminKnownInflationDestination provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), adminKnownInflationDestinationPrimaryKeyMapping)
@@ -882,77 +757,63 @@ func (o *AdminKnownInflationDestination) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from admin_known_inflation_destinations")
+		return 0, errors.Wrap(err, "models: unable to delete from admin_known_inflation_destinations")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for admin_known_inflation_destinations")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q adminKnownInflationDestinationQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q adminKnownInflationDestinationQuery) DeleteAll() error {
+func (q adminKnownInflationDestinationQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no adminKnownInflationDestinationQuery provided for delete all")
+		return 0, errors.New("models: no adminKnownInflationDestinationQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from admin_known_inflation_destinations")
+		return 0, errors.Wrap(err, "models: unable to delete all from admin_known_inflation_destinations")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o AdminKnownInflationDestinationSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_known_inflation_destinations")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o AdminKnownInflationDestinationSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no AdminKnownInflationDestination slice provided for delete all")
-	}
+func (o AdminKnownInflationDestinationSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o AdminKnownInflationDestinationSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o AdminKnownInflationDestinationSlice) DeleteAll(exec boil.Executor) error {
+func (o AdminKnownInflationDestinationSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminKnownInflationDestination slice provided for delete all")
+		return 0, errors.New("models: no AdminKnownInflationDestination slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(adminKnownInflationDestinationBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -971,34 +832,25 @@ func (o AdminKnownInflationDestinationSlice) DeleteAll(exec boil.Executor) error
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from adminKnownInflationDestination slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from adminKnownInflationDestination slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_known_inflation_destinations")
 	}
 
 	if len(adminKnownInflationDestinationAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *AdminKnownInflationDestination) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *AdminKnownInflationDestination) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1022,24 +874,6 @@ func (o *AdminKnownInflationDestination) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminKnownInflationDestinationSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminKnownInflationDestinationSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *AdminKnownInflationDestinationSlice) ReloadAllG() error {
@@ -1057,7 +891,7 @@ func (o *AdminKnownInflationDestinationSlice) ReloadAll(exec boil.Executor) erro
 		return nil
 	}
 
-	adminKnownInflationDestinations := AdminKnownInflationDestinationSlice{}
+	slice := AdminKnownInflationDestinationSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), adminKnownInflationDestinationPrimaryKeyMapping)
@@ -1067,29 +901,34 @@ func (o *AdminKnownInflationDestinationSlice) ReloadAll(exec boil.Executor) erro
 	sql := "SELECT \"admin_known_inflation_destinations\".* FROM \"admin_known_inflation_destinations\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, adminKnownInflationDestinationPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&adminKnownInflationDestinations)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in AdminKnownInflationDestinationSlice")
 	}
 
-	*o = adminKnownInflationDestinations
+	*o = slice
 
 	return nil
 }
 
+// AdminKnownInflationDestinationExistsG checks if the AdminKnownInflationDestination row exists.
+func AdminKnownInflationDestinationExistsG(iD int) (bool, error) {
+	return AdminKnownInflationDestinationExists(boil.GetDB(), iD)
+}
+
 // AdminKnownInflationDestinationExists checks if the AdminKnownInflationDestination row exists.
-func AdminKnownInflationDestinationExists(exec boil.Executor, id int) (bool, error) {
+func AdminKnownInflationDestinationExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"admin_known_inflation_destinations\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1097,29 +936,4 @@ func AdminKnownInflationDestinationExists(exec boil.Executor, id int) (bool, err
 	}
 
 	return exists, nil
-}
-
-// AdminKnownInflationDestinationExistsG checks if the AdminKnownInflationDestination row exists.
-func AdminKnownInflationDestinationExistsG(id int) (bool, error) {
-	return AdminKnownInflationDestinationExists(boil.GetDB(), id)
-}
-
-// AdminKnownInflationDestinationExistsGP checks if the AdminKnownInflationDestination row exists. Panics on error.
-func AdminKnownInflationDestinationExistsGP(id int) bool {
-	e, err := AdminKnownInflationDestinationExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// AdminKnownInflationDestinationExistsP checks if the AdminKnownInflationDestination row exists. Panics on error.
-func AdminKnownInflationDestinationExistsP(exec boil.Executor, id int) bool {
-	e, err := AdminKnownInflationDestinationExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

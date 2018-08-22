@@ -2,13 +2,15 @@ package main
 
 import (
 	"errors"
+	"time"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/Soneso/lumenshine-backend/services/db/models"
-	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	context "golang.org/x/net/context"
 )
@@ -22,9 +24,9 @@ func (s *server) QueuePushNotification(ctx context.Context, r *pb.QueuePushNotif
 		return nil, errors.New("invalid device type")
 	}
 
-	u, err := models.UserProfiles(db, qm.Where(
+	u, err := models.UserProfiles(qm.Where(
 		models.UserProfileColumns.ID+"=?", r.UserId,
-	)).One()
+	)).One(db)
 
 	if err != nil {
 		return nil, err
@@ -38,7 +40,7 @@ func (s *server) QueuePushNotification(ctx context.Context, r *pb.QueuePushNotif
 	n.MailType = models.MailContentTypeText
 	n.UpdatedBy = r.Base.UpdateBy
 
-	err = n.Insert(db)
+	err = n.Insert(db, boil.Infer())
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +54,9 @@ func (s *server) QueueMailNotification(ctx context.Context, r *pb.QueueMailNotif
 		return nil, errors.New("need either content or subject")
 	}
 
-	u, err := models.UserProfiles(db, qm.Where(
+	u, err := models.UserProfiles(qm.Where(
 		models.UserProfileColumns.ID+"=?", r.UserId,
-	)).One()
+	)).One(db)
 
 	if err != nil {
 		return nil, err
@@ -69,7 +71,7 @@ func (s *server) QueueMailNotification(ctx context.Context, r *pb.QueueMailNotif
 	n.UserEmail = r.UserEmail
 	n.UpdatedBy = r.Base.UpdateBy
 
-	err = n.Insert(db)
+	err = n.Insert(db, boil.Infer())
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +87,9 @@ func (s *server) UpdateNotificationsStatus(ctx context.Context, r *pb.UpdateNoti
 	var n *models.NotificationArchive
 
 	for _, rNotification := range r.Notifications {
-		n, err = models.NotificationArchives(db, qm.Where(
+		n, err = models.NotificationArchives(qm.Where(
 			models.NotificationArchiveColumns.ID+"=?", rNotification.Id,
-		)).One()
+		)).One(db)
 
 		if err != nil {
 			log.WithError(err).
@@ -112,13 +114,13 @@ func (s *server) UpdateNotificationsStatus(ctx context.Context, r *pb.UpdateNoti
 		n.UpdatedBy = r.Base.UpdateBy
 		n.UpdatedAt = time.Now()
 
-		err = n.Update(db,
+		_, err = n.Update(db, boil.Whitelist(
 			models.NotificationArchiveColumns.Status,
 			models.NotificationArchiveColumns.InternalErrorString,
 			models.NotificationArchiveColumns.ExternalStatusCode,
 			models.NotificationArchiveColumns.ExternalErrorString,
 			models.NotificationArchiveColumns.UpdatedAt,
-			models.NotificationArchiveColumns.UpdatedBy)
+			models.NotificationArchiveColumns.UpdatedBy))
 
 		if err != nil {
 			log.WithError(err).
@@ -134,7 +136,7 @@ func (s *server) UpdateNotificationsStatus(ctx context.Context, r *pb.UpdateNoti
 func (s *server) DequeueNotifications(ctx context.Context, r *pb.DequeueRequest) (*pb.NotificationListResponse, error) {
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 
-	dbNotifications, err := models.Notifications(db, qm.OrderBy(models.NotificationColumns.ID), qm.Limit(int(r.LimitCount))).All()
+	dbNotifications, err := models.Notifications(qm.OrderBy(models.NotificationColumns.ID), qm.Limit(int(r.LimitCount))).All(db)
 
 	if err != nil {
 		log.WithError(err).Error("Error reading notifications")
@@ -166,7 +168,7 @@ func (s *server) DequeueNotifications(ctx context.Context, r *pb.DequeueRequest)
 		nArchive.Status = models.NotificationStatusCodeNew
 		nArchive.UpdatedBy = r.Base.UpdateBy
 
-		err = nArchive.Insert(tx)
+		err = nArchive.Insert(tx, boil.Infer())
 		if err != nil {
 			tx.Rollback()
 
@@ -177,7 +179,7 @@ func (s *server) DequeueNotifications(ctx context.Context, r *pb.DequeueRequest)
 			continue
 		}
 
-		err = rNotification.Delete(tx)
+		_, err = rNotification.Delete(tx)
 		if err != nil {
 			tx.Rollback()
 

@@ -2,11 +2,13 @@ package main
 
 import (
 	"errors"
+
 	"github.com/Soneso/lumenshine-backend/pb"
 
 	"github.com/Soneso/lumenshine-backend/services/db/models"
 
 	_ "github.com/lib/pq"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	context "golang.org/x/net/context"
 )
@@ -16,7 +18,7 @@ func (s *server) CheckWalletData(ctx context.Context, r *pb.CheckWalletRequest) 
 	resp := new(pb.CheckWalletResponse)
 
 	if r.PublicKey_0 != "" {
-		exists, err := models.UserWallets(db, qm.Where("user_id=? and public_key_0 ilike ?", r.UserId, r.PublicKey_0)).Exists()
+		exists, err := models.UserWallets(qm.Where("user_id=? and public_key_0 ilike ?", r.UserId, r.PublicKey_0)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
@@ -24,7 +26,7 @@ func (s *server) CheckWalletData(ctx context.Context, r *pb.CheckWalletRequest) 
 	}
 
 	if r.WalletName != "" {
-		exists, err := models.UserWallets(db, qm.Where("user_id=? and wallet_name ilike ?", r.UserId, r.WalletName)).Exists()
+		exists, err := models.UserWallets(qm.Where("user_id=? and wallet_name ilike ?", r.UserId, r.WalletName)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
@@ -32,7 +34,7 @@ func (s *server) CheckWalletData(ctx context.Context, r *pb.CheckWalletRequest) 
 	}
 
 	if r.FederationAddress != "" {
-		exists, err := models.UserWallets(db, qm.Where("federation_address ilike ?", r.FederationAddress)).Exists()
+		exists, err := models.UserWallets(qm.Where("federation_address ilike ?", r.FederationAddress)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +45,7 @@ func (s *server) CheckWalletData(ctx context.Context, r *pb.CheckWalletRequest) 
 }
 
 func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDResponse, error) {
-	uExists, err := models.UserProfiles(db, qm.Where("id=?", r.UserId)).Exists()
+	uExists, err := models.UserProfiles(qm.Where("id=?", r.UserId)).Exists(db)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +54,7 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 	}
 
 	//check wallet does not exists
-	exists, err := models.UserWallets(db, qm.Where("user_id=? and wallet_name ilike ?", r.UserId, r.WalletName)).Exists()
+	exists, err := models.UserWallets(qm.Where("user_id=? and wallet_name ilike ?", r.UserId, r.WalletName)).Exists(db)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 
 	//if fedname specified, check that fedname does not exist for other user
 	if r.FederationAddress != "" {
-		exists, err := models.UserWallets(db, qm.Where("user_id<>? and federation_address ilike ?", r.UserId, r.FederationAddress)).Exists()
+		exists, err := models.UserWallets(qm.Where("user_id<>? and federation_address ilike ?", r.UserId, r.FederationAddress)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
@@ -81,7 +83,7 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 		UpdatedBy:         r.Base.UpdateBy,
 	}
 
-	err = w.Insert(db)
+	err = w.Insert(db, boil.Infer())
 	if err != nil {
 		return nil, err
 	}
@@ -90,12 +92,12 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 }
 
 func (s *server) RemoveWallet(ctx context.Context, r *pb.RemoveWalletRequest) (*pb.Empty, error) {
-	w, err := models.UserWallets(db, qm.Where("id=? and user_id=?", r.Id, r.UserId)).One()
+	w, err := models.UserWallets(qm.Where("id=? and user_id=?", r.Id, r.UserId)).One(db)
 	if err != nil {
 		return nil, err
 	}
 
-	err = w.Delete(db)
+	_, err = w.Delete(db)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +106,7 @@ func (s *server) RemoveWallet(ctx context.Context, r *pb.RemoveWalletRequest) (*
 }
 
 func (s *server) WalletChangeName(ctx context.Context, r *pb.WalletChangeNameRequest) (*pb.Empty, error) {
-	w, err := models.UserWallets(db, qm.Where("id=? and user_id=?", r.Id, r.UserId)).One()
+	w, err := models.UserWallets(qm.Where("id=? and user_id=?", r.Id, r.UserId)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +114,11 @@ func (s *server) WalletChangeName(ctx context.Context, r *pb.WalletChangeNameReq
 	w.WalletName = r.Name
 	w.UpdatedBy = r.Base.UpdateBy
 
-	err = w.Update(db, "wallet_name", "updated_at", "updated_by")
+	_, err = w.Update(db, boil.Whitelist(
+		models.UserWalletColumns.WalletName,
+		models.UserWalletColumns.UpdatedAt,
+		models.UserWalletColumns.UpdatedBy,
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +127,7 @@ func (s *server) WalletChangeName(ctx context.Context, r *pb.WalletChangeNameReq
 }
 
 func (s *server) WalletChangeFederationAddress(ctx context.Context, r *pb.WalletChangeFederationAddressRequest) (*pb.Empty, error) {
-	w, err := models.UserWallets(db, qm.Where("id=? and user_id=?", r.Id, r.UserId)).One()
+	w, err := models.UserWallets(qm.Where("id=? and user_id=?", r.Id, r.UserId)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +135,11 @@ func (s *server) WalletChangeFederationAddress(ctx context.Context, r *pb.Wallet
 	w.FederationAddress = r.FederationAddress
 	w.UpdatedBy = r.Base.UpdateBy
 
-	err = w.Update(db, "federation_address", "updated_at", "updated_by")
+	_, err = w.Update(db, boil.Whitelist(
+		models.UserWalletColumns.FederationAddress,
+		models.UserWalletColumns.UpdatedAt,
+		models.UserWalletColumns.UpdatedBy,
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +148,7 @@ func (s *server) WalletChangeFederationAddress(ctx context.Context, r *pb.Wallet
 }
 
 func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*pb.GetWalletsResponse, error) {
-	wallets, err := models.UserWallets(db, qm.Where("user_id=?", r.UserId)).All()
+	wallets, err := models.UserWallets(qm.Where("user_id=?", r.UserId)).All(db)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +169,7 @@ func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*
 }
 
 func (s *server) WalletIsLast(ctx context.Context, r *pb.WalletIsLastRequest) (*pb.BoolResponse, error) {
-	wallets, err := models.UserWallets(db, qm.Where("user_id=?", r.UserId)).All()
+	wallets, err := models.UserWallets(qm.Where("user_id=?", r.UserId)).All(db)
 	if err != nil {
 		return nil, err
 	}
@@ -174,17 +184,17 @@ func (s *server) WalletIsLast(ctx context.Context, r *pb.WalletIsLastRequest) (*
 }
 
 func (s *server) WalletSetHomescreen(ctx context.Context, r *pb.WalletSetHomescreenRequest) (*pb.Empty, error) {
-	wallet, err := models.UserWallets(db, qm.Where("id=? and user_id=?", r.Id, r.UserId)).One()
+	wallet, err := models.UserWallets(qm.Where("id=? and user_id=?", r.Id, r.UserId)).One(db)
 	if err != nil {
 		return nil, err
 	}
 	wallet.ShowOnHomescreen = r.Visible
 	wallet.UpdatedBy = r.Base.UpdateBy
-	err = wallet.Update(db,
+	_, err = wallet.Update(db, boil.Whitelist(
 		models.UserWalletColumns.ShowOnHomescreen,
 		models.UserWalletColumns.UpdatedAt,
 		models.UserWalletColumns.UpdatedBy,
-	)
+	))
 
 	return &pb.Empty{}, err
 }

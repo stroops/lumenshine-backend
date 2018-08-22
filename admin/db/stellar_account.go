@@ -6,12 +6,13 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/admin/models"
 
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 //AddStellarAccount creates a new account
 func AddStellarAccount(account *models.AdminStellarAccount, assetCode string) error {
-	err := account.InsertG()
+	err := account.InsertG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -22,7 +23,7 @@ func AddStellarAccount(account *models.AdminStellarAccount, assetCode string) er
 			IssuerPublicKeyID: account.PublicKey,
 			UpdatedBy:         account.UpdatedBy}
 
-		err := accountAsset.InsertG()
+		err := accountAsset.InsertG(boil.Infer())
 		if err != nil {
 			return err
 		}
@@ -33,7 +34,7 @@ func AddStellarAccount(account *models.AdminStellarAccount, assetCode string) er
 
 //ExistsStellarAccount - true if an account with the public key already exists
 func ExistsStellarAccount(publicKey string) (bool, error) {
-	account, err := models.AdminStellarAccountsG(qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).One()
+	account, err := models.AdminStellarAccounts(qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
@@ -48,10 +49,10 @@ func ExistsStellarAccount(publicKey string) (bool, error) {
 
 //GetStellarAccount - returns the stellar account
 func GetStellarAccount(publicKey string) (*models.AdminStellarAccount, error) {
-	account, err := models.AdminStellarAccountsG(
+	account, err := models.AdminStellarAccounts(
 		qm.Load("IssuerPublicKeyAdminStellarAssets"),
 		qm.Load("StellarAccountPublicKeyAdminStellarSigners"),
-		qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).One()
+		qm.Where(models.AdminStellarAccountColumns.PublicKey+"=?", publicKey)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
@@ -62,7 +63,7 @@ func GetStellarAccount(publicKey string) (*models.AdminStellarAccount, error) {
 
 //AllStellarAccounts - returns all stellar accounts
 func AllStellarAccounts() (models.AdminStellarAccountSlice, error) {
-	accounts, err := models.AdminStellarAccountsG().All()
+	accounts, err := models.AdminStellarAccounts().AllG()
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func AllStellarAccounts() (models.AdminStellarAccountSlice, error) {
 
 //IssuerAssetCodes - returns the asset codes
 func IssuerAssetCodes(issuerPublicKey string) (models.AdminStellarAssetSlice, error) {
-	assetcodes, err := models.AdminStellarAssetsG(qm.Where(models.AdminStellarAssetColumns.IssuerPublicKeyID+"=?", issuerPublicKey)).All()
+	assetcodes, err := models.AdminStellarAssets(qm.Where(models.AdminStellarAssetColumns.IssuerPublicKeyID+"=?", issuerPublicKey)).AllG()
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +86,7 @@ func UpdateStellarAccount(account *models.AdminStellarAccount, updatedBy string)
 	account.UpdatedBy = updatedBy
 	account.UpdatedAt = time.Now()
 
-	err := account.UpdateG()
+	_, err := account.UpdateG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -100,7 +101,7 @@ func AddAssetCode(account *models.AdminStellarAccount, assetCode string, updated
 		AssetCode:         assetCode,
 		UpdatedBy:         updatedBy}
 
-	err := dbAssetCode.InsertG()
+	err := dbAssetCode.InsertG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -115,9 +116,9 @@ func AddAssetCode(account *models.AdminStellarAccount, assetCode string, updated
 
 //RemoveAssetCode - removes  asset code from issuer account
 func RemoveAssetCode(account *models.AdminStellarAccount, assetCode string, updatedBy string) error {
-	dbAssetCode, err := models.AdminStellarAssetsG(
+	dbAssetCode, err := models.AdminStellarAssets(
 		qm.Where(models.AdminStellarAssetColumns.IssuerPublicKeyID+"=?", account.PublicKey),
-		qm.Where(models.AdminStellarAssetColumns.AssetCode+"=?", assetCode)).One()
+		qm.Where(models.AdminStellarAssetColumns.AssetCode+"=?", assetCode)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return err
@@ -127,7 +128,7 @@ func RemoveAssetCode(account *models.AdminStellarAccount, assetCode string, upda
 		return nil
 	}
 
-	err = dbAssetCode.DeleteG()
+	_, err = dbAssetCode.DeleteG()
 	if err != nil {
 		return err
 	}
@@ -144,7 +145,7 @@ func RemoveAssetCode(account *models.AdminStellarAccount, assetCode string, upda
 func AddSigner(account *models.AdminStellarAccount, signer *models.AdminStellarSigner, updatedBy string) error {
 	signer.UpdatedBy = updatedBy
 
-	err := signer.InsertG()
+	err := signer.InsertG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -159,10 +160,10 @@ func AddSigner(account *models.AdminStellarAccount, signer *models.AdminStellarS
 
 //RemoveSigner - removes  signer from issuer account
 func RemoveSigner(account *models.AdminStellarAccount, signerPublicKey string, signerType string, updatedBy string) error {
-	dbSigner, err := models.AdminStellarSignersG(
+	dbSigner, err := models.AdminStellarSigners(
 		qm.Where(models.AdminStellarSignerColumns.StellarAccountPublicKeyID+"=?", account.PublicKey),
 		qm.Where(models.AdminStellarSignerColumns.SignerPublicKey+"=?", signerPublicKey),
-		qm.Where(models.AdminStellarSignerColumns.Type+"=?", signerType)).One()
+		qm.Where(models.AdminStellarSignerColumns.Type+"=?", signerType)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return err
@@ -172,7 +173,7 @@ func RemoveSigner(account *models.AdminStellarAccount, signerPublicKey string, s
 		return nil
 	}
 
-	err = dbSigner.DeleteG()
+	_, err = dbSigner.DeleteG()
 	if err != nil {
 		return err
 	}
@@ -188,18 +189,18 @@ func RemoveSigner(account *models.AdminStellarAccount, signerPublicKey string, s
 //DeleteStellarAccount - deletes the account
 func DeleteStellarAccount(account *models.AdminStellarAccount) error {
 	if len(account.R.IssuerPublicKeyAdminStellarAssets) > 0 {
-		err := account.R.IssuerPublicKeyAdminStellarAssets.DeleteAllG()
+		_, err := account.R.IssuerPublicKeyAdminStellarAssets.DeleteAllG()
 		if err != nil {
 			return err
 		}
 	}
 	if len(account.R.StellarAccountPublicKeyAdminStellarSigners) > 0 {
-		err := account.R.StellarAccountPublicKeyAdminStellarSigners.DeleteAllG()
+		_, err := account.R.StellarAccountPublicKeyAdminStellarSigners.DeleteAllG()
 		if err != nil {
 			return err
 		}
 	}
-	err := account.DeleteG()
+	_, err := account.DeleteG()
 	if err != nil {
 		return err
 	}
@@ -208,8 +209,8 @@ func DeleteStellarAccount(account *models.AdminStellarAccount) error {
 
 //GetStellarSigner - returns the stellar signer
 func GetStellarSigner(publicKey string) (*models.AdminStellarSigner, error) {
-	signer, err := models.AdminStellarSignersG(
-		qm.Where(models.AdminStellarSignerColumns.SignerPublicKey+"=?", publicKey)).One()
+	signer, err := models.AdminStellarSigners(
+		qm.Where(models.AdminStellarSignerColumns.SignerPublicKey+"=?", publicKey)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
@@ -223,7 +224,7 @@ func UpdateSigner(signer *models.AdminStellarSigner, updatedBy string) error {
 	signer.UpdatedBy = updatedBy
 	signer.UpdatedAt = time.Now()
 
-	err := signer.UpdateG()
+	_, err := signer.UpdateG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -235,7 +236,7 @@ func UpdateSigner(signer *models.AdminStellarSigner, updatedBy string) error {
 func AddTrustline(trustline *models.AdminUnauthorizedTrustline, updatedBy string) error {
 	trustline.UpdatedBy = updatedBy
 
-	err := trustline.InsertG()
+	err := trustline.InsertG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -245,10 +246,10 @@ func AddTrustline(trustline *models.AdminUnauthorizedTrustline, updatedBy string
 
 //ExistsUnauthorizedTrustline - true if trustline already exists
 func ExistsUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) (bool, error) {
-	trustline, err := models.AdminUnauthorizedTrustlinesG(
+	trustline, err := models.AdminUnauthorizedTrustlines(
 		qm.Where(models.AdminUnauthorizedTrustlineColumns.TrustorPublicKey+"=?", trustorPublicKey),
 		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).One()
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).OneG()
 
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
@@ -262,10 +263,10 @@ func ExistsUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey strin
 }
 
 func DeleteUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) error {
-	trustline, err := models.AdminUnauthorizedTrustlinesG(
+	trustline, err := models.AdminUnauthorizedTrustlines(
 		qm.Where(models.AdminUnauthorizedTrustlineColumns.TrustorPublicKey+"=?", trustorPublicKey),
 		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).One()
+		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).OneG()
 
 	if err == sql.ErrNoRows {
 		return nil
@@ -275,7 +276,7 @@ func DeleteUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey strin
 		return nil
 	}
 
-	err = trustline.DeleteG()
+	_, err = trustline.DeleteG()
 	if err != nil {
 		return err
 	}

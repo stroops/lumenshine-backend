@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -60,9 +60,21 @@ var AdminStellarSignerColumns = struct {
 	UpdatedBy:        "updated_by",
 }
 
+// AdminStellarSignerRels is where relationship names are stored.
+var AdminStellarSignerRels = struct {
+	StellarAccountPublicKey string
+}{
+	StellarAccountPublicKey: "StellarAccountPublicKey",
+}
+
 // adminStellarSignerR is where relationships are stored.
 type adminStellarSignerR struct {
 	StellarAccountPublicKey *AdminStellarAccount
+}
+
+// NewStruct creates a new relationship struct
+func (*adminStellarSignerR) NewStruct() *adminStellarSignerR {
+	return &adminStellarSignerR{}
 }
 
 // adminStellarSignerL is where Load methods for each relationship are stored.
@@ -103,9 +115,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var adminStellarSignerBeforeInsertHooks []AdminStellarSignerHook
 var adminStellarSignerBeforeUpdateHooks []AdminStellarSignerHook
 var adminStellarSignerBeforeDeleteHooks []AdminStellarSignerHook
@@ -240,23 +251,18 @@ func AddAdminStellarSignerHook(hookPoint boil.HookPoint, adminStellarSignerHook 
 	}
 }
 
-// OneP returns a single adminStellarSigner record from the query, and panics on error.
-func (q adminStellarSignerQuery) OneP() *AdminStellarSigner {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single adminStellarSigner record from the query using the global executor.
+func (q adminStellarSignerQuery) OneG() (*AdminStellarSigner, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single adminStellarSigner record from the query.
-func (q adminStellarSignerQuery) One() (*AdminStellarSigner, error) {
+func (q adminStellarSignerQuery) One(exec boil.Executor) (*AdminStellarSigner, error) {
 	o := &AdminStellarSigner{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -264,35 +270,30 @@ func (q adminStellarSignerQuery) One() (*AdminStellarSigner, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for admin_stellar_signer")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all AdminStellarSigner records from the query, and panics on error.
-func (q adminStellarSignerQuery) AllP() AdminStellarSignerSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all AdminStellarSigner records from the query using the global executor.
+func (q adminStellarSignerQuery) AllG() (AdminStellarSignerSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all AdminStellarSigner records from the query.
-func (q adminStellarSignerQuery) All() (AdminStellarSignerSlice, error) {
+func (q adminStellarSignerQuery) All(exec boil.Executor) (AdminStellarSignerSlice, error) {
 	var o []*AdminStellarSigner
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to AdminStellarSigner slice")
 	}
 
 	if len(adminStellarSignerAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -301,24 +302,19 @@ func (q adminStellarSignerQuery) All() (AdminStellarSignerSlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all AdminStellarSigner records in the query, and panics on error.
-func (q adminStellarSignerQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all AdminStellarSigner records in the query, and panics on error.
+func (q adminStellarSignerQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all AdminStellarSigner records in the query.
-func (q adminStellarSignerQuery) Count() (int64, error) {
+func (q adminStellarSignerQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count admin_stellar_signer rows")
 	}
@@ -326,24 +322,19 @@ func (q adminStellarSignerQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q adminStellarSignerQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q adminStellarSignerQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q adminStellarSignerQuery) Exists() (bool, error) {
+func (q adminStellarSignerQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if admin_stellar_signer exists")
 	}
@@ -351,70 +342,75 @@ func (q adminStellarSignerQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// StellarAccountPublicKeyG pointed to by the foreign key.
-func (o *AdminStellarSigner) StellarAccountPublicKeyG(mods ...qm.QueryMod) adminStellarAccountQuery {
-	return o.StellarAccountPublicKey(boil.GetDB(), mods...)
-}
-
 // StellarAccountPublicKey pointed to by the foreign key.
-func (o *AdminStellarSigner) StellarAccountPublicKey(exec boil.Executor, mods ...qm.QueryMod) adminStellarAccountQuery {
+func (o *AdminStellarSigner) StellarAccountPublicKey(mods ...qm.QueryMod) adminStellarAccountQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("public_key=?", o.StellarAccountPublicKeyID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := AdminStellarAccounts(exec, queryMods...)
+	query := AdminStellarAccounts(queryMods...)
 	queries.SetFrom(query.Query, "\"admin_stellar_account\"")
 
 	return query
-} // LoadStellarAccountPublicKey allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (adminStellarSignerL) LoadStellarAccountPublicKey(e boil.Executor, singular bool, maybeAdminStellarSigner interface{}) error {
+}
+
+// LoadStellarAccountPublicKey allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (adminStellarSignerL) LoadStellarAccountPublicKey(e boil.Executor, singular bool, maybeAdminStellarSigner interface{}, mods queries.Applicator) error {
 	var slice []*AdminStellarSigner
 	var object *AdminStellarSigner
 
-	count := 1
 	if singular {
 		object = maybeAdminStellarSigner.(*AdminStellarSigner)
 	} else {
 		slice = *maybeAdminStellarSigner.(*[]*AdminStellarSigner)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &adminStellarSignerR{}
 		}
-		args[0] = object.StellarAccountPublicKeyID
+		args = append(args, object.StellarAccountPublicKeyID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &adminStellarSignerR{}
 			}
-			args[i] = obj.StellarAccountPublicKeyID
+
+			for _, a := range args {
+				if a == obj.StellarAccountPublicKeyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.StellarAccountPublicKeyID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"admin_stellar_account\" where \"public_key\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`admin_stellar_account`), qm.WhereIn(`public_key in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load AdminStellarAccount")
 	}
-	defer results.Close()
 
 	var resultSlice []*AdminStellarAccount
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice AdminStellarAccount")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for admin_stellar_account")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for admin_stellar_account")
 	}
 
 	if len(adminStellarSignerAfterSelectHooks) != 0 {
@@ -430,7 +426,12 @@ func (adminStellarSignerL) LoadStellarAccountPublicKey(e boil.Executor, singular
 	}
 
 	if singular {
-		object.R.StellarAccountPublicKey = resultSlice[0]
+		foreign := resultSlice[0]
+		object.R.StellarAccountPublicKey = foreign
+		if foreign.R == nil {
+			foreign.R = &adminStellarAccountR{}
+		}
+		foreign.R.StellarAccountPublicKeyAdminStellarSigners = append(foreign.R.StellarAccountPublicKeyAdminStellarSigners, object)
 		return nil
 	}
 
@@ -438,6 +439,10 @@ func (adminStellarSignerL) LoadStellarAccountPublicKey(e boil.Executor, singular
 		for _, foreign := range resultSlice {
 			if local.StellarAccountPublicKeyID == foreign.PublicKey {
 				local.R.StellarAccountPublicKey = foreign
+				if foreign.R == nil {
+					foreign.R = &adminStellarAccountR{}
+				}
+				foreign.R.StellarAccountPublicKeyAdminStellarSigners = append(foreign.R.StellarAccountPublicKeyAdminStellarSigners, local)
 				break
 			}
 		}
@@ -446,7 +451,7 @@ func (adminStellarSignerL) LoadStellarAccountPublicKey(e boil.Executor, singular
 	return nil
 }
 
-// SetStellarAccountPublicKeyG of the admin_stellar_signer to the related item.
+// SetStellarAccountPublicKeyG of the adminStellarSigner to the related item.
 // Sets o.R.StellarAccountPublicKey to related.
 // Adds o to related.R.StellarAccountPublicKeyAdminStellarSigners.
 // Uses the global database handle.
@@ -454,33 +459,13 @@ func (o *AdminStellarSigner) SetStellarAccountPublicKeyG(insert bool, related *A
 	return o.SetStellarAccountPublicKey(boil.GetDB(), insert, related)
 }
 
-// SetStellarAccountPublicKeyP of the admin_stellar_signer to the related item.
-// Sets o.R.StellarAccountPublicKey to related.
-// Adds o to related.R.StellarAccountPublicKeyAdminStellarSigners.
-// Panics on error.
-func (o *AdminStellarSigner) SetStellarAccountPublicKeyP(exec boil.Executor, insert bool, related *AdminStellarAccount) {
-	if err := o.SetStellarAccountPublicKey(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetStellarAccountPublicKeyGP of the admin_stellar_signer to the related item.
-// Sets o.R.StellarAccountPublicKey to related.
-// Adds o to related.R.StellarAccountPublicKeyAdminStellarSigners.
-// Uses the global database handle and panics on error.
-func (o *AdminStellarSigner) SetStellarAccountPublicKeyGP(insert bool, related *AdminStellarAccount) {
-	if err := o.SetStellarAccountPublicKey(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetStellarAccountPublicKey of the admin_stellar_signer to the related item.
+// SetStellarAccountPublicKey of the adminStellarSigner to the related item.
 // Sets o.R.StellarAccountPublicKey to related.
 // Adds o to related.R.StellarAccountPublicKeyAdminStellarSigners.
 func (o *AdminStellarSigner) SetStellarAccountPublicKey(exec boil.Executor, insert bool, related *AdminStellarAccount) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -502,7 +487,6 @@ func (o *AdminStellarSigner) SetStellarAccountPublicKey(exec boil.Executor, inse
 	}
 
 	o.StellarAccountPublicKeyID = related.PublicKey
-
 	if o.R == nil {
 		o.R = &adminStellarSignerR{
 			StellarAccountPublicKey: related,
@@ -522,35 +506,20 @@ func (o *AdminStellarSigner) SetStellarAccountPublicKey(exec boil.Executor, inse
 	return nil
 }
 
-// AdminStellarSignersG retrieves all records.
-func AdminStellarSignersG(mods ...qm.QueryMod) adminStellarSignerQuery {
-	return AdminStellarSigners(boil.GetDB(), mods...)
-}
-
 // AdminStellarSigners retrieves all the records using an executor.
-func AdminStellarSigners(exec boil.Executor, mods ...qm.QueryMod) adminStellarSignerQuery {
+func AdminStellarSigners(mods ...qm.QueryMod) adminStellarSignerQuery {
 	mods = append(mods, qm.From("\"admin_stellar_signer\""))
-	return adminStellarSignerQuery{NewQuery(exec, mods...)}
+	return adminStellarSignerQuery{NewQuery(mods...)}
 }
 
 // FindAdminStellarSignerG retrieves a single record by ID.
-func FindAdminStellarSignerG(id int, selectCols ...string) (*AdminStellarSigner, error) {
-	return FindAdminStellarSigner(boil.GetDB(), id, selectCols...)
-}
-
-// FindAdminStellarSignerGP retrieves a single record by ID, and panics on error.
-func FindAdminStellarSignerGP(id int, selectCols ...string) *AdminStellarSigner {
-	retobj, err := FindAdminStellarSigner(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindAdminStellarSignerG(iD int, selectCols ...string) (*AdminStellarSigner, error) {
+	return FindAdminStellarSigner(boil.GetDB(), iD, selectCols...)
 }
 
 // FindAdminStellarSigner retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindAdminStellarSigner(exec boil.Executor, id int, selectCols ...string) (*AdminStellarSigner, error) {
+func FindAdminStellarSigner(exec boil.Executor, iD int, selectCols ...string) (*AdminStellarSigner, error) {
 	adminStellarSignerObj := &AdminStellarSigner{}
 
 	sel := "*"
@@ -561,9 +530,9 @@ func FindAdminStellarSigner(exec boil.Executor, id int, selectCols ...string) (*
 		"select %s from \"admin_stellar_signer\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(adminStellarSignerObj)
+	err := q.Bind(nil, exec, adminStellarSignerObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -574,43 +543,14 @@ func FindAdminStellarSigner(exec boil.Executor, id int, selectCols ...string) (*
 	return adminStellarSignerObj, nil
 }
 
-// FindAdminStellarSignerP retrieves a single record by ID with an executor, and panics on error.
-func FindAdminStellarSignerP(exec boil.Executor, id int, selectCols ...string) *AdminStellarSigner {
-	retobj, err := FindAdminStellarSigner(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *AdminStellarSigner) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *AdminStellarSigner) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *AdminStellarSigner) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminStellarSigner) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *AdminStellarSigner) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *AdminStellarSigner) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_stellar_signer provided for insertion")
 	}
@@ -631,18 +571,17 @@ func (o *AdminStellarSigner) Insert(exec boil.Executor, whitelist ...string) err
 
 	nzDefaults := queries.NonZeroDefaultSet(adminStellarSignerColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	adminStellarSignerInsertCacheMut.RLock()
 	cache, cached := adminStellarSignerInsertCache[key]
 	adminStellarSignerInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			adminStellarSignerColumns,
 			adminStellarSignerColumnsWithDefault,
 			adminStellarSignerColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(adminStellarSignerType, adminStellarSignerMapping, wl)
@@ -654,9 +593,9 @@ func (o *AdminStellarSigner) Insert(exec boil.Executor, whitelist ...string) err
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"admin_stellar_signer\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"admin_stellar_signer\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"admin_stellar_signer\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"admin_stellar_signer\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -665,9 +604,7 @@ func (o *AdminStellarSigner) Insert(exec boil.Executor, whitelist ...string) err
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -697,63 +634,40 @@ func (o *AdminStellarSigner) Insert(exec boil.Executor, whitelist ...string) err
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single AdminStellarSigner record. See Update for
-// whitelist behavior description.
-func (o *AdminStellarSigner) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single AdminStellarSigner record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *AdminStellarSigner) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the AdminStellarSigner, and panics on error.
-// See Update for whitelist behavior description.
-func (o *AdminStellarSigner) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single AdminStellarSigner record using the global executor.
+// See Update for more documentation.
+func (o *AdminStellarSigner) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the AdminStellarSigner.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *AdminStellarSigner) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *AdminStellarSigner) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	adminStellarSignerUpdateCacheMut.RLock()
 	cache, cached := adminStellarSignerUpdateCache[key]
 	adminStellarSignerUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			adminStellarSignerColumns,
 			adminStellarSignerPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update admin_stellar_signer, could not build whitelist")
+			return 0, errors.New("models: unable to update admin_stellar_signer, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"admin_stellar_signer\" SET %s WHERE %s",
@@ -762,7 +676,7 @@ func (o *AdminStellarSigner) Update(exec boil.Executor, whitelist ...string) err
 		)
 		cache.valueMapping, err = queries.BindMapping(adminStellarSignerType, adminStellarSignerMapping, append(wl, adminStellarSignerPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -773,9 +687,15 @@ func (o *AdminStellarSigner) Update(exec boil.Executor, whitelist ...string) err
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update admin_stellar_signer row")
+		return 0, errors.Wrap(err, "models: unable to update admin_stellar_signer row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for admin_stellar_signer")
 	}
 
 	if !cached {
@@ -784,56 +704,40 @@ func (o *AdminStellarSigner) Update(exec boil.Executor, whitelist ...string) err
 		adminStellarSignerUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q adminStellarSignerQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q adminStellarSignerQuery) UpdateAll(cols M) error {
+func (q adminStellarSignerQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for admin_stellar_signer")
+		return 0, errors.Wrap(err, "models: unable to update all for admin_stellar_signer")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for admin_stellar_signer")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o AdminStellarSignerSlice) UpdateAllG(cols M) error {
+func (o AdminStellarSignerSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o AdminStellarSignerSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o AdminStellarSignerSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o AdminStellarSignerSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o AdminStellarSignerSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -861,36 +765,26 @@ func (o AdminStellarSignerSlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in adminStellarSigner slice")
+		return 0, errors.Wrap(err, "models: unable to update all in adminStellarSigner slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all adminStellarSigner")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *AdminStellarSigner) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *AdminStellarSigner) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *AdminStellarSigner) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminStellarSigner) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_stellar_signer provided for upsert")
 	}
@@ -907,9 +801,8 @@ func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, c
 
 	nzDefaults := queries.NonZeroDefaultSet(adminStellarSignerColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -920,11 +813,13 @@ func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, c
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -941,19 +836,17 @@ func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, c
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			adminStellarSignerColumns,
 			adminStellarSignerColumnsWithDefault,
 			adminStellarSignerColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			adminStellarSignerColumns,
 			adminStellarSignerPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert admin_stellar_signer, could not build update column list")
 		}
@@ -963,7 +856,7 @@ func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, c
 			conflict = make([]string, len(adminStellarSignerPrimaryKeyColumns))
 			copy(conflict, adminStellarSignerPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"admin_stellar_signer\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"admin_stellar_signer\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(adminStellarSignerType, adminStellarSignerMapping, insert)
 		if err != nil {
@@ -1010,43 +903,21 @@ func (o *AdminStellarSigner) Upsert(exec boil.Executor, updateOnConflict bool, c
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single AdminStellarSigner record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminStellarSigner) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single AdminStellarSigner record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *AdminStellarSigner) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no AdminStellarSigner provided for deletion")
-	}
-
+func (o *AdminStellarSigner) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single AdminStellarSigner record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminStellarSigner) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single AdminStellarSigner record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *AdminStellarSigner) Delete(exec boil.Executor) error {
+func (o *AdminStellarSigner) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminStellarSigner provided for delete")
+		return 0, errors.New("models: no AdminStellarSigner provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), adminStellarSignerPrimaryKeyMapping)
@@ -1057,77 +928,63 @@ func (o *AdminStellarSigner) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from admin_stellar_signer")
+		return 0, errors.Wrap(err, "models: unable to delete from admin_stellar_signer")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for admin_stellar_signer")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q adminStellarSignerQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q adminStellarSignerQuery) DeleteAll() error {
+func (q adminStellarSignerQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no adminStellarSignerQuery provided for delete all")
+		return 0, errors.New("models: no adminStellarSignerQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from admin_stellar_signer")
+		return 0, errors.Wrap(err, "models: unable to delete all from admin_stellar_signer")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o AdminStellarSignerSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_stellar_signer")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o AdminStellarSignerSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no AdminStellarSigner slice provided for delete all")
-	}
+func (o AdminStellarSignerSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o AdminStellarSignerSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o AdminStellarSignerSlice) DeleteAll(exec boil.Executor) error {
+func (o AdminStellarSignerSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminStellarSigner slice provided for delete all")
+		return 0, errors.New("models: no AdminStellarSigner slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(adminStellarSignerBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -1146,34 +1003,25 @@ func (o AdminStellarSignerSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from adminStellarSigner slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from adminStellarSigner slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_stellar_signer")
 	}
 
 	if len(adminStellarSignerAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *AdminStellarSigner) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *AdminStellarSigner) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1197,24 +1045,6 @@ func (o *AdminStellarSigner) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminStellarSignerSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminStellarSignerSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *AdminStellarSignerSlice) ReloadAllG() error {
@@ -1232,7 +1062,7 @@ func (o *AdminStellarSignerSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	adminStellarSigners := AdminStellarSignerSlice{}
+	slice := AdminStellarSignerSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), adminStellarSignerPrimaryKeyMapping)
@@ -1242,29 +1072,34 @@ func (o *AdminStellarSignerSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"admin_stellar_signer\".* FROM \"admin_stellar_signer\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, adminStellarSignerPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&adminStellarSigners)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in AdminStellarSignerSlice")
 	}
 
-	*o = adminStellarSigners
+	*o = slice
 
 	return nil
 }
 
+// AdminStellarSignerExistsG checks if the AdminStellarSigner row exists.
+func AdminStellarSignerExistsG(iD int) (bool, error) {
+	return AdminStellarSignerExists(boil.GetDB(), iD)
+}
+
 // AdminStellarSignerExists checks if the AdminStellarSigner row exists.
-func AdminStellarSignerExists(exec boil.Executor, id int) (bool, error) {
+func AdminStellarSignerExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"admin_stellar_signer\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1272,29 +1107,4 @@ func AdminStellarSignerExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// AdminStellarSignerExistsG checks if the AdminStellarSigner row exists.
-func AdminStellarSignerExistsG(id int) (bool, error) {
-	return AdminStellarSignerExists(boil.GetDB(), id)
-}
-
-// AdminStellarSignerExistsGP checks if the AdminStellarSigner row exists. Panics on error.
-func AdminStellarSignerExistsGP(id int) bool {
-	e, err := AdminStellarSignerExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// AdminStellarSignerExistsP checks if the AdminStellarSigner row exists. Panics on error.
-func AdminStellarSignerExistsP(exec boil.Executor, id int) bool {
-	e, err := AdminStellarSignerExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

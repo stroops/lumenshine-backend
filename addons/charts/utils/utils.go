@@ -5,11 +5,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 	"github.com/Soneso/lumenshine-backend/addons/charts/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
-	"log"
-	"strings"
 
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -87,7 +88,7 @@ func InsertCurrencyToDB(currencyCode string, currencyIssuer string) error {
 		currency.CurrencyName = config.CurrencyCodeToName[currencyCode]
 	}
 	currency.CurrencyIssuer = currencyIssuer
-	err := currency.Insert(DB)
+	err := currency.Insert(DB, boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func GetCurrencyByCode(code string, issuer string, insertIfNotFound bool) (curre
 	currencyCode := strings.ToUpper(code)
 	currencyIssuer := strings.ToUpper(issuer)
 
-	exists, err := models.Currencies(DB, qm.Where("currency_code=? AND currency_issuer=?", currencyCode, currencyIssuer)).Exists()
+	exists, err := models.Currencies(qm.Where("currency_code=? AND currency_issuer=?", currencyCode, currencyIssuer)).Exists(DB)
 	if !exists {
 		if !insertIfNotFound {
 			err = errors.New("Currency not found")
@@ -113,7 +114,7 @@ func GetCurrencyByCode(code string, issuer string, insertIfNotFound bool) (curre
 		}
 
 	}
-	currency, _ = models.Currencies(DB, qm.Where("currency_code=? AND currency_issuer=?", currencyCode, currencyIssuer)).One()
+	currency, _ = models.Currencies(qm.Where("currency_code=? AND currency_issuer=?", currencyCode, currencyIssuer)).One(DB)
 
 	return
 }
@@ -121,10 +122,10 @@ func GetCurrencyByCode(code string, issuer string, insertIfNotFound bool) (curre
 // GetCurrentRate returns latest exchange available between 2 currencies
 func GetCurrentRate(sourceCurrency *models.Currency, destinationCurrency *models.Currency) (lastTransaction *models.CurrentChartDataMinutely, err error) {
 
-	lastTransaction, err = sourceCurrency.SourceCurrencyCurrentChartDataMinutelies(DB,
+	lastTransaction, err = sourceCurrency.SourceCurrencyCurrentChartDataMinutelies(
 		qm.Where("destination_currency_id =?", destinationCurrency.ID),
 		qm.OrderBy("exchange_rate_time DESC"),
-	).One()
+	).One(DB)
 
 	// if err != nil {
 	// 	log.Panicf("Error getting current rate %v", err)

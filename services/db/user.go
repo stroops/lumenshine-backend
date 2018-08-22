@@ -12,6 +12,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/db/models"
 
 	_ "github.com/lib/pq"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"golang.org/x/crypto/bcrypt"
 	context "golang.org/x/net/context"
@@ -30,7 +31,7 @@ func getUserByIDOrEmail(r *pb.GetUserByIDOrEmailRequest) (*models.UserProfile, e
 		q = append(q, qm.Where(models.UserProfileColumns.Email+"=?", r.Email))
 	}
 
-	u, err := models.UserProfiles(db, q...).One()
+	u, err := models.UserProfiles(q...).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func getUserByIDOrEmail(r *pb.GetUserByIDOrEmailRequest) (*models.UserProfile, e
 }
 
 func (s *server) GetUserByMailtoken(ctx context.Context, r *pb.UserMailTokenRequest) (*pb.UserMailTokenResponse, error) {
-	u, err := models.UserProfiles(db, qm.Where(models.UserProfileColumns.MailConfirmationKey+"=?", r.Token)).One()
+	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.MailConfirmationKey+"=?", r.Token)).One(db)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &pb.UserMailTokenResponse{
@@ -89,9 +90,9 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 }
 
 func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserProfileResponse, error) {
-	u, err := models.UserProfiles(db, qm.Where(
+	u, err := models.UserProfiles(qm.Where(
 		models.UserProfileColumns.ID+"=?", r.Id,
-	)).One()
+	)).One(db)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -158,7 +159,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.Password = r.Password
 	u.UpdatedBy = r.Base.UpdateBy
 
-	err = u.Insert(tx)
+	err = u.Insert(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -182,7 +183,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	ud.PublicKey188 = r.PublicKey_188
 	ud.UpdatedBy = r.Base.UpdateBy
 
-	err = ud.Insert(tx)
+	err = ud.Insert(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -194,7 +195,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	w.WalletName = "Primary Wallet"
 	w.PublicKey0 = r.PublicKey_0
 	w.ShowOnHomescreen = true
-	err = w.Insert(tx)
+	err = w.Insert(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -209,7 +210,7 @@ func (s *server) ExistsEmail(ctx context.Context, r *pb.ExistsEmailRequest) (*pb
 		return nil, errors.New("need email")
 	}
 
-	exists, err := models.UserProfiles(db, qm.Where(models.UserProfileColumns.Email+"=?", strings.ToLower(r.Email))).Exists()
+	exists, err := models.UserProfiles(qm.Where(models.UserProfileColumns.Email+"=?", strings.ToLower(r.Email))).Exists(db)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &pb.ExistsEmailResponse{Exists: false}, nil
@@ -225,7 +226,7 @@ func (s *server) GetCountryList(ctx context.Context, r *pb.LanguageCodeRequest) 
 		return nil, errors.New("need language code")
 	}
 
-	countries, err := models.Countries(db, qm.Where(models.CountryColumns.LangCode+"=?", r.LanguageCode)).All()
+	countries, err := models.Countries(qm.Where(models.CountryColumns.LangCode+"=?", r.LanguageCode)).All(db)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +244,7 @@ func (s *server) GetSalutationList(ctx context.Context, r *pb.LanguageCodeReques
 		return nil, errors.New("need language code")
 	}
 
-	salutations, err := models.Salutations(db, qm.Where(models.SalutationColumns.LangCode+"=?", r.LanguageCode)).All()
+	salutations, err := models.Salutations(qm.Where(models.SalutationColumns.LangCode+"=?", r.LanguageCode)).All(db)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +258,7 @@ func (s *server) GetSalutationList(ctx context.Context, r *pb.LanguageCodeReques
 }
 
 func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfirmedRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where("id=?", r.UserId)).One()
+	u, err := models.UserProfiles(qm.Where("id=?", r.UserId)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +271,7 @@ func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfir
 	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
 
-	err = u.Update(db,
+	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.TfaQrcode,
 		models.UserProfileColumns.TfaURL,
 		models.UserProfileColumns.TfaSecret,
@@ -278,7 +279,7 @@ func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfir
 		models.UserProfileColumns.TfaConfirmed,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
-	)
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -287,18 +288,18 @@ func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfir
 }
 
 func (s *server) SetUserMailConfirmed(ctx context.Context, r *pb.IDRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where("id=?", r.Id)).One()
+	u, err := models.UserProfiles(qm.Where("id=?", r.Id)).One(db)
 	if err != nil {
 		return nil, err
 	}
 
 	u.MailConfirmed = true
 	u.UpdatedBy = r.Base.UpdateBy
-	err = u.Update(db,
+	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.MailConfirmed,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
-	)
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -307,18 +308,18 @@ func (s *server) SetUserMailConfirmed(ctx context.Context, r *pb.IDRequest) (*pb
 }
 
 func (s *server) SetUserMnemonicConfirmed(ctx context.Context, r *pb.IDRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where("id=?", r.Id)).One()
+	u, err := models.UserProfiles(qm.Where("id=?", r.Id)).One(db)
 	if err != nil {
 		return nil, err
 	}
 
 	u.MnemonicConfirmed = true
 	u.UpdatedBy = r.Base.UpdateBy
-	err = u.Update(db,
+	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.MnemonicConfirmed,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
-	)
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -327,9 +328,9 @@ func (s *server) SetUserMnemonicConfirmed(ctx context.Context, r *pb.IDRequest) 
 }
 
 func (s *server) GetUserSecurities(ctx context.Context, r *pb.IDRequest) (*pb.UserSecurityResponse, error) {
-	ss, err := models.UserSecurities(db, qm.Where(
+	ss, err := models.UserSecurities(qm.Where(
 		models.UserSecurityColumns.UserID+"=?", r.Id,
-	)).One()
+	)).One(db)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -357,9 +358,9 @@ func (s *server) GetUserSecurities(ctx context.Context, r *pb.IDRequest) (*pb.Us
 }
 
 func (s *server) SetUserMailToken(ctx context.Context, r *pb.SetMailTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where(
+	u, err := models.UserProfiles(qm.Where(
 		models.UserProfileColumns.ID+"=?", r.UserId,
-	)).One()
+	)).One(db)
 
 	if err != nil {
 		return nil, err
@@ -368,14 +369,14 @@ func (s *server) SetUserMailToken(ctx context.Context, r *pb.SetMailTokenRequest
 	u.MailConfirmationKey = r.MailConfirmationKey
 	u.MailConfirmationExpiryDate = time.Unix(r.MailConfirmationExpiry, 0)
 	u.UpdatedBy = r.Base.UpdateBy
-	u.Update(db,
+	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.MailConfirmationExpiryDate,
 		models.UserProfileColumns.MailConfirmationKey,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
-	)
+	))
 
-	return &pb.Empty{}, nil
+	return &pb.Empty{}, err
 }
 
 func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityRequest) (*pb.Empty, error) {
@@ -390,25 +391,25 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 	if err != nil {
 		return nil, err
 	}
-	user, err := models.UserProfiles(tx, qm.Where("id=?", r.UserId)).One()
+	user, err := models.UserProfiles(qm.Where("id=?", r.UserId)).One(tx)
 	if err != nil {
 		return nil, err
 	}
 	user.Password = string(pwd)
 	user.UpdatedBy = r.Base.UpdateBy
-	err = user.Update(tx,
+	_, err = user.Update(tx, boil.Whitelist(
 		models.UserProfileColumns.Password,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
-	)
+	))
 	if err != nil {
 		return nil, err
 	}
 
 	//update the security data
-	u, err := models.UserSecurities(tx, qm.Where(
+	u, err := models.UserSecurities(qm.Where(
 		models.UserSecurityColumns.UserID+"=?", r.UserId,
-	)).One()
+	)).One(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +428,7 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 	u.PublicKey188 = r.PublicKey_188
 	u.UpdatedBy = r.Base.UpdateBy
 
-	err = u.Update(tx,
+	_, err = u.Update(tx, boil.Whitelist(
 		models.UserSecurityColumns.KDFSalt,
 		models.UserSecurityColumns.MnemonicMasterKey,
 		models.UserSecurityColumns.MnemonicMasterIv,
@@ -442,7 +443,7 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 
 		models.UserSecurityColumns.UpdatedAt,
 		models.UserSecurityColumns.UpdatedBy,
-	)
+	))
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -453,9 +454,9 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 }
 
 func (s *server) UpdateUserSecurityPassword(ctx context.Context, r *pb.UserSecurityRequest) (*pb.Empty, error) {
-	u, err := models.UserSecurities(db, qm.Where(
+	u, err := models.UserSecurities(qm.Where(
 		models.UserSecurityColumns.UserID+"=?", r.UserId,
-	)).One()
+	)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -467,7 +468,7 @@ func (s *server) UpdateUserSecurityPassword(ctx context.Context, r *pb.UserSecur
 	u.WordlistMasterIv = r.WordlistMasterIv
 	u.UpdatedBy = r.Base.UpdateBy
 
-	return &pb.Empty{}, u.Update(db,
+	_, err = u.Update(db, boil.Whitelist(
 		models.UserSecurityColumns.KDFSalt,
 		models.UserSecurityColumns.MnemonicMasterKey,
 		models.UserSecurityColumns.MnemonicMasterIv,
@@ -475,11 +476,12 @@ func (s *server) UpdateUserSecurityPassword(ctx context.Context, r *pb.UserSecur
 		models.UserSecurityColumns.WordlistMasterIv,
 		models.UserSecurityColumns.UpdatedAt,
 		models.UserSecurityColumns.UpdatedBy,
-	)
+	))
+	return &pb.Empty{}, err
 }
 
 func (s *server) SetTempTfaSecret(ctx context.Context, r *pb.SetTempTfaSecretRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where("id=?", r.UserId)).One()
+	u, err := models.UserProfiles(qm.Where("id=?", r.UserId)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -488,11 +490,12 @@ func (s *server) SetTempTfaSecret(ctx context.Context, r *pb.SetTempTfaSecretReq
 	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
 
-	return &pb.Empty{}, u.Update(db,
+	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.TfaTempSecret,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
-	)
+	))
+	return &pb.Empty{}, err
 }
 
 func (s *server) GetUserMessages(ctx context.Context, r *pb.UserMessageListRequest) (*pb.UserMessageListResponse, error) {
@@ -503,7 +506,7 @@ func (s *server) GetUserMessages(ctx context.Context, r *pb.UserMessageListReque
 	archiveCount = 0
 
 	if !r.Archive {
-		messages, err := models.UserMessages(db, qm.Where("user_id=?", r.UserId)).All()
+		messages, err := models.UserMessages(qm.Where("user_id=?", r.UserId)).All(db)
 		if err != nil {
 			return nil, err
 		}
@@ -517,13 +520,13 @@ func (s *server) GetUserMessages(ctx context.Context, r *pb.UserMessageListReque
 		}
 
 		currentCount = int64(len(messages))
-		archiveCount, err = models.UserMessageArchives(db, qm.Where("user_id=?", r.UserId)).Count()
+		archiveCount, err = models.UserMessageArchives(qm.Where("user_id=?", r.UserId)).Count(db)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		//get archive messages
-		messages, err := models.UserMessageArchives(db, qm.Where("id=?", r.UserId)).All()
+		messages, err := models.UserMessageArchives(qm.Where("id=?", r.UserId)).All(db)
 		if err != nil {
 			return nil, err
 		}
@@ -536,7 +539,7 @@ func (s *server) GetUserMessages(ctx context.Context, r *pb.UserMessageListReque
 			})
 		}
 		archiveCount = int64(len(messages))
-		currentCount, err = models.UserMessages(db, qm.Where("user_id=?", r.UserId)).Count()
+		currentCount, err = models.UserMessages(qm.Where("user_id=?", r.UserId)).Count(db)
 		if err != nil {
 			return nil, err
 		}
@@ -550,7 +553,7 @@ func (s *server) GetUserMessage(ctx context.Context, r *pb.UserMessageRequest) (
 	ret := &pb.UserMessageItem{}
 
 	if !r.Archive {
-		m, err := models.UserMessages(db, qm.Where("id=?", r.MessageId)).One()
+		m, err := models.UserMessages(qm.Where("id=?", r.MessageId)).One(db)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return &pb.UserMessageItem{}, nil
@@ -563,7 +566,7 @@ func (s *server) GetUserMessage(ctx context.Context, r *pb.UserMessageRequest) (
 		ret.Message = m.Message
 		ret.DateCreated = m.CreatedAt.Unix()
 	} else {
-		m, err := models.UserMessageArchives(db, qm.Where("id=?", r.MessageId)).One()
+		m, err := models.UserMessageArchives(qm.Where("id=?", r.MessageId)).One(db)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return &pb.UserMessageItem{}, nil
@@ -586,7 +589,7 @@ func (s *server) MoveMessageToArchive(ctx context.Context, r *pb.IDRequest) (*pb
 		return nil, err
 	}
 
-	m, err := models.UserMessages(tx, qm.Where("id=?", r.Id)).One()
+	m, err := models.UserMessages(qm.Where("id=?", r.Id)).One(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -597,13 +600,13 @@ func (s *server) MoveMessageToArchive(ctx context.Context, r *pb.IDRequest) (*pb
 	ma.Message = m.Message
 	ma.CreatedAt = m.CreatedAt
 	ma.UpdatedAt = time.Now()
-	err = ma.Insert(tx)
+	err = ma.Insert(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	err = m.Delete(tx)
+	_, err = m.Delete(tx)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -614,7 +617,7 @@ func (s *server) MoveMessageToArchive(ctx context.Context, r *pb.IDRequest) (*pb
 }
 
 func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*pb.Empty, error) {
-	pushToken, err := models.UserPushtokens(db, qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).One()
+	pushToken, err := models.UserPushtokens(qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -624,10 +627,10 @@ func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*
 			pushToken.UserID = int(r.UserId)
 			pushToken.UpdatedAt = time.Now()
 			pushToken.UpdatedBy = r.Base.UpdateBy
-			err = pushToken.Update(db,
+			_, err = pushToken.Update(db, boil.Whitelist(
 				models.UserPushtokenColumns.UserID,
 				models.UserPushtokenColumns.UpdatedAt,
-				models.UserPushtokenColumns.UpdatedBy)
+				models.UserPushtokenColumns.UpdatedBy))
 
 			if err != nil {
 				return nil, err
@@ -639,7 +642,7 @@ func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*
 		pushToken.PushToken = r.PushToken
 		pushToken.DeviceType = r.DeviceType.String()
 		pushToken.UpdatedBy = r.Base.UpdateBy
-		err = pushToken.Insert(db)
+		err = pushToken.Insert(db, boil.Infer())
 
 		if err != nil {
 			return nil, err
@@ -650,28 +653,28 @@ func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*
 }
 
 func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One()
+	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One(db)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("User id:%d does not exist", r.UserId)
 		}
 		return nil, err
 	}
-	pushToken, err := models.UserPushtokens(db,
+	pushToken, err := models.UserPushtokens(
 		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.OldPushToken)).
-		One()
+		One(db)
 	if err != nil {
 		return nil, err
 	}
 	if pushToken != nil {
-		err = pushToken.Delete(db)
+		_, err = pushToken.Delete(db)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	pushToken, err = models.UserPushtokens(db, qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.NewPushToken)).One()
+	pushToken, err = models.UserPushtokens(qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.NewPushToken)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -681,10 +684,10 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 			pushToken.UserID = int(r.UserId)
 			pushToken.UpdatedAt = time.Now()
 			pushToken.UpdatedBy = r.Base.UpdateBy
-			err = pushToken.Update(db,
+			_, err = pushToken.Update(db, boil.Whitelist(
 				models.UserPushtokenColumns.UserID,
 				models.UserPushtokenColumns.UpdatedAt,
-				models.UserPushtokenColumns.UpdatedBy)
+				models.UserPushtokenColumns.UpdatedBy))
 
 			if err != nil {
 				return nil, err
@@ -696,7 +699,7 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 		pushToken.PushToken = r.NewPushToken
 		pushToken.DeviceType = r.DeviceType.String()
 		pushToken.UpdatedBy = r.Base.UpdateBy
-		err = pushToken.Insert(db)
+		err = pushToken.Insert(db, boil.Infer())
 
 		if err != nil {
 			return nil, err
@@ -707,22 +710,22 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 }
 
 func (s *server) DeletePushToken(ctx context.Context, r *pb.DeletePushTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(db, qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One()
+	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One(db)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("User id:%d does not exist", r.UserId)
 		}
 		return nil, err
 	}
-	pushToken, err := models.UserPushtokens(db,
+	pushToken, err := models.UserPushtokens(
 		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).
-		One()
+		One(db)
 	if err != nil {
 		return nil, err
 	}
 	if pushToken != nil {
-		err = pushToken.Delete(db)
+		_, err = pushToken.Delete(db)
 		if err != nil {
 			return nil, err
 		}
@@ -732,7 +735,7 @@ func (s *server) DeletePushToken(ctx context.Context, r *pb.DeletePushTokenReque
 }
 
 func (s *server) GetPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.GetPushTokensResponse, error) {
-	dbPushTokens, err := models.UserPushtokens(db, qm.Where(models.UserPushtokenColumns.UserID+"=?", r.Id)).All()
+	dbPushTokens, err := models.UserPushtokens(qm.Where(models.UserPushtokenColumns.UserID+"=?", r.Id)).All(db)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}

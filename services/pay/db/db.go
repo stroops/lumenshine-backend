@@ -80,7 +80,7 @@ func (db *DB) GetNextChainAddressIndex(chain string) (uint32, error) {
 				"@key":             m.KeyValueStoreColumns.Key,
 			})
 
-		err := queries.Raw(db, sql, key).Bind(&v)
+		err := queries.Raw(sql, key).Bind(nil, db, &v)
 		if err != nil {
 			return 0, err
 		}
@@ -111,7 +111,7 @@ func (db *DB) SaveLastProcessedBitcoinBlock(block uint64) error {
 }
 
 func (db *DB) getBlockToProcess(key string) (uint64, error) {
-	kv, err := m.KeyValueStores(db, qm.Where(m.KeyValueStoreColumns.Key+"=?", key)).One()
+	kv, err := m.KeyValueStores(qm.Where(m.KeyValueStoreColumns.Key+"=?", key)).One(db)
 	if err != nil {
 		return 0, errors.Wrap(err, "Error getting `"+key+"` from DB")
 	}
@@ -135,7 +135,7 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 	}
 	defer tx.Rollback()
 
-	kv, err := m.KeyValueStores(tx, qm.Where(m.KeyValueStoreColumns.Key+"=?", key)).One()
+	kv, err := m.KeyValueStores(qm.Where(m.KeyValueStoreColumns.Key+"=?", key)).One(tx)
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,10 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 
 	if block > lastBlock {
 		kv.STRValue = fmt.Sprintf("%d", block)
-		kv.Update(tx, m.KeyValueStoreColumns.STRValue)
+		_, err := kv.Update(tx, boil.Whitelist(m.KeyValueStoreColumns.STRValue))
+		if err != nil {
+			return err
+		}
 	}
 
 	err = tx.Commit()
@@ -168,11 +171,11 @@ func (db *DB) GetOpenOrderForAddress(chain string, address string) (*m.UserOrder
 		})
 
 	//set order to payment recived
-	err := queries.Raw(db, sqlStr, m.OrderStatusPaymentReceived, chain, address, m.OrderStatusWaitingForPayment).Bind(userOrder)
+	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, chain, address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			//if we did not find an open order, we need to search for all orders on the user, in order to get the multiple transaction triggered
-			userOrder, err = m.UserOrders(db, qm.Where("chain=? and chain_address=?", chain, address)).One()
+			userOrder, err = m.UserOrders(qm.Where("chain=? and chain_address=?", chain, address)).One(db)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					return nil, nil
@@ -201,7 +204,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, chain string, hash string, toA
 	d.Status = m.TransactionStatusNew
 	d.ChainAmountDenom = denomAmount.String()
 
-	err := d.Insert(db)
+	err := d.Insert(db, boil.Infer())
 	if err != nil && isDuplicateError(err) {
 		//add the transaction to the multiple table for manual handling
 		b := new(m.MultipleTransaction)
@@ -210,7 +213,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, chain string, hash string, toA
 		b.TransactionID = hash
 		b.UserOrderID = orderID
 		b.ChainAmountDenom = denomAmount.String()
-		errB := b.Insert(db)
+		errB := b.Insert(db, boil.Infer())
 		if errB != nil {
 			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": hash}).Error("Error saving multiple transaction")
 		}
@@ -238,7 +241,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			"@updated_at":   m.UserOrderColumns.UpdatedAt,
 		})
 
-	err = queries.Raw(db, sqlStr, m.OrderStatusWaitingUserTX, tx.UserOrderID, m.OrderStatusPaymentReceived).Bind(order)
+	err = queries.Raw(sqlStr, m.OrderStatusWaitingUserTX, tx.UserOrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
 	if err != nil {
 		return true, err
 	}
@@ -256,7 +259,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			order.OrderStatus = m.OrderStatusUnderPay
 		}
 
-		err = order.Update(db, m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt)
+		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 		if err != nil {
 			return false, err
 		}
@@ -273,14 +276,14 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 				"@updated_at":  m.IcoPhaseColumns.UpdatedAt,
 			})
 
-		err = queries.Raw(db, sqlStr, order.CoinAmount, order.CoinAmount).Bind(ph)
+		err = queries.Raw(sqlStr, order.CoinAmount, order.CoinAmount).Bind(nil, db, ph)
 		if err != nil {
 			//something is not ok
 			//either amount was to small, or phase is already gone... we will read the data againe and check
 			if err != sql.ErrNoRows {
 				return true, err
 			} else {
-				ph, err = m.IcoPhases(db, qm.Where(m.IcoPhaseColumns.IsActive+"=true")).One()
+				ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IsActive + "=true")).One(db)
 				if err != nil {
 					return true, err
 				}
@@ -289,7 +292,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 				} else {
 					order.OrderStatus = m.OrderStatusPhaseExpired
 				}
-				err = order.Update(db, m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt)
+				_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 				if err != nil {
 					return true, err
 				}
@@ -298,18 +301,18 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 	}
 
 	//check all user orders and if one is payed, set flag, if not, remove flag
-	user, err := m.UserProfiles(db, qm.Where("id=?", order.UserID)).One()
+	user, err := m.UserProfiles(qm.Where("id=?", order.UserID)).One(db)
 	if err != nil {
 		return false, err
 	}
 
-	cnt, err := m.UserOrders(db, qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTX)).Count()
+	cnt, err := m.UserOrders(qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTX)).Count(db)
 	if cnt > 0 {
 		user.PaymentState = m.PaymentStateOpen
 	} else {
 		user.PaymentState = m.PaymentStateClose
 	}
-	err = user.Update(db, m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt)
+	_, err = user.Update(db, boil.Whitelist(m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt))
 	if err != nil {
 		return false, err
 	}

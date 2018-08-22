@@ -7,6 +7,7 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/admin/models"
 
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -24,9 +25,9 @@ type UserDetails struct {
 
 //GetUserByEmail returns the user details for the specified email
 func GetUserByEmail(email string) (*UserDetails, error) {
-	user, err := models.AdminUsersG(
+	user, err := models.AdminUsers(
 		qm.Load("UserAdminUsergroups.Group"),
-		qm.Where("email=?", email)).One()
+		qm.Where("email=?", email)).OneG()
 
 	if err != nil {
 		return nil, err
@@ -54,9 +55,9 @@ func GetUserByEmail(email string) (*UserDetails, error) {
 
 //GetUserByID returns the user details for the specified ID
 func GetUserByID(userID int) (*UserDetails, error) {
-	user, err := models.AdminUsersG(
+	user, err := models.AdminUsers(
 		qm.Load("UserAdminUsergroups.Group"),
-		qm.Where("id=?", userID)).One()
+		qm.Where("id=?", userID)).OneG()
 
 	if err != nil {
 		return nil, err
@@ -89,7 +90,8 @@ func UpdateLastLogin(user UserDetails) error {
 		return err
 	}
 	dbUser.LastLogin = time.Now()
-	return dbUser.UpdateG(models.AdminUserColumns.LastLogin)
+	_, err = dbUser.UpdateG(boil.Whitelist(models.AdminUserColumns.LastLogin))
+	return err
 }
 
 //RegisterUser creates a new user
@@ -102,7 +104,7 @@ func RegisterUser(user *models.AdminUser, groups []string) error {
 	q := []qm.QueryMod{}
 	q = append(q, qm.Select(models.AdminGroupColumns.ID, models.AdminGroupColumns.Name))
 	q = append(q, qm.WhereIn("lower("+models.AdminGroupColumns.Name+") IN ?", groupArgs...))
-	dbGroups, err := models.AdminGroupsG(q...).All()
+	dbGroups, err := models.AdminGroups(q...).AllG()
 	if err != nil {
 		return err
 	}
@@ -111,7 +113,7 @@ func RegisterUser(user *models.AdminUser, groups []string) error {
 		return errors.New("User must be in a valid group")
 	}
 
-	err = user.InsertG()
+	err = user.InsertG(boil.Infer())
 
 	if err != nil {
 		return err
@@ -119,7 +121,7 @@ func RegisterUser(user *models.AdminUser, groups []string) error {
 
 	for _, group := range dbGroups {
 		usergroup := models.AdminUsergroup{UserID: user.ID, GroupID: group.ID}
-		err = usergroup.InsertG()
+		err = usergroup.InsertG(boil.Infer())
 		if err != nil {
 			return err
 		}
@@ -143,7 +145,7 @@ func ActivateUser(userID int, active bool, updatedBy string) error {
 	user.UpdatedAt = time.Now()
 	user.UpdatedBy = updatedBy
 
-	err = user.UpdateG()
+	_, err = user.UpdateG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -153,8 +155,8 @@ func ActivateUser(userID int, active bool, updatedBy string) error {
 
 //AllUsers - returns all users
 func AllUsers() (models.AdminUserSlice, error) {
-	users, err := models.AdminUsersG(
-		qm.Load("UserAdminUsergroups.Group")).All()
+	users, err := models.AdminUsers(
+		qm.Load("UserAdminUsergroups.Group")).AllG()
 
 	if err != nil {
 		return nil, err
@@ -183,7 +185,7 @@ func UpdateUser(user models.AdminUser, updatedBy string) error {
 	dbUser.UpdatedBy = updatedBy
 	dbUser.UpdatedAt = time.Now()
 
-	err = dbUser.UpdateG()
+	_, err = dbUser.UpdateG(boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -208,7 +210,7 @@ func SetGroups(userID int, groups []string) error {
 	q := []qm.QueryMod{}
 	q = append(q, qm.Select(models.AdminGroupColumns.ID, models.AdminGroupColumns.Name))
 	q = append(q, qm.WhereIn("lower("+models.AdminGroupColumns.Name+") IN ?", groupArgs...))
-	dbGroups, err := models.AdminGroupsG(q...).All()
+	dbGroups, err := models.AdminGroups(q...).AllG()
 	if err != nil {
 		return err
 	}
@@ -216,13 +218,13 @@ func SetGroups(userID int, groups []string) error {
 		return errors.New("Invalid groups")
 	}
 
-	usergroupsToDelete, err := models.AdminUsergroupsG(qm.Where("user_id=?", userID)).All()
+	usergroupsToDelete, err := models.AdminUsergroups(qm.Where("user_id=?", userID)).AllG()
 	if err != nil {
 		return err
 	}
 
 	if len(usergroupsToDelete) > 0 {
-		err = usergroupsToDelete.DeleteAllG()
+		_, err = usergroupsToDelete.DeleteAllG()
 		if err != nil {
 			return err
 		}
@@ -230,7 +232,7 @@ func SetGroups(userID int, groups []string) error {
 
 	for _, group := range dbGroups {
 		usergroup := models.AdminUsergroup{UserID: userID, GroupID: group.ID}
-		err = usergroup.InsertG()
+		err = usergroup.InsertG(boil.Infer())
 		if err != nil {
 			return err
 		}
@@ -241,9 +243,9 @@ func SetGroups(userID int, groups []string) error {
 
 //AllActiveAdministrators - returns all users
 func AllActiveAdministrators() (models.AdminUserSlice, error) {
-	users, err := models.AdminUsersG(
+	users, err := models.AdminUsers(
 		qm.Load("UserAdminUsergroups.Group"),
-		qm.Where("active=?", true)).All()
+		qm.Where("active=?", true)).AllG()
 
 	var admins models.AdminUserSlice
 	for _, user := range users {

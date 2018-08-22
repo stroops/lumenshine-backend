@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Soneso/lumenshine-backend/pb"
+	"github.com/volatiletech/sqlboiler/boil"
 
 	"github.com/Soneso/lumenshine-backend/services/db/models"
 
@@ -22,7 +23,7 @@ func (s *server) SaveMail(ctx context.Context, r *pb.SaveMailRequest) (*pb.Empty
 	m.InternalStatus = r.InternalStatus
 	m.UpdatedBy = r.Base.UpdateBy
 
-	err := m.Insert(db)
+	err := m.Insert(db, boil.Infer())
 	if err != nil {
 		return nil, err
 	}

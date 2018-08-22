@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/Soneso/lumenshine-backend/pb"
 	"time"
 
+	"github.com/Soneso/lumenshine-backend/pb"
+
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/Soneso/lumenshine-backend/services/db/models"
@@ -13,7 +15,7 @@ import (
 )
 
 func (s *server) GetAllJwtKeys(ctx context.Context, r *pb.Empty) (*pb.KeyListResponse, error) {
-	jwts, err := models.JWTKeys(db).All()
+	jwts, err := models.JWTKeys().All(db)
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +35,9 @@ func (s *server) GetAllJwtKeys(ctx context.Context, r *pb.Empty) (*pb.KeyListRes
 }
 
 func (s *server) SetJwtKey(ctx context.Context, r *pb.JwtSetKeyRequest) (*pb.Empty, error) {
-	jwt, err := models.JWTKeys(db, qm.Where(
+	jwt, err := models.JWTKeys(qm.Where(
 		models.JWTKeyColumns.KeyName+"=?", r.Key,
-	)).One()
+	)).One(db)
 	if err != nil {
 		return nil, err
 	}
@@ -44,10 +46,10 @@ func (s *server) SetJwtKey(ctx context.Context, r *pb.JwtSetKeyRequest) (*pb.Emp
 	jwt.KeyValue2 = r.Value2
 	jwt.Valid1To = time.Unix(r.Expiry1, 0)
 	jwt.Valid2To = time.Unix(r.Expiry2, 0)
-	jwt.Update(db,
+	_, err = jwt.Update(db, boil.Whitelist(
 		models.JWTKeyColumns.KeyValue1, models.JWTKeyColumns.KeyValue2,
 		models.JWTKeyColumns.Valid1To, models.JWTKeyColumns.Valid2To,
-		models.JWTKeyColumns.UpdatedAt,
+		models.JWTKeyColumns.UpdatedAt),
 	)
-	return &pb.Empty{}, nil
+	return &pb.Empty{}, err
 }

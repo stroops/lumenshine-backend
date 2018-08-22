@@ -16,6 +16,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/addons/charts/models"
 	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
 
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
@@ -225,7 +226,7 @@ func handleData(exchange Exchange) error {
 			history.SourceCurrencyID = sourceCurrency.ID
 			history.DestinationCurrencyID = destinationCurrency.ID
 
-			err = history.Insert(utils.DB)
+			err = history.Insert(utils.DB, boil.Infer())
 			if err != nil {
 				return err
 			}
@@ -235,15 +236,15 @@ func handleData(exchange Exchange) error {
 
 		// you have to compute a price from the new source w.r.t. the xlm to usd price from that day
 
-		xlm, _ := models.Currencies(utils.DB, qm.Where("currency_code=?", "XLM")).One()
-		usd, _ := models.Currencies(utils.DB, qm.Where("currency_code=?", "USD")).One()
+		xlm, _ := models.Currencies(qm.Where("currency_code=?", "XLM")).One(utils.DB)
+		usd, _ := models.Currencies(qm.Where("currency_code=?", "USD")).One(utils.DB)
 
 		// get the earliest date you have in the db with a transaction from xlm to usd. for other currencies the history may go earlier and we would not have a reference point
-		earliestXlmToUsd, _ := models.HistoryChartData(utils.DB, qm.Where("source_currency_id=?", xlm.ID), qm.And("destination_currency_id=?", usd.ID), qm.OrderBy("exchange_rate_date")).One()
+		earliestXlmToUsd, _ := models.HistoryChartData(qm.Where("source_currency_id=?", xlm.ID), qm.And("destination_currency_id=?", usd.ID), qm.OrderBy("exchange_rate_date")).One(utils.DB)
 		earliestXlmToUsdExchange := earliestXlmToUsd.ExchangeRateDate.Format(config.DateFormat)
 
 		// store exchange rates history from xlm to usd
-		xlmToUsd, _ := models.HistoryChartData(utils.DB, qm.Where("source_currency_id=?", xlm.ID), qm.And("destination_currency_id=?", usd.ID)).All()
+		xlmToUsd, _ := models.HistoryChartData(qm.Where("source_currency_id=?", xlm.ID), qm.And("destination_currency_id=?", usd.ID)).All(utils.DB)
 		var xlmToUsdExchangeHistory = make(map[string]float64)
 		for _, v := range xlmToUsd {
 			xlmToUsdExchangeHistory[v.ExchangeRateDate.Format(config.DateFormat)] = v.ExchangeRate
@@ -266,7 +267,7 @@ func handleData(exchange Exchange) error {
 			history.SourceCurrencyID = xlm.ID
 			history.DestinationCurrencyID = sourceCurrency.ID
 
-			err = history.Insert(utils.DB)
+			err = history.Insert(utils.DB, boil.Infer())
 			if err != nil {
 				return err
 			}

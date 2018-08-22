@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -51,6 +51,23 @@ var CurrencyColumns = struct {
 	UpdatedBy:      "updated_by",
 }
 
+// CurrencyRels is where relationship names are stored.
+var CurrencyRels = struct {
+	SourceCurrencyCurrentChartDataHourlies        string
+	DestinationCurrencyCurrentChartDataHourlies   string
+	SourceCurrencyCurrentChartDataMinutelies      string
+	DestinationCurrencyCurrentChartDataMinutelies string
+	SourceCurrencyHistoryChartData                string
+	DestinationCurrencyHistoryChartData           string
+}{
+	SourceCurrencyCurrentChartDataHourlies:        "SourceCurrencyCurrentChartDataHourlies",
+	DestinationCurrencyCurrentChartDataHourlies:   "DestinationCurrencyCurrentChartDataHourlies",
+	SourceCurrencyCurrentChartDataMinutelies:      "SourceCurrencyCurrentChartDataMinutelies",
+	DestinationCurrencyCurrentChartDataMinutelies: "DestinationCurrencyCurrentChartDataMinutelies",
+	SourceCurrencyHistoryChartData:                "SourceCurrencyHistoryChartData",
+	DestinationCurrencyHistoryChartData:           "DestinationCurrencyHistoryChartData",
+}
+
 // currencyR is where relationships are stored.
 type currencyR struct {
 	SourceCurrencyCurrentChartDataHourlies        CurrentChartDataHourlySlice
@@ -59,6 +76,11 @@ type currencyR struct {
 	DestinationCurrencyCurrentChartDataMinutelies CurrentChartDataMinutelySlice
 	SourceCurrencyHistoryChartData                HistoryChartDatumSlice
 	DestinationCurrencyHistoryChartData           HistoryChartDatumSlice
+}
+
+// NewStruct creates a new relationship struct
+func (*currencyR) NewStruct() *currencyR {
+	return &currencyR{}
 }
 
 // currencyL is where Load methods for each relationship are stored.
@@ -99,9 +121,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var currencyBeforeInsertHooks []CurrencyHook
 var currencyBeforeUpdateHooks []CurrencyHook
 var currencyBeforeDeleteHooks []CurrencyHook
@@ -236,23 +257,13 @@ func AddCurrencyHook(hookPoint boil.HookPoint, currencyHook CurrencyHook) {
 	}
 }
 
-// OneP returns a single currency record from the query, and panics on error.
-func (q currencyQuery) OneP() *Currency {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
-}
-
 // One returns a single currency record from the query.
-func (q currencyQuery) One() (*Currency, error) {
+func (q currencyQuery) One(exec boil.Executor) (*Currency, error) {
 	o := &Currency{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -260,35 +271,25 @@ func (q currencyQuery) One() (*Currency, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for currency")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all Currency records from the query, and panics on error.
-func (q currencyQuery) AllP() CurrencySlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
-}
-
 // All returns all Currency records from the query.
-func (q currencyQuery) All() (CurrencySlice, error) {
+func (q currencyQuery) All(exec boil.Executor) (CurrencySlice, error) {
 	var o []*Currency
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to Currency slice")
 	}
 
 	if len(currencyAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -297,24 +298,14 @@ func (q currencyQuery) All() (CurrencySlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all Currency records in the query, and panics on error.
-func (q currencyQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
-}
-
 // Count returns the count of all Currency records in the query.
-func (q currencyQuery) Count() (int64, error) {
+func (q currencyQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count currency rows")
 	}
@@ -322,24 +313,14 @@ func (q currencyQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q currencyQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
 // Exists checks if the row exists in the table.
-func (q currencyQuery) Exists() (bool, error) {
+func (q currencyQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if currency exists")
 	}
@@ -347,13 +328,8 @@ func (q currencyQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// SourceCurrencyCurrentChartDataHourliesG retrieves all the current_chart_data_hourly's current chart data hourly via source_currency_id column.
-func (o *Currency) SourceCurrencyCurrentChartDataHourliesG(mods ...qm.QueryMod) currentChartDataHourlyQuery {
-	return o.SourceCurrencyCurrentChartDataHourlies(boil.GetDB(), mods...)
-}
-
-// SourceCurrencyCurrentChartDataHourlies retrieves all the current_chart_data_hourly's current chart data hourly with an executor via source_currency_id column.
-func (o *Currency) SourceCurrencyCurrentChartDataHourlies(exec boil.Executor, mods ...qm.QueryMod) currentChartDataHourlyQuery {
+// SourceCurrencyCurrentChartDataHourlies retrieves all the current_chart_data_hourly's CurrentChartDataHourlies with an executor via source_currency_id column.
+func (o *Currency) SourceCurrencyCurrentChartDataHourlies(mods ...qm.QueryMod) currentChartDataHourlyQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -363,7 +339,7 @@ func (o *Currency) SourceCurrencyCurrentChartDataHourlies(exec boil.Executor, mo
 		qm.Where("\"current_chart_data_hourly\".\"source_currency_id\"=?", o.ID),
 	)
 
-	query := CurrentChartDataHourlies(exec, queryMods...)
+	query := CurrentChartDataHourlies(queryMods...)
 	queries.SetFrom(query.Query, "\"current_chart_data_hourly\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -373,13 +349,8 @@ func (o *Currency) SourceCurrencyCurrentChartDataHourlies(exec boil.Executor, mo
 	return query
 }
 
-// DestinationCurrencyCurrentChartDataHourliesG retrieves all the current_chart_data_hourly's current chart data hourly via destination_currency_id column.
-func (o *Currency) DestinationCurrencyCurrentChartDataHourliesG(mods ...qm.QueryMod) currentChartDataHourlyQuery {
-	return o.DestinationCurrencyCurrentChartDataHourlies(boil.GetDB(), mods...)
-}
-
-// DestinationCurrencyCurrentChartDataHourlies retrieves all the current_chart_data_hourly's current chart data hourly with an executor via destination_currency_id column.
-func (o *Currency) DestinationCurrencyCurrentChartDataHourlies(exec boil.Executor, mods ...qm.QueryMod) currentChartDataHourlyQuery {
+// DestinationCurrencyCurrentChartDataHourlies retrieves all the current_chart_data_hourly's CurrentChartDataHourlies with an executor via destination_currency_id column.
+func (o *Currency) DestinationCurrencyCurrentChartDataHourlies(mods ...qm.QueryMod) currentChartDataHourlyQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -389,7 +360,7 @@ func (o *Currency) DestinationCurrencyCurrentChartDataHourlies(exec boil.Executo
 		qm.Where("\"current_chart_data_hourly\".\"destination_currency_id\"=?", o.ID),
 	)
 
-	query := CurrentChartDataHourlies(exec, queryMods...)
+	query := CurrentChartDataHourlies(queryMods...)
 	queries.SetFrom(query.Query, "\"current_chart_data_hourly\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -399,13 +370,8 @@ func (o *Currency) DestinationCurrencyCurrentChartDataHourlies(exec boil.Executo
 	return query
 }
 
-// SourceCurrencyCurrentChartDataMinuteliesG retrieves all the current_chart_data_minutely's current chart data minutely via source_currency_id column.
-func (o *Currency) SourceCurrencyCurrentChartDataMinuteliesG(mods ...qm.QueryMod) currentChartDataMinutelyQuery {
-	return o.SourceCurrencyCurrentChartDataMinutelies(boil.GetDB(), mods...)
-}
-
-// SourceCurrencyCurrentChartDataMinutelies retrieves all the current_chart_data_minutely's current chart data minutely with an executor via source_currency_id column.
-func (o *Currency) SourceCurrencyCurrentChartDataMinutelies(exec boil.Executor, mods ...qm.QueryMod) currentChartDataMinutelyQuery {
+// SourceCurrencyCurrentChartDataMinutelies retrieves all the current_chart_data_minutely's CurrentChartDataMinutelies with an executor via source_currency_id column.
+func (o *Currency) SourceCurrencyCurrentChartDataMinutelies(mods ...qm.QueryMod) currentChartDataMinutelyQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -415,7 +381,7 @@ func (o *Currency) SourceCurrencyCurrentChartDataMinutelies(exec boil.Executor, 
 		qm.Where("\"current_chart_data_minutely\".\"source_currency_id\"=?", o.ID),
 	)
 
-	query := CurrentChartDataMinutelies(exec, queryMods...)
+	query := CurrentChartDataMinutelies(queryMods...)
 	queries.SetFrom(query.Query, "\"current_chart_data_minutely\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -425,13 +391,8 @@ func (o *Currency) SourceCurrencyCurrentChartDataMinutelies(exec boil.Executor, 
 	return query
 }
 
-// DestinationCurrencyCurrentChartDataMinuteliesG retrieves all the current_chart_data_minutely's current chart data minutely via destination_currency_id column.
-func (o *Currency) DestinationCurrencyCurrentChartDataMinuteliesG(mods ...qm.QueryMod) currentChartDataMinutelyQuery {
-	return o.DestinationCurrencyCurrentChartDataMinutelies(boil.GetDB(), mods...)
-}
-
-// DestinationCurrencyCurrentChartDataMinutelies retrieves all the current_chart_data_minutely's current chart data minutely with an executor via destination_currency_id column.
-func (o *Currency) DestinationCurrencyCurrentChartDataMinutelies(exec boil.Executor, mods ...qm.QueryMod) currentChartDataMinutelyQuery {
+// DestinationCurrencyCurrentChartDataMinutelies retrieves all the current_chart_data_minutely's CurrentChartDataMinutelies with an executor via destination_currency_id column.
+func (o *Currency) DestinationCurrencyCurrentChartDataMinutelies(mods ...qm.QueryMod) currentChartDataMinutelyQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -441,7 +402,7 @@ func (o *Currency) DestinationCurrencyCurrentChartDataMinutelies(exec boil.Execu
 		qm.Where("\"current_chart_data_minutely\".\"destination_currency_id\"=?", o.ID),
 	)
 
-	query := CurrentChartDataMinutelies(exec, queryMods...)
+	query := CurrentChartDataMinutelies(queryMods...)
 	queries.SetFrom(query.Query, "\"current_chart_data_minutely\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -451,13 +412,8 @@ func (o *Currency) DestinationCurrencyCurrentChartDataMinutelies(exec boil.Execu
 	return query
 }
 
-// SourceCurrencyHistoryChartDataG retrieves all the history_chart_datum's history chart data via source_currency_id column.
-func (o *Currency) SourceCurrencyHistoryChartDataG(mods ...qm.QueryMod) historyChartDatumQuery {
-	return o.SourceCurrencyHistoryChartData(boil.GetDB(), mods...)
-}
-
-// SourceCurrencyHistoryChartData retrieves all the history_chart_datum's history chart data with an executor via source_currency_id column.
-func (o *Currency) SourceCurrencyHistoryChartData(exec boil.Executor, mods ...qm.QueryMod) historyChartDatumQuery {
+// SourceCurrencyHistoryChartData retrieves all the history_chart_datum's HistoryChartData with an executor via source_currency_id column.
+func (o *Currency) SourceCurrencyHistoryChartData(mods ...qm.QueryMod) historyChartDatumQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -467,7 +423,7 @@ func (o *Currency) SourceCurrencyHistoryChartData(exec boil.Executor, mods ...qm
 		qm.Where("\"history_chart_data\".\"source_currency_id\"=?", o.ID),
 	)
 
-	query := HistoryChartData(exec, queryMods...)
+	query := HistoryChartData(queryMods...)
 	queries.SetFrom(query.Query, "\"history_chart_data\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -477,13 +433,8 @@ func (o *Currency) SourceCurrencyHistoryChartData(exec boil.Executor, mods ...qm
 	return query
 }
 
-// DestinationCurrencyHistoryChartDataG retrieves all the history_chart_datum's history chart data via destination_currency_id column.
-func (o *Currency) DestinationCurrencyHistoryChartDataG(mods ...qm.QueryMod) historyChartDatumQuery {
-	return o.DestinationCurrencyHistoryChartData(boil.GetDB(), mods...)
-}
-
-// DestinationCurrencyHistoryChartData retrieves all the history_chart_datum's history chart data with an executor via destination_currency_id column.
-func (o *Currency) DestinationCurrencyHistoryChartData(exec boil.Executor, mods ...qm.QueryMod) historyChartDatumQuery {
+// DestinationCurrencyHistoryChartData retrieves all the history_chart_datum's HistoryChartData with an executor via destination_currency_id column.
+func (o *Currency) DestinationCurrencyHistoryChartData(mods ...qm.QueryMod) historyChartDatumQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -493,7 +444,7 @@ func (o *Currency) DestinationCurrencyHistoryChartData(exec boil.Executor, mods 
 		qm.Where("\"history_chart_data\".\"destination_currency_id\"=?", o.ID),
 	)
 
-	query := HistoryChartData(exec, queryMods...)
+	query := HistoryChartData(queryMods...)
 	queries.SetFrom(query.Query, "\"history_chart_data\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -504,51 +455,60 @@ func (o *Currency) DestinationCurrencyHistoryChartData(exec boil.Executor, mods 
 }
 
 // LoadSourceCurrencyCurrentChartDataHourlies allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currencyL) LoadSourceCurrencyCurrentChartDataHourlies(e boil.Executor, singular bool, maybeCurrency interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (currencyL) LoadSourceCurrencyCurrentChartDataHourlies(e boil.Executor, singular bool, maybeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*Currency
 	var object *Currency
 
-	count := 1
 	if singular {
 		object = maybeCurrency.(*Currency)
 	} else {
 		slice = *maybeCurrency.(*[]*Currency)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currencyR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currencyR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"current_chart_data_hourly\" where \"source_currency_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`current_chart_data_hourly`), qm.WhereIn(`source_currency_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load current_chart_data_hourly")
 	}
-	defer results.Close()
 
 	var resultSlice []*CurrentChartDataHourly
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice current_chart_data_hourly")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on current_chart_data_hourly")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for current_chart_data_hourly")
 	}
 
 	if len(currentChartDataHourlyAfterSelectHooks) != 0 {
@@ -560,6 +520,12 @@ func (currencyL) LoadSourceCurrencyCurrentChartDataHourlies(e boil.Executor, sin
 	}
 	if singular {
 		object.R.SourceCurrencyCurrentChartDataHourlies = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &currentChartDataHourlyR{}
+			}
+			foreign.R.SourceCurrency = object
+		}
 		return nil
 	}
 
@@ -567,6 +533,10 @@ func (currencyL) LoadSourceCurrencyCurrentChartDataHourlies(e boil.Executor, sin
 		for _, local := range slice {
 			if local.ID == foreign.SourceCurrencyID {
 				local.R.SourceCurrencyCurrentChartDataHourlies = append(local.R.SourceCurrencyCurrentChartDataHourlies, foreign)
+				if foreign.R == nil {
+					foreign.R = &currentChartDataHourlyR{}
+				}
+				foreign.R.SourceCurrency = local
 				break
 			}
 		}
@@ -576,51 +546,60 @@ func (currencyL) LoadSourceCurrencyCurrentChartDataHourlies(e boil.Executor, sin
 }
 
 // LoadDestinationCurrencyCurrentChartDataHourlies allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currencyL) LoadDestinationCurrencyCurrentChartDataHourlies(e boil.Executor, singular bool, maybeCurrency interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (currencyL) LoadDestinationCurrencyCurrentChartDataHourlies(e boil.Executor, singular bool, maybeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*Currency
 	var object *Currency
 
-	count := 1
 	if singular {
 		object = maybeCurrency.(*Currency)
 	} else {
 		slice = *maybeCurrency.(*[]*Currency)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currencyR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currencyR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"current_chart_data_hourly\" where \"destination_currency_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`current_chart_data_hourly`), qm.WhereIn(`destination_currency_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load current_chart_data_hourly")
 	}
-	defer results.Close()
 
 	var resultSlice []*CurrentChartDataHourly
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice current_chart_data_hourly")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on current_chart_data_hourly")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for current_chart_data_hourly")
 	}
 
 	if len(currentChartDataHourlyAfterSelectHooks) != 0 {
@@ -632,6 +611,12 @@ func (currencyL) LoadDestinationCurrencyCurrentChartDataHourlies(e boil.Executor
 	}
 	if singular {
 		object.R.DestinationCurrencyCurrentChartDataHourlies = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &currentChartDataHourlyR{}
+			}
+			foreign.R.DestinationCurrency = object
+		}
 		return nil
 	}
 
@@ -639,6 +624,10 @@ func (currencyL) LoadDestinationCurrencyCurrentChartDataHourlies(e boil.Executor
 		for _, local := range slice {
 			if local.ID == foreign.DestinationCurrencyID {
 				local.R.DestinationCurrencyCurrentChartDataHourlies = append(local.R.DestinationCurrencyCurrentChartDataHourlies, foreign)
+				if foreign.R == nil {
+					foreign.R = &currentChartDataHourlyR{}
+				}
+				foreign.R.DestinationCurrency = local
 				break
 			}
 		}
@@ -648,51 +637,60 @@ func (currencyL) LoadDestinationCurrencyCurrentChartDataHourlies(e boil.Executor
 }
 
 // LoadSourceCurrencyCurrentChartDataMinutelies allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currencyL) LoadSourceCurrencyCurrentChartDataMinutelies(e boil.Executor, singular bool, maybeCurrency interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (currencyL) LoadSourceCurrencyCurrentChartDataMinutelies(e boil.Executor, singular bool, maybeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*Currency
 	var object *Currency
 
-	count := 1
 	if singular {
 		object = maybeCurrency.(*Currency)
 	} else {
 		slice = *maybeCurrency.(*[]*Currency)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currencyR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currencyR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"current_chart_data_minutely\" where \"source_currency_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`current_chart_data_minutely`), qm.WhereIn(`source_currency_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load current_chart_data_minutely")
 	}
-	defer results.Close()
 
 	var resultSlice []*CurrentChartDataMinutely
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice current_chart_data_minutely")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on current_chart_data_minutely")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for current_chart_data_minutely")
 	}
 
 	if len(currentChartDataMinutelyAfterSelectHooks) != 0 {
@@ -704,6 +702,12 @@ func (currencyL) LoadSourceCurrencyCurrentChartDataMinutelies(e boil.Executor, s
 	}
 	if singular {
 		object.R.SourceCurrencyCurrentChartDataMinutelies = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &currentChartDataMinutelyR{}
+			}
+			foreign.R.SourceCurrency = object
+		}
 		return nil
 	}
 
@@ -711,6 +715,10 @@ func (currencyL) LoadSourceCurrencyCurrentChartDataMinutelies(e boil.Executor, s
 		for _, local := range slice {
 			if local.ID == foreign.SourceCurrencyID {
 				local.R.SourceCurrencyCurrentChartDataMinutelies = append(local.R.SourceCurrencyCurrentChartDataMinutelies, foreign)
+				if foreign.R == nil {
+					foreign.R = &currentChartDataMinutelyR{}
+				}
+				foreign.R.SourceCurrency = local
 				break
 			}
 		}
@@ -720,51 +728,60 @@ func (currencyL) LoadSourceCurrencyCurrentChartDataMinutelies(e boil.Executor, s
 }
 
 // LoadDestinationCurrencyCurrentChartDataMinutelies allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currencyL) LoadDestinationCurrencyCurrentChartDataMinutelies(e boil.Executor, singular bool, maybeCurrency interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (currencyL) LoadDestinationCurrencyCurrentChartDataMinutelies(e boil.Executor, singular bool, maybeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*Currency
 	var object *Currency
 
-	count := 1
 	if singular {
 		object = maybeCurrency.(*Currency)
 	} else {
 		slice = *maybeCurrency.(*[]*Currency)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currencyR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currencyR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"current_chart_data_minutely\" where \"destination_currency_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`current_chart_data_minutely`), qm.WhereIn(`destination_currency_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load current_chart_data_minutely")
 	}
-	defer results.Close()
 
 	var resultSlice []*CurrentChartDataMinutely
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice current_chart_data_minutely")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on current_chart_data_minutely")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for current_chart_data_minutely")
 	}
 
 	if len(currentChartDataMinutelyAfterSelectHooks) != 0 {
@@ -776,6 +793,12 @@ func (currencyL) LoadDestinationCurrencyCurrentChartDataMinutelies(e boil.Execut
 	}
 	if singular {
 		object.R.DestinationCurrencyCurrentChartDataMinutelies = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &currentChartDataMinutelyR{}
+			}
+			foreign.R.DestinationCurrency = object
+		}
 		return nil
 	}
 
@@ -783,6 +806,10 @@ func (currencyL) LoadDestinationCurrencyCurrentChartDataMinutelies(e boil.Execut
 		for _, local := range slice {
 			if local.ID == foreign.DestinationCurrencyID {
 				local.R.DestinationCurrencyCurrentChartDataMinutelies = append(local.R.DestinationCurrencyCurrentChartDataMinutelies, foreign)
+				if foreign.R == nil {
+					foreign.R = &currentChartDataMinutelyR{}
+				}
+				foreign.R.DestinationCurrency = local
 				break
 			}
 		}
@@ -792,51 +819,60 @@ func (currencyL) LoadDestinationCurrencyCurrentChartDataMinutelies(e boil.Execut
 }
 
 // LoadSourceCurrencyHistoryChartData allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currencyL) LoadSourceCurrencyHistoryChartData(e boil.Executor, singular bool, maybeCurrency interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (currencyL) LoadSourceCurrencyHistoryChartData(e boil.Executor, singular bool, maybeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*Currency
 	var object *Currency
 
-	count := 1
 	if singular {
 		object = maybeCurrency.(*Currency)
 	} else {
 		slice = *maybeCurrency.(*[]*Currency)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currencyR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currencyR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"history_chart_data\" where \"source_currency_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`history_chart_data`), qm.WhereIn(`source_currency_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load history_chart_data")
 	}
-	defer results.Close()
 
 	var resultSlice []*HistoryChartDatum
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice history_chart_data")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on history_chart_data")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for history_chart_data")
 	}
 
 	if len(historyChartDatumAfterSelectHooks) != 0 {
@@ -848,6 +884,12 @@ func (currencyL) LoadSourceCurrencyHistoryChartData(e boil.Executor, singular bo
 	}
 	if singular {
 		object.R.SourceCurrencyHistoryChartData = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &historyChartDatumR{}
+			}
+			foreign.R.SourceCurrency = object
+		}
 		return nil
 	}
 
@@ -855,6 +897,10 @@ func (currencyL) LoadSourceCurrencyHistoryChartData(e boil.Executor, singular bo
 		for _, local := range slice {
 			if local.ID == foreign.SourceCurrencyID {
 				local.R.SourceCurrencyHistoryChartData = append(local.R.SourceCurrencyHistoryChartData, foreign)
+				if foreign.R == nil {
+					foreign.R = &historyChartDatumR{}
+				}
+				foreign.R.SourceCurrency = local
 				break
 			}
 		}
@@ -864,51 +910,60 @@ func (currencyL) LoadSourceCurrencyHistoryChartData(e boil.Executor, singular bo
 }
 
 // LoadDestinationCurrencyHistoryChartData allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currencyL) LoadDestinationCurrencyHistoryChartData(e boil.Executor, singular bool, maybeCurrency interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (currencyL) LoadDestinationCurrencyHistoryChartData(e boil.Executor, singular bool, maybeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*Currency
 	var object *Currency
 
-	count := 1
 	if singular {
 		object = maybeCurrency.(*Currency)
 	} else {
 		slice = *maybeCurrency.(*[]*Currency)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currencyR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currencyR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"history_chart_data\" where \"destination_currency_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`history_chart_data`), qm.WhereIn(`destination_currency_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load history_chart_data")
 	}
-	defer results.Close()
 
 	var resultSlice []*HistoryChartDatum
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice history_chart_data")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on history_chart_data")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for history_chart_data")
 	}
 
 	if len(historyChartDatumAfterSelectHooks) != 0 {
@@ -920,6 +975,12 @@ func (currencyL) LoadDestinationCurrencyHistoryChartData(e boil.Executor, singul
 	}
 	if singular {
 		object.R.DestinationCurrencyHistoryChartData = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &historyChartDatumR{}
+			}
+			foreign.R.DestinationCurrency = object
+		}
 		return nil
 	}
 
@@ -927,43 +988,16 @@ func (currencyL) LoadDestinationCurrencyHistoryChartData(e boil.Executor, singul
 		for _, local := range slice {
 			if local.ID == foreign.DestinationCurrencyID {
 				local.R.DestinationCurrencyHistoryChartData = append(local.R.DestinationCurrencyHistoryChartData, foreign)
+				if foreign.R == nil {
+					foreign.R = &historyChartDatumR{}
+				}
+				foreign.R.DestinationCurrency = local
 				break
 			}
 		}
 	}
 
 	return nil
-}
-
-// AddSourceCurrencyCurrentChartDataHourliesG adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyCurrentChartDataHourlies.
-// Sets related.R.SourceCurrency appropriately.
-// Uses the global database handle.
-func (o *Currency) AddSourceCurrencyCurrentChartDataHourliesG(insert bool, related ...*CurrentChartDataHourly) error {
-	return o.AddSourceCurrencyCurrentChartDataHourlies(boil.GetDB(), insert, related...)
-}
-
-// AddSourceCurrencyCurrentChartDataHourliesP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyCurrentChartDataHourlies.
-// Sets related.R.SourceCurrency appropriately.
-// Panics on error.
-func (o *Currency) AddSourceCurrencyCurrentChartDataHourliesP(exec boil.Executor, insert bool, related ...*CurrentChartDataHourly) {
-	if err := o.AddSourceCurrencyCurrentChartDataHourlies(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddSourceCurrencyCurrentChartDataHourliesGP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyCurrentChartDataHourlies.
-// Sets related.R.SourceCurrency appropriately.
-// Uses the global database handle and panics on error.
-func (o *Currency) AddSourceCurrencyCurrentChartDataHourliesGP(insert bool, related ...*CurrentChartDataHourly) {
-	if err := o.AddSourceCurrencyCurrentChartDataHourlies(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // AddSourceCurrencyCurrentChartDataHourlies adds the given related objects to the existing relationships
@@ -975,7 +1009,7 @@ func (o *Currency) AddSourceCurrencyCurrentChartDataHourlies(exec boil.Executor,
 	for _, rel := range related {
 		if insert {
 			rel.SourceCurrencyID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1019,37 +1053,6 @@ func (o *Currency) AddSourceCurrencyCurrentChartDataHourlies(exec boil.Executor,
 	return nil
 }
 
-// AddDestinationCurrencyCurrentChartDataHourliesG adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyCurrentChartDataHourlies.
-// Sets related.R.DestinationCurrency appropriately.
-// Uses the global database handle.
-func (o *Currency) AddDestinationCurrencyCurrentChartDataHourliesG(insert bool, related ...*CurrentChartDataHourly) error {
-	return o.AddDestinationCurrencyCurrentChartDataHourlies(boil.GetDB(), insert, related...)
-}
-
-// AddDestinationCurrencyCurrentChartDataHourliesP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyCurrentChartDataHourlies.
-// Sets related.R.DestinationCurrency appropriately.
-// Panics on error.
-func (o *Currency) AddDestinationCurrencyCurrentChartDataHourliesP(exec boil.Executor, insert bool, related ...*CurrentChartDataHourly) {
-	if err := o.AddDestinationCurrencyCurrentChartDataHourlies(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddDestinationCurrencyCurrentChartDataHourliesGP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyCurrentChartDataHourlies.
-// Sets related.R.DestinationCurrency appropriately.
-// Uses the global database handle and panics on error.
-func (o *Currency) AddDestinationCurrencyCurrentChartDataHourliesGP(insert bool, related ...*CurrentChartDataHourly) {
-	if err := o.AddDestinationCurrencyCurrentChartDataHourlies(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddDestinationCurrencyCurrentChartDataHourlies adds the given related objects to the existing relationships
 // of the currency, optionally inserting them as new records.
 // Appends related to o.R.DestinationCurrencyCurrentChartDataHourlies.
@@ -1059,7 +1062,7 @@ func (o *Currency) AddDestinationCurrencyCurrentChartDataHourlies(exec boil.Exec
 	for _, rel := range related {
 		if insert {
 			rel.DestinationCurrencyID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1103,37 +1106,6 @@ func (o *Currency) AddDestinationCurrencyCurrentChartDataHourlies(exec boil.Exec
 	return nil
 }
 
-// AddSourceCurrencyCurrentChartDataMinuteliesG adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyCurrentChartDataMinutelies.
-// Sets related.R.SourceCurrency appropriately.
-// Uses the global database handle.
-func (o *Currency) AddSourceCurrencyCurrentChartDataMinuteliesG(insert bool, related ...*CurrentChartDataMinutely) error {
-	return o.AddSourceCurrencyCurrentChartDataMinutelies(boil.GetDB(), insert, related...)
-}
-
-// AddSourceCurrencyCurrentChartDataMinuteliesP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyCurrentChartDataMinutelies.
-// Sets related.R.SourceCurrency appropriately.
-// Panics on error.
-func (o *Currency) AddSourceCurrencyCurrentChartDataMinuteliesP(exec boil.Executor, insert bool, related ...*CurrentChartDataMinutely) {
-	if err := o.AddSourceCurrencyCurrentChartDataMinutelies(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddSourceCurrencyCurrentChartDataMinuteliesGP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyCurrentChartDataMinutelies.
-// Sets related.R.SourceCurrency appropriately.
-// Uses the global database handle and panics on error.
-func (o *Currency) AddSourceCurrencyCurrentChartDataMinuteliesGP(insert bool, related ...*CurrentChartDataMinutely) {
-	if err := o.AddSourceCurrencyCurrentChartDataMinutelies(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddSourceCurrencyCurrentChartDataMinutelies adds the given related objects to the existing relationships
 // of the currency, optionally inserting them as new records.
 // Appends related to o.R.SourceCurrencyCurrentChartDataMinutelies.
@@ -1143,7 +1115,7 @@ func (o *Currency) AddSourceCurrencyCurrentChartDataMinutelies(exec boil.Executo
 	for _, rel := range related {
 		if insert {
 			rel.SourceCurrencyID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1187,37 +1159,6 @@ func (o *Currency) AddSourceCurrencyCurrentChartDataMinutelies(exec boil.Executo
 	return nil
 }
 
-// AddDestinationCurrencyCurrentChartDataMinuteliesG adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyCurrentChartDataMinutelies.
-// Sets related.R.DestinationCurrency appropriately.
-// Uses the global database handle.
-func (o *Currency) AddDestinationCurrencyCurrentChartDataMinuteliesG(insert bool, related ...*CurrentChartDataMinutely) error {
-	return o.AddDestinationCurrencyCurrentChartDataMinutelies(boil.GetDB(), insert, related...)
-}
-
-// AddDestinationCurrencyCurrentChartDataMinuteliesP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyCurrentChartDataMinutelies.
-// Sets related.R.DestinationCurrency appropriately.
-// Panics on error.
-func (o *Currency) AddDestinationCurrencyCurrentChartDataMinuteliesP(exec boil.Executor, insert bool, related ...*CurrentChartDataMinutely) {
-	if err := o.AddDestinationCurrencyCurrentChartDataMinutelies(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddDestinationCurrencyCurrentChartDataMinuteliesGP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyCurrentChartDataMinutelies.
-// Sets related.R.DestinationCurrency appropriately.
-// Uses the global database handle and panics on error.
-func (o *Currency) AddDestinationCurrencyCurrentChartDataMinuteliesGP(insert bool, related ...*CurrentChartDataMinutely) {
-	if err := o.AddDestinationCurrencyCurrentChartDataMinutelies(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddDestinationCurrencyCurrentChartDataMinutelies adds the given related objects to the existing relationships
 // of the currency, optionally inserting them as new records.
 // Appends related to o.R.DestinationCurrencyCurrentChartDataMinutelies.
@@ -1227,7 +1168,7 @@ func (o *Currency) AddDestinationCurrencyCurrentChartDataMinutelies(exec boil.Ex
 	for _, rel := range related {
 		if insert {
 			rel.DestinationCurrencyID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1271,37 +1212,6 @@ func (o *Currency) AddDestinationCurrencyCurrentChartDataMinutelies(exec boil.Ex
 	return nil
 }
 
-// AddSourceCurrencyHistoryChartDataG adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyHistoryChartData.
-// Sets related.R.SourceCurrency appropriately.
-// Uses the global database handle.
-func (o *Currency) AddSourceCurrencyHistoryChartDataG(insert bool, related ...*HistoryChartDatum) error {
-	return o.AddSourceCurrencyHistoryChartData(boil.GetDB(), insert, related...)
-}
-
-// AddSourceCurrencyHistoryChartDataP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyHistoryChartData.
-// Sets related.R.SourceCurrency appropriately.
-// Panics on error.
-func (o *Currency) AddSourceCurrencyHistoryChartDataP(exec boil.Executor, insert bool, related ...*HistoryChartDatum) {
-	if err := o.AddSourceCurrencyHistoryChartData(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddSourceCurrencyHistoryChartDataGP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.SourceCurrencyHistoryChartData.
-// Sets related.R.SourceCurrency appropriately.
-// Uses the global database handle and panics on error.
-func (o *Currency) AddSourceCurrencyHistoryChartDataGP(insert bool, related ...*HistoryChartDatum) {
-	if err := o.AddSourceCurrencyHistoryChartData(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddSourceCurrencyHistoryChartData adds the given related objects to the existing relationships
 // of the currency, optionally inserting them as new records.
 // Appends related to o.R.SourceCurrencyHistoryChartData.
@@ -1311,7 +1221,7 @@ func (o *Currency) AddSourceCurrencyHistoryChartData(exec boil.Executor, insert 
 	for _, rel := range related {
 		if insert {
 			rel.SourceCurrencyID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1355,37 +1265,6 @@ func (o *Currency) AddSourceCurrencyHistoryChartData(exec boil.Executor, insert 
 	return nil
 }
 
-// AddDestinationCurrencyHistoryChartDataG adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyHistoryChartData.
-// Sets related.R.DestinationCurrency appropriately.
-// Uses the global database handle.
-func (o *Currency) AddDestinationCurrencyHistoryChartDataG(insert bool, related ...*HistoryChartDatum) error {
-	return o.AddDestinationCurrencyHistoryChartData(boil.GetDB(), insert, related...)
-}
-
-// AddDestinationCurrencyHistoryChartDataP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyHistoryChartData.
-// Sets related.R.DestinationCurrency appropriately.
-// Panics on error.
-func (o *Currency) AddDestinationCurrencyHistoryChartDataP(exec boil.Executor, insert bool, related ...*HistoryChartDatum) {
-	if err := o.AddDestinationCurrencyHistoryChartData(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddDestinationCurrencyHistoryChartDataGP adds the given related objects to the existing relationships
-// of the currency, optionally inserting them as new records.
-// Appends related to o.R.DestinationCurrencyHistoryChartData.
-// Sets related.R.DestinationCurrency appropriately.
-// Uses the global database handle and panics on error.
-func (o *Currency) AddDestinationCurrencyHistoryChartDataGP(insert bool, related ...*HistoryChartDatum) {
-	if err := o.AddDestinationCurrencyHistoryChartData(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddDestinationCurrencyHistoryChartData adds the given related objects to the existing relationships
 // of the currency, optionally inserting them as new records.
 // Appends related to o.R.DestinationCurrencyHistoryChartData.
@@ -1395,7 +1274,7 @@ func (o *Currency) AddDestinationCurrencyHistoryChartData(exec boil.Executor, in
 	for _, rel := range related {
 		if insert {
 			rel.DestinationCurrencyID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1439,35 +1318,15 @@ func (o *Currency) AddDestinationCurrencyHistoryChartData(exec boil.Executor, in
 	return nil
 }
 
-// CurrenciesG retrieves all records.
-func CurrenciesG(mods ...qm.QueryMod) currencyQuery {
-	return Currencies(boil.GetDB(), mods...)
-}
-
 // Currencies retrieves all the records using an executor.
-func Currencies(exec boil.Executor, mods ...qm.QueryMod) currencyQuery {
+func Currencies(mods ...qm.QueryMod) currencyQuery {
 	mods = append(mods, qm.From("\"currency\""))
-	return currencyQuery{NewQuery(exec, mods...)}
-}
-
-// FindCurrencyG retrieves a single record by ID.
-func FindCurrencyG(id int, selectCols ...string) (*Currency, error) {
-	return FindCurrency(boil.GetDB(), id, selectCols...)
-}
-
-// FindCurrencyGP retrieves a single record by ID, and panics on error.
-func FindCurrencyGP(id int, selectCols ...string) *Currency {
-	retobj, err := FindCurrency(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+	return currencyQuery{NewQuery(mods...)}
 }
 
 // FindCurrency retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindCurrency(exec boil.Executor, id int, selectCols ...string) (*Currency, error) {
+func FindCurrency(exec boil.Executor, iD int, selectCols ...string) (*Currency, error) {
 	currencyObj := &Currency{}
 
 	sel := "*"
@@ -1478,9 +1337,9 @@ func FindCurrency(exec boil.Executor, id int, selectCols ...string) (*Currency, 
 		"select %s from \"currency\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(currencyObj)
+	err := q.Bind(nil, exec, currencyObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -1491,43 +1350,9 @@ func FindCurrency(exec boil.Executor, id int, selectCols ...string) (*Currency, 
 	return currencyObj, nil
 }
 
-// FindCurrencyP retrieves a single record by ID with an executor, and panics on error.
-func FindCurrencyP(exec boil.Executor, id int, selectCols ...string) *Currency {
-	retobj, err := FindCurrency(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
-// InsertG a single record. See Insert for whitelist behavior description.
-func (o *Currency) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *Currency) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *Currency) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *Currency) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *Currency) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no currency provided for insertion")
 	}
@@ -1548,18 +1373,17 @@ func (o *Currency) Insert(exec boil.Executor, whitelist ...string) error {
 
 	nzDefaults := queries.NonZeroDefaultSet(currencyColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	currencyInsertCacheMut.RLock()
 	cache, cached := currencyInsertCache[key]
 	currencyInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			currencyColumns,
 			currencyColumnsWithDefault,
 			currencyColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(currencyType, currencyMapping, wl)
@@ -1571,9 +1395,9 @@ func (o *Currency) Insert(exec boil.Executor, whitelist ...string) error {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"currency\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"currency\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"currency\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"currency\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -1582,9 +1406,7 @@ func (o *Currency) Insert(exec boil.Executor, whitelist ...string) error {
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -1614,63 +1436,34 @@ func (o *Currency) Insert(exec boil.Executor, whitelist ...string) error {
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single Currency record. See Update for
-// whitelist behavior description.
-func (o *Currency) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single Currency record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *Currency) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the Currency, and panics on error.
-// See Update for whitelist behavior description.
-func (o *Currency) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Update uses an executor to update the Currency.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *Currency) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *Currency) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	currencyUpdateCacheMut.RLock()
 	cache, cached := currencyUpdateCache[key]
 	currencyUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			currencyColumns,
 			currencyPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update currency, could not build whitelist")
+			return 0, errors.New("models: unable to update currency, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"currency\" SET %s WHERE %s",
@@ -1679,7 +1472,7 @@ func (o *Currency) Update(exec boil.Executor, whitelist ...string) error {
 		)
 		cache.valueMapping, err = queries.BindMapping(currencyType, currencyMapping, append(wl, currencyPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -1690,9 +1483,15 @@ func (o *Currency) Update(exec boil.Executor, whitelist ...string) error {
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update currency row")
+		return 0, errors.Wrap(err, "models: unable to update currency row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for currency")
 	}
 
 	if !cached {
@@ -1701,56 +1500,35 @@ func (o *Currency) Update(exec boil.Executor, whitelist ...string) error {
 		currencyUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q currencyQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q currencyQuery) UpdateAll(cols M) error {
+func (q currencyQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for currency")
+		return 0, errors.Wrap(err, "models: unable to update all for currency")
 	}
 
-	return nil
-}
-
-// UpdateAllG updates all rows with the specified column values.
-func (o CurrencySlice) UpdateAllG(cols M) error {
-	return o.UpdateAll(boil.GetDB(), cols)
-}
-
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o CurrencySlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for currency")
 	}
-}
 
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o CurrencySlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o CurrencySlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o CurrencySlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -1778,36 +1556,21 @@ func (o CurrencySlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in currency slice")
+		return 0, errors.Wrap(err, "models: unable to update all in currency slice")
 	}
 
-	return nil
-}
-
-// UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *Currency) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *Currency) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all currency")
 	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *Currency) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no currency provided for upsert")
 	}
@@ -1824,9 +1587,8 @@ func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictCol
 
 	nzDefaults := queries.NonZeroDefaultSet(currencyColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -1837,11 +1599,13 @@ func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictCol
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -1858,19 +1622,17 @@ func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictCol
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			currencyColumns,
 			currencyColumnsWithDefault,
 			currencyColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			currencyColumns,
 			currencyPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert currency, could not build update column list")
 		}
@@ -1880,7 +1642,7 @@ func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictCol
 			conflict = make([]string, len(currencyPrimaryKeyColumns))
 			copy(conflict, currencyPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"currency\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"currency\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(currencyType, currencyMapping, insert)
 		if err != nil {
@@ -1927,43 +1689,15 @@ func (o *Currency) Upsert(exec boil.Executor, updateOnConflict bool, conflictCol
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single Currency record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *Currency) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// DeleteG deletes a single Currency record.
-// DeleteG will match against the primary key column to find the record to delete.
-func (o *Currency) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no Currency provided for deletion")
-	}
-
-	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single Currency record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *Currency) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Delete deletes a single Currency record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *Currency) Delete(exec boil.Executor) error {
+func (o *Currency) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no Currency provided for delete")
+		return 0, errors.New("models: no Currency provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), currencyPrimaryKeyMapping)
@@ -1974,77 +1708,58 @@ func (o *Currency) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from currency")
+		return 0, errors.Wrap(err, "models: unable to delete from currency")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for currency")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q currencyQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q currencyQuery) DeleteAll() error {
+func (q currencyQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no currencyQuery provided for delete all")
+		return 0, errors.New("models: no currencyQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from currency")
+		return 0, errors.Wrap(err, "models: unable to delete all from currency")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o CurrencySlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for currency")
 	}
-}
 
-// DeleteAllG deletes all rows in the slice.
-func (o CurrencySlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no Currency slice provided for delete all")
-	}
-	return o.DeleteAll(boil.GetDB())
-}
-
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o CurrencySlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o CurrencySlice) DeleteAll(exec boil.Executor) error {
+func (o CurrencySlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no Currency slice provided for delete all")
+		return 0, errors.New("models: no Currency slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(currencyBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -2063,43 +1778,25 @@ func (o CurrencySlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from currency slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from currency slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for currency")
 	}
 
 	if len(currencyAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *Currency) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *Currency) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadG refetches the object from the database using the primary keys.
-func (o *Currency) ReloadG() error {
-	if o == nil {
-		return errors.New("models: no Currency provided for reload")
-	}
-
-	return o.Reload(boil.GetDB())
+	return rowsAff, nil
 }
 
 // Reload refetches the object from the database
@@ -2114,34 +1811,6 @@ func (o *Currency) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *CurrencySlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *CurrencySlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllG refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-func (o *CurrencySlice) ReloadAllG() error {
-	if o == nil {
-		return errors.New("models: empty CurrencySlice provided for reload all")
-	}
-
-	return o.ReloadAll(boil.GetDB())
-}
-
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *CurrencySlice) ReloadAll(exec boil.Executor) error {
@@ -2149,7 +1818,7 @@ func (o *CurrencySlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	currencies := CurrencySlice{}
+	slice := CurrencySlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), currencyPrimaryKeyMapping)
@@ -2159,29 +1828,29 @@ func (o *CurrencySlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"currency\".* FROM \"currency\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, currencyPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&currencies)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in CurrencySlice")
 	}
 
-	*o = currencies
+	*o = slice
 
 	return nil
 }
 
 // CurrencyExists checks if the Currency row exists.
-func CurrencyExists(exec boil.Executor, id int) (bool, error) {
+func CurrencyExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"currency\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -2189,29 +1858,4 @@ func CurrencyExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// CurrencyExistsG checks if the Currency row exists.
-func CurrencyExistsG(id int) (bool, error) {
-	return CurrencyExists(boil.GetDB(), id)
-}
-
-// CurrencyExistsGP checks if the Currency row exists. Panics on error.
-func CurrencyExistsGP(id int) bool {
-	e, err := CurrencyExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// CurrencyExistsP checks if the Currency row exists. Panics on error.
-func CurrencyExistsP(exec boil.Executor, id int) bool {
-	e, err := CurrencyExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

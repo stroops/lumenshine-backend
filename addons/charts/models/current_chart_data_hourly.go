@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -54,10 +54,24 @@ var CurrentChartDataHourlyColumns = struct {
 	UpdatedBy:             "updated_by",
 }
 
+// CurrentChartDataHourlyRels is where relationship names are stored.
+var CurrentChartDataHourlyRels = struct {
+	SourceCurrency      string
+	DestinationCurrency string
+}{
+	SourceCurrency:      "SourceCurrency",
+	DestinationCurrency: "DestinationCurrency",
+}
+
 // currentChartDataHourlyR is where relationships are stored.
 type currentChartDataHourlyR struct {
 	SourceCurrency      *Currency
 	DestinationCurrency *Currency
+}
+
+// NewStruct creates a new relationship struct
+func (*currentChartDataHourlyR) NewStruct() *currentChartDataHourlyR {
+	return &currentChartDataHourlyR{}
 }
 
 // currentChartDataHourlyL is where Load methods for each relationship are stored.
@@ -98,9 +112,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var currentChartDataHourlyBeforeInsertHooks []CurrentChartDataHourlyHook
 var currentChartDataHourlyBeforeUpdateHooks []CurrentChartDataHourlyHook
 var currentChartDataHourlyBeforeDeleteHooks []CurrentChartDataHourlyHook
@@ -235,23 +248,13 @@ func AddCurrentChartDataHourlyHook(hookPoint boil.HookPoint, currentChartDataHou
 	}
 }
 
-// OneP returns a single currentChartDataHourly record from the query, and panics on error.
-func (q currentChartDataHourlyQuery) OneP() *CurrentChartDataHourly {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
-}
-
 // One returns a single currentChartDataHourly record from the query.
-func (q currentChartDataHourlyQuery) One() (*CurrentChartDataHourly, error) {
+func (q currentChartDataHourlyQuery) One(exec boil.Executor) (*CurrentChartDataHourly, error) {
 	o := &CurrentChartDataHourly{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -259,35 +262,25 @@ func (q currentChartDataHourlyQuery) One() (*CurrentChartDataHourly, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for current_chart_data_hourly")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all CurrentChartDataHourly records from the query, and panics on error.
-func (q currentChartDataHourlyQuery) AllP() CurrentChartDataHourlySlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
-}
-
 // All returns all CurrentChartDataHourly records from the query.
-func (q currentChartDataHourlyQuery) All() (CurrentChartDataHourlySlice, error) {
+func (q currentChartDataHourlyQuery) All(exec boil.Executor) (CurrentChartDataHourlySlice, error) {
 	var o []*CurrentChartDataHourly
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to CurrentChartDataHourly slice")
 	}
 
 	if len(currentChartDataHourlyAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -296,24 +289,14 @@ func (q currentChartDataHourlyQuery) All() (CurrentChartDataHourlySlice, error) 
 	return o, nil
 }
 
-// CountP returns the count of all CurrentChartDataHourly records in the query, and panics on error.
-func (q currentChartDataHourlyQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
-}
-
 // Count returns the count of all CurrentChartDataHourly records in the query.
-func (q currentChartDataHourlyQuery) Count() (int64, error) {
+func (q currentChartDataHourlyQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count current_chart_data_hourly rows")
 	}
@@ -321,24 +304,14 @@ func (q currentChartDataHourlyQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q currentChartDataHourlyQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
 // Exists checks if the row exists in the table.
-func (q currentChartDataHourlyQuery) Exists() (bool, error) {
+func (q currentChartDataHourlyQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if current_chart_data_hourly exists")
 	}
@@ -346,89 +319,89 @@ func (q currentChartDataHourlyQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// SourceCurrencyG pointed to by the foreign key.
-func (o *CurrentChartDataHourly) SourceCurrencyG(mods ...qm.QueryMod) currencyQuery {
-	return o.SourceCurrency(boil.GetDB(), mods...)
-}
-
 // SourceCurrency pointed to by the foreign key.
-func (o *CurrentChartDataHourly) SourceCurrency(exec boil.Executor, mods ...qm.QueryMod) currencyQuery {
+func (o *CurrentChartDataHourly) SourceCurrency(mods ...qm.QueryMod) currencyQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("id=?", o.SourceCurrencyID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := Currencies(exec, queryMods...)
+	query := Currencies(queryMods...)
 	queries.SetFrom(query.Query, "\"currency\"")
 
 	return query
 }
 
-// DestinationCurrencyG pointed to by the foreign key.
-func (o *CurrentChartDataHourly) DestinationCurrencyG(mods ...qm.QueryMod) currencyQuery {
-	return o.DestinationCurrency(boil.GetDB(), mods...)
-}
-
 // DestinationCurrency pointed to by the foreign key.
-func (o *CurrentChartDataHourly) DestinationCurrency(exec boil.Executor, mods ...qm.QueryMod) currencyQuery {
+func (o *CurrentChartDataHourly) DestinationCurrency(mods ...qm.QueryMod) currencyQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("id=?", o.DestinationCurrencyID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := Currencies(exec, queryMods...)
+	query := Currencies(queryMods...)
 	queries.SetFrom(query.Query, "\"currency\"")
 
 	return query
-} // LoadSourceCurrency allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currentChartDataHourlyL) LoadSourceCurrency(e boil.Executor, singular bool, maybeCurrentChartDataHourly interface{}) error {
+}
+
+// LoadSourceCurrency allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (currentChartDataHourlyL) LoadSourceCurrency(e boil.Executor, singular bool, maybeCurrentChartDataHourly interface{}, mods queries.Applicator) error {
 	var slice []*CurrentChartDataHourly
 	var object *CurrentChartDataHourly
 
-	count := 1
 	if singular {
 		object = maybeCurrentChartDataHourly.(*CurrentChartDataHourly)
 	} else {
 		slice = *maybeCurrentChartDataHourly.(*[]*CurrentChartDataHourly)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currentChartDataHourlyR{}
 		}
-		args[0] = object.SourceCurrencyID
+		args = append(args, object.SourceCurrencyID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currentChartDataHourlyR{}
 			}
-			args[i] = obj.SourceCurrencyID
+
+			for _, a := range args {
+				if a == obj.SourceCurrencyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.SourceCurrencyID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"currency\" where \"id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`currency`), qm.WhereIn(`id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load Currency")
 	}
-	defer results.Close()
 
 	var resultSlice []*Currency
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice Currency")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for currency")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for currency")
 	}
 
 	if len(currentChartDataHourlyAfterSelectHooks) != 0 {
@@ -444,7 +417,12 @@ func (currentChartDataHourlyL) LoadSourceCurrency(e boil.Executor, singular bool
 	}
 
 	if singular {
-		object.R.SourceCurrency = resultSlice[0]
+		foreign := resultSlice[0]
+		object.R.SourceCurrency = foreign
+		if foreign.R == nil {
+			foreign.R = &currencyR{}
+		}
+		foreign.R.SourceCurrencyCurrentChartDataHourlies = append(foreign.R.SourceCurrencyCurrentChartDataHourlies, object)
 		return nil
 	}
 
@@ -452,6 +430,10 @@ func (currentChartDataHourlyL) LoadSourceCurrency(e boil.Executor, singular bool
 		for _, foreign := range resultSlice {
 			if local.SourceCurrencyID == foreign.ID {
 				local.R.SourceCurrency = foreign
+				if foreign.R == nil {
+					foreign.R = &currencyR{}
+				}
+				foreign.R.SourceCurrencyCurrentChartDataHourlies = append(foreign.R.SourceCurrencyCurrentChartDataHourlies, local)
 				break
 			}
 		}
@@ -461,52 +443,60 @@ func (currentChartDataHourlyL) LoadSourceCurrency(e boil.Executor, singular bool
 }
 
 // LoadDestinationCurrency allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (currentChartDataHourlyL) LoadDestinationCurrency(e boil.Executor, singular bool, maybeCurrentChartDataHourly interface{}) error {
+// loaded structs of the objects. This is for an N-1 relationship.
+func (currentChartDataHourlyL) LoadDestinationCurrency(e boil.Executor, singular bool, maybeCurrentChartDataHourly interface{}, mods queries.Applicator) error {
 	var slice []*CurrentChartDataHourly
 	var object *CurrentChartDataHourly
 
-	count := 1
 	if singular {
 		object = maybeCurrentChartDataHourly.(*CurrentChartDataHourly)
 	} else {
 		slice = *maybeCurrentChartDataHourly.(*[]*CurrentChartDataHourly)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &currentChartDataHourlyR{}
 		}
-		args[0] = object.DestinationCurrencyID
+		args = append(args, object.DestinationCurrencyID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &currentChartDataHourlyR{}
 			}
-			args[i] = obj.DestinationCurrencyID
+
+			for _, a := range args {
+				if a == obj.DestinationCurrencyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.DestinationCurrencyID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"currency\" where \"id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`currency`), qm.WhereIn(`id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load Currency")
 	}
-	defer results.Close()
 
 	var resultSlice []*Currency
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice Currency")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for currency")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for currency")
 	}
 
 	if len(currentChartDataHourlyAfterSelectHooks) != 0 {
@@ -522,7 +512,12 @@ func (currentChartDataHourlyL) LoadDestinationCurrency(e boil.Executor, singular
 	}
 
 	if singular {
-		object.R.DestinationCurrency = resultSlice[0]
+		foreign := resultSlice[0]
+		object.R.DestinationCurrency = foreign
+		if foreign.R == nil {
+			foreign.R = &currencyR{}
+		}
+		foreign.R.DestinationCurrencyCurrentChartDataHourlies = append(foreign.R.DestinationCurrencyCurrentChartDataHourlies, object)
 		return nil
 	}
 
@@ -530,6 +525,10 @@ func (currentChartDataHourlyL) LoadDestinationCurrency(e boil.Executor, singular
 		for _, foreign := range resultSlice {
 			if local.DestinationCurrencyID == foreign.ID {
 				local.R.DestinationCurrency = foreign
+				if foreign.R == nil {
+					foreign.R = &currencyR{}
+				}
+				foreign.R.DestinationCurrencyCurrentChartDataHourlies = append(foreign.R.DestinationCurrencyCurrentChartDataHourlies, local)
 				break
 			}
 		}
@@ -538,41 +537,13 @@ func (currentChartDataHourlyL) LoadDestinationCurrency(e boil.Executor, singular
 	return nil
 }
 
-// SetSourceCurrencyG of the current_chart_data_hourly to the related item.
-// Sets o.R.SourceCurrency to related.
-// Adds o to related.R.SourceCurrencyCurrentChartDataHourlies.
-// Uses the global database handle.
-func (o *CurrentChartDataHourly) SetSourceCurrencyG(insert bool, related *Currency) error {
-	return o.SetSourceCurrency(boil.GetDB(), insert, related)
-}
-
-// SetSourceCurrencyP of the current_chart_data_hourly to the related item.
-// Sets o.R.SourceCurrency to related.
-// Adds o to related.R.SourceCurrencyCurrentChartDataHourlies.
-// Panics on error.
-func (o *CurrentChartDataHourly) SetSourceCurrencyP(exec boil.Executor, insert bool, related *Currency) {
-	if err := o.SetSourceCurrency(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetSourceCurrencyGP of the current_chart_data_hourly to the related item.
-// Sets o.R.SourceCurrency to related.
-// Adds o to related.R.SourceCurrencyCurrentChartDataHourlies.
-// Uses the global database handle and panics on error.
-func (o *CurrentChartDataHourly) SetSourceCurrencyGP(insert bool, related *Currency) {
-	if err := o.SetSourceCurrency(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetSourceCurrency of the current_chart_data_hourly to the related item.
+// SetSourceCurrency of the currentChartDataHourly to the related item.
 // Sets o.R.SourceCurrency to related.
 // Adds o to related.R.SourceCurrencyCurrentChartDataHourlies.
 func (o *CurrentChartDataHourly) SetSourceCurrency(exec boil.Executor, insert bool, related *Currency) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -594,7 +565,6 @@ func (o *CurrentChartDataHourly) SetSourceCurrency(exec boil.Executor, insert bo
 	}
 
 	o.SourceCurrencyID = related.ID
-
 	if o.R == nil {
 		o.R = &currentChartDataHourlyR{
 			SourceCurrency: related,
@@ -614,41 +584,13 @@ func (o *CurrentChartDataHourly) SetSourceCurrency(exec boil.Executor, insert bo
 	return nil
 }
 
-// SetDestinationCurrencyG of the current_chart_data_hourly to the related item.
-// Sets o.R.DestinationCurrency to related.
-// Adds o to related.R.DestinationCurrencyCurrentChartDataHourlies.
-// Uses the global database handle.
-func (o *CurrentChartDataHourly) SetDestinationCurrencyG(insert bool, related *Currency) error {
-	return o.SetDestinationCurrency(boil.GetDB(), insert, related)
-}
-
-// SetDestinationCurrencyP of the current_chart_data_hourly to the related item.
-// Sets o.R.DestinationCurrency to related.
-// Adds o to related.R.DestinationCurrencyCurrentChartDataHourlies.
-// Panics on error.
-func (o *CurrentChartDataHourly) SetDestinationCurrencyP(exec boil.Executor, insert bool, related *Currency) {
-	if err := o.SetDestinationCurrency(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetDestinationCurrencyGP of the current_chart_data_hourly to the related item.
-// Sets o.R.DestinationCurrency to related.
-// Adds o to related.R.DestinationCurrencyCurrentChartDataHourlies.
-// Uses the global database handle and panics on error.
-func (o *CurrentChartDataHourly) SetDestinationCurrencyGP(insert bool, related *Currency) {
-	if err := o.SetDestinationCurrency(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetDestinationCurrency of the current_chart_data_hourly to the related item.
+// SetDestinationCurrency of the currentChartDataHourly to the related item.
 // Sets o.R.DestinationCurrency to related.
 // Adds o to related.R.DestinationCurrencyCurrentChartDataHourlies.
 func (o *CurrentChartDataHourly) SetDestinationCurrency(exec boil.Executor, insert bool, related *Currency) error {
 	var err error
 	if insert {
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -670,7 +612,6 @@ func (o *CurrentChartDataHourly) SetDestinationCurrency(exec boil.Executor, inse
 	}
 
 	o.DestinationCurrencyID = related.ID
-
 	if o.R == nil {
 		o.R = &currentChartDataHourlyR{
 			DestinationCurrency: related,
@@ -690,35 +631,15 @@ func (o *CurrentChartDataHourly) SetDestinationCurrency(exec boil.Executor, inse
 	return nil
 }
 
-// CurrentChartDataHourliesG retrieves all records.
-func CurrentChartDataHourliesG(mods ...qm.QueryMod) currentChartDataHourlyQuery {
-	return CurrentChartDataHourlies(boil.GetDB(), mods...)
-}
-
 // CurrentChartDataHourlies retrieves all the records using an executor.
-func CurrentChartDataHourlies(exec boil.Executor, mods ...qm.QueryMod) currentChartDataHourlyQuery {
+func CurrentChartDataHourlies(mods ...qm.QueryMod) currentChartDataHourlyQuery {
 	mods = append(mods, qm.From("\"current_chart_data_hourly\""))
-	return currentChartDataHourlyQuery{NewQuery(exec, mods...)}
-}
-
-// FindCurrentChartDataHourlyG retrieves a single record by ID.
-func FindCurrentChartDataHourlyG(id int, selectCols ...string) (*CurrentChartDataHourly, error) {
-	return FindCurrentChartDataHourly(boil.GetDB(), id, selectCols...)
-}
-
-// FindCurrentChartDataHourlyGP retrieves a single record by ID, and panics on error.
-func FindCurrentChartDataHourlyGP(id int, selectCols ...string) *CurrentChartDataHourly {
-	retobj, err := FindCurrentChartDataHourly(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+	return currentChartDataHourlyQuery{NewQuery(mods...)}
 }
 
 // FindCurrentChartDataHourly retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindCurrentChartDataHourly(exec boil.Executor, id int, selectCols ...string) (*CurrentChartDataHourly, error) {
+func FindCurrentChartDataHourly(exec boil.Executor, iD int, selectCols ...string) (*CurrentChartDataHourly, error) {
 	currentChartDataHourlyObj := &CurrentChartDataHourly{}
 
 	sel := "*"
@@ -729,9 +650,9 @@ func FindCurrentChartDataHourly(exec boil.Executor, id int, selectCols ...string
 		"select %s from \"current_chart_data_hourly\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(currentChartDataHourlyObj)
+	err := q.Bind(nil, exec, currentChartDataHourlyObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -742,43 +663,9 @@ func FindCurrentChartDataHourly(exec boil.Executor, id int, selectCols ...string
 	return currentChartDataHourlyObj, nil
 }
 
-// FindCurrentChartDataHourlyP retrieves a single record by ID with an executor, and panics on error.
-func FindCurrentChartDataHourlyP(exec boil.Executor, id int, selectCols ...string) *CurrentChartDataHourly {
-	retobj, err := FindCurrentChartDataHourly(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
-// InsertG a single record. See Insert for whitelist behavior description.
-func (o *CurrentChartDataHourly) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *CurrentChartDataHourly) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *CurrentChartDataHourly) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *CurrentChartDataHourly) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *CurrentChartDataHourly) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no current_chart_data_hourly provided for insertion")
 	}
@@ -799,18 +686,17 @@ func (o *CurrentChartDataHourly) Insert(exec boil.Executor, whitelist ...string)
 
 	nzDefaults := queries.NonZeroDefaultSet(currentChartDataHourlyColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	currentChartDataHourlyInsertCacheMut.RLock()
 	cache, cached := currentChartDataHourlyInsertCache[key]
 	currentChartDataHourlyInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			currentChartDataHourlyColumns,
 			currentChartDataHourlyColumnsWithDefault,
 			currentChartDataHourlyColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(currentChartDataHourlyType, currentChartDataHourlyMapping, wl)
@@ -822,9 +708,9 @@ func (o *CurrentChartDataHourly) Insert(exec boil.Executor, whitelist ...string)
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"current_chart_data_hourly\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"current_chart_data_hourly\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"current_chart_data_hourly\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"current_chart_data_hourly\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -833,9 +719,7 @@ func (o *CurrentChartDataHourly) Insert(exec boil.Executor, whitelist ...string)
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -865,63 +749,34 @@ func (o *CurrentChartDataHourly) Insert(exec boil.Executor, whitelist ...string)
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single CurrentChartDataHourly record. See Update for
-// whitelist behavior description.
-func (o *CurrentChartDataHourly) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single CurrentChartDataHourly record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *CurrentChartDataHourly) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the CurrentChartDataHourly, and panics on error.
-// See Update for whitelist behavior description.
-func (o *CurrentChartDataHourly) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Update uses an executor to update the CurrentChartDataHourly.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *CurrentChartDataHourly) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *CurrentChartDataHourly) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	currentChartDataHourlyUpdateCacheMut.RLock()
 	cache, cached := currentChartDataHourlyUpdateCache[key]
 	currentChartDataHourlyUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			currentChartDataHourlyColumns,
 			currentChartDataHourlyPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update current_chart_data_hourly, could not build whitelist")
+			return 0, errors.New("models: unable to update current_chart_data_hourly, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"current_chart_data_hourly\" SET %s WHERE %s",
@@ -930,7 +785,7 @@ func (o *CurrentChartDataHourly) Update(exec boil.Executor, whitelist ...string)
 		)
 		cache.valueMapping, err = queries.BindMapping(currentChartDataHourlyType, currentChartDataHourlyMapping, append(wl, currentChartDataHourlyPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -941,9 +796,15 @@ func (o *CurrentChartDataHourly) Update(exec boil.Executor, whitelist ...string)
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update current_chart_data_hourly row")
+		return 0, errors.Wrap(err, "models: unable to update current_chart_data_hourly row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for current_chart_data_hourly")
 	}
 
 	if !cached {
@@ -952,56 +813,35 @@ func (o *CurrentChartDataHourly) Update(exec boil.Executor, whitelist ...string)
 		currentChartDataHourlyUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q currentChartDataHourlyQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q currentChartDataHourlyQuery) UpdateAll(cols M) error {
+func (q currentChartDataHourlyQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for current_chart_data_hourly")
+		return 0, errors.Wrap(err, "models: unable to update all for current_chart_data_hourly")
 	}
 
-	return nil
-}
-
-// UpdateAllG updates all rows with the specified column values.
-func (o CurrentChartDataHourlySlice) UpdateAllG(cols M) error {
-	return o.UpdateAll(boil.GetDB(), cols)
-}
-
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o CurrentChartDataHourlySlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for current_chart_data_hourly")
 	}
-}
 
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o CurrentChartDataHourlySlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o CurrentChartDataHourlySlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o CurrentChartDataHourlySlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -1029,36 +869,21 @@ func (o CurrentChartDataHourlySlice) UpdateAll(exec boil.Executor, cols M) error
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in currentChartDataHourly slice")
+		return 0, errors.Wrap(err, "models: unable to update all in currentChartDataHourly slice")
 	}
 
-	return nil
-}
-
-// UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *CurrentChartDataHourly) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *CurrentChartDataHourly) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all currentChartDataHourly")
 	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *CurrentChartDataHourly) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no current_chart_data_hourly provided for upsert")
 	}
@@ -1075,9 +900,8 @@ func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict boo
 
 	nzDefaults := queries.NonZeroDefaultSet(currentChartDataHourlyColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -1088,11 +912,13 @@ func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict boo
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -1109,19 +935,17 @@ func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict boo
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			currentChartDataHourlyColumns,
 			currentChartDataHourlyColumnsWithDefault,
 			currentChartDataHourlyColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			currentChartDataHourlyColumns,
 			currentChartDataHourlyPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert current_chart_data_hourly, could not build update column list")
 		}
@@ -1131,7 +955,7 @@ func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict boo
 			conflict = make([]string, len(currentChartDataHourlyPrimaryKeyColumns))
 			copy(conflict, currentChartDataHourlyPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"current_chart_data_hourly\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"current_chart_data_hourly\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(currentChartDataHourlyType, currentChartDataHourlyMapping, insert)
 		if err != nil {
@@ -1178,43 +1002,15 @@ func (o *CurrentChartDataHourly) Upsert(exec boil.Executor, updateOnConflict boo
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single CurrentChartDataHourly record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *CurrentChartDataHourly) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// DeleteG deletes a single CurrentChartDataHourly record.
-// DeleteG will match against the primary key column to find the record to delete.
-func (o *CurrentChartDataHourly) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no CurrentChartDataHourly provided for deletion")
-	}
-
-	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single CurrentChartDataHourly record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *CurrentChartDataHourly) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // Delete deletes a single CurrentChartDataHourly record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *CurrentChartDataHourly) Delete(exec boil.Executor) error {
+func (o *CurrentChartDataHourly) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no CurrentChartDataHourly provided for delete")
+		return 0, errors.New("models: no CurrentChartDataHourly provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), currentChartDataHourlyPrimaryKeyMapping)
@@ -1225,77 +1021,58 @@ func (o *CurrentChartDataHourly) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from current_chart_data_hourly")
+		return 0, errors.Wrap(err, "models: unable to delete from current_chart_data_hourly")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for current_chart_data_hourly")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q currentChartDataHourlyQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q currentChartDataHourlyQuery) DeleteAll() error {
+func (q currentChartDataHourlyQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no currentChartDataHourlyQuery provided for delete all")
+		return 0, errors.New("models: no currentChartDataHourlyQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from current_chart_data_hourly")
+		return 0, errors.Wrap(err, "models: unable to delete all from current_chart_data_hourly")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o CurrentChartDataHourlySlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for current_chart_data_hourly")
 	}
-}
 
-// DeleteAllG deletes all rows in the slice.
-func (o CurrentChartDataHourlySlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no CurrentChartDataHourly slice provided for delete all")
-	}
-	return o.DeleteAll(boil.GetDB())
-}
-
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o CurrentChartDataHourlySlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o CurrentChartDataHourlySlice) DeleteAll(exec boil.Executor) error {
+func (o CurrentChartDataHourlySlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no CurrentChartDataHourly slice provided for delete all")
+		return 0, errors.New("models: no CurrentChartDataHourly slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(currentChartDataHourlyBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -1314,43 +1091,25 @@ func (o CurrentChartDataHourlySlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from currentChartDataHourly slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from currentChartDataHourly slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for current_chart_data_hourly")
 	}
 
 	if len(currentChartDataHourlyAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *CurrentChartDataHourly) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *CurrentChartDataHourly) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadG refetches the object from the database using the primary keys.
-func (o *CurrentChartDataHourly) ReloadG() error {
-	if o == nil {
-		return errors.New("models: no CurrentChartDataHourly provided for reload")
-	}
-
-	return o.Reload(boil.GetDB())
+	return rowsAff, nil
 }
 
 // Reload refetches the object from the database
@@ -1365,34 +1124,6 @@ func (o *CurrentChartDataHourly) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *CurrentChartDataHourlySlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *CurrentChartDataHourlySlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllG refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-func (o *CurrentChartDataHourlySlice) ReloadAllG() error {
-	if o == nil {
-		return errors.New("models: empty CurrentChartDataHourlySlice provided for reload all")
-	}
-
-	return o.ReloadAll(boil.GetDB())
-}
-
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *CurrentChartDataHourlySlice) ReloadAll(exec boil.Executor) error {
@@ -1400,7 +1131,7 @@ func (o *CurrentChartDataHourlySlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	currentChartDataHourlies := CurrentChartDataHourlySlice{}
+	slice := CurrentChartDataHourlySlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), currentChartDataHourlyPrimaryKeyMapping)
@@ -1410,29 +1141,29 @@ func (o *CurrentChartDataHourlySlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"current_chart_data_hourly\".* FROM \"current_chart_data_hourly\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, currentChartDataHourlyPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&currentChartDataHourlies)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in CurrentChartDataHourlySlice")
 	}
 
-	*o = currentChartDataHourlies
+	*o = slice
 
 	return nil
 }
 
 // CurrentChartDataHourlyExists checks if the CurrentChartDataHourly row exists.
-func CurrentChartDataHourlyExists(exec boil.Executor, id int) (bool, error) {
+func CurrentChartDataHourlyExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"current_chart_data_hourly\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1440,29 +1171,4 @@ func CurrentChartDataHourlyExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// CurrentChartDataHourlyExistsG checks if the CurrentChartDataHourly row exists.
-func CurrentChartDataHourlyExistsG(id int) (bool, error) {
-	return CurrentChartDataHourlyExists(boil.GetDB(), id)
-}
-
-// CurrentChartDataHourlyExistsGP checks if the CurrentChartDataHourly row exists. Panics on error.
-func CurrentChartDataHourlyExistsGP(id int) bool {
-	e, err := CurrentChartDataHourlyExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// CurrentChartDataHourlyExistsP checks if the CurrentChartDataHourly row exists. Panics on error.
-func CurrentChartDataHourlyExistsP(exec boil.Executor, id int) bool {
-	e, err := CurrentChartDataHourlyExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

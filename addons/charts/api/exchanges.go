@@ -2,11 +2,12 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 	"github.com/Soneso/lumenshine-backend/addons/charts/models"
 	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
-	"net/http"
-	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 
@@ -250,12 +251,13 @@ func getRates(sourceCurrency *models.Currency, destinationCurrency *models.Curre
 	fromTime := time.Now().Add(-time.Hour * time.Duration(rangeHours))
 
 	// Use query building
-	err := models.NewQuery(utils.DB,
+	//TODO: Theo check
+	err := models.NewQuery(
 		qm.Select(schema+table+".exchange_rate, "+schema+table+"."+dateCol),
 		qm.From(schema+table),
 		qm.Where("source_currency_id=? AND destination_currency_id=? AND "+dateCol+">?", sourceCurrency.ID, destinationCurrency.ID, fromTime),
 		qm.OrderBy(dateCol+" DESC"),
-	).Bind(&chartD)
+	).Bind(nil, utils.DB, &chartD)
 
 	if err != nil {
 		return data, err

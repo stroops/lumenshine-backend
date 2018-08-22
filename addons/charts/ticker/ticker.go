@@ -1,10 +1,12 @@
 package ticker
 
 import (
-	"github.com/Soneso/lumenshine-backend/addons/charts/models"
-	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
 	"strconv"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/addons/charts/models"
+	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
+	"github.com/volatiletech/sqlboiler/boil"
 )
 
 type exchange struct {
@@ -54,7 +56,7 @@ func handleData(ex exchange) error {
 	minutelyData.DestinationCurrencyID = destinationCurrency.ID
 
 	// upsert set to do nothin on conflict, so we don't have duplicates in the db
-	err = minutelyData.Upsert(utils.DB, false, nil, nil)
+	err = minutelyData.Upsert(utils.DB, false, nil, boil.Infer(), boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -66,7 +68,9 @@ func handleData(ex exchange) error {
 	hourlyData.DestinationCurrencyID = destinationCurrency.ID
 
 	// upsert set to update exchange rate on conflict, so we always have the latest from that hour in the db
-	err = hourlyData.Upsert(utils.DB, true, []string{"exchange_rate_time", "source_currency_id", "destination_currency_id"}, []string{"exchange_rate"})
+	//err = hourlyData.Upsert(utils.DB, true, []string{"exchange_rate_time", "source_currency_id", "destination_currency_id"}, []string{"exchange_rate"})
+	//TODO: check Theo
+	err = hourlyData.Upsert(utils.DB, true, []string{"exchange_rate_time", "source_currency_id", "destination_currency_id"}, boil.Infer(), boil.Infer())
 	if err != nil {
 		return err
 	}
@@ -78,7 +82,9 @@ func handleData(ex exchange) error {
 	dailyData.DestinationCurrencyID = destinationCurrency.ID
 
 	// upsert set to update exchange rate on conflict, so we always have the latest from that hour in the db
-	err = dailyData.Upsert(utils.DB, true, []string{"exchange_rate_date", "source_currency_id", "destination_currency_id"}, []string{"exchange_rate"})
+	//TODO: check Theo
+	//err = dailyData.Upsert(utils.DB, true, []string{"exchange_rate_date", "source_currency_id", "destination_currency_id"}, []string{"exchange_rate"})
+	err = dailyData.Upsert(utils.DB, true, []string{"exchange_rate_date", "source_currency_id", "destination_currency_id"}, boil.Infer(), boil.Infer())
 	if err != nil {
 		return err
 	}

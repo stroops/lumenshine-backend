@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,9 +45,21 @@ var AdminGroupColumns = struct {
 	UpdatedBy: "updated_by",
 }
 
+// AdminGroupRels is where relationship names are stored.
+var AdminGroupRels = struct {
+	GroupAdminUsergroups string
+}{
+	GroupAdminUsergroups: "GroupAdminUsergroups",
+}
+
 // adminGroupR is where relationships are stored.
 type adminGroupR struct {
 	GroupAdminUsergroups AdminUsergroupSlice
+}
+
+// NewStruct creates a new relationship struct
+func (*adminGroupR) NewStruct() *adminGroupR {
+	return &adminGroupR{}
 }
 
 // adminGroupL is where Load methods for each relationship are stored.
@@ -88,9 +100,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var adminGroupBeforeInsertHooks []AdminGroupHook
 var adminGroupBeforeUpdateHooks []AdminGroupHook
 var adminGroupBeforeDeleteHooks []AdminGroupHook
@@ -225,23 +236,18 @@ func AddAdminGroupHook(hookPoint boil.HookPoint, adminGroupHook AdminGroupHook) 
 	}
 }
 
-// OneP returns a single adminGroup record from the query, and panics on error.
-func (q adminGroupQuery) OneP() *AdminGroup {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single adminGroup record from the query using the global executor.
+func (q adminGroupQuery) OneG() (*AdminGroup, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single adminGroup record from the query.
-func (q adminGroupQuery) One() (*AdminGroup, error) {
+func (q adminGroupQuery) One(exec boil.Executor) (*AdminGroup, error) {
 	o := &AdminGroup{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -249,35 +255,30 @@ func (q adminGroupQuery) One() (*AdminGroup, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for admin_group")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all AdminGroup records from the query, and panics on error.
-func (q adminGroupQuery) AllP() AdminGroupSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all AdminGroup records from the query using the global executor.
+func (q adminGroupQuery) AllG() (AdminGroupSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all AdminGroup records from the query.
-func (q adminGroupQuery) All() (AdminGroupSlice, error) {
+func (q adminGroupQuery) All(exec boil.Executor) (AdminGroupSlice, error) {
 	var o []*AdminGroup
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to AdminGroup slice")
 	}
 
 	if len(adminGroupAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -286,24 +287,19 @@ func (q adminGroupQuery) All() (AdminGroupSlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all AdminGroup records in the query, and panics on error.
-func (q adminGroupQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all AdminGroup records in the query, and panics on error.
+func (q adminGroupQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all AdminGroup records in the query.
-func (q adminGroupQuery) Count() (int64, error) {
+func (q adminGroupQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count admin_group rows")
 	}
@@ -311,24 +307,19 @@ func (q adminGroupQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q adminGroupQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q adminGroupQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q adminGroupQuery) Exists() (bool, error) {
+func (q adminGroupQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if admin_group exists")
 	}
@@ -336,13 +327,8 @@ func (q adminGroupQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// GroupAdminUsergroupsG retrieves all the admin_usergroup's admin usergroup via group_id column.
-func (o *AdminGroup) GroupAdminUsergroupsG(mods ...qm.QueryMod) adminUsergroupQuery {
-	return o.GroupAdminUsergroups(boil.GetDB(), mods...)
-}
-
-// GroupAdminUsergroups retrieves all the admin_usergroup's admin usergroup with an executor via group_id column.
-func (o *AdminGroup) GroupAdminUsergroups(exec boil.Executor, mods ...qm.QueryMod) adminUsergroupQuery {
+// GroupAdminUsergroups retrieves all the admin_usergroup's AdminUsergroups with an executor via group_id column.
+func (o *AdminGroup) GroupAdminUsergroups(mods ...qm.QueryMod) adminUsergroupQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -352,7 +338,7 @@ func (o *AdminGroup) GroupAdminUsergroups(exec boil.Executor, mods ...qm.QueryMo
 		qm.Where("\"admin_usergroup\".\"group_id\"=?", o.ID),
 	)
 
-	query := AdminUsergroups(exec, queryMods...)
+	query := AdminUsergroups(queryMods...)
 	queries.SetFrom(query.Query, "\"admin_usergroup\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -363,51 +349,60 @@ func (o *AdminGroup) GroupAdminUsergroups(exec boil.Executor, mods ...qm.QueryMo
 }
 
 // LoadGroupAdminUsergroups allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (adminGroupL) LoadGroupAdminUsergroups(e boil.Executor, singular bool, maybeAdminGroup interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (adminGroupL) LoadGroupAdminUsergroups(e boil.Executor, singular bool, maybeAdminGroup interface{}, mods queries.Applicator) error {
 	var slice []*AdminGroup
 	var object *AdminGroup
 
-	count := 1
 	if singular {
 		object = maybeAdminGroup.(*AdminGroup)
 	} else {
 		slice = *maybeAdminGroup.(*[]*AdminGroup)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &adminGroupR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &adminGroupR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"admin_usergroup\" where \"group_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`admin_usergroup`), qm.WhereIn(`group_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load admin_usergroup")
 	}
-	defer results.Close()
 
 	var resultSlice []*AdminUsergroup
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice admin_usergroup")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on admin_usergroup")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for admin_usergroup")
 	}
 
 	if len(adminUsergroupAfterSelectHooks) != 0 {
@@ -419,6 +414,12 @@ func (adminGroupL) LoadGroupAdminUsergroups(e boil.Executor, singular bool, mayb
 	}
 	if singular {
 		object.R.GroupAdminUsergroups = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &adminUsergroupR{}
+			}
+			foreign.R.Group = object
+		}
 		return nil
 	}
 
@@ -426,6 +427,10 @@ func (adminGroupL) LoadGroupAdminUsergroups(e boil.Executor, singular bool, mayb
 		for _, local := range slice {
 			if local.ID == foreign.GroupID {
 				local.R.GroupAdminUsergroups = append(local.R.GroupAdminUsergroups, foreign)
+				if foreign.R == nil {
+					foreign.R = &adminUsergroupR{}
+				}
+				foreign.R.Group = local
 				break
 			}
 		}
@@ -443,28 +448,6 @@ func (o *AdminGroup) AddGroupAdminUsergroupsG(insert bool, related ...*AdminUser
 	return o.AddGroupAdminUsergroups(boil.GetDB(), insert, related...)
 }
 
-// AddGroupAdminUsergroupsP adds the given related objects to the existing relationships
-// of the admin_group, optionally inserting them as new records.
-// Appends related to o.R.GroupAdminUsergroups.
-// Sets related.R.Group appropriately.
-// Panics on error.
-func (o *AdminGroup) AddGroupAdminUsergroupsP(exec boil.Executor, insert bool, related ...*AdminUsergroup) {
-	if err := o.AddGroupAdminUsergroups(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddGroupAdminUsergroupsGP adds the given related objects to the existing relationships
-// of the admin_group, optionally inserting them as new records.
-// Appends related to o.R.GroupAdminUsergroups.
-// Sets related.R.Group appropriately.
-// Uses the global database handle and panics on error.
-func (o *AdminGroup) AddGroupAdminUsergroupsGP(insert bool, related ...*AdminUsergroup) {
-	if err := o.AddGroupAdminUsergroups(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddGroupAdminUsergroups adds the given related objects to the existing relationships
 // of the admin_group, optionally inserting them as new records.
 // Appends related to o.R.GroupAdminUsergroups.
@@ -474,7 +457,7 @@ func (o *AdminGroup) AddGroupAdminUsergroups(exec boil.Executor, insert bool, re
 	for _, rel := range related {
 		if insert {
 			rel.GroupID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -518,35 +501,20 @@ func (o *AdminGroup) AddGroupAdminUsergroups(exec boil.Executor, insert bool, re
 	return nil
 }
 
-// AdminGroupsG retrieves all records.
-func AdminGroupsG(mods ...qm.QueryMod) adminGroupQuery {
-	return AdminGroups(boil.GetDB(), mods...)
-}
-
 // AdminGroups retrieves all the records using an executor.
-func AdminGroups(exec boil.Executor, mods ...qm.QueryMod) adminGroupQuery {
+func AdminGroups(mods ...qm.QueryMod) adminGroupQuery {
 	mods = append(mods, qm.From("\"admin_group\""))
-	return adminGroupQuery{NewQuery(exec, mods...)}
+	return adminGroupQuery{NewQuery(mods...)}
 }
 
 // FindAdminGroupG retrieves a single record by ID.
-func FindAdminGroupG(id int, selectCols ...string) (*AdminGroup, error) {
-	return FindAdminGroup(boil.GetDB(), id, selectCols...)
-}
-
-// FindAdminGroupGP retrieves a single record by ID, and panics on error.
-func FindAdminGroupGP(id int, selectCols ...string) *AdminGroup {
-	retobj, err := FindAdminGroup(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindAdminGroupG(iD int, selectCols ...string) (*AdminGroup, error) {
+	return FindAdminGroup(boil.GetDB(), iD, selectCols...)
 }
 
 // FindAdminGroup retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindAdminGroup(exec boil.Executor, id int, selectCols ...string) (*AdminGroup, error) {
+func FindAdminGroup(exec boil.Executor, iD int, selectCols ...string) (*AdminGroup, error) {
 	adminGroupObj := &AdminGroup{}
 
 	sel := "*"
@@ -557,9 +525,9 @@ func FindAdminGroup(exec boil.Executor, id int, selectCols ...string) (*AdminGro
 		"select %s from \"admin_group\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(adminGroupObj)
+	err := q.Bind(nil, exec, adminGroupObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -570,43 +538,14 @@ func FindAdminGroup(exec boil.Executor, id int, selectCols ...string) (*AdminGro
 	return adminGroupObj, nil
 }
 
-// FindAdminGroupP retrieves a single record by ID with an executor, and panics on error.
-func FindAdminGroupP(exec boil.Executor, id int, selectCols ...string) *AdminGroup {
-	retobj, err := FindAdminGroup(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *AdminGroup) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *AdminGroup) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *AdminGroup) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminGroup) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *AdminGroup) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *AdminGroup) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_group provided for insertion")
 	}
@@ -627,18 +566,17 @@ func (o *AdminGroup) Insert(exec boil.Executor, whitelist ...string) error {
 
 	nzDefaults := queries.NonZeroDefaultSet(adminGroupColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	adminGroupInsertCacheMut.RLock()
 	cache, cached := adminGroupInsertCache[key]
 	adminGroupInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			adminGroupColumns,
 			adminGroupColumnsWithDefault,
 			adminGroupColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(adminGroupType, adminGroupMapping, wl)
@@ -650,9 +588,9 @@ func (o *AdminGroup) Insert(exec boil.Executor, whitelist ...string) error {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"admin_group\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"admin_group\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"admin_group\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"admin_group\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -661,9 +599,7 @@ func (o *AdminGroup) Insert(exec boil.Executor, whitelist ...string) error {
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -693,63 +629,40 @@ func (o *AdminGroup) Insert(exec boil.Executor, whitelist ...string) error {
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single AdminGroup record. See Update for
-// whitelist behavior description.
-func (o *AdminGroup) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single AdminGroup record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *AdminGroup) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the AdminGroup, and panics on error.
-// See Update for whitelist behavior description.
-func (o *AdminGroup) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single AdminGroup record using the global executor.
+// See Update for more documentation.
+func (o *AdminGroup) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the AdminGroup.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *AdminGroup) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *AdminGroup) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	adminGroupUpdateCacheMut.RLock()
 	cache, cached := adminGroupUpdateCache[key]
 	adminGroupUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			adminGroupColumns,
 			adminGroupPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update admin_group, could not build whitelist")
+			return 0, errors.New("models: unable to update admin_group, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"admin_group\" SET %s WHERE %s",
@@ -758,7 +671,7 @@ func (o *AdminGroup) Update(exec boil.Executor, whitelist ...string) error {
 		)
 		cache.valueMapping, err = queries.BindMapping(adminGroupType, adminGroupMapping, append(wl, adminGroupPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -769,9 +682,15 @@ func (o *AdminGroup) Update(exec boil.Executor, whitelist ...string) error {
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update admin_group row")
+		return 0, errors.Wrap(err, "models: unable to update admin_group row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for admin_group")
 	}
 
 	if !cached {
@@ -780,56 +699,40 @@ func (o *AdminGroup) Update(exec boil.Executor, whitelist ...string) error {
 		adminGroupUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q adminGroupQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q adminGroupQuery) UpdateAll(cols M) error {
+func (q adminGroupQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for admin_group")
+		return 0, errors.Wrap(err, "models: unable to update all for admin_group")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for admin_group")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o AdminGroupSlice) UpdateAllG(cols M) error {
+func (o AdminGroupSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o AdminGroupSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o AdminGroupSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o AdminGroupSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o AdminGroupSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -857,36 +760,26 @@ func (o AdminGroupSlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in adminGroup slice")
+		return 0, errors.Wrap(err, "models: unable to update all in adminGroup slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all adminGroup")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *AdminGroup) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *AdminGroup) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *AdminGroup) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *AdminGroup) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no admin_group provided for upsert")
 	}
@@ -903,9 +796,8 @@ func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictC
 
 	nzDefaults := queries.NonZeroDefaultSet(adminGroupColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -916,11 +808,13 @@ func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictC
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -937,19 +831,17 @@ func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictC
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			adminGroupColumns,
 			adminGroupColumnsWithDefault,
 			adminGroupColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			adminGroupColumns,
 			adminGroupPrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert admin_group, could not build update column list")
 		}
@@ -959,7 +851,7 @@ func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictC
 			conflict = make([]string, len(adminGroupPrimaryKeyColumns))
 			copy(conflict, adminGroupPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"admin_group\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"admin_group\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(adminGroupType, adminGroupMapping, insert)
 		if err != nil {
@@ -1006,43 +898,21 @@ func (o *AdminGroup) Upsert(exec boil.Executor, updateOnConflict bool, conflictC
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single AdminGroup record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminGroup) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single AdminGroup record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *AdminGroup) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no AdminGroup provided for deletion")
-	}
-
+func (o *AdminGroup) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single AdminGroup record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *AdminGroup) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single AdminGroup record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *AdminGroup) Delete(exec boil.Executor) error {
+func (o *AdminGroup) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminGroup provided for delete")
+		return 0, errors.New("models: no AdminGroup provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), adminGroupPrimaryKeyMapping)
@@ -1053,77 +923,63 @@ func (o *AdminGroup) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from admin_group")
+		return 0, errors.Wrap(err, "models: unable to delete from admin_group")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for admin_group")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q adminGroupQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q adminGroupQuery) DeleteAll() error {
+func (q adminGroupQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no adminGroupQuery provided for delete all")
+		return 0, errors.New("models: no adminGroupQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from admin_group")
+		return 0, errors.Wrap(err, "models: unable to delete all from admin_group")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o AdminGroupSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_group")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o AdminGroupSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no AdminGroup slice provided for delete all")
-	}
+func (o AdminGroupSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o AdminGroupSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o AdminGroupSlice) DeleteAll(exec boil.Executor) error {
+func (o AdminGroupSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no AdminGroup slice provided for delete all")
+		return 0, errors.New("models: no AdminGroup slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(adminGroupBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -1142,34 +998,25 @@ func (o AdminGroupSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from adminGroup slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from adminGroup slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for admin_group")
 	}
 
 	if len(adminGroupAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *AdminGroup) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *AdminGroup) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1193,24 +1040,6 @@ func (o *AdminGroup) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminGroupSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *AdminGroupSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *AdminGroupSlice) ReloadAllG() error {
@@ -1228,7 +1057,7 @@ func (o *AdminGroupSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	adminGroups := AdminGroupSlice{}
+	slice := AdminGroupSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), adminGroupPrimaryKeyMapping)
@@ -1238,29 +1067,34 @@ func (o *AdminGroupSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"admin_group\".* FROM \"admin_group\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, adminGroupPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&adminGroups)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in AdminGroupSlice")
 	}
 
-	*o = adminGroups
+	*o = slice
 
 	return nil
 }
 
+// AdminGroupExistsG checks if the AdminGroup row exists.
+func AdminGroupExistsG(iD int) (bool, error) {
+	return AdminGroupExists(boil.GetDB(), iD)
+}
+
 // AdminGroupExists checks if the AdminGroup row exists.
-func AdminGroupExists(exec boil.Executor, id int) (bool, error) {
+func AdminGroupExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"admin_group\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1268,29 +1102,4 @@ func AdminGroupExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// AdminGroupExistsG checks if the AdminGroup row exists.
-func AdminGroupExistsG(id int) (bool, error) {
-	return AdminGroupExists(boil.GetDB(), id)
-}
-
-// AdminGroupExistsGP checks if the AdminGroup row exists. Panics on error.
-func AdminGroupExistsGP(id int) bool {
-	e, err := AdminGroupExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// AdminGroupExistsP checks if the AdminGroup row exists. Panics on error.
-func AdminGroupExistsP(exec boil.Executor, id int) bool {
-	e, err := AdminGroupExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

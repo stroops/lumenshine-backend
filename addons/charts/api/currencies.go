@@ -1,9 +1,10 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/Soneso/lumenshine-backend/addons/charts/models"
 	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
-	"net/http"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
@@ -26,15 +27,15 @@ func ChartCurrencyPairs(uc *mw.IcopContext, c *gin.Context) {
 	data := []exchangeCurrencyPairs{}
 	schema := utils.GetSchemaForQuery()
 
-	currencies, _ := models.Currencies(utils.DB).All()
+	currencies, _ := models.Currencies().All(utils.DB)
 	for _, sourceCurrency := range currencies {
 
-		destinationCurrencies, err := models.Currencies(utils.DB,
+		destinationCurrencies, err := models.Currencies(
 			qm.Select(schema+"currency.*"),
 			qm.InnerJoin(schema+"history_chart_data h on h.destination_currency_id = "+schema+"currency.id"),
 			qm.Where("h.source_currency_id =?", sourceCurrency.ID),
 			qm.GroupBy(schema+"currency.id"),
-		).All()
+		).All(utils.DB)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting data from db", cerr.GeneralError))

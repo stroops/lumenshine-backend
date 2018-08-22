@@ -5,19 +5,22 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math/big"
+	"net"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"github.com/Soneso/lumenshine-backend/services/pay/environment"
-	"math/big"
-	"net"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/bitcoin"
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
 	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
 	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
+	"github.com/volatiletech/sqlboiler/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -102,12 +105,16 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		return nil, err
 	}
 
+	//TODO: udo check
+	var v types.Decimal
+	v.SetFloat64(chainAmount)
+
 	//save order to db
 	order := &m.UserOrder{
 		UserID:               int(r.UserId),
 		OrderStatus:          m.OrderStatusWaitingForPayment,
 		CoinAmount:           r.CoinAmount,
-		ChainAmount:          chainAmount,
+		ChainAmount:          v,
 		ChainAmountDenom:     chainAmountDenom.String(),
 		Chain:                r.Chain,
 		AddressIndex:         int64(index),
@@ -116,7 +123,7 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		UserStellarPublicKey: r.UserPublicKey,
 		OrderPhaseID:         r.IcoPhase,
 	}
-	err = order.Insert(s.Env.DBC)
+	err = order.Insert(s.Env.DBC, boil.Infer())
 	if err != nil {
 		log.WithError(err).WithFields(logrus.Fields{
 			"chain": r.Chain, "address": ret.Address, "index": index,
@@ -169,18 +176,23 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 		q = append(q, qm.Where("id=?", r.OrderId))
 	}
 
-	orders, err := m.UserOrders(s.Env.DBC, q...).All()
+	orders, err := m.UserOrders(q...).All(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}
 	ret := new(pb.UserOrdersResponse)
 	ret.UserOrders = make([]*pb.UserOrder, len(orders))
 	for i := 0; i < len(orders); i++ {
+		//TODO: udo check
+		v, ok := orders[i].ChainAmount.Float64()
+		if !ok {
+			v = 0
+		}
 		ret.UserOrders[i] = &pb.UserOrder{
 			Id:                   int64(orders[i].ID),
 			OrderStatus:          orders[i].OrderStatus,
 			CoinAmount:           orders[i].CoinAmount,
-			ChainAmount:          orders[i].ChainAmount,
+			ChainAmount:          v,
 			ChainAmountDenom:     orders[i].ChainAmountDenom,
 			Chain:                orders[i].Chain,
 			ChainAddress:         orders[i].ChainAddress,
@@ -198,7 +210,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 }
 
 func (s *server) UserOrderSetStatus(ctx context.Context, r *pb.UserOrderSetStatusRequest) (*pb.Empty, error) {
-	order, err := m.UserOrders(s.Env.DBC, qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One()
+	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}
@@ -207,12 +219,12 @@ func (s *server) UserOrderSetStatus(ctx context.Context, r *pb.UserOrderSetStatu
 	order.PaymentErrorMessage = r.ErrorMessage
 	order.UpdatedBy = r.Base.UpdateBy
 
-	err = order.Update(s.Env.DBC,
+	_, err = order.Update(s.Env.DBC, boil.Whitelist(
 		m.UserOrderColumns.OrderStatus,
 		m.UserOrderColumns.PaymentErrorMessage,
 		m.UserOrderColumns.UpdatedAt,
 		m.UserOrderColumns.UpdatedBy,
-	)
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +233,7 @@ func (s *server) UserOrderSetStatus(ctx context.Context, r *pb.UserOrderSetStatu
 }
 
 func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhaseResponse, error) {
-	p, err := m.IcoPhases(s.Env.DBC, qm.Where(m.IcoPhaseColumns.IsActive+"=?", true)).One()
+	p, err := m.IcoPhases(qm.Where(m.IcoPhaseColumns.IsActive+"=?", true)).One(s.Env.DBC)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &pb.IcoPhaseResponse{}, nil
@@ -239,7 +251,7 @@ func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhas
 }
 
 func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusRequest) (*pb.BoolResponse, error) {
-	order, err := m.UserOrders(s.Env.DBC, qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One()
+	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +261,7 @@ func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusR
 }
 
 func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionRequest) (*pb.PayGetTransactionResponse, error) {
-	order, err := m.UserOrders(s.Env.DBC, qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One()
+	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}
@@ -259,11 +271,11 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 		//update the order to hold the tx
 		order.PaymentTX = tx
 		order.UpdatedBy = r.Base.UpdateBy
-		err = order.Update(s.Env.DBC,
+		_, err = order.Update(s.Env.DBC, boil.Whitelist(
 			m.UserOrderColumns.PaymentTX,
 			m.UserOrderColumns.UpdatedAt,
 			m.UserOrderColumns.UpdatedBy,
-		)
+		))
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +288,7 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 }
 
 func (s *server) PayExecuteTransaction(ctx context.Context, r *pb.PayExecuteTransactionRequest) (*pb.Empty, error) {
-	order, err := m.UserOrders(s.Env.DBC, qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One()
+	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}

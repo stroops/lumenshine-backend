@@ -4,10 +4,10 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -129,6 +129,27 @@ var UserProfileColumns = struct {
 	TfaTempSecret:              "tfa_temp_secret",
 }
 
+// UserProfileRels is where relationship names are stored.
+var UserProfileRels = struct {
+	UserUserSecurity         string
+	UserNotifications        string
+	UserNotificationArchives string
+	UserUserMessages         string
+	UserUserMessageArchives  string
+	UserUserOrders           string
+	UserUserPushtokens       string
+	UserUserWallets          string
+}{
+	UserUserSecurity:         "UserUserSecurity",
+	UserNotifications:        "UserNotifications",
+	UserNotificationArchives: "UserNotificationArchives",
+	UserUserMessages:         "UserUserMessages",
+	UserUserMessageArchives:  "UserUserMessageArchives",
+	UserUserOrders:           "UserUserOrders",
+	UserUserPushtokens:       "UserUserPushtokens",
+	UserUserWallets:          "UserUserWallets",
+}
+
 // userProfileR is where relationships are stored.
 type userProfileR struct {
 	UserUserSecurity         *UserSecurity
@@ -139,6 +160,11 @@ type userProfileR struct {
 	UserUserOrders           UserOrderSlice
 	UserUserPushtokens       UserPushtokenSlice
 	UserUserWallets          UserWalletSlice
+}
+
+// NewStruct creates a new relationship struct
+func (*userProfileR) NewStruct() *userProfileR {
+	return &userProfileR{}
 }
 
 // userProfileL is where Load methods for each relationship are stored.
@@ -179,9 +205,8 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
 )
+
 var userProfileBeforeInsertHooks []UserProfileHook
 var userProfileBeforeUpdateHooks []UserProfileHook
 var userProfileBeforeDeleteHooks []UserProfileHook
@@ -316,23 +341,18 @@ func AddUserProfileHook(hookPoint boil.HookPoint, userProfileHook UserProfileHoo
 	}
 }
 
-// OneP returns a single userProfile record from the query, and panics on error.
-func (q userProfileQuery) OneP() *UserProfile {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single userProfile record from the query using the global executor.
+func (q userProfileQuery) OneG() (*UserProfile, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single userProfile record from the query.
-func (q userProfileQuery) One() (*UserProfile, error) {
+func (q userProfileQuery) One(exec boil.Executor) (*UserProfile, error) {
 	o := &UserProfile{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -340,35 +360,30 @@ func (q userProfileQuery) One() (*UserProfile, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for user_profile")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all UserProfile records from the query, and panics on error.
-func (q userProfileQuery) AllP() UserProfileSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all UserProfile records from the query using the global executor.
+func (q userProfileQuery) AllG() (UserProfileSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all UserProfile records from the query.
-func (q userProfileQuery) All() (UserProfileSlice, error) {
+func (q userProfileQuery) All(exec boil.Executor) (UserProfileSlice, error) {
 	var o []*UserProfile
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to UserProfile slice")
 	}
 
 	if len(userProfileAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -377,24 +392,19 @@ func (q userProfileQuery) All() (UserProfileSlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all UserProfile records in the query, and panics on error.
-func (q userProfileQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all UserProfile records in the query, and panics on error.
+func (q userProfileQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all UserProfile records in the query.
-func (q userProfileQuery) Count() (int64, error) {
+func (q userProfileQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count user_profile rows")
 	}
@@ -402,24 +412,19 @@ func (q userProfileQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q userProfileQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q userProfileQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q userProfileQuery) Exists() (bool, error) {
+func (q userProfileQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if user_profile exists")
 	}
@@ -427,32 +432,22 @@ func (q userProfileQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// UserUserSecurityG pointed to by the foreign key.
-func (o *UserProfile) UserUserSecurityG(mods ...qm.QueryMod) userSecurityQuery {
-	return o.UserUserSecurity(boil.GetDB(), mods...)
-}
-
 // UserUserSecurity pointed to by the foreign key.
-func (o *UserProfile) UserUserSecurity(exec boil.Executor, mods ...qm.QueryMod) userSecurityQuery {
+func (o *UserProfile) UserUserSecurity(mods ...qm.QueryMod) userSecurityQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("user_id=?", o.ID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := UserSecurities(exec, queryMods...)
+	query := UserSecurities(queryMods...)
 	queries.SetFrom(query.Query, "\"user_security\"")
 
 	return query
 }
 
-// UserNotificationsG retrieves all the notification's notification via user_id column.
-func (o *UserProfile) UserNotificationsG(mods ...qm.QueryMod) notificationQuery {
-	return o.UserNotifications(boil.GetDB(), mods...)
-}
-
-// UserNotifications retrieves all the notification's notification with an executor via user_id column.
-func (o *UserProfile) UserNotifications(exec boil.Executor, mods ...qm.QueryMod) notificationQuery {
+// UserNotifications retrieves all the notification's Notifications with an executor via user_id column.
+func (o *UserProfile) UserNotifications(mods ...qm.QueryMod) notificationQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -462,7 +457,7 @@ func (o *UserProfile) UserNotifications(exec boil.Executor, mods ...qm.QueryMod)
 		qm.Where("\"notification\".\"user_id\"=?", o.ID),
 	)
 
-	query := Notifications(exec, queryMods...)
+	query := Notifications(queryMods...)
 	queries.SetFrom(query.Query, "\"notification\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -472,13 +467,8 @@ func (o *UserProfile) UserNotifications(exec boil.Executor, mods ...qm.QueryMod)
 	return query
 }
 
-// UserNotificationArchivesG retrieves all the notification_archive's notification archive via user_id column.
-func (o *UserProfile) UserNotificationArchivesG(mods ...qm.QueryMod) notificationArchiveQuery {
-	return o.UserNotificationArchives(boil.GetDB(), mods...)
-}
-
-// UserNotificationArchives retrieves all the notification_archive's notification archive with an executor via user_id column.
-func (o *UserProfile) UserNotificationArchives(exec boil.Executor, mods ...qm.QueryMod) notificationArchiveQuery {
+// UserNotificationArchives retrieves all the notification_archive's NotificationArchives with an executor via user_id column.
+func (o *UserProfile) UserNotificationArchives(mods ...qm.QueryMod) notificationArchiveQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -488,7 +478,7 @@ func (o *UserProfile) UserNotificationArchives(exec boil.Executor, mods ...qm.Qu
 		qm.Where("\"notification_archive\".\"user_id\"=?", o.ID),
 	)
 
-	query := NotificationArchives(exec, queryMods...)
+	query := NotificationArchives(queryMods...)
 	queries.SetFrom(query.Query, "\"notification_archive\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -498,13 +488,8 @@ func (o *UserProfile) UserNotificationArchives(exec boil.Executor, mods ...qm.Qu
 	return query
 }
 
-// UserUserMessagesG retrieves all the user_message's user message via user_id column.
-func (o *UserProfile) UserUserMessagesG(mods ...qm.QueryMod) userMessageQuery {
-	return o.UserUserMessages(boil.GetDB(), mods...)
-}
-
-// UserUserMessages retrieves all the user_message's user message with an executor via user_id column.
-func (o *UserProfile) UserUserMessages(exec boil.Executor, mods ...qm.QueryMod) userMessageQuery {
+// UserUserMessages retrieves all the user_message's UserMessages with an executor via user_id column.
+func (o *UserProfile) UserUserMessages(mods ...qm.QueryMod) userMessageQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -514,7 +499,7 @@ func (o *UserProfile) UserUserMessages(exec boil.Executor, mods ...qm.QueryMod) 
 		qm.Where("\"user_message\".\"user_id\"=?", o.ID),
 	)
 
-	query := UserMessages(exec, queryMods...)
+	query := UserMessages(queryMods...)
 	queries.SetFrom(query.Query, "\"user_message\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -524,13 +509,8 @@ func (o *UserProfile) UserUserMessages(exec boil.Executor, mods ...qm.QueryMod) 
 	return query
 }
 
-// UserUserMessageArchivesG retrieves all the user_message_archive's user message archive via user_id column.
-func (o *UserProfile) UserUserMessageArchivesG(mods ...qm.QueryMod) userMessageArchiveQuery {
-	return o.UserUserMessageArchives(boil.GetDB(), mods...)
-}
-
-// UserUserMessageArchives retrieves all the user_message_archive's user message archive with an executor via user_id column.
-func (o *UserProfile) UserUserMessageArchives(exec boil.Executor, mods ...qm.QueryMod) userMessageArchiveQuery {
+// UserUserMessageArchives retrieves all the user_message_archive's UserMessageArchives with an executor via user_id column.
+func (o *UserProfile) UserUserMessageArchives(mods ...qm.QueryMod) userMessageArchiveQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -540,7 +520,7 @@ func (o *UserProfile) UserUserMessageArchives(exec boil.Executor, mods ...qm.Que
 		qm.Where("\"user_message_archive\".\"user_id\"=?", o.ID),
 	)
 
-	query := UserMessageArchives(exec, queryMods...)
+	query := UserMessageArchives(queryMods...)
 	queries.SetFrom(query.Query, "\"user_message_archive\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -550,13 +530,8 @@ func (o *UserProfile) UserUserMessageArchives(exec boil.Executor, mods ...qm.Que
 	return query
 }
 
-// UserUserOrdersG retrieves all the user_order's user order via user_id column.
-func (o *UserProfile) UserUserOrdersG(mods ...qm.QueryMod) userOrderQuery {
-	return o.UserUserOrders(boil.GetDB(), mods...)
-}
-
-// UserUserOrders retrieves all the user_order's user order with an executor via user_id column.
-func (o *UserProfile) UserUserOrders(exec boil.Executor, mods ...qm.QueryMod) userOrderQuery {
+// UserUserOrders retrieves all the user_order's UserOrders with an executor via user_id column.
+func (o *UserProfile) UserUserOrders(mods ...qm.QueryMod) userOrderQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -566,7 +541,7 @@ func (o *UserProfile) UserUserOrders(exec boil.Executor, mods ...qm.QueryMod) us
 		qm.Where("\"user_order\".\"user_id\"=?", o.ID),
 	)
 
-	query := UserOrders(exec, queryMods...)
+	query := UserOrders(queryMods...)
 	queries.SetFrom(query.Query, "\"user_order\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -576,13 +551,8 @@ func (o *UserProfile) UserUserOrders(exec boil.Executor, mods ...qm.QueryMod) us
 	return query
 }
 
-// UserUserPushtokensG retrieves all the user_pushtoken's user pushtoken via user_id column.
-func (o *UserProfile) UserUserPushtokensG(mods ...qm.QueryMod) userPushtokenQuery {
-	return o.UserUserPushtokens(boil.GetDB(), mods...)
-}
-
-// UserUserPushtokens retrieves all the user_pushtoken's user pushtoken with an executor via user_id column.
-func (o *UserProfile) UserUserPushtokens(exec boil.Executor, mods ...qm.QueryMod) userPushtokenQuery {
+// UserUserPushtokens retrieves all the user_pushtoken's UserPushtokens with an executor via user_id column.
+func (o *UserProfile) UserUserPushtokens(mods ...qm.QueryMod) userPushtokenQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -592,7 +562,7 @@ func (o *UserProfile) UserUserPushtokens(exec boil.Executor, mods ...qm.QueryMod
 		qm.Where("\"user_pushtoken\".\"user_id\"=?", o.ID),
 	)
 
-	query := UserPushtokens(exec, queryMods...)
+	query := UserPushtokens(queryMods...)
 	queries.SetFrom(query.Query, "\"user_pushtoken\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -602,13 +572,8 @@ func (o *UserProfile) UserUserPushtokens(exec boil.Executor, mods ...qm.QueryMod
 	return query
 }
 
-// UserUserWalletsG retrieves all the user_wallet's user wallet via user_id column.
-func (o *UserProfile) UserUserWalletsG(mods ...qm.QueryMod) userWalletQuery {
-	return o.UserUserWallets(boil.GetDB(), mods...)
-}
-
-// UserUserWallets retrieves all the user_wallet's user wallet with an executor via user_id column.
-func (o *UserProfile) UserUserWallets(exec boil.Executor, mods ...qm.QueryMod) userWalletQuery {
+// UserUserWallets retrieves all the user_wallet's UserWallets with an executor via user_id column.
+func (o *UserProfile) UserUserWallets(mods ...qm.QueryMod) userWalletQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -618,7 +583,7 @@ func (o *UserProfile) UserUserWallets(exec boil.Executor, mods ...qm.QueryMod) u
 		qm.Where("\"user_wallet\".\"user_id\"=?", o.ID),
 	)
 
-	query := UserWallets(exec, queryMods...)
+	query := UserWallets(queryMods...)
 	queries.SetFrom(query.Query, "\"user_wallet\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -629,52 +594,60 @@ func (o *UserProfile) UserUserWallets(exec boil.Executor, mods ...qm.QueryMod) u
 }
 
 // LoadUserUserSecurity allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserUserSecurity(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-1 relationship.
+func (userProfileL) LoadUserUserSecurity(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_security\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_security`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load UserSecurity")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserSecurity
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice UserSecurity")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for user_security")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_security")
 	}
 
 	if len(userProfileAfterSelectHooks) != 0 {
@@ -690,14 +663,22 @@ func (userProfileL) LoadUserUserSecurity(e boil.Executor, singular bool, maybeUs
 	}
 
 	if singular {
-		object.R.UserUserSecurity = resultSlice[0]
-		return nil
+		foreign := resultSlice[0]
+		object.R.UserUserSecurity = foreign
+		if foreign.R == nil {
+			foreign.R = &userSecurityR{}
+		}
+		foreign.R.User = object
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
 			if local.ID == foreign.UserID {
 				local.R.UserUserSecurity = foreign
+				if foreign.R == nil {
+					foreign.R = &userSecurityR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -707,51 +688,60 @@ func (userProfileL) LoadUserUserSecurity(e boil.Executor, singular bool, maybeUs
 }
 
 // LoadUserNotifications allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserNotifications(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserNotifications(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"notification\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`notification`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load notification")
 	}
-	defer results.Close()
 
 	var resultSlice []*Notification
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice notification")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on notification")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for notification")
 	}
 
 	if len(notificationAfterSelectHooks) != 0 {
@@ -763,6 +753,12 @@ func (userProfileL) LoadUserNotifications(e boil.Executor, singular bool, maybeU
 	}
 	if singular {
 		object.R.UserNotifications = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &notificationR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -770,6 +766,10 @@ func (userProfileL) LoadUserNotifications(e boil.Executor, singular bool, maybeU
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserNotifications = append(local.R.UserNotifications, foreign)
+				if foreign.R == nil {
+					foreign.R = &notificationR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -779,51 +779,60 @@ func (userProfileL) LoadUserNotifications(e boil.Executor, singular bool, maybeU
 }
 
 // LoadUserNotificationArchives allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"notification_archive\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`notification_archive`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load notification_archive")
 	}
-	defer results.Close()
 
 	var resultSlice []*NotificationArchive
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice notification_archive")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on notification_archive")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for notification_archive")
 	}
 
 	if len(notificationArchiveAfterSelectHooks) != 0 {
@@ -835,6 +844,12 @@ func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool,
 	}
 	if singular {
 		object.R.UserNotificationArchives = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &notificationArchiveR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -842,6 +857,10 @@ func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool,
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserNotificationArchives = append(local.R.UserNotificationArchives, foreign)
+				if foreign.R == nil {
+					foreign.R = &notificationArchiveR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -851,51 +870,60 @@ func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool,
 }
 
 // LoadUserUserMessages allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserUserMessages(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserUserMessages(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_message\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_message`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load user_message")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserMessage
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice user_message")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_message")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_message")
 	}
 
 	if len(userMessageAfterSelectHooks) != 0 {
@@ -907,6 +935,12 @@ func (userProfileL) LoadUserUserMessages(e boil.Executor, singular bool, maybeUs
 	}
 	if singular {
 		object.R.UserUserMessages = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userMessageR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -914,6 +948,10 @@ func (userProfileL) LoadUserUserMessages(e boil.Executor, singular bool, maybeUs
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserUserMessages = append(local.R.UserUserMessages, foreign)
+				if foreign.R == nil {
+					foreign.R = &userMessageR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -923,51 +961,60 @@ func (userProfileL) LoadUserUserMessages(e boil.Executor, singular bool, maybeUs
 }
 
 // LoadUserUserMessageArchives allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserUserMessageArchives(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserUserMessageArchives(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_message_archive\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_message_archive`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load user_message_archive")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserMessageArchive
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice user_message_archive")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_message_archive")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_message_archive")
 	}
 
 	if len(userMessageArchiveAfterSelectHooks) != 0 {
@@ -979,6 +1026,12 @@ func (userProfileL) LoadUserUserMessageArchives(e boil.Executor, singular bool, 
 	}
 	if singular {
 		object.R.UserUserMessageArchives = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userMessageArchiveR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -986,6 +1039,10 @@ func (userProfileL) LoadUserUserMessageArchives(e boil.Executor, singular bool, 
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserUserMessageArchives = append(local.R.UserUserMessageArchives, foreign)
+				if foreign.R == nil {
+					foreign.R = &userMessageArchiveR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -995,51 +1052,60 @@ func (userProfileL) LoadUserUserMessageArchives(e boil.Executor, singular bool, 
 }
 
 // LoadUserUserOrders allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserUserOrders(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserUserOrders(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_order\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_order`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load user_order")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserOrder
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice user_order")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_order")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_order")
 	}
 
 	if len(userOrderAfterSelectHooks) != 0 {
@@ -1051,6 +1117,12 @@ func (userProfileL) LoadUserUserOrders(e boil.Executor, singular bool, maybeUser
 	}
 	if singular {
 		object.R.UserUserOrders = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userOrderR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -1058,6 +1130,10 @@ func (userProfileL) LoadUserUserOrders(e boil.Executor, singular bool, maybeUser
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserUserOrders = append(local.R.UserUserOrders, foreign)
+				if foreign.R == nil {
+					foreign.R = &userOrderR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -1067,51 +1143,60 @@ func (userProfileL) LoadUserUserOrders(e boil.Executor, singular bool, maybeUser
 }
 
 // LoadUserUserPushtokens allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserUserPushtokens(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserUserPushtokens(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_pushtoken\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_pushtoken`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load user_pushtoken")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserPushtoken
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice user_pushtoken")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_pushtoken")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_pushtoken")
 	}
 
 	if len(userPushtokenAfterSelectHooks) != 0 {
@@ -1123,6 +1208,12 @@ func (userProfileL) LoadUserUserPushtokens(e boil.Executor, singular bool, maybe
 	}
 	if singular {
 		object.R.UserUserPushtokens = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userPushtokenR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -1130,6 +1221,10 @@ func (userProfileL) LoadUserUserPushtokens(e boil.Executor, singular bool, maybe
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserUserPushtokens = append(local.R.UserUserPushtokens, foreign)
+				if foreign.R == nil {
+					foreign.R = &userPushtokenR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -1139,51 +1234,60 @@ func (userProfileL) LoadUserUserPushtokens(e boil.Executor, singular bool, maybe
 }
 
 // LoadUserUserWallets allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (userProfileL) LoadUserUserWallets(e boil.Executor, singular bool, maybeUserProfile interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserUserWallets(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
 	var slice []*UserProfile
 	var object *UserProfile
 
-	count := 1
 	if singular {
 		object = maybeUserProfile.(*UserProfile)
 	} else {
 		slice = *maybeUserProfile.(*[]*UserProfile)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &userProfileR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &userProfileR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"user_wallet\" where \"user_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	query := NewQuery(qm.From(`user_wallet`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
 	}
 
-	results, err := e.Query(query, args...)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load user_wallet")
 	}
-	defer results.Close()
 
 	var resultSlice []*UserWallet
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice user_wallet")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_wallet")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_wallet")
 	}
 
 	if len(userWalletAfterSelectHooks) != 0 {
@@ -1195,6 +1299,12 @@ func (userProfileL) LoadUserUserWallets(e boil.Executor, singular bool, maybeUse
 	}
 	if singular {
 		object.R.UserUserWallets = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userWalletR{}
+			}
+			foreign.R.User = object
+		}
 		return nil
 	}
 
@@ -1202,6 +1312,10 @@ func (userProfileL) LoadUserUserWallets(e boil.Executor, singular bool, maybeUse
 		for _, local := range slice {
 			if local.ID == foreign.UserID {
 				local.R.UserUserWallets = append(local.R.UserUserWallets, foreign)
+				if foreign.R == nil {
+					foreign.R = &userWalletR{}
+				}
+				foreign.R.User = local
 				break
 			}
 		}
@@ -1210,7 +1324,7 @@ func (userProfileL) LoadUserUserWallets(e boil.Executor, singular bool, maybeUse
 	return nil
 }
 
-// SetUserUserSecurityG of the user_profile to the related item.
+// SetUserUserSecurityG of the userProfile to the related item.
 // Sets o.R.UserUserSecurity to related.
 // Adds o to related.R.User.
 // Uses the global database handle.
@@ -1218,27 +1332,7 @@ func (o *UserProfile) SetUserUserSecurityG(insert bool, related *UserSecurity) e
 	return o.SetUserUserSecurity(boil.GetDB(), insert, related)
 }
 
-// SetUserUserSecurityP of the user_profile to the related item.
-// Sets o.R.UserUserSecurity to related.
-// Adds o to related.R.User.
-// Panics on error.
-func (o *UserProfile) SetUserUserSecurityP(exec boil.Executor, insert bool, related *UserSecurity) {
-	if err := o.SetUserUserSecurity(exec, insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetUserUserSecurityGP of the user_profile to the related item.
-// Sets o.R.UserUserSecurity to related.
-// Adds o to related.R.User.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) SetUserUserSecurityGP(insert bool, related *UserSecurity) {
-	if err := o.SetUserUserSecurity(boil.GetDB(), insert, related); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetUserUserSecurity of the user_profile to the related item.
+// SetUserUserSecurity of the userProfile to the related item.
 // Sets o.R.UserUserSecurity to related.
 // Adds o to related.R.User.
 func (o *UserProfile) SetUserUserSecurity(exec boil.Executor, insert bool, related *UserSecurity) error {
@@ -1247,7 +1341,7 @@ func (o *UserProfile) SetUserUserSecurity(exec boil.Executor, insert bool, relat
 	if insert {
 		related.UserID = o.ID
 
-		if err = related.Insert(exec); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	} else {
@@ -1298,28 +1392,6 @@ func (o *UserProfile) AddUserNotificationsG(insert bool, related ...*Notificatio
 	return o.AddUserNotifications(boil.GetDB(), insert, related...)
 }
 
-// AddUserNotificationsP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserNotifications.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserNotificationsP(exec boil.Executor, insert bool, related ...*Notification) {
-	if err := o.AddUserNotifications(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserNotificationsGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserNotifications.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserNotificationsGP(insert bool, related ...*Notification) {
-	if err := o.AddUserNotifications(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserNotifications adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserNotifications.
@@ -1329,7 +1401,7 @@ func (o *UserProfile) AddUserNotifications(exec boil.Executor, insert bool, rela
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1382,28 +1454,6 @@ func (o *UserProfile) AddUserNotificationArchivesG(insert bool, related ...*Noti
 	return o.AddUserNotificationArchives(boil.GetDB(), insert, related...)
 }
 
-// AddUserNotificationArchivesP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserNotificationArchives.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserNotificationArchivesP(exec boil.Executor, insert bool, related ...*NotificationArchive) {
-	if err := o.AddUserNotificationArchives(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserNotificationArchivesGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserNotificationArchives.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserNotificationArchivesGP(insert bool, related ...*NotificationArchive) {
-	if err := o.AddUserNotificationArchives(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserNotificationArchives adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserNotificationArchives.
@@ -1413,7 +1463,7 @@ func (o *UserProfile) AddUserNotificationArchives(exec boil.Executor, insert boo
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1466,28 +1516,6 @@ func (o *UserProfile) AddUserUserMessagesG(insert bool, related ...*UserMessage)
 	return o.AddUserUserMessages(boil.GetDB(), insert, related...)
 }
 
-// AddUserUserMessagesP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserMessages.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserUserMessagesP(exec boil.Executor, insert bool, related ...*UserMessage) {
-	if err := o.AddUserUserMessages(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserUserMessagesGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserMessages.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserUserMessagesGP(insert bool, related ...*UserMessage) {
-	if err := o.AddUserUserMessages(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserUserMessages adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserUserMessages.
@@ -1497,7 +1525,7 @@ func (o *UserProfile) AddUserUserMessages(exec boil.Executor, insert bool, relat
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1550,28 +1578,6 @@ func (o *UserProfile) AddUserUserMessageArchivesG(insert bool, related ...*UserM
 	return o.AddUserUserMessageArchives(boil.GetDB(), insert, related...)
 }
 
-// AddUserUserMessageArchivesP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserMessageArchives.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserUserMessageArchivesP(exec boil.Executor, insert bool, related ...*UserMessageArchive) {
-	if err := o.AddUserUserMessageArchives(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserUserMessageArchivesGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserMessageArchives.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserUserMessageArchivesGP(insert bool, related ...*UserMessageArchive) {
-	if err := o.AddUserUserMessageArchives(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserUserMessageArchives adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserUserMessageArchives.
@@ -1581,7 +1587,7 @@ func (o *UserProfile) AddUserUserMessageArchives(exec boil.Executor, insert bool
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1634,28 +1640,6 @@ func (o *UserProfile) AddUserUserOrdersG(insert bool, related ...*UserOrder) err
 	return o.AddUserUserOrders(boil.GetDB(), insert, related...)
 }
 
-// AddUserUserOrdersP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserOrders.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserUserOrdersP(exec boil.Executor, insert bool, related ...*UserOrder) {
-	if err := o.AddUserUserOrders(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserUserOrdersGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserOrders.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserUserOrdersGP(insert bool, related ...*UserOrder) {
-	if err := o.AddUserUserOrders(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserUserOrders adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserUserOrders.
@@ -1665,7 +1649,7 @@ func (o *UserProfile) AddUserUserOrders(exec boil.Executor, insert bool, related
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1718,28 +1702,6 @@ func (o *UserProfile) AddUserUserPushtokensG(insert bool, related ...*UserPushto
 	return o.AddUserUserPushtokens(boil.GetDB(), insert, related...)
 }
 
-// AddUserUserPushtokensP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserPushtokens.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserUserPushtokensP(exec boil.Executor, insert bool, related ...*UserPushtoken) {
-	if err := o.AddUserUserPushtokens(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserUserPushtokensGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserPushtokens.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserUserPushtokensGP(insert bool, related ...*UserPushtoken) {
-	if err := o.AddUserUserPushtokens(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserUserPushtokens adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserUserPushtokens.
@@ -1749,7 +1711,7 @@ func (o *UserProfile) AddUserUserPushtokens(exec boil.Executor, insert bool, rel
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1802,28 +1764,6 @@ func (o *UserProfile) AddUserUserWalletsG(insert bool, related ...*UserWallet) e
 	return o.AddUserUserWallets(boil.GetDB(), insert, related...)
 }
 
-// AddUserUserWalletsP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserWallets.
-// Sets related.R.User appropriately.
-// Panics on error.
-func (o *UserProfile) AddUserUserWalletsP(exec boil.Executor, insert bool, related ...*UserWallet) {
-	if err := o.AddUserUserWallets(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddUserUserWalletsGP adds the given related objects to the existing relationships
-// of the user_profile, optionally inserting them as new records.
-// Appends related to o.R.UserUserWallets.
-// Sets related.R.User appropriately.
-// Uses the global database handle and panics on error.
-func (o *UserProfile) AddUserUserWalletsGP(insert bool, related ...*UserWallet) {
-	if err := o.AddUserUserWallets(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddUserUserWallets adds the given related objects to the existing relationships
 // of the user_profile, optionally inserting them as new records.
 // Appends related to o.R.UserUserWallets.
@@ -1833,7 +1773,7 @@ func (o *UserProfile) AddUserUserWallets(exec boil.Executor, insert bool, relate
 	for _, rel := range related {
 		if insert {
 			rel.UserID = o.ID
-			if err = rel.Insert(exec); err != nil {
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -1877,35 +1817,20 @@ func (o *UserProfile) AddUserUserWallets(exec boil.Executor, insert bool, relate
 	return nil
 }
 
-// UserProfilesG retrieves all records.
-func UserProfilesG(mods ...qm.QueryMod) userProfileQuery {
-	return UserProfiles(boil.GetDB(), mods...)
-}
-
 // UserProfiles retrieves all the records using an executor.
-func UserProfiles(exec boil.Executor, mods ...qm.QueryMod) userProfileQuery {
+func UserProfiles(mods ...qm.QueryMod) userProfileQuery {
 	mods = append(mods, qm.From("\"user_profile\""))
-	return userProfileQuery{NewQuery(exec, mods...)}
+	return userProfileQuery{NewQuery(mods...)}
 }
 
 // FindUserProfileG retrieves a single record by ID.
-func FindUserProfileG(id int, selectCols ...string) (*UserProfile, error) {
-	return FindUserProfile(boil.GetDB(), id, selectCols...)
-}
-
-// FindUserProfileGP retrieves a single record by ID, and panics on error.
-func FindUserProfileGP(id int, selectCols ...string) *UserProfile {
-	retobj, err := FindUserProfile(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindUserProfileG(iD int, selectCols ...string) (*UserProfile, error) {
+	return FindUserProfile(boil.GetDB(), iD, selectCols...)
 }
 
 // FindUserProfile retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindUserProfile(exec boil.Executor, id int, selectCols ...string) (*UserProfile, error) {
+func FindUserProfile(exec boil.Executor, iD int, selectCols ...string) (*UserProfile, error) {
 	userProfileObj := &UserProfile{}
 
 	sel := "*"
@@ -1916,9 +1841,9 @@ func FindUserProfile(exec boil.Executor, id int, selectCols ...string) (*UserPro
 		"select %s from \"user_profile\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(userProfileObj)
+	err := q.Bind(nil, exec, userProfileObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -1929,43 +1854,14 @@ func FindUserProfile(exec boil.Executor, id int, selectCols ...string) (*UserPro
 	return userProfileObj, nil
 }
 
-// FindUserProfileP retrieves a single record by ID with an executor, and panics on error.
-func FindUserProfileP(exec boil.Executor, id int, selectCols ...string) *UserProfile {
-	retobj, err := FindUserProfile(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *UserProfile) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *UserProfile) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *UserProfile) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *UserProfile) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *UserProfile) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *UserProfile) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no user_profile provided for insertion")
 	}
@@ -1986,18 +1882,17 @@ func (o *UserProfile) Insert(exec boil.Executor, whitelist ...string) error {
 
 	nzDefaults := queries.NonZeroDefaultSet(userProfileColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	userProfileInsertCacheMut.RLock()
 	cache, cached := userProfileInsertCache[key]
 	userProfileInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			userProfileColumns,
 			userProfileColumnsWithDefault,
 			userProfileColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(userProfileType, userProfileMapping, wl)
@@ -2009,9 +1904,9 @@ func (o *UserProfile) Insert(exec boil.Executor, whitelist ...string) error {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"user_profile\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"user_profile\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"user_profile\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"user_profile\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -2020,9 +1915,7 @@ func (o *UserProfile) Insert(exec boil.Executor, whitelist ...string) error {
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -2052,63 +1945,40 @@ func (o *UserProfile) Insert(exec boil.Executor, whitelist ...string) error {
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single UserProfile record. See Update for
-// whitelist behavior description.
-func (o *UserProfile) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single UserProfile record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *UserProfile) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the UserProfile, and panics on error.
-// See Update for whitelist behavior description.
-func (o *UserProfile) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single UserProfile record using the global executor.
+// See Update for more documentation.
+func (o *UserProfile) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the UserProfile.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *UserProfile) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *UserProfile) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	userProfileUpdateCacheMut.RLock()
 	cache, cached := userProfileUpdateCache[key]
 	userProfileUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			userProfileColumns,
 			userProfilePrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update user_profile, could not build whitelist")
+			return 0, errors.New("models: unable to update user_profile, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"user_profile\" SET %s WHERE %s",
@@ -2117,7 +1987,7 @@ func (o *UserProfile) Update(exec boil.Executor, whitelist ...string) error {
 		)
 		cache.valueMapping, err = queries.BindMapping(userProfileType, userProfileMapping, append(wl, userProfilePrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -2128,9 +1998,15 @@ func (o *UserProfile) Update(exec boil.Executor, whitelist ...string) error {
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update user_profile row")
+		return 0, errors.Wrap(err, "models: unable to update user_profile row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for user_profile")
 	}
 
 	if !cached {
@@ -2139,56 +2015,40 @@ func (o *UserProfile) Update(exec boil.Executor, whitelist ...string) error {
 		userProfileUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q userProfileQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q userProfileQuery) UpdateAll(cols M) error {
+func (q userProfileQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for user_profile")
+		return 0, errors.Wrap(err, "models: unable to update all for user_profile")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for user_profile")
+	}
+
+	return rowsAff, nil
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o UserProfileSlice) UpdateAllG(cols M) error {
+func (o UserProfileSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o UserProfileSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o UserProfileSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o UserProfileSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o UserProfileSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -2216,36 +2076,26 @@ func (o UserProfileSlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in userProfile slice")
+		return 0, errors.Wrap(err, "models: unable to update all in userProfile slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all userProfile")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *UserProfile) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *UserProfile) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *UserProfile) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *UserProfile) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no user_profile provided for upsert")
 	}
@@ -2262,9 +2112,8 @@ func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflict
 
 	nzDefaults := queries.NonZeroDefaultSet(userProfileColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -2275,11 +2124,13 @@ func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflict
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -2296,19 +2147,17 @@ func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflict
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			userProfileColumns,
 			userProfileColumnsWithDefault,
 			userProfileColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			userProfileColumns,
 			userProfilePrimaryKeyColumns,
-			updateColumns,
 		)
+
 		if len(update) == 0 {
 			return errors.New("models: unable to upsert user_profile, could not build update column list")
 		}
@@ -2318,7 +2167,7 @@ func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflict
 			conflict = make([]string, len(userProfilePrimaryKeyColumns))
 			copy(conflict, userProfilePrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"user_profile\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"user_profile\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(userProfileType, userProfileMapping, insert)
 		if err != nil {
@@ -2365,43 +2214,21 @@ func (o *UserProfile) Upsert(exec boil.Executor, updateOnConflict bool, conflict
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single UserProfile record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *UserProfile) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single UserProfile record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *UserProfile) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no UserProfile provided for deletion")
-	}
-
+func (o *UserProfile) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single UserProfile record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *UserProfile) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single UserProfile record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *UserProfile) Delete(exec boil.Executor) error {
+func (o *UserProfile) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no UserProfile provided for delete")
+		return 0, errors.New("models: no UserProfile provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), userProfilePrimaryKeyMapping)
@@ -2412,77 +2239,63 @@ func (o *UserProfile) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from user_profile")
+		return 0, errors.Wrap(err, "models: unable to delete from user_profile")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for user_profile")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q userProfileQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q userProfileQuery) DeleteAll() error {
+func (q userProfileQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no userProfileQuery provided for delete all")
+		return 0, errors.New("models: no userProfileQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from user_profile")
+		return 0, errors.Wrap(err, "models: unable to delete all from user_profile")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o UserProfileSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for user_profile")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o UserProfileSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no UserProfile slice provided for delete all")
-	}
+func (o UserProfileSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o UserProfileSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o UserProfileSlice) DeleteAll(exec boil.Executor) error {
+func (o UserProfileSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no UserProfile slice provided for delete all")
+		return 0, errors.New("models: no UserProfile slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(userProfileBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -2501,34 +2314,25 @@ func (o UserProfileSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from userProfile slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from userProfile slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for user_profile")
 	}
 
 	if len(userProfileAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *UserProfile) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *UserProfile) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -2552,24 +2356,6 @@ func (o *UserProfile) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *UserProfileSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *UserProfileSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *UserProfileSlice) ReloadAllG() error {
@@ -2587,7 +2373,7 @@ func (o *UserProfileSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	userProfiles := UserProfileSlice{}
+	slice := UserProfileSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), userProfilePrimaryKeyMapping)
@@ -2597,29 +2383,34 @@ func (o *UserProfileSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"user_profile\".* FROM \"user_profile\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, userProfilePrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&userProfiles)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in UserProfileSlice")
 	}
 
-	*o = userProfiles
+	*o = slice
 
 	return nil
 }
 
+// UserProfileExistsG checks if the UserProfile row exists.
+func UserProfileExistsG(iD int) (bool, error) {
+	return UserProfileExists(boil.GetDB(), iD)
+}
+
 // UserProfileExists checks if the UserProfile row exists.
-func UserProfileExists(exec boil.Executor, id int) (bool, error) {
+func UserProfileExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"user_profile\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -2627,29 +2418,4 @@ func UserProfileExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// UserProfileExistsG checks if the UserProfile row exists.
-func UserProfileExistsG(id int) (bool, error) {
-	return UserProfileExists(boil.GetDB(), id)
-}
-
-// UserProfileExistsGP checks if the UserProfile row exists. Panics on error.
-func UserProfileExistsGP(id int) bool {
-	e, err := UserProfileExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// UserProfileExistsP checks if the UserProfile row exists. Panics on error.
-func UserProfileExistsP(exec boil.Executor, id int) bool {
-	e, err := UserProfileExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

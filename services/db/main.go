@@ -1,6 +1,6 @@
 package main
 
-//go:generate sqlboiler --wipe -b goose_db_version --no-tests --tinyint-as-bool=true --config $HOME/.config/sqlboiler/sqlboiler_db.toml postgres
+//go:generate sqlboiler --wipe --no-tests --no-context --add-global-variants --config $HOME/.config/sqlboiler/sqlboiler_db.toml psql
 
 import (
 	"fmt"
