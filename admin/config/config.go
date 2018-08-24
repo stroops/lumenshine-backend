@@ -25,8 +25,9 @@ type Config struct {
 	GRPCPort  int64
 	CORSHosts []string
 
-	AdminDB    DBConfig
-	CustomerDB DBConfig
+	AdminDB       DBConfig
+	CustomerDB    DBConfig
+	StellarCoreDB DBConfig
 
 	SQLMigrationDir string
 	ApplicationDir  string

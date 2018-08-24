@@ -232,54 +232,19 @@ func UpdateSigner(signer *models.AdminStellarSigner, updatedBy string) error {
 	return nil
 }
 
-//AddTrustline adds a new trustline
-func AddTrustline(trustline *models.AdminUnauthorizedTrustline, updatedBy string) error {
-	trustline.UpdatedBy = updatedBy
-
-	err := trustline.InsertG(boil.Infer())
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-//ExistsUnauthorizedTrustline - true if trustline already exists
-func ExistsUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) (bool, error) {
-	trustline, err := models.AdminUnauthorizedTrustlines(
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.TrustorPublicKey+"=?", trustorPublicKey),
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).OneG()
-
-	if err != nil && err != sql.ErrNoRows {
-		return false, err
-	}
-
-	if trustline == nil {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func DeleteUnauthorizedTrustline(trustorPublicKey string, issuingPublicKey string, assetCode string) error {
-	trustline, err := models.AdminUnauthorizedTrustlines(
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.TrustorPublicKey+"=?", trustorPublicKey),
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.IssuerPublicKeyID+"=?", issuingPublicKey),
-		qm.Where(models.AdminUnauthorizedTrustlineColumns.AssetCode+"=?", assetCode)).OneG()
+//GetStellarIssuerAccounts - gets the stellar issuer accounts
+func GetStellarIssuerAccounts() (models.AdminStellarAccountSlice, error) {
+	issuers, err := models.AdminStellarAccounts(
+		qm.Load("IssuerPublicKeyAdminStellarAssets"),
+		qm.Where(models.AdminStellarAccountColumns.Type+"=?", models.StellarAccountTypeIssuing)).AllG()
 
 	if err == sql.ErrNoRows {
-		return nil
+		return nil, nil
 	}
 
-	if trustline == nil {
-		return nil
-	}
-
-	_, err = trustline.DeleteG()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return issuers, nil
 }

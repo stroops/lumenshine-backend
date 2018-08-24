@@ -140,7 +140,7 @@
   revision = "fd153d5969d30bd701e10f3530228f001213047c"
 
 [[projects]]
-  digest = "1:ff5177e2b11960528b3da5ce01e3924579a86d6fa0a1b2dce5e7d2edad19ee6b"
+  digest = "1:357c22161d353614c6454c8250114286130c34a29f4aefb964afbd08de20084f"
   name = "github.com/ericlagergren/decimal"
   packages = [
     ".",
@@ -862,17 +862,6 @@
   revision = "c1b8fa8bdccecb0b8db834ee0b92fdbcfa606dd6"
 
 [[projects]]
-  digest = "1:8a1a728f86b71d82c099eebd03bdda5abc089babfaec80954b874921a3743089"
-  name = "gopkg.in/volatiletech/null.v6"
-  packages = [
-    ".",
-    "convert",
-  ]
-  pruneopts = "UT"
-  revision = "0bef4e07ae1b27a2a4efa23bbb3006c8c3d2e01d"
-  version = "v6.4"
-
-[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -896,7 +885,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/GeertJohan/go.rice",
-    "github.com/GeertJohan/go.rice/embedded",
     "github.com/NaySoftware/go-fcm",
     "github.com/bradfitz/gomemcache/memcache",
     "github.com/btcsuite/btcd/chaincfg",
@@ -949,7 +937,6 @@
     "gopkg.in/dgrijalva/jwt-go.v3",
     "gopkg.in/go-playground/validator.v9",
     "gopkg.in/mail.v2",
-    "gopkg.in/volatiletech/null.v6",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
