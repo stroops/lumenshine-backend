@@ -10,10 +10,12 @@ services:
     # one can then connect to the db via port 5434 with user stellar and password provided
     stdin_open: true
     tty: true
-    # build:
-    #  context: ./stellar
+    #build:
+    #  context: stellar-core
+    #  dockerfile: Dockerfile
+
     restart: "no"
-    image: stellar/quickstart
+    image: stellar/quickstart:testing
     volumes:
       - stellar-data:/opt/stellar/postgresql/data        
       - ./stellar-config:/opt/stellar           
@@ -23,16 +25,7 @@ services:
       - "5434:5432"
       - "8000:8000"
       - "11625:11625"
-      - "11626:11626"
-  
-  #this setup is used for the stellar service: friendbot, foundationserver   
-  #stellaraddons:
-  #  build:
-  #    context: .
-  #    dockerfile: DockerfileStellarAddons
-      
-    #volumes:      
-    #  - .\stellaraddons-config:/stellaraddons-config       
+      - "11626:11626"  
       
 # please create the data volumes external with this command
 # docker volume create --name stellar-data -d local
