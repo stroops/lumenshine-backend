@@ -127,7 +127,7 @@ CREATE TABLE admin_known_inflation_destinations
 );
 
 /*stellar_trustline_status*/
-CREATE TYPE stellar_trustline_status AS ENUM ('denied','revoked');
+CREATE TYPE stellar_trustline_status AS ENUM ('ok','waiting','denied','revoked');
 
 /* admin_unauthorized_trustline table */
 CREATE TABLE admin_unauthorized_trustline
