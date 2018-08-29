@@ -14,7 +14,7 @@ services:
     #  context: stellar-core
     #  dockerfile: Dockerfile
 
-    restart: "no"
+    restart: always
     image: stellar/quickstart:testing
     volumes:
       - stellar-data:/opt/stellar/postgresql/data        
