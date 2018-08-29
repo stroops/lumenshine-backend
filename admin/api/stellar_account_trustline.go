@@ -7,12 +7,16 @@ import (
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
+	"github.com/Soneso/lumenshine-backend/admin/route"
+	"github.com/Soneso/lumenshine-backend/db/pageinate"
+	qq "github.com/Soneso/lumenshine-backend/db/querying"
 	coremodels "github.com/Soneso/lumenshine-backend/db/stellarcore/models"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
+	"github.com/Soneso/lumenshine-backend/services/db/modext"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/Soneso/lumenshine-backend/admin/route"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 //init setup all the routes for the users handling
@@ -20,6 +24,7 @@ func init() {
 	route.AddRoute("POST", "/add_unathorized_trustline", AddTrustline, []string{"Administrators"}, "add_unathorized_trustline", StellarAccountRoutePrefix)
 	route.AddRoute("POST", "/remove_unathorized_trustline", RemoveTrustline, []string{"Administrators"}, "remove_unathorized_trustline", StellarAccountRoutePrefix)
 	route.AddRoute("GET", "/worker_account_trustlines/:publickey", WorkerAccountTrustlines, []string{"Administrators"}, "worker_account_trustlines", StellarAccountRoutePrefix)
+	route.AddRoute("GET", "/search_trusting_accounts", IssuerAccountTrustlines, []string{"Administrators"}, "search_trusting_accounts", StellarAccountRoutePrefix)
 }
 
 //AddTrustlineRequest - info
@@ -237,10 +242,10 @@ func WorkerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
 
 	resultTrustlines := make([]*WorkerTrustlineItem, 0)
 	for _, trustline := range internalTrustlines {
-		status := "waiting_for_authorization"
+		status := models.StellarTrustlineStatusWaiting
 		reason := ""
 		if trustline.Flags == 1 {
-			status = "allowed"
+			status = models.StellarTrustlineStatusOk
 		}
 		for _, uaTrustline := range uaTrustlines {
 			if strings.EqualFold(trustline.Issuer, uaTrustline.IssuerPublicKeyID) &&
@@ -260,4 +265,129 @@ func WorkerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &resultTrustlines)
+}
+
+//SearchAccountsRequest for filtering the issuer's trusting accounts
+type SearchAccountsRequest struct {
+	pageinate.PaginationRequestStruct
+
+	IssueingPublicKey string   `form:"issuing_account_public_key" validate:"required,base64,len=56"`
+	AssetCode         string   `form:"asset_code" validate:"required,icop_assetcode"`
+	FilterName        string   `form:"filter_name"`
+	FilterPublicKey   string   `form:"filter_public_key" validate:"omitempty,base64,len=56"`
+	FilterType        string   `form:"filter_type" validate:"required"`
+	FilterStatuses    []string `form:"filter_statuses"`
+}
+
+//SearchAccountsItem is one item in the list
+type SearchAccountsItem struct {
+	Name      string `json:"name"`
+	PublicKey string `json:"public_key"`
+	AssetCode string `json:"asset_code"`
+	Type      string `json:"type"`
+	Status    string `json:"status"`
+	Reason    string `json:"reason"`
+}
+
+//SearchAccountsResponse list of accounts
+type SearchAccountsResponse struct {
+	pageinate.PaginationResponseStruct
+	Items []SearchAccountsItem `json:"items"`
+}
+
+//IssuerAccountTrustlines returns list of all accounts, filtered by given params
+func IssuerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
+	var err error
+	var rr SearchAccountsRequest
+	if err = c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	customerType := "customer"
+	workerType := "worker"
+
+	if !strings.EqualFold(rr.FilterType, customerType) && !strings.EqualFold(rr.FilterType, workerType) {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "filter_type", cerr.InvalidArgument, "Filter type is not customer or worker.", ""))
+		return
+	}
+
+	viewName := modext.CustomerTrustlinesViewName
+	accountType := customerType
+	if strings.EqualFold(rr.FilterType, workerType) {
+		viewName = modext.AdminTrustlinesViewName
+		accountType = workerType
+	}
+
+	selectQ := []qm.QueryMod{
+		qm.Select(
+			modext.IssuerTrustlineColumns.Name,
+			modext.IssuerTrustlineColumns.PublicKey,
+			modext.IssuerTrustlineColumns.IssuerPublicKey,
+			modext.IssuerTrustlineColumns.AssetCode,
+			modext.IssuerTrustlineColumns.Status,
+			modext.IssuerTrustlineColumns.Reason,
+		),
+		qm.From(viewName),
+	}
+	countQ := []qm.QueryMod{
+		qm.Select("count(*) as total_count"),
+		qm.From(viewName),
+	}
+	filterQ := []qm.QueryMod{qm.Where(modext.IssuerTrustlineColumns.IssuerPublicKey+" = ?", rr.IssueingPublicKey),
+		qm.Where(modext.IssuerTrustlineColumns.AssetCode+" = ?", rr.AssetCode),
+	}
+
+	if rr.FilterName != "" {
+		filterQ = append(filterQ, qm.Where(modext.IssuerTrustlineColumns.Name+" ilike ?", qq.Like(rr.FilterName)))
+	}
+	if rr.FilterPublicKey != "" {
+		filterQ = append(filterQ, qm.Where(modext.IssuerTrustlineColumns.PublicKey+" ilike ?", qq.Like(rr.FilterPublicKey)))
+	}
+	if len(rr.FilterStatuses) > 0 {
+		filter := make([]interface{}, len(rr.FilterStatuses))
+		for i := range rr.FilterStatuses {
+			filter[i] = rr.FilterStatuses[i]
+		}
+		filterQ = append(filterQ, qm.WhereIn(modext.IssuerTrustlineColumns.Status+" in ? ", filter...))
+	}
+
+	response := new(SearchAccountsResponse)
+
+	count := pageinate.CountStruct{}
+	countQ = append(countQ, filterQ...)
+	err = models.NewQuery(countQ...).Bind(nil, db.DB, &count)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error counting trustlines", cerr.GeneralError))
+		return
+	}
+	response.TotalCount = count.TotalCount
+
+	selectQ = append(selectQ, filterQ...)
+	qP := pageinate.Paginate(selectQ, &rr.PaginationRequestStruct, &response.PaginationResponseStruct)
+	itemList := make([]modext.IssuerTrustline, 0)
+	err = models.NewQuery(qP...).Bind(nil, db.DB, &itemList)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading trustlines", cerr.GeneralError))
+		return
+	}
+
+	response.Items = make([]SearchAccountsItem, len(itemList))
+	for i, item := range itemList {
+		response.Items[i] = SearchAccountsItem{
+			Name:      item.Name,
+			PublicKey: item.PublicKey,
+			AssetCode: item.AssetCode,
+			Type:      accountType,
+			Status:    item.Status,
+			Reason:    item.Reason,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }

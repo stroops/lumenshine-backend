@@ -35,6 +35,7 @@ func init() {
 	route.AddRoute("POST", "/update_personal_data", CustomerEdit, []string{}, "customer_update_personal_data", CustomerRoutePrefix)
 	route.AddRoute("GET", "/orders/:id", CustomerOrders, []string{}, "customer_orders", CustomerRoutePrefix)
 	route.AddRoute("GET", "/wallets/:id", CustomerWallets, []string{}, "customer_wallets", CustomerRoutePrefix)
+	route.AddRoute("POST", "/update_kyc_status", CustomerUpdateKYCStatus, []string{}, "update_kyc_status", CustomerRoutePrefix)
 }
 
 //AddCustomerRoutes adds all the routes for the user handling
@@ -511,4 +512,63 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusOK, r)
+}
+
+//CustomerUpdateKYCStatusRequest - request
+type CustomerUpdateKYCStatusRequest struct {
+	ID        int    `form:"id" json:"id"`
+	KycStatus string `form:"kyc_status" json:"kyc_status" validate:"required,max=64"`
+}
+
+//CustomerUpdateKYCStatus updates status
+func CustomerUpdateKYCStatus(uc *mw.AdminContext, c *gin.Context) {
+	var err error
+	var rr CustomerUpdateKYCStatusRequest
+	if err = c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	if rr.KycStatus != m.KycStatusApproved &&
+		rr.KycStatus != m.KycStatusInReview &&
+		rr.KycStatus != m.KycStatusNotSupported &&
+		rr.KycStatus != m.KycStatusPending &&
+		rr.KycStatus != m.KycStatusRejected &&
+		rr.KycStatus != m.KycStatusWaitingForData &&
+		rr.KycStatus != m.KycStatusWaitingForReview {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("kyc_status", cerr.InvalidArgument, "Invalid status value", ""))
+		return
+	}
+
+	u, err := m.UserProfiles(
+		qm.Where("id=?", rr.ID),
+		qm.Select(
+			m.UserProfileColumns.ID,
+			m.UserProfileColumns.KycStatus,
+		),
+	).One(db.DBC)
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
+		return
+	}
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("id", cerr.UserNotExists, "User does not exist in db", ""))
+		return
+	}
+
+	u.KycStatus = rr.KycStatus
+	_, err = u.Update(db.DBC, boil.Whitelist(m.UserProfileColumns.ID,
+		m.UserProfileColumns.KycStatus))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
 }

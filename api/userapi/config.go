@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/sirupsen/logrus"
 
@@ -24,6 +25,9 @@ type ServicesConfig struct {
 
 	MailSrvPort int64
 	MailSrvHost string
+
+	AdminAPISrvPort int64
+	AdminAPISrvHost string
 }
 
 //ConfigSite globals that define the site behaviour

@@ -16,6 +16,11 @@ type PaginationResponseStruct struct {
 	PageNumber int   `json:"page_number"`
 }
 
+//CountStruct represents the count returned by the query
+type CountStruct struct {
+	TotalCount int64 `boil:"total_count"`
+}
+
 //Paginate returns the queryMods for the paginated data
 func Paginate(q []qm.QueryMod, r *PaginationRequestStruct, resp *PaginationResponseStruct) []qm.QueryMod {
 	pageNumer := r.PageNumber
