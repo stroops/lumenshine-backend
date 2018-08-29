@@ -1,0 +1,40 @@
+version: '3.6'
+
+services:
+  
+  geth:    
+    stdin_open: true
+    tty: true    
+    restart: "no"
+    image: ethereum/client-go
+    volumes:
+      - geth-data:/eth_data
+    ports:
+      - 8545:8545
+      - 30303:30303
+      
+    command: --datadir "/eth_data" --testnet --syncmode "fast" --rpc --rpcaddr "0.0.0.0"
+
+  bitcoin:
+    restart: "no"
+    image: kylemanna/bitcoind
+    ports:
+      - "18333:18333"
+      - "127.0.0.1:18332:18332"
+    volumes:
+      - btc-data:/bitcoin
+    #environment:
+
+    command: ["-testnet", "-printtoconsole", "-rpcallowip=0.0.0.0/0", "-rpcuser=rpcuser", "-rpcpassword=rpcpass", "-server", "-rest"]
+  
+  # bifrost:
+    
+
+# please create the data volumes external with this command
+# docker volume create --name geth-data -d local
+# docker volume create --name btc-data -d local
+volumes:
+  geth-data:
+    external: true
+  btc-data:
+    external: true
