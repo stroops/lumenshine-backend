@@ -242,10 +242,10 @@ func WorkerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
 
 	resultTrustlines := make([]*WorkerTrustlineItem, 0)
 	for _, trustline := range internalTrustlines {
-		status := "waiting"
+		status := models.StellarTrustlineStatusWaiting
 		reason := ""
 		if trustline.Flags == 1 {
-			status = "ok"
+			status = models.StellarTrustlineStatusOk
 		}
 		for _, uaTrustline := range uaTrustlines {
 			if strings.EqualFold(trustline.Issuer, uaTrustline.IssuerPublicKeyID) &&

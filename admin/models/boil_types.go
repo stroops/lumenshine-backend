@@ -68,4 +68,6 @@ const (
 const (
 	StellarTrustlineStatusDenied  = "denied"
 	StellarTrustlineStatusRevoked = "revoked"
+	StellarTrustlineStatusOk      = "ok"
+	StellarTrustlineStatusWaiting = "waiting"
 )
