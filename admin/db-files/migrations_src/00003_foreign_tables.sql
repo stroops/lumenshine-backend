@@ -52,7 +52,7 @@ CREATE OR REPLACE VIEW customer_trustlines AS
 		INNER JOIN user_security ON trustlines.accountid = user_security.public_key_0
 		INNER JOIN user_profile ON user_profile.id = user_security.user_id
 		LEFT JOIN admin_unauthorized_trustline AS aut 
-			ON aut.issuer_public_key_id = trustlines.issuer AND aut.asset_code = trustlines.assetcode AND aut.trustor_public_key = trustlines.accountid
+			ON aut.issuer_public_key_id = trustlines.issuer AND aut.asset_code = trustlines.assetcode AND aut.trustor_public_key = trustlines.accountid;
 
 -- Create view admin_trustlines
 CREATE OR REPLACE VIEW admin_trustlines AS
@@ -69,13 +69,13 @@ CREATE OR REPLACE VIEW admin_trustlines AS
 	FROM trustlines
 		INNER JOIN admin_stellar_account ON trustlines.accountid = admin_stellar_account.public_key
 		LEFT JOIN admin_unauthorized_trustline AS aut 
-			ON aut.issuer_public_key_id = trustlines.issuer AND aut.asset_code = trustlines.assetcode AND aut.trustor_public_key = trustlines.accountid
+			ON aut.issuer_public_key_id = trustlines.issuer AND aut.asset_code = trustlines.assetcode AND aut.trustor_public_key = trustlines.accountid;
 
 -- +goose Down
 -- SQL in this section1 is executed when the migration is rolled back.
+DROP VIEW IF EXISTS customer_trustlines;
+DROP VIEW IF EXISTS admin_trustlines;
+
 drop FOREIGN table IF EXISTS trustlines;
 drop FOREIGN table IF EXISTS user_profile;
 drop FOREIGN table IF EXISTS user_security;
-
-DROP VIEW IF EXISTS customer_trustlines;
-DROP VIEW IF EXISTS admin_trustlines;
