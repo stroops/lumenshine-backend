@@ -192,6 +192,13 @@ func connectServices(log *logrus.Entry) {
 		log.WithError(err).Fatalf("Dial failed: %v", err)
 	}
 	dbClient = pb.NewDBServiceClient(connDB)
+
+	//connect db service
+	connAdminAPI, err := grpc.Dial(fmt.Sprintf("%s:%d", cnf.Services.AdminAPISrvHost, cnf.Services.AdminAPISrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	adminAPIClient = pb.NewAdminApiServiceClient(connAdminAPI)
 }
 
 var (

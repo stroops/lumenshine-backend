@@ -25,6 +25,9 @@ CORSHosts = [
 	MailSrvPort = 4003
 	MailSrvHost = "localhost"
 
+	AdminApiSrvPort = 9005
+	AdminApiSrvHost = "localhost"
+
 [Site]
   SiteName = "Lumenshine Demo"
 	EmailSender = "demo@lumenshine.com"
