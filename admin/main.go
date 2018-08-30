@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -143,6 +144,10 @@ func (s *server) GetKnownCurrency(c context.Context, r *pb.GetKnownCurrencyReque
 		return nil, err
 	}
 
+	if currency == nil {
+		return nil, errors.New("Currency inexistent")
+	}
+
 	return &pb.GetKnownCurrencyResponse{
 		Id:               int64(currency.ID),
 		Name:             currency.Name,
@@ -165,8 +170,12 @@ func (s *server) GetKnownCurrencies(c context.Context, r *pb.Empty) (*pb.GetKnow
 		return nil, err
 	}
 
+	if currencies == nil {
+		return nil, errors.New("No currencies")
+	}
+
 	res := new(pb.GetKnownCurrenciesResponse)
-	for i, cr := range currencies {
+	for _, cr := range currencies {
 		res.Currencies = append(res.Currencies, &pb.GetKnownCurrencyResponse{
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
@@ -191,6 +200,10 @@ func (s *server) GetKnownInflationDestination(c context.Context, r *pb.GetKnownI
 		return nil, err
 	}
 
+	if dest == nil {
+		return nil, errors.New("Destination inexistent")
+	}
+
 	return &pb.GetKnownInflationDestinationResponse{
 		Id:               int64(dest.ID),
 		Name:             dest.Name,
@@ -212,9 +225,13 @@ func (s *server) GetKnownInflationDestinations(c context.Context, r *pb.Empty) (
 		return nil, err
 	}
 
+	if dest == nil {
+		return nil, errors.New("No destinations")
+	}
+
 	res := new(pb.GetKnownInflationDestinationsResponse)
-	for i, cr := range dest {
-		res.Destinations = append(res.Currencies, &pb.GetKnownInflationDestinationResponse{
+	for _, cr := range dest {
+		res.Destinations = append(res.Destinations, &pb.GetKnownInflationDestinationResponse{
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
 			IssuerPublicKey:  cr.IssuerPublicKey,
