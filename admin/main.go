@@ -165,21 +165,19 @@ func (s *server) GetKnownCurrencies(c context.Context, r *pb.Empty) (*pb.GetKnow
 		return nil, err
 	}
 
-	var res pb.GetKnownCurrenciesResponse
-	res.Currencies = make([]*pb.GetKnownCurrencyResponse, len(currencies))
+	res := new(pb.GetKnownCurrenciesResponse)
 	for i, cr := range currencies {
-		c := pb.GetKnownCurrencyResponse{
+		res.Currencies = append(res.Currencies, &pb.GetKnownCurrencyResponse{
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
 			IssuerPublicKey:  cr.IssuerPublicKey,
 			ShortDescription: cr.ShortDescription,
 			LongDescription:  cr.LongDescription,
 			OrderIndex:       int64(cr.OrderIndex),
-		}
-		*res.Currencies[i] = c
+		})
 	}
 
-	return &res, nil
+	return res, nil
 
 }
 
@@ -214,21 +212,19 @@ func (s *server) GetKnownInflationDestinations(c context.Context, r *pb.Empty) (
 		return nil, err
 	}
 
-	var res pb.GetKnownInflationDestinationsResponse
-	res.Destinations = make([]*pb.GetKnownInflationDestinationResponse, len(dest))
+	res := new(pb.GetKnownInflationDestinationsResponse)
 	for i, cr := range dest {
-		c := pb.GetKnownInflationDestinationResponse{
+		res.Destinations = append(res.Currencies, &pb.GetKnownInflationDestinationResponse{
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
 			IssuerPublicKey:  cr.IssuerPublicKey,
 			ShortDescription: cr.ShortDescription,
 			LongDescription:  cr.LongDescription,
 			OrderIndex:       int64(cr.OrderIndex),
-		}
-		*res.Destinations[i] = c
+		})
 	}
 
-	return &res, nil
+	return res, nil
 
 }
 
