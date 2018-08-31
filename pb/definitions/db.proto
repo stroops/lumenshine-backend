@@ -234,8 +234,9 @@ message AddWalletRequest {
   int64 user_id = 2;
   string public_key_0 = 3;
   string wallet_name = 4;
-  string federation_address = 5;
-  bool show_on_homescreen = 6;
+  string friendly_id = 5;
+  string domain = 6;
+  bool show_on_homescreen = 7;
 }
 
 message WalletChangeNameRequest {  
@@ -256,15 +257,17 @@ message WalletChangeFederationAddressRequest {
   BaseRequest base = 1;
   int64 id = 2;
   int64 user_id = 3;  
-  string federation_address = 4;
+  string friendly_id = 4;
+  string domain = 5;
 }
 
 message CheckWalletRequest {  
   BaseRequest base = 1;
   int64 user_id = 2;  
   string wallet_name = 3;
-  string federation_address = 4;
-  string public_key_0 = 5;
+  string friendly_id = 4;
+  string domain = 5;
+  string public_key_0 = 6;
 }
 
 message CheckWalletResponse {  
@@ -278,8 +281,9 @@ message Wallet {
   int64 user_id = 2;
   string public_key_0 = 3;
   string wallet_name = 4;
-  string federation_address = 5;
-  bool show_on_homescreen = 6;
+  string friendly_id = 5;
+  string domain = 6;
+  bool show_on_homescreen = 7;
 }
 
 message GetWalletsRequest {  
