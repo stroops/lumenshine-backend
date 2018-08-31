@@ -124,11 +124,15 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 
 	ws := make([]GetUserWalletsResponse, len(wallets.Wallets))
 	for i, w := range wallets.Wallets {
+		federationAddress := ""
+		if w.FriendlyId != "" && w.Domain != "" {
+			federationAddress = w.FriendlyId + "*" + w.Domain
+		}
 		ws[i] = GetUserWalletsResponse{
 			ID:                w.Id,
 			PublicKey0:        w.PublicKey_0,
 			WalletName:        w.WalletName,
-			FederationAddress: w.FriendlyId + "*" + w.Domain,
+			FederationAddress: federationAddress,
 			ShowOnHomescreen:  w.ShowOnHomescreen,
 		}
 	}
