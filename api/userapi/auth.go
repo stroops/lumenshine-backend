@@ -156,9 +156,8 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 	//check that the passed in key matches the saved password in the userprofile
 	user := mw.GetAuthUser(c)
 	req := &pb.GetUserByIDOrEmailRequest{
-		Base:       &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
-		Id:         user.UserID,
-		WithQrData: true,
+		Base: &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		Id:   user.UserID,
 	}
 	u, err := dbClient.GetUserDetails(c, req)
 	if err != nil {
@@ -177,19 +176,34 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if user.TfaConfirmed {
-		authMiddlewareFull.SetAuthHeader(c, u.Id)
-	} else {
-		authMiddlewareSimple.SetAuthHeader(c, u.Id)
-	}
-
-	c.JSON(http.StatusOK, &LoginStep2Response{
-		TfaSecret:         u.TfaSecret,
-		TfaQRImage:        u.TfaQrcode,
+	ret := &LoginStep2Response{
 		MailConfirmed:     user.MailConfirmed,
 		TfaConfirmed:      user.TfaConfirmed,
 		MnemonicConfirmed: user.MnemonicConfirmed,
-	})
+	}
+
+	if user.TfaConfirmed {
+		//if confirmed, we don't create the image, because it's not needed any longer
+		//authentication of the tfa code was allready done in LoginStep1
+		authMiddlewareFull.SetAuthHeader(c, u.Id)
+	} else {
+		//if not confirmed, recreate image and send this back to the client, which will continue the setup process
+		qr2FA, err := twoFAClient.FromSecret(c, &pb.FromSecretRequest{
+			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+			Email:  user.Email,
+			Secret: u.TfaTempSecret, // need the temp-screte here
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting 2FA data", cerr.GeneralError))
+			return
+		}
+		ret.TfaQRImage = qr2FA.Bitmap
+		ret.TfaSecret = u.TfaTempSecret
+
+		authMiddlewareSimple.SetAuthHeader(c, u.Id)
+	}
+
+	c.JSON(http.StatusOK, ret)
 }
 
 //CheckPasswordHash check a given password to the hashed value

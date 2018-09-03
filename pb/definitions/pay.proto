@@ -116,8 +116,7 @@ message PayExecuteTransactionRequest{
 service PayService {
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
   rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
-  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}  
-  rpc UserOrderSetStatus (UserOrderSetStatusRequest) returns (Empty) {}  
+  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}    
   rpc GetActveICOPhase (Empty) returns (IcoPhaseResponse) {}
   
   rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (BoolResponse) {}

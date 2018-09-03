@@ -29,8 +29,7 @@ CREATE TABLE user_profile
 	mail_confirmation_expiry_date timestamp with time zone NOT NULL,
 
     tfa_secret character varying NOT NULL,
-    tfa_qrcode bytea NOT NULL,
-    tfa_url character varying(256) NOT NULL,
+    tfa_temp_secret character varying NOT NULL,
 
     mail_confirmed boolean NOT null default false,
     tfa_confirmed bool NOT NULL default false,
@@ -190,7 +189,8 @@ CREATE TABLE user_wallet
     user_id integer not null REFERENCES user_profile(id),
     public_key_0 character(56) NOT NULL,
     wallet_name character varying(500) NOT NULL,
-    federation_address character varying(255) NOT NULL,
+    friendly_id character varying(255) NOT NULL  DEFAULT '',
+    domain character varying(255) NOT NULL DEFAULT '',
     show_on_homescreen boolean not null default true,
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp,
@@ -199,9 +199,9 @@ CREATE TABLE user_wallet
 
 create index idx_user_wallet_user_profile on user_wallet(user_id);
 CREATE UNIQUE index idx_user_wallet_pub_key on user_wallet(public_key_0);
-CREATE unique INDEX idx_user_wallet_fedname ON user_wallet(federation_address) where federation_address <> '';
 CREATE INDEX idx_user_wallet_name ON user_wallet USING gin (wallet_name gin_trgm_ops);
 CREATE UNIQUE index idx_user_wallet_name_2 on user_wallet(user_id, wallet_name);
+CREATE unique INDEX idx_user_wallet_fedname ON user_wallet(friendly_id,domain) where friendly_id <> '' and domain <> '';
 
 /*message_type*/
 CREATE TYPE message_type AS ENUM ('ios','android', 'mail');

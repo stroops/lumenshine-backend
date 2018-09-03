@@ -119,7 +119,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		Email:                  ur.Email,
 		MailConfirmationKey:    helpers.RandomString(constants.DefaultMailkeyLength),
 		MailConfirmationExpiry: time.Now().AddDate(0, 0, constants.DefaultMailkeyExpiryDays).Unix(),
-		TfaTempSecret:              twoFaResp.Secret,
+		TfaTempSecret:          twoFaResp.Secret,
 		Salutation:             ur.Salutation,
 		Title:                  ur.Title,
 		Forename:               ur.Forename,

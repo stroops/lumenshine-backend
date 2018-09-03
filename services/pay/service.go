@@ -209,29 +209,6 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	return ret, nil
 }
 
-func (s *server) UserOrderSetStatus(ctx context.Context, r *pb.UserOrderSetStatusRequest) (*pb.Empty, error) {
-	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
-	if err != nil {
-		return nil, err
-	}
-
-	order.OrderStatus = r.Status
-	order.PaymentErrorMessage = r.ErrorMessage
-	order.UpdatedBy = r.Base.UpdateBy
-
-	_, err = order.Update(s.Env.DBC, boil.Whitelist(
-		m.UserOrderColumns.OrderStatus,
-		m.UserOrderColumns.PaymentErrorMessage,
-		m.UserOrderColumns.UpdatedAt,
-		m.UserOrderColumns.UpdatedBy,
-	))
-	if err != nil {
-		return nil, err
-	}
-
-	return &pb.Empty{}, nil
-}
-
 func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhaseResponse, error) {
 	p, err := m.IcoPhases(qm.Where(m.IcoPhaseColumns.IsActive+"=?", true)).One(s.Env.DBC)
 	if err != nil {

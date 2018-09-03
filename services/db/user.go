@@ -74,16 +74,11 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		MailConfirmationExpiry: int64(u.MailConfirmationExpiryDate.Unix()),
 		TfaSecret:              u.TfaSecret,
 		TfaTempSecret:          u.TfaTempSecret,
-		TfaUrl:                 u.TfaURL,
 		TfaConfirmed:           u.TfaConfirmed,
 		MnemonicConfirmed:      u.MnemonicConfirmed,
 		Password:               u.Password,
 		Email:                  u.Email,
 		MessageCount:           int64(u.MessageCount),
-	}
-
-	if r.WithQrData {
-		ret.TfaQrcode = u.TfaQrcode
 	}
 
 	return ret, nil
@@ -263,8 +258,6 @@ func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfir
 		return nil, err
 	}
 
-	u.TfaQrcode = r.TfaQrcode
-	u.TfaURL = r.TfaUrl
 	u.TfaSecret = u.TfaTempSecret
 	u.TfaTempSecret = ""
 	u.TfaConfirmed = true
@@ -272,8 +265,6 @@ func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfir
 	u.UpdatedBy = r.Base.UpdateBy
 
 	_, err = u.Update(db, boil.Whitelist(
-		models.UserProfileColumns.TfaQrcode,
-		models.UserProfileColumns.TfaURL,
 		models.UserProfileColumns.TfaSecret,
 		models.UserProfileColumns.TfaTempSecret,
 		models.UserProfileColumns.TfaConfirmed,
