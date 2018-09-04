@@ -47,7 +47,7 @@ CREATE TABLE user_profile
 CREATE INDEX user_ix_profile_email ON user_profile USING gin (email gin_trgm_ops);
 CREATE INDEX user_ix_profile_forename ON user_profile USING gin (forename gin_trgm_ops);
 CREATE INDEX user_ix_profile_lastname ON user_profile USING gin (lastname gin_trgm_ops);
-CREATE UNIQUE index idx_mail_confirmation_key on user_profile(mail_confirmation_key);
+CREATE UNIQUE index idx_mail_confirmation_key on user_profile(mail_confirmation_key) where mail_confirmation_key<>'';
 
 CREATE TABLE user_security
 (

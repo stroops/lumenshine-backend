@@ -191,7 +191,7 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		qr2FA, err := twoFAClient.FromSecret(c, &pb.FromSecretRequest{
 			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
 			Email:  user.Email,
-			Secret: u.TfaTempSecret, // need the temp-screte here
+			Secret: u.TfaTempSecret, // need the temp-secrete here
 		})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting 2FA data", cerr.GeneralError))
