@@ -236,13 +236,6 @@ func OrderDetails(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
-//SetOrderStatusRequest request-data
-type SetOrderStatusRequest struct {
-	OrderID      int64  `form:"order_id" json:"order_id" validate:"required"`
-	Status       string `form:"status" json:"status" validate:"required,oneof=payment_error finished"`
-	ErrorMessage string `form:"error_message" json:"error_message"`
-}
-
 //OrderGetTrustStatusRequest request data
 type OrderGetTrustStatusRequest struct {
 	OrderID int64 `form:"order_id" json:"order_id" validate:"required"`
@@ -250,7 +243,9 @@ type OrderGetTrustStatusRequest struct {
 
 //OrderGetTrustStatusResponse response onbect
 type OrderGetTrustStatusResponse struct {
-	HasTrustline bool `json:"has_trustline"`
+	HasTrustline         bool   `json:"has_trustline"`
+	StellarIssuerAccount string `json:"stellar_issuer_account"`
+	StellarAssetCode     string `json:"stellar_asset_code"`
 }
 
 //OrderGetTrustStatus returns the status for the trustline
@@ -280,7 +275,9 @@ func OrderGetTrustStatus(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &OrderGetTrustStatusResponse{
-		HasTrustline: t.Value,
+		HasTrustline:         t.HasStrust,
+		StellarIssuerAccount: t.StellarIssuerAccount,
+		StellarAssetCode:     t.StellarAssetCode,
 	})
 }
 

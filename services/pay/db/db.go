@@ -159,6 +159,7 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 
 //GetOpenOrderForAddress reads the user orders for open payments for the specified address and chain
 //the method also updates the order to refelect, that it has been processed
+//it will set the order in status OrderStatusPaymentReceived
 func (db *DB) GetOpenOrderForAddress(chain string, address string) (*m.UserOrder, error) {
 	userOrder := new(m.UserOrder)
 	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
@@ -229,6 +230,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, chain string, hash string, toA
 }
 
 //handleNewTransaction checks the transaction data and updates the user_profile to reflect the payment
+//the order must be in status OrderStatusPaymentReceived and will be set to status OrderStatusWaitingUserTX
 func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (processed bool, err error) {
 	order := new(m.UserOrder)
 

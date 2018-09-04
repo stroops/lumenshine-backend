@@ -17,6 +17,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
 	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
+	"github.com/ericlagergren/decimal"
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -105,16 +106,12 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		return nil, err
 	}
 
-	//TODO: udo check
-	var v types.Decimal
-	v.SetFloat64(chainAmount)
-
 	//save order to db
 	order := &m.UserOrder{
 		UserID:               int(r.UserId),
 		OrderStatus:          m.OrderStatusWaitingForPayment,
 		CoinAmount:           r.CoinAmount,
-		ChainAmount:          v,
+		ChainAmount:          types.NewDecimal(new(decimal.Big).SetFloat64(chainAmount)),
 		ChainAmountDenom:     chainAmountDenom.String(),
 		Chain:                r.Chain,
 		AddressIndex:         int64(index),
@@ -183,7 +180,6 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	ret := new(pb.UserOrdersResponse)
 	ret.UserOrders = make([]*pb.UserOrder, len(orders))
 	for i := 0; i < len(orders); i++ {
-		//TODO: udo check
 		v, ok := orders[i].ChainAmount.Float64()
 		if !ok {
 			v = 0
@@ -227,14 +223,18 @@ func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhas
 	}, nil
 }
 
-func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusRequest) (*pb.BoolResponse, error) {
+func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusRequest) (*pb.PayGetTrustStatusResponse, error) {
 	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}
 
 	hasTrust, err := s.Env.AccountConfigurator.GetTrustStatus(order)
-	return &pb.BoolResponse{Value: hasTrust}, err
+	return &pb.PayGetTrustStatusResponse{
+		HasStrust:            hasTrust,
+		StellarAssetCode:     s.Env.Config.Stellar.TokenAssetCode,
+		StellarIssuerAccount: s.Env.Config.Stellar.IssuerPublicKey,
+	}, err
 }
 
 func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionRequest) (*pb.PayGetTransactionResponse, error) {
