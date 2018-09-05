@@ -79,3 +79,5 @@ lumenshine-backend.exe
 
 dist/
 .icop_config/
+
+sqlboiler.toml

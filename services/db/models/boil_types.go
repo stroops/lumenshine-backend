@@ -85,6 +85,28 @@ const (
 	TransactionStatusProcessed = "processed"
 )
 
+// Enum values for document_type
+const (
+	DocumentTypePassport         = "passport"
+	DocumentTypeDriversLicense   = "drivers_license"
+	DocumentTypeIDCard           = "id_card"
+	DocumentTypeProofOfResidence = "proof_of_residence"
+)
+
+// Enum values for document_format
+const (
+	DocumentFormatPNG  = "png"
+	DocumentFormatPDF  = "pdf"
+	DocumentFormatJPG  = "jpg"
+	DocumentFormatJpeg = "jpeg"
+)
+
+// Enum values for document_side
+const (
+	DocumentSideFront = "front"
+	DocumentSideBack  = "back"
+)
+
 // Enum values for order_status
 const (
 	OrderStatusWaitingForPayment = "waiting_for_payment"

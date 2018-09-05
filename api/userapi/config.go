@@ -36,6 +36,11 @@ type ConfigSite struct {
 	EmailSender string
 }
 
+//ConfigKyc - kyc configuration
+type ConfigKyc struct {
+	DocumentsPath string
+}
+
 //ConfigWebLinks links that are used in the clients (e.g. token confirm)
 type ConfigWebLinks struct {
 	ConfirmMail  string
@@ -54,6 +59,8 @@ type Config struct {
 	Services ServicesConfig
 	Site     ConfigSite
 	WebLinks ConfigWebLinks
+
+	Kyc ConfigKyc
 }
 
 var cnf *Config

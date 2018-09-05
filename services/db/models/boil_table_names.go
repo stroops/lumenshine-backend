@@ -14,6 +14,7 @@ var TableNames = struct {
 	NotificationArchive  string
 	ProcessedTransaction string
 	Salutations          string
+	UserKycDocument      string
 	UserMessage          string
 	UserMessageArchive   string
 	UserOrder            string
@@ -32,6 +33,7 @@ var TableNames = struct {
 	NotificationArchive:  "notification_archive",
 	ProcessedTransaction: "processed_transaction",
 	Salutations:          "salutations",
+	UserKycDocument:      "user_kyc_document",
 	UserMessage:          "user_message",
 	UserMessageArchive:   "user_message_archive",
 	UserOrder:            "user_order",

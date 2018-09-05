@@ -147,6 +147,8 @@ func main() {
 
 		authDash.POST("/get_known_inflation_destination", mw.UseIcopContext(GetKnownInflationDestination))
 		authDash.POST("/get_known_inflation_destinations", mw.UseIcopContext(GetKnownInflationDestinations))
+
+		authDash.POST("/upload_kyc_document", mw.UseIcopContext(UploadKycDocument))
 	}
 
 	//this group is used only for the change password functionality. It is a special key, which is received from

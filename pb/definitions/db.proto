@@ -360,6 +360,22 @@ message AddPushTokenRequest {
   string push_token = 4;
 }
 
+message AddKycDocumentRequest{
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  DocumentType document_type = 3;
+  DocumentFormat document_format = 4;
+  DocumentSide document_side = 5;
+  string id_country_code = 6;
+  int64 id_issue_date = 7;
+  int64 id_expiration_date = 8;
+  string id_number = 9;  
+}
+
+message AddKycDocumentResponse {
+  int64 document_id = 1;
+}
+
 message GetPushTokensResponse {
   repeated PushToken pushTokens = 1;
 }
@@ -417,6 +433,7 @@ service DBService {
   rpc GetUserWallets (GetWalletsRequest) returns (GetWalletsResponse) {}
   rpc WalletIsLast (WalletIsLastRequest) returns (BoolResponse) {}
   rpc WalletSetHomescreen (WalletSetHomescreenRequest) returns (Empty) {}  
+  rpc AddKycDocument(AddKycDocumentRequest) returns (AddKycDocumentResponse) {}
 
   rpc AddPushToken(AddPushTokenRequest) returns (Empty) {}
   rpc DeletePushToken(DeletePushTokenRequest) returns (Empty) {}

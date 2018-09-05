@@ -59,3 +59,22 @@ enum DeviceType {
   apple = 0;
   google = 1;
 }
+
+enum DocumentType {
+  passport = 0;
+  drivers_license = 1;
+  id_card = 2;
+  proof_of_residence = 3;
+}
+
+enum DocumentFormat {
+  png = 0;
+  pdf = 1;
+  jpg = 2;
+  jpeg = 3;
+}
+
+enum DocumentSide {
+  front = 0;
+  back = 1;
+}

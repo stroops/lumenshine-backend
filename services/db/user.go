@@ -750,3 +750,24 @@ func (s *server) GetPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.GetPus
 
 	return &pb.GetPushTokensResponse{PushTokens: tokens}, nil
 }
+
+func (s *server) AddKycDocument(ctx context.Context, r *pb.AddKycDocumentRequest) (*pb.AddKycDocumentResponse, error) {
+
+	document := &models.UserKycDocument{}
+	document.UserID = int(r.UserId)
+	document.Type = r.DocumentType.String()
+	document.Format = r.DocumentFormat.String()
+	document.Side = r.DocumentSide.String()
+	document.IDCountryCode = r.IdCountryCode
+	document.IDIssueDate = time.Unix(r.IdIssueDate, 0)
+	document.IDExpirationDate = time.Unix(r.IdExpirationDate, 0)
+	document.IDNumber = r.IdNumber
+	document.UpdatedBy = r.Base.UpdateBy
+	err := document.Insert(db, boil.Infer())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.AddKycDocumentResponse{DocumentId: int64(document.ID)}, nil
+}
