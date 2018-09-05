@@ -1,9 +1,10 @@
 package main
 
 import (
+	"net/http"
+
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 	"github.com/Soneso/lumenshine-backend/pb"
-	"net/http"
 
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
@@ -235,65 +236,6 @@ func OrderDetails(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
-//SetOrderStatusRequest request-data
-type SetOrderStatusRequest struct {
-	OrderID      int64  `form:"order_id" json:"order_id" validate:"required"`
-	Status       string `form:"status" json:"status" validate:"required,oneof=payment_error finished"`
-	ErrorMessage string `form:"error_message" json:"error_message"`
-}
-
-//SetOrderStatus sets the status of the order
-//can only be used, if the order is in status tx_created
-func SetOrderStatus(uc *mw.IcopContext, c *gin.Context) {
-	var l SetOrderStatusRequest
-	if err := c.Bind(&l); err != nil {
-		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
-		return
-	}
-
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
-	userID := mw.GetAuthUser(c).UserID
-
-	orders, err := payClient.GetUserOrders(c, &pb.UserOrdersRequest{
-		Base:    NewBaseRequest(uc),
-		UserId:  userID,
-		OrderId: l.OrderID,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting orders", cerr.GeneralError))
-		return
-	}
-
-	if len(orders.UserOrders) != 1 {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("order_id", cerr.InvalidArgument, "No order found for id", ""))
-		return
-	}
-
-	order := orders.UserOrders[0]
-	if order.OrderStatus != m.OrderStatusTXCreated {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("order_id", cerr.OrderWrongStatus, "Order has wrong status", ""))
-		return
-	}
-
-	_, err = payClient.UserOrderSetStatus(c, &pb.UserOrderSetStatusRequest{
-		Base:         NewBaseRequest(uc),
-		UserId:       userID,
-		OrderId:      l.OrderID,
-		Status:       l.Status,
-		ErrorMessage: l.ErrorMessage,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting order-status", cerr.GeneralError))
-		return
-	}
-
-	c.JSON(http.StatusOK, "{}")
-}
-
 //OrderGetTrustStatusRequest request data
 type OrderGetTrustStatusRequest struct {
 	OrderID int64 `form:"order_id" json:"order_id" validate:"required"`
@@ -301,7 +243,9 @@ type OrderGetTrustStatusRequest struct {
 
 //OrderGetTrustStatusResponse response onbect
 type OrderGetTrustStatusResponse struct {
-	HasTrustline bool `json:"has_trustline"`
+	HasTrustline         bool   `json:"has_trustline"`
+	StellarIssuerAccount string `json:"stellar_issuer_account"`
+	StellarAssetCode     string `json:"stellar_asset_code"`
 }
 
 //OrderGetTrustStatus returns the status for the trustline
@@ -331,7 +275,9 @@ func OrderGetTrustStatus(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &OrderGetTrustStatusResponse{
-		HasTrustline: t.Value,
+		HasTrustline:         t.HasStrust,
+		StellarIssuerAccount: t.StellarIssuerAccount,
+		StellarAssetCode:     t.StellarAssetCode,
 	})
 }
 

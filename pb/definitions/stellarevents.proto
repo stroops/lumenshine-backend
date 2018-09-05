@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+import "global.proto";
+
+package pb;
+
+enum StellarEventType {
+    PAYMENT = 1;
+    // THRUSTLINE_CHANGE = 2;        
+}
+
+message ListenForEventRequest{
+    BaseRequest base  = 1;
+    StellarEventType event_type = 2;
+    string account = 3;    
+}
+
+service StellarEventsService {
+  rpc ListenForEvent (ListenForEventRequest) returns (Empty) {}  
+}

@@ -14,6 +14,7 @@ services:
     #  context: stellar-core
     #  dockerfile: Dockerfile
 
+    #restart: always
     restart: "no"
     image: stellar/quickstart:testing
     volumes:

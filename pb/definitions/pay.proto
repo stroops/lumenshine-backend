@@ -60,27 +60,6 @@ message UserOrdersResponse{
     repeated UserOrder UserOrders=1;
 }
 
-message UserOrderGetTransactionRequest{
-    BaseRequest base = 1;
-    int64 user_id = 2;        
-    int64 order_id = 3;
-}
-message UserOrderTransactionResponse{
-    string transaction = 1;
-    string issuer_public_key = 2;
-    string token_asset_code = 3;    
-    bool has_trustline = 4;
-    uint64 trust_sequence = 5;
-}
-
-message UserOrderSetStatusRequest{
-    BaseRequest base = 1;
-    int64 user_id = 2;        
-    int64 order_id = 3;
-    string status = 4;
-    string error_message = 5;
-}
-
 message IcoPhaseResponse{
     string phase_name = 1;
     int64 start_time = 2;
@@ -95,10 +74,16 @@ message PayGetTrustStatusRequest{
     int64 order_id = 3;  
 }
 
+message PayGetTrustStatusResponse{    
+    bool has_strust = 1;
+    string stellar_issuer_account = 4;
+    string stellar_asset_code = 5;
+}
+
 message PayGetTransactionRequest{
     BaseRequest base = 1;
     int64 user_id = 2;        
-    int64 order_id = 3;  
+    int64 order_id = 3;      
 }
 
 message PayGetTransactionResponse{
@@ -116,11 +101,10 @@ message PayExecuteTransactionRequest{
 service PayService {
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
   rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
-  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}  
-  rpc UserOrderSetStatus (UserOrderSetStatusRequest) returns (Empty) {}  
+  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}    
   rpc GetActveICOPhase (Empty) returns (IcoPhaseResponse) {}
   
-  rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (BoolResponse) {}
+  rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (PayGetTrustStatusResponse) {}
   rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}
   rpc PayExecuteTransaction (PayExecuteTransactionRequest) returns (Empty) {}
 }

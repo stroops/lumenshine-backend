@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -143,6 +144,10 @@ func (s *server) GetKnownCurrency(c context.Context, r *pb.GetKnownCurrencyReque
 		return nil, err
 	}
 
+	if currency == nil {
+		return nil, errors.New("Currency inexistent")
+	}
+
 	return &pb.GetKnownCurrencyResponse{
 		Id:               int64(currency.ID),
 		Name:             currency.Name,
@@ -165,21 +170,23 @@ func (s *server) GetKnownCurrencies(c context.Context, r *pb.Empty) (*pb.GetKnow
 		return nil, err
 	}
 
-	var res pb.GetKnownCurrenciesResponse
-	res.Currencies = make([]*pb.GetKnownCurrencyResponse, len(currencies))
-	for i, cr := range currencies {
-		c := pb.GetKnownCurrencyResponse{
+	if currencies == nil {
+		return nil, errors.New("No currencies")
+	}
+
+	res := new(pb.GetKnownCurrenciesResponse)
+	for _, cr := range currencies {
+		res.Currencies = append(res.Currencies, &pb.GetKnownCurrencyResponse{
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
 			IssuerPublicKey:  cr.IssuerPublicKey,
 			ShortDescription: cr.ShortDescription,
 			LongDescription:  cr.LongDescription,
 			OrderIndex:       int64(cr.OrderIndex),
-		}
-		*res.Currencies[i] = c
+		})
 	}
 
-	return &res, nil
+	return res, nil
 
 }
 
@@ -191,6 +198,10 @@ func (s *server) GetKnownInflationDestination(c context.Context, r *pb.GetKnownI
 	if err != nil {
 		log.WithError(err).WithField("ID", r.Id).Error("Error getting known inflation destination by id")
 		return nil, err
+	}
+
+	if dest == nil {
+		return nil, errors.New("Destination inexistent")
 	}
 
 	return &pb.GetKnownInflationDestinationResponse{
@@ -214,21 +225,23 @@ func (s *server) GetKnownInflationDestinations(c context.Context, r *pb.Empty) (
 		return nil, err
 	}
 
-	var res pb.GetKnownInflationDestinationsResponse
-	res.Destinations = make([]*pb.GetKnownInflationDestinationResponse, len(dest))
-	for i, cr := range dest {
-		c := pb.GetKnownInflationDestinationResponse{
+	if dest == nil {
+		return nil, errors.New("No destinations")
+	}
+
+	res := new(pb.GetKnownInflationDestinationsResponse)
+	for _, cr := range dest {
+		res.Destinations = append(res.Destinations, &pb.GetKnownInflationDestinationResponse{
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
 			IssuerPublicKey:  cr.IssuerPublicKey,
 			ShortDescription: cr.ShortDescription,
 			LongDescription:  cr.LongDescription,
 			OrderIndex:       int64(cr.OrderIndex),
-		}
-		*res.Destinations[i] = c
+		})
 	}
 
-	return &res, nil
+	return res, nil
 
 }
 

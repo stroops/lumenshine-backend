@@ -348,7 +348,6 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting token in DB", cerr.GeneralError))
 	}
 
-	//TODO: Send email
 	ur, err := dbClient.GetUserProfile(c, &pb.IDRequest{
 		Base: NewBaseRequest(uc),
 		Id:   user.Id,

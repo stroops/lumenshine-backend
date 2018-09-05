@@ -41,8 +41,7 @@ type UserProfile struct {
 	MailConfirmationKey        string    `boil:"mail_confirmation_key" json:"mail_confirmation_key" toml:"mail_confirmation_key" yaml:"mail_confirmation_key"`
 	MailConfirmationExpiryDate time.Time `boil:"mail_confirmation_expiry_date" json:"mail_confirmation_expiry_date" toml:"mail_confirmation_expiry_date" yaml:"mail_confirmation_expiry_date"`
 	TfaSecret                  string    `boil:"tfa_secret" json:"tfa_secret" toml:"tfa_secret" yaml:"tfa_secret"`
-	TfaQrcode                  []byte    `boil:"tfa_qrcode" json:"tfa_qrcode" toml:"tfa_qrcode" yaml:"tfa_qrcode"`
-	TfaURL                     string    `boil:"tfa_url" json:"tfa_url" toml:"tfa_url" yaml:"tfa_url"`
+	TfaTempSecret              string    `boil:"tfa_temp_secret" json:"tfa_temp_secret" toml:"tfa_temp_secret" yaml:"tfa_temp_secret"`
 	MailConfirmed              bool      `boil:"mail_confirmed" json:"mail_confirmed" toml:"mail_confirmed" yaml:"mail_confirmed"`
 	TfaConfirmed               bool      `boil:"tfa_confirmed" json:"tfa_confirmed" toml:"tfa_confirmed" yaml:"tfa_confirmed"`
 	MnemonicConfirmed          bool      `boil:"mnemonic_confirmed" json:"mnemonic_confirmed" toml:"mnemonic_confirmed" yaml:"mnemonic_confirmed"`
@@ -53,7 +52,6 @@ type UserProfile struct {
 	UpdatedAt                  time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                  string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 	KycStatus                  string    `boil:"kyc_status" json:"kyc_status" toml:"kyc_status" yaml:"kyc_status"`
-	TfaTempSecret              string    `boil:"tfa_temp_secret" json:"tfa_temp_secret" toml:"tfa_temp_secret" yaml:"tfa_temp_secret"`
 
 	R *userProfileR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userProfileL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -80,8 +78,7 @@ var UserProfileColumns = struct {
 	MailConfirmationKey        string
 	MailConfirmationExpiryDate string
 	TfaSecret                  string
-	TfaQrcode                  string
-	TfaURL                     string
+	TfaTempSecret              string
 	MailConfirmed              string
 	TfaConfirmed               string
 	MnemonicConfirmed          string
@@ -92,7 +89,6 @@ var UserProfileColumns = struct {
 	UpdatedAt                  string
 	UpdatedBy                  string
 	KycStatus                  string
-	TfaTempSecret              string
 }{
 	ID:                         "id",
 	Email:                      "email",
@@ -114,8 +110,7 @@ var UserProfileColumns = struct {
 	MailConfirmationKey:        "mail_confirmation_key",
 	MailConfirmationExpiryDate: "mail_confirmation_expiry_date",
 	TfaSecret:                  "tfa_secret",
-	TfaQrcode:                  "tfa_qrcode",
-	TfaURL:                     "tfa_url",
+	TfaTempSecret:              "tfa_temp_secret",
 	MailConfirmed:              "mail_confirmed",
 	TfaConfirmed:               "tfa_confirmed",
 	MnemonicConfirmed:          "mnemonic_confirmed",
@@ -126,7 +121,6 @@ var UserProfileColumns = struct {
 	UpdatedAt:                  "updated_at",
 	UpdatedBy:                  "updated_by",
 	KycStatus:                  "kyc_status",
-	TfaTempSecret:              "tfa_temp_secret",
 }
 
 // UserProfileRels is where relationship names are stored.
@@ -174,9 +168,9 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_qrcode", "tfa_url", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "password", "created_at", "updated_at", "updated_by", "kyc_status", "tfa_temp_secret"}
-	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_qrcode", "tfa_url", "password", "updated_by"}
-	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "created_at", "updated_at", "kyc_status", "tfa_temp_secret"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "password", "created_at", "updated_at", "updated_by", "kyc_status"}
+	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
+	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "created_at", "updated_at", "kyc_status"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )
 

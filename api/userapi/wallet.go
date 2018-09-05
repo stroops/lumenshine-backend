@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strings"
 
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
@@ -38,13 +39,25 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	userID := mw.GetAuthUser(c).UserID
+	friendlyID := ""
+	domain := ""
+	if l.FederationAddress != "" {
+		fedS := strings.Split(l.FederationAddress, "*")
+		if len(fedS) != 2 {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("federation_address", cerr.InvalidArgument, "Federation address incorrect format", ""))
+			return
+		}
+		friendlyID = fedS[0]
+		domain = fedS[1]
+	}
 
 	//first check the walletdata
 	reqData := &pb.CheckWalletRequest{
-		UserId:            userID,
-		WalletName:        l.WalletName,
-		FederationAddress: l.FederationAddress,
-		PublicKey_0:       l.PublicKey0,
+		UserId:      userID,
+		WalletName:  l.WalletName,
+		FriendlyId:  friendlyID,
+		Domain:      domain,
+		PublicKey_0: l.PublicKey0,
 	}
 	walletStatus, err := dbClient.CheckWalletData(c, reqData)
 	if err != nil {
@@ -68,12 +81,13 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 
 	//add the wallet
 	req := &pb.AddWalletRequest{
-		Base:              NewBaseRequest(uc),
-		UserId:            userID,
-		PublicKey_0:       l.PublicKey0,
-		WalletName:        l.WalletName,
-		FederationAddress: l.FederationAddress,
-		ShowOnHomescreen:  l.ShowOnHomescreen,
+		Base:             NewBaseRequest(uc),
+		UserId:           userID,
+		PublicKey_0:      l.PublicKey0,
+		WalletName:       l.WalletName,
+		FriendlyId:       friendlyID,
+		Domain:           domain,
+		ShowOnHomescreen: l.ShowOnHomescreen,
 	}
 	id, err := dbClient.AddWallet(c, req)
 	if err != nil {
@@ -110,11 +124,15 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 
 	ws := make([]GetUserWalletsResponse, len(wallets.Wallets))
 	for i, w := range wallets.Wallets {
+		federationAddress := ""
+		if w.FriendlyId != "" && w.Domain != "" {
+			federationAddress = w.FriendlyId + "*" + w.Domain
+		}
 		ws[i] = GetUserWalletsResponse{
 			ID:                w.Id,
 			PublicKey0:        w.PublicKey_0,
 			WalletName:        w.WalletName,
-			FederationAddress: w.FederationAddress,
+			FederationAddress: federationAddress,
 			ShowOnHomescreen:  w.ShowOnHomescreen,
 		}
 	}
@@ -194,13 +212,25 @@ func WalletChangeData(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	userID := mw.GetAuthUser(c).UserID
+	friendlyID := ""
+	domain := ""
+	if l.FederationAddress != "" {
+		fedS := strings.Split(l.FederationAddress, "*")
+		if len(fedS) != 2 {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("federation_address", cerr.InvalidArgument, "Federation address incorrect format", ""))
+			return
+		}
+		friendlyID = fedS[0]
+		domain = fedS[1]
+	}
 
 	//check new Walletdata
 	checkData, err := dbClient.CheckWalletData(c, &pb.CheckWalletRequest{
-		Base:              NewBaseRequest(uc),
-		UserId:            userID,
-		WalletName:        l.WalletName,
-		FederationAddress: l.FederationAddress,
+		Base:       NewBaseRequest(uc),
+		UserId:     userID,
+		WalletName: l.WalletName,
+		FriendlyId: friendlyID,
+		Domain:     domain,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error checking wallet data", cerr.GeneralError))
@@ -239,10 +269,11 @@ func WalletChangeData(uc *mw.IcopContext, c *gin.Context) {
 	//change the fed name
 	if l.FederationAddress != "" {
 		req := &pb.WalletChangeFederationAddressRequest{
-			Base:              NewBaseRequest(uc),
-			Id:                l.ID,
-			UserId:            userID,
-			FederationAddress: l.FederationAddress,
+			Base:       NewBaseRequest(uc),
+			Id:         l.ID,
+			UserId:     userID,
+			FriendlyId: friendlyID,
+			Domain:     domain,
 		}
 		_, err = dbClient.WalletChangeFederationAddress(c, req)
 		if err != nil {
@@ -276,10 +307,11 @@ func RemoveWalletFederationAddress(uc *mw.IcopContext, c *gin.Context) {
 
 	//remove the wallet
 	req := &pb.WalletChangeFederationAddressRequest{
-		Base:              NewBaseRequest(uc),
-		Id:                l.ID,
-		UserId:            userID,
-		FederationAddress: "",
+		Base:       NewBaseRequest(uc),
+		Id:         l.ID,
+		UserId:     userID,
+		FriendlyId: "",
+		Domain:     "",
 	}
 	_, err := dbClient.WalletChangeFederationAddress(c, req)
 	if err != nil {

@@ -8,9 +8,7 @@ package pb;
 message GetUserByIDOrEmailRequest {
   BaseRequest base = 1;
   int64 id = 2;
-  string email = 3;
-  bool with_qr_data = 4;
-  bool user_not_found = 5;
+  string email = 3;    
 }
 
 message CreateUserRequest {
@@ -77,16 +75,14 @@ message UserDetailsResponse {
   bool mail_confirmed = 2;
   string mail_confirmation_key = 3;
   int64 mail_confirmation_expiry = 4;
-  string tfa_secret = 5;
-  bytes tfa_qrcode = 6;
-  string tfa_url = 7;
-  bool tfa_confirmed = 8;
-  bool mnemonic_confirmed = 9;
-  string password = 10;
-  string email = 11;
-  int64 message_count = 12;
-  bool user_not_found = 13;
-  string tfa_temp_secret = 14;
+  string tfa_secret = 5;  
+  bool tfa_confirmed = 6;
+  bool mnemonic_confirmed = 7;
+  string password = 8;
+  string email = 9;
+  int64 message_count = 10;
+  bool user_not_found = 11;
+  string tfa_temp_secret = 12;
 }
 
 message ExistsEmailRequest {
@@ -234,8 +230,9 @@ message AddWalletRequest {
   int64 user_id = 2;
   string public_key_0 = 3;
   string wallet_name = 4;
-  string federation_address = 5;
-  bool show_on_homescreen = 6;
+  string friendly_id = 5;
+  string domain = 6;
+  bool show_on_homescreen = 7;
 }
 
 message WalletChangeNameRequest {  
@@ -256,15 +253,17 @@ message WalletChangeFederationAddressRequest {
   BaseRequest base = 1;
   int64 id = 2;
   int64 user_id = 3;  
-  string federation_address = 4;
+  string friendly_id = 4;
+  string domain = 5;
 }
 
 message CheckWalletRequest {  
   BaseRequest base = 1;
   int64 user_id = 2;  
   string wallet_name = 3;
-  string federation_address = 4;
-  string public_key_0 = 5;
+  string friendly_id = 4;
+  string domain = 5;
+  string public_key_0 = 6;
 }
 
 message CheckWalletResponse {  
@@ -278,8 +277,9 @@ message Wallet {
   int64 user_id = 2;
   string public_key_0 = 3;
   string wallet_name = 4;
-  string federation_address = 5;
-  bool show_on_homescreen = 6;
+  string friendly_id = 5;
+  string domain = 6;
+  bool show_on_homescreen = 7;
 }
 
 message GetWalletsRequest {  

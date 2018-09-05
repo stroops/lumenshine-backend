@@ -33,8 +33,8 @@ func (s *server) CheckWalletData(ctx context.Context, r *pb.CheckWalletRequest) 
 		resp.NameOk = !exists
 	}
 
-	if r.FederationAddress != "" {
-		exists, err := models.UserWallets(qm.Where("federation_address ilike ?", r.FederationAddress)).Exists(db)
+	if r.FriendlyId != "" && r.Domain != "" {
+		exists, err := models.UserWallets(qm.Where("friendly_id ilike ? and domain ilike ?", r.FriendlyId, r.Domain)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
@@ -63,8 +63,8 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 	}
 
 	//if fedname specified, check that fedname does not exist for other user
-	if r.FederationAddress != "" {
-		exists, err := models.UserWallets(qm.Where("user_id<>? and federation_address ilike ?", r.UserId, r.FederationAddress)).Exists(db)
+	if r.FriendlyId != "" && r.Domain != "" {
+		exists, err := models.UserWallets(qm.Where("user_id<>? and friendly_id ilike ? and domain ilike ?", r.UserId, r.FriendlyId, r.Domain)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
@@ -75,12 +75,13 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 
 	//add the wallet for the user
 	w := &models.UserWallet{
-		UserID:            int(r.UserId),
-		PublicKey0:        r.PublicKey_0,
-		WalletName:        r.WalletName,
-		FederationAddress: r.FederationAddress,
-		ShowOnHomescreen:  r.ShowOnHomescreen,
-		UpdatedBy:         r.Base.UpdateBy,
+		UserID:           int(r.UserId),
+		PublicKey0:       r.PublicKey_0,
+		WalletName:       r.WalletName,
+		FriendlyID:       r.FriendlyId,
+		Domain:           r.Domain,
+		ShowOnHomescreen: r.ShowOnHomescreen,
+		UpdatedBy:        r.Base.UpdateBy,
 	}
 
 	err = w.Insert(db, boil.Infer())
@@ -132,11 +133,13 @@ func (s *server) WalletChangeFederationAddress(ctx context.Context, r *pb.Wallet
 		return nil, err
 	}
 
-	w.FederationAddress = r.FederationAddress
+	w.FriendlyID = r.FriendlyId
+	w.Domain = r.Domain
 	w.UpdatedBy = r.Base.UpdateBy
 
 	_, err = w.Update(db, boil.Whitelist(
-		models.UserWalletColumns.FederationAddress,
+		models.UserWalletColumns.FriendlyID,
+		models.UserWalletColumns.Domain,
 		models.UserWalletColumns.UpdatedAt,
 		models.UserWalletColumns.UpdatedBy,
 	))
@@ -156,12 +159,13 @@ func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*
 	ret := new(pb.GetWalletsResponse)
 	for _, w := range wallets {
 		ret.Wallets = append(ret.Wallets, &pb.Wallet{
-			Id:                int64(w.ID),
-			UserId:            int64(w.UserID),
-			PublicKey_0:       w.PublicKey0,
-			WalletName:        w.WalletName,
-			ShowOnHomescreen:  w.ShowOnHomescreen,
-			FederationAddress: w.FederationAddress,
+			Id:               int64(w.ID),
+			UserId:           int64(w.UserID),
+			PublicKey_0:      w.PublicKey0,
+			WalletName:       w.WalletName,
+			ShowOnHomescreen: w.ShowOnHomescreen,
+			FriendlyId:       w.FriendlyID,
+			Domain:           w.Domain,
 		})
 	}
 
