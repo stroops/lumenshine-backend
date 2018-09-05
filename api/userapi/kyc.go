@@ -84,8 +84,7 @@ func UploadKycDocument(uc *mw.IcopContext, c *gin.Context) {
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("id_country_code", cerr.InvalidArgument, "Id country code is required", ""))
 			return
 		}
-		emptyDate := time.Time{}
-		if rr.IDIssueDate == emptyDate {
+		if rr.IDIssueDate.IsZero() {
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("id_issue_date", cerr.InvalidArgument, "Id issue date is required", ""))
 			return
 		}
