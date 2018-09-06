@@ -32,6 +32,7 @@ type Config struct {
 	SQLMigrationDir string
 	ApplicationDir  string
 	IsDevSystem     bool
+	ConnectToCoreDB bool
 }
 
 //Cnf holds the application configuration

@@ -170,6 +170,7 @@ func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 	c.JSON(http.StatusOK, r)
 }
 
+// CustomerDetailsResponse - customer details response
 type CustomerDetailsResponse struct {
 	ID               int       `json:"id"`
 	Forename         string    `json:"forename"`
@@ -246,6 +247,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 	})
 }
 
+// CustomerEditRequest - request data
 type CustomerEditRequest struct {
 	ID            int    `form:"id" json:"id"`
 	Forename      string `form:"forename" json:"forename" validate:"required,max=64"`

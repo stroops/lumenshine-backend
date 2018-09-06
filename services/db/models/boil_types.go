@@ -51,6 +51,38 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	return str
 }
 
+// Enum values for exchange_currency_type
+const (
+	ExchangeCurrencyTypeStellar     = "stellar"
+	ExchangeCurrencyTypeOtherCrypto = "other_crypto"
+	ExchangeCurrencyTypeFiat        = "fiat"
+)
+
+// Enum values for ico_status
+const (
+	IcoStatusPlanning  = "planning"
+	IcoStatusReady     = "ready"
+	IcoStatusActive    = "active"
+	IcoStatusFinished  = "finished"
+	IcoStatusCompleted = "completed"
+	IcoStatusStopped   = "stopped"
+)
+
+// Enum values for ico_sales_model
+const (
+	IcoSalesModelFixed = "fixed"
+)
+
+// Enum values for icophase_status
+const (
+	IcophaseStatusPlanning  = "planning"
+	IcophaseStatusReady     = "ready"
+	IcophaseStatusActive    = "active"
+	IcophaseStatusFinished  = "finished"
+	IcophaseStatusCompleted = "completed"
+	IcophaseStatusStopped   = "stopped"
+)
+
 // Enum values for chain
 const (
 	ChainFiat = "fiat"
