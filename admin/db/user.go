@@ -177,7 +177,18 @@ func UpdateUser(user models.AdminUser, updatedBy string) error {
 		return errors.New("User not found")
 	}
 
-	dbUser.Password = user.Password
+	whitelist := make([]string, 0)
+	whitelist = append(whitelist, models.AdminUserColumns.Forename,
+		models.AdminUserColumns.Lastname,
+		models.AdminUserColumns.Phone,
+		models.AdminUserColumns.Active,
+		models.AdminUserColumns.UpdatedBy,
+		models.AdminUserColumns.UpdatedAt)
+
+	if user.Password != "" {
+		dbUser.Password = user.Password
+		whitelist = append(whitelist, models.AdminUserColumns.Password)
+	}
 	dbUser.Forename = user.Forename
 	dbUser.Lastname = user.Lastname
 	dbUser.Phone = user.Phone
@@ -185,7 +196,7 @@ func UpdateUser(user models.AdminUser, updatedBy string) error {
 	dbUser.UpdatedBy = updatedBy
 	dbUser.UpdatedAt = time.Now()
 
-	_, err = dbUser.UpdateG(boil.Infer())
+	_, err = dbUser.UpdateG(boil.Whitelist(whitelist...))
 	if err != nil {
 		return err
 	}
