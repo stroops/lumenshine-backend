@@ -63,7 +63,7 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 
 	var err error
-	chainAmount, chainAmountDenom, err := s.getPriceForCoins(r.Chain, r.CoinAmount)
+	chainAmount, _, err := s.getPriceForCoins(r.Chain, r.CoinAmount)
 	if err != nil {
 		log.WithError(err).Error("Error getting price")
 		return nil, err
@@ -80,17 +80,17 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	addressSeed := ""
 	var index uint32
 	index = 0
-	if r.Chain == m.BlockChainEthereum || r.Chain == m.BlockChainBitcoin {
+	if r.Chain == m.PaymentNetworkEthereum || r.Chain == m.PaymentNetworkBitcoin {
 		//get new chain address
 		index, err = env.DBC.GetNextChainAddressIndex(r.Chain)
-		if r.Chain == m.BlockChainEthereum {
+		if r.Chain == m.PaymentNetworkEthereum {
 			ret.Address, err = s.Env.EthereumAddressGenerator.Generate(index)
 		} else {
 			ret.Address, err = s.Env.BitcoinAddressGenerator.Generate(index)
 		}
-	} else if r.Chain == m.BlockChainStellar {
+	} else if r.Chain == m.PaymentNetworkStellar {
 		ret.Address, addressSeed, err = s.Env.StellarAddressGenerator.Generate()
-	} else if r.Chain == m.BlockChainFiat {
+	} else if r.Chain == m.PaymentNetworkFiat {
 		//return the fiat data
 		ret.FiatBic = s.Env.Config.Fiat.BIC
 		ret.FiatIban = s.Env.Config.Fiat.IBAN
@@ -110,12 +110,12 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		OrderStatus: m.OrderStatusWaitingForPayment,
 		TokenAmount: r.CoinAmount,
 		//ChainAmount:          types.NewDecimal(new(decimal.Big).SetFloat64(chainAmount)),
-		CurrencyDenomAmount:  chainAmountDenom.Int64(),
-		Chain:                r.Chain,
+		//CurrencyDenomAmount:  chainAmountDenom.Int64(),
+		PaymentNetwork:       r.Chain,
 		AddressIndex:         int64(index),
-		ChainAddress:         ret.Address,
-		ChainAddressSeed:     addressSeed,
-		UserStellarPublicKey: r.UserPublicKey,
+		PaymentAddress:       ret.Address,
+		PaymentSeed:          addressSeed,
+		UserAccountPublicKey: r.UserPublicKey,
 		//OrderPhaseID:         r.IcoPhase,
 	}
 	err = order.Insert(s.Env.DBC, boil.Infer())
@@ -134,16 +134,16 @@ func (s *server) getPriceForCoins(chain string, coinCount int64) (chainAmount fl
 	chainAmount = 0.0
 	chainDenomAmount = big.NewInt(0)
 
-	if chain == m.BlockChainEthereum {
+	if chain == m.PaymentNetworkEthereum {
 		chainAmount = s.Env.Config.Ethereum.TokenPrice * float64(coinCount)
 		chainDenomAmount, err = ethereum.EthToWei(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.BlockChainBitcoin {
+	} else if chain == m.PaymentNetworkBitcoin {
 		chainAmount = s.Env.Config.Bitcoin.TokenPrice * float64(coinCount)
 		chainDenomAmount, err = bitcoin.BtcToSat(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.BlockChainStellar {
+	} else if chain == m.PaymentNetworkStellar {
 		chainAmount = s.Env.Config.Stellar.TokenPrice * float64(coinCount)
 		chainDenomAmount, err = stellar.XLMToStroops(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.BlockChainFiat {
+	} else if chain == m.PaymentNetworkFiat {
 		chainAmount = s.Env.Config.Fiat.TokenPrice * float64(coinCount)
 	}
 
@@ -188,11 +188,11 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 			CoinAmount:  orders[i].TokenAmount,
 			//ChainAmount:          v,
 			//ChainAmountDenom:     orders[i].CurrencyDenomAmount,
-			Chain:                orders[i].Chain,
-			ChainAddress:         orders[i].ChainAddress,
-			UserStellarPublicKey: orders[i].UserStellarPublicKey,
+			Chain:                orders[i].PaymentNetwork,
+			ChainAddress:         orders[i].PaymentAddress,
+			UserStellarPublicKey: orders[i].UserAccountPublicKey,
 		}
-		if orders[i].Chain == m.BlockChainFiat {
+		if orders[i].PaymentNetwork == m.PaymentNetworkFiat {
 			ret.UserOrders[i].FiatBic = s.Env.Config.Fiat.BIC
 			ret.UserOrders[i].FiatIban = s.Env.Config.Fiat.IBAN
 			ret.UserOrders[i].FiatDestinationName = s.Env.Config.Fiat.DestiantionName
@@ -244,10 +244,9 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 	tx, errCode, err := s.Env.AccountConfigurator.GetPaymentTransaction(order)
 	if err == nil && errCode == 0 {
 		//update the order to hold the tx
-		order.PaymentTX = tx
+		//TODO
 		order.UpdatedBy = r.Base.UpdateBy
 		_, err = order.Update(s.Env.DBC, boil.Whitelist(
-			m.UserOrderColumns.PaymentTX,
 			m.UserOrderColumns.UpdatedAt,
 			m.UserOrderColumns.UpdatedBy,
 		))

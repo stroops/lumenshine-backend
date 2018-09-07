@@ -24,7 +24,7 @@ type ExchangeCurrency struct {
 	ID                   int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	ExchangeCurrencyType string    `boil:"exchange_currency_type" json:"exchange_currency_type" toml:"exchange_currency_type" yaml:"exchange_currency_type"`
 	AssetCode            string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
-	Chain                string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
+	PaymentNetwork       string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
 	IssuerPK             string    `boil:"issuer_pk" json:"issuer_pk" toml:"issuer_pk" yaml:"issuer_pk"`
 	Decimals             int       `boil:"decimals" json:"decimals" toml:"decimals" yaml:"decimals"`
 	CreatedAt            time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -39,7 +39,7 @@ var ExchangeCurrencyColumns = struct {
 	ID                   string
 	ExchangeCurrencyType string
 	AssetCode            string
-	Chain                string
+	PaymentNetwork       string
 	IssuerPK             string
 	Decimals             string
 	CreatedAt            string
@@ -49,7 +49,7 @@ var ExchangeCurrencyColumns = struct {
 	ID:                   "id",
 	ExchangeCurrencyType: "exchange_currency_type",
 	AssetCode:            "asset_code",
-	Chain:                "chain",
+	PaymentNetwork:       "payment_network",
 	IssuerPK:             "issuer_pk",
 	Decimals:             "decimals",
 	CreatedAt:            "created_at",
@@ -61,18 +61,18 @@ var ExchangeCurrencyColumns = struct {
 var ExchangeCurrencyRels = struct {
 	IcoPhaseActivatedExchangeCurrencies string
 	IcoSupportedExchangeCurrencies      string
-	CurrencyUserOrders                  string
+	UserOrders                          string
 }{
 	IcoPhaseActivatedExchangeCurrencies: "IcoPhaseActivatedExchangeCurrencies",
 	IcoSupportedExchangeCurrencies:      "IcoSupportedExchangeCurrencies",
-	CurrencyUserOrders:                  "CurrencyUserOrders",
+	UserOrders:                          "UserOrders",
 }
 
 // exchangeCurrencyR is where relationships are stored.
 type exchangeCurrencyR struct {
 	IcoPhaseActivatedExchangeCurrencies IcoPhaseActivatedExchangeCurrencySlice
 	IcoSupportedExchangeCurrencies      IcoSupportedExchangeCurrencySlice
-	CurrencyUserOrders                  UserOrderSlice
+	UserOrders                          UserOrderSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -84,8 +84,8 @@ func (*exchangeCurrencyR) NewStruct() *exchangeCurrencyR {
 type exchangeCurrencyL struct{}
 
 var (
-	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "chain", "issuer_pk", "decimals", "created_at", "updated_at", "updated_by"}
-	exchangeCurrencyColumnsWithoutDefault = []string{"exchange_currency_type", "asset_code", "chain", "issuer_pk", "decimals", "updated_by"}
+	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "payment_network", "issuer_pk", "decimals", "created_at", "updated_at", "updated_by"}
+	exchangeCurrencyColumnsWithoutDefault = []string{"exchange_currency_type", "asset_code", "payment_network", "issuer_pk", "decimals", "updated_by"}
 	exchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	exchangeCurrencyPrimaryKeyColumns     = []string{"id"}
 )
@@ -387,15 +387,15 @@ func (o *ExchangeCurrency) IcoSupportedExchangeCurrencies(mods ...qm.QueryMod) i
 	return query
 }
 
-// CurrencyUserOrders retrieves all the user_order's UserOrders with an executor via currency_id column.
-func (o *ExchangeCurrency) CurrencyUserOrders(mods ...qm.QueryMod) userOrderQuery {
+// UserOrders retrieves all the user_order's UserOrders with an executor.
+func (o *ExchangeCurrency) UserOrders(mods ...qm.QueryMod) userOrderQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"user_order\".\"currency_id\"=?", o.ID),
+		qm.Where("\"user_order\".\"exchange_currency_id\"=?", o.ID),
 	)
 
 	query := UserOrders(queryMods...)
@@ -590,9 +590,9 @@ func (exchangeCurrencyL) LoadIcoSupportedExchangeCurrencies(e boil.Executor, sin
 	return nil
 }
 
-// LoadCurrencyUserOrders allows an eager lookup of values, cached into the
+// LoadUserOrders allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (exchangeCurrencyL) LoadCurrencyUserOrders(e boil.Executor, singular bool, maybeExchangeCurrency interface{}, mods queries.Applicator) error {
+func (exchangeCurrencyL) LoadUserOrders(e boil.Executor, singular bool, maybeExchangeCurrency interface{}, mods queries.Applicator) error {
 	var slice []*ExchangeCurrency
 	var object *ExchangeCurrency
 
@@ -625,7 +625,7 @@ func (exchangeCurrencyL) LoadCurrencyUserOrders(e boil.Executor, singular bool, 
 		}
 	}
 
-	query := NewQuery(qm.From(`user_order`), qm.WhereIn(`currency_id in ?`, args...))
+	query := NewQuery(qm.From(`user_order`), qm.WhereIn(`exchange_currency_id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
@@ -655,24 +655,24 @@ func (exchangeCurrencyL) LoadCurrencyUserOrders(e boil.Executor, singular bool, 
 		}
 	}
 	if singular {
-		object.R.CurrencyUserOrders = resultSlice
+		object.R.UserOrders = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
 				foreign.R = &userOrderR{}
 			}
-			foreign.R.Currency = object
+			foreign.R.ExchangeCurrency = object
 		}
 		return nil
 	}
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if local.ID == foreign.CurrencyID {
-				local.R.CurrencyUserOrders = append(local.R.CurrencyUserOrders, foreign)
+			if local.ID == foreign.ExchangeCurrencyID {
+				local.R.UserOrders = append(local.R.UserOrders, foreign)
 				if foreign.R == nil {
 					foreign.R = &userOrderR{}
 				}
-				foreign.R.Currency = local
+				foreign.R.ExchangeCurrency = local
 				break
 			}
 		}
@@ -805,31 +805,31 @@ func (o *ExchangeCurrency) AddIcoSupportedExchangeCurrencies(exec boil.Executor,
 	return nil
 }
 
-// AddCurrencyUserOrdersG adds the given related objects to the existing relationships
+// AddUserOrdersG adds the given related objects to the existing relationships
 // of the exchange_currency, optionally inserting them as new records.
-// Appends related to o.R.CurrencyUserOrders.
-// Sets related.R.Currency appropriately.
+// Appends related to o.R.UserOrders.
+// Sets related.R.ExchangeCurrency appropriately.
 // Uses the global database handle.
-func (o *ExchangeCurrency) AddCurrencyUserOrdersG(insert bool, related ...*UserOrder) error {
-	return o.AddCurrencyUserOrders(boil.GetDB(), insert, related...)
+func (o *ExchangeCurrency) AddUserOrdersG(insert bool, related ...*UserOrder) error {
+	return o.AddUserOrders(boil.GetDB(), insert, related...)
 }
 
-// AddCurrencyUserOrders adds the given related objects to the existing relationships
+// AddUserOrders adds the given related objects to the existing relationships
 // of the exchange_currency, optionally inserting them as new records.
-// Appends related to o.R.CurrencyUserOrders.
-// Sets related.R.Currency appropriately.
-func (o *ExchangeCurrency) AddCurrencyUserOrders(exec boil.Executor, insert bool, related ...*UserOrder) error {
+// Appends related to o.R.UserOrders.
+// Sets related.R.ExchangeCurrency appropriately.
+func (o *ExchangeCurrency) AddUserOrders(exec boil.Executor, insert bool, related ...*UserOrder) error {
 	var err error
 	for _, rel := range related {
 		if insert {
-			rel.CurrencyID = o.ID
+			rel.ExchangeCurrencyID = o.ID
 			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
 				"UPDATE \"user_order\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"currency_id"}),
+				strmangle.SetParamNames("\"", "\"", 1, []string{"exchange_currency_id"}),
 				strmangle.WhereClause("\"", "\"", 2, userOrderPrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
@@ -843,25 +843,25 @@ func (o *ExchangeCurrency) AddCurrencyUserOrders(exec boil.Executor, insert bool
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			rel.CurrencyID = o.ID
+			rel.ExchangeCurrencyID = o.ID
 		}
 	}
 
 	if o.R == nil {
 		o.R = &exchangeCurrencyR{
-			CurrencyUserOrders: related,
+			UserOrders: related,
 		}
 	} else {
-		o.R.CurrencyUserOrders = append(o.R.CurrencyUserOrders, related...)
+		o.R.UserOrders = append(o.R.UserOrders, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &userOrderR{
-				Currency: o,
+				ExchangeCurrency: o,
 			}
 		} else {
-			rel.R.Currency = o
+			rel.R.ExchangeCurrency = o
 		}
 	}
 	return nil

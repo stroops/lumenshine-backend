@@ -21,37 +21,37 @@ import (
 
 // ProcessedTransaction is an object representing the database table.
 type ProcessedTransaction struct {
-	Status           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
-	Chain            string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
-	TransactionID    string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
-	ReceivingAddress string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
-	ChainAmountDenom string    `boil:"chain_amount_denom" json:"chain_amount_denom" toml:"chain_amount_denom" yaml:"chain_amount_denom"`
-	UserOrderID      int       `boil:"user_order_id" json:"user_order_id" toml:"user_order_id" yaml:"user_order_id"`
-	CreatedAt        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	Status                           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
+	PaymentNetwork                   string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
+	TransactionID                    string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
+	ReceivingAddress                 string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
+	PaymentNetworkAmountDenomination string    `boil:"payment_network_amount_denomination" json:"payment_network_amount_denomination" toml:"payment_network_amount_denomination" yaml:"payment_network_amount_denomination"`
+	UserOrderID                      int       `boil:"user_order_id" json:"user_order_id" toml:"user_order_id" yaml:"user_order_id"`
+	CreatedAt                        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *processedTransactionR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L processedTransactionL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var ProcessedTransactionColumns = struct {
-	Status           string
-	Chain            string
-	TransactionID    string
-	ReceivingAddress string
-	ChainAmountDenom string
-	UserOrderID      string
-	CreatedAt        string
-	UpdatedAt        string
+	Status                           string
+	PaymentNetwork                   string
+	TransactionID                    string
+	ReceivingAddress                 string
+	PaymentNetworkAmountDenomination string
+	UserOrderID                      string
+	CreatedAt                        string
+	UpdatedAt                        string
 }{
-	Status:           "status",
-	Chain:            "chain",
-	TransactionID:    "transaction_id",
-	ReceivingAddress: "receiving_address",
-	ChainAmountDenom: "chain_amount_denom",
-	UserOrderID:      "user_order_id",
-	CreatedAt:        "created_at",
-	UpdatedAt:        "updated_at",
+	Status:                           "status",
+	PaymentNetwork:                   "payment_network",
+	TransactionID:                    "transaction_id",
+	ReceivingAddress:                 "receiving_address",
+	PaymentNetworkAmountDenomination: "payment_network_amount_denomination",
+	UserOrderID:                      "user_order_id",
+	CreatedAt:                        "created_at",
+	UpdatedAt:                        "updated_at",
 }
 
 // ProcessedTransactionRels is where relationship names are stored.
@@ -75,10 +75,10 @@ func (*processedTransactionR) NewStruct() *processedTransactionR {
 type processedTransactionL struct{}
 
 var (
-	processedTransactionColumns               = []string{"status", "chain", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id", "created_at", "updated_at"}
-	processedTransactionColumnsWithoutDefault = []string{"status", "chain", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id"}
+	processedTransactionColumns               = []string{"status", "payment_network", "transaction_id", "receiving_address", "payment_network_amount_denomination", "user_order_id", "created_at", "updated_at"}
+	processedTransactionColumnsWithoutDefault = []string{"status", "payment_network", "transaction_id", "receiving_address", "payment_network_amount_denomination", "user_order_id"}
 	processedTransactionColumnsWithDefault    = []string{"created_at", "updated_at"}
-	processedTransactionPrimaryKeyColumns     = []string{"chain", "transaction_id"}
+	processedTransactionPrimaryKeyColumns     = []string{"payment_network", "transaction_id"}
 )
 
 type (
@@ -469,7 +469,7 @@ func (o *ProcessedTransaction) SetUserOrder(exec boil.Executor, insert bool, rel
 		strmangle.SetParamNames("\"", "\"", 1, []string{"user_order_id"}),
 		strmangle.WhereClause("\"", "\"", 2, processedTransactionPrimaryKeyColumns),
 	)
-	values := []interface{}{related.ID, o.Chain, o.TransactionID}
+	values := []interface{}{related.ID, o.PaymentNetwork, o.TransactionID}
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, updateQuery)
@@ -507,13 +507,13 @@ func ProcessedTransactions(mods ...qm.QueryMod) processedTransactionQuery {
 }
 
 // FindProcessedTransactionG retrieves a single record by ID.
-func FindProcessedTransactionG(chain string, transactionID string, selectCols ...string) (*ProcessedTransaction, error) {
-	return FindProcessedTransaction(boil.GetDB(), chain, transactionID, selectCols...)
+func FindProcessedTransactionG(paymentNetwork string, transactionID string, selectCols ...string) (*ProcessedTransaction, error) {
+	return FindProcessedTransaction(boil.GetDB(), paymentNetwork, transactionID, selectCols...)
 }
 
 // FindProcessedTransaction retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindProcessedTransaction(exec boil.Executor, chain string, transactionID string, selectCols ...string) (*ProcessedTransaction, error) {
+func FindProcessedTransaction(exec boil.Executor, paymentNetwork string, transactionID string, selectCols ...string) (*ProcessedTransaction, error) {
 	processedTransactionObj := &ProcessedTransaction{}
 
 	sel := "*"
@@ -521,10 +521,10 @@ func FindProcessedTransaction(exec boil.Executor, chain string, transactionID st
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"processed_transaction\" where \"chain\"=$1 AND \"transaction_id\"=$2", sel,
+		"select %s from \"processed_transaction\" where \"payment_network\"=$1 AND \"transaction_id\"=$2", sel,
 	)
 
-	q := queries.Raw(query, chain, transactionID)
+	q := queries.Raw(query, paymentNetwork, transactionID)
 
 	err := q.Bind(nil, exec, processedTransactionObj)
 	if err != nil {
@@ -915,7 +915,7 @@ func (o *ProcessedTransaction) Delete(exec boil.Executor) (int64, error) {
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), processedTransactionPrimaryKeyMapping)
-	sql := "DELETE FROM \"processed_transaction\" WHERE \"chain\"=$1 AND \"transaction_id\"=$2"
+	sql := "DELETE FROM \"processed_transaction\" WHERE \"payment_network\"=$1 AND \"transaction_id\"=$2"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -1030,7 +1030,7 @@ func (o *ProcessedTransaction) ReloadG() error {
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *ProcessedTransaction) Reload(exec boil.Executor) error {
-	ret, err := FindProcessedTransaction(exec, o.Chain, o.TransactionID)
+	ret, err := FindProcessedTransaction(exec, o.PaymentNetwork, o.TransactionID)
 	if err != nil {
 		return err
 	}
@@ -1079,21 +1079,21 @@ func (o *ProcessedTransactionSlice) ReloadAll(exec boil.Executor) error {
 }
 
 // ProcessedTransactionExistsG checks if the ProcessedTransaction row exists.
-func ProcessedTransactionExistsG(chain string, transactionID string) (bool, error) {
-	return ProcessedTransactionExists(boil.GetDB(), chain, transactionID)
+func ProcessedTransactionExistsG(paymentNetwork string, transactionID string) (bool, error) {
+	return ProcessedTransactionExists(boil.GetDB(), paymentNetwork, transactionID)
 }
 
 // ProcessedTransactionExists checks if the ProcessedTransaction row exists.
-func ProcessedTransactionExists(exec boil.Executor, chain string, transactionID string) (bool, error) {
+func ProcessedTransactionExists(exec boil.Executor, paymentNetwork string, transactionID string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"processed_transaction\" where \"chain\"=$1 AND \"transaction_id\"=$2 limit 1)"
+	sql := "select exists(select 1 from \"processed_transaction\" where \"payment_network\"=$1 AND \"transaction_id\"=$2 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, chain, transactionID)
+		fmt.Fprintln(boil.DebugWriter, paymentNetwork, transactionID)
 	}
 
-	row := exec.QueryRow(sql, chain, transactionID)
+	row := exec.QueryRow(sql, paymentNetwork, transactionID)
 
 	err := row.Scan(&exists)
 	if err != nil {

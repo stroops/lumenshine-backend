@@ -213,7 +213,7 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	//get the order from the database
-	order, err := l.DB.GetOpenOrderForAddress(m.BlockChainEthereum, toAddress)
+	order, err := l.DB.GetOpenOrderForAddress(m.PaymentNetworkEthereum, toAddress)
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -224,7 +224,7 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.BlockChainEthereum, hash, toAddress, order.ID, valueWei)
+	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
 	if err != nil {
 		return err
 	}

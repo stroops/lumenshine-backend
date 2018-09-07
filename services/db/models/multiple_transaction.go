@@ -21,37 +21,37 @@ import (
 
 // MultipleTransaction is an object representing the database table.
 type MultipleTransaction struct {
-	ID               int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Chain            string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
-	TransactionID    string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
-	ReceivingAddress string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
-	ChainAmountDenom string    `boil:"chain_amount_denom" json:"chain_amount_denom" toml:"chain_amount_denom" yaml:"chain_amount_denom"`
-	UserOrderID      int       `boil:"user_order_id" json:"user_order_id" toml:"user_order_id" yaml:"user_order_id"`
-	CreatedAt        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID                        int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	PaymentNetwork            string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
+	TransactionID             string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
+	ReceivingAddress          string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
+	PaymentNetworkAmountDenom string    `boil:"payment_network_amount_denom" json:"payment_network_amount_denom" toml:"payment_network_amount_denom" yaml:"payment_network_amount_denom"`
+	UserOrderID               int       `boil:"user_order_id" json:"user_order_id" toml:"user_order_id" yaml:"user_order_id"`
+	CreatedAt                 time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                 time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *multipleTransactionR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L multipleTransactionL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var MultipleTransactionColumns = struct {
-	ID               string
-	Chain            string
-	TransactionID    string
-	ReceivingAddress string
-	ChainAmountDenom string
-	UserOrderID      string
-	CreatedAt        string
-	UpdatedAt        string
+	ID                        string
+	PaymentNetwork            string
+	TransactionID             string
+	ReceivingAddress          string
+	PaymentNetworkAmountDenom string
+	UserOrderID               string
+	CreatedAt                 string
+	UpdatedAt                 string
 }{
-	ID:               "id",
-	Chain:            "chain",
-	TransactionID:    "transaction_id",
-	ReceivingAddress: "receiving_address",
-	ChainAmountDenom: "chain_amount_denom",
-	UserOrderID:      "user_order_id",
-	CreatedAt:        "created_at",
-	UpdatedAt:        "updated_at",
+	ID:                        "id",
+	PaymentNetwork:            "payment_network",
+	TransactionID:             "transaction_id",
+	ReceivingAddress:          "receiving_address",
+	PaymentNetworkAmountDenom: "payment_network_amount_denom",
+	UserOrderID:               "user_order_id",
+	CreatedAt:                 "created_at",
+	UpdatedAt:                 "updated_at",
 }
 
 // MultipleTransactionRels is where relationship names are stored.
@@ -75,8 +75,8 @@ func (*multipleTransactionR) NewStruct() *multipleTransactionR {
 type multipleTransactionL struct{}
 
 var (
-	multipleTransactionColumns               = []string{"id", "chain", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id", "created_at", "updated_at"}
-	multipleTransactionColumnsWithoutDefault = []string{"chain", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id"}
+	multipleTransactionColumns               = []string{"id", "payment_network", "transaction_id", "receiving_address", "payment_network_amount_denom", "user_order_id", "created_at", "updated_at"}
+	multipleTransactionColumnsWithoutDefault = []string{"payment_network", "transaction_id", "receiving_address", "payment_network_amount_denom", "user_order_id"}
 	multipleTransactionColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	multipleTransactionPrimaryKeyColumns     = []string{"id"}
 )

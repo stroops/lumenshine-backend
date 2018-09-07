@@ -58,12 +58,12 @@ const (
 	ExchangeCurrencyTypeFiat        = "fiat"
 )
 
-// Enum values for block_chain
+// Enum values for payment_network
 const (
-	BlockChainFiat     = "fiat"
-	BlockChainStellar  = "stellar"
-	BlockChainEthereum = "ethereum"
-	BlockChainBitcoin  = "bitcoin"
+	PaymentNetworkFiat     = "fiat"
+	PaymentNetworkStellar  = "stellar"
+	PaymentNetworkEthereum = "ethereum"
+	PaymentNetworkBitcoin  = "bitcoin"
 )
 
 // Enum values for ico_status

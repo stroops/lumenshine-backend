@@ -244,7 +244,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	//get the order from the database
-	order, err := l.DB.GetOpenOrderForAddress(m.BlockChainBitcoin, toAddress)
+	order, err := l.DB.GetOpenOrderForAddress(m.PaymentNetworkBitcoin, toAddress)
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -255,7 +255,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.BlockChainBitcoin, hash, toAddress, order.ID, valueSat)
+	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkBitcoin, hash, toAddress, order.ID, valueSat)
 	if err != nil {
 		return err
 	}

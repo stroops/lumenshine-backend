@@ -400,8 +400,8 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 		qm.Select(
 			m.UserOrderColumns.ID,
 			m.UserOrderColumns.TokenAmount,
-			m.UserOrderColumns.CurrencyDenomAmount,
-			m.UserOrderColumns.Chain,
+			m.UserOrderColumns.ExchangeCurrencyDenominationAmount,
+			m.UserOrderColumns.PaymentNetwork,
 			m.UserOrderColumns.OrderStatus,
 			m.UserOrderColumns.CreatedAt,
 		),

@@ -63,9 +63,9 @@ func CreateNewDB(cnf *config.Config) (*DB, error) {
 func (db *DB) GetNextChainAddressIndex(chain string) (uint32, error) {
 	key := ""
 	var index uint32
-	if chain == m.BlockChainBitcoin {
+	if chain == m.PaymentNetworkBitcoin {
 		key = "btc_address_index"
-	} else if chain == m.BlockChainEthereum {
+	} else if chain == m.PaymentNetworkEthereum {
 		key = "eth_address_index"
 	}
 

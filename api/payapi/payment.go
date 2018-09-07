@@ -105,7 +105,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 
 	// TODO: Checks for payment
 	// correct amount, ordercount, check for fiat, etc.
-	if l.Chain != m.BlockChainFiat && l.UserPublicKey == "" {
+	if l.Chain != m.PaymentNetworkFiat && l.UserPublicKey == "" {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("user_public_key", cerr.MissingMandatoryField, "Need stellar public key", ""))
 		return
 	}
