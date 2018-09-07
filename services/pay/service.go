@@ -17,11 +17,9 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
 	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
-	"github.com/ericlagergren/decimal"
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
-	"github.com/volatiletech/sqlboiler/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -82,17 +80,17 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	addressSeed := ""
 	var index uint32
 	index = 0
-	if r.Chain == m.ChainEth || r.Chain == m.ChainBTC {
+	if r.Chain == m.BlockChainEthereum || r.Chain == m.BlockChainBitcoin {
 		//get new chain address
 		index, err = env.DBC.GetNextChainAddressIndex(r.Chain)
-		if r.Chain == m.ChainEth {
+		if r.Chain == m.BlockChainEthereum {
 			ret.Address, err = s.Env.EthereumAddressGenerator.Generate(index)
 		} else {
 			ret.Address, err = s.Env.BitcoinAddressGenerator.Generate(index)
 		}
-	} else if r.Chain == m.ChainXLM {
+	} else if r.Chain == m.BlockChainStellar {
 		ret.Address, addressSeed, err = s.Env.StellarAddressGenerator.Generate()
-	} else if r.Chain == m.ChainFiat {
+	} else if r.Chain == m.BlockChainFiat {
 		//return the fiat data
 		ret.FiatBic = s.Env.Config.Fiat.BIC
 		ret.FiatIban = s.Env.Config.Fiat.IBAN
@@ -108,17 +106,17 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 
 	//save order to db
 	order := &m.UserOrder{
-		UserID:               int(r.UserId),
-		OrderStatus:          m.OrderStatusWaitingForPayment,
-		CoinAmount:           r.CoinAmount,
-		ChainAmount:          types.NewDecimal(new(decimal.Big).SetFloat64(chainAmount)),
-		ChainAmountDenom:     chainAmountDenom.String(),
+		UserID:      int(r.UserId),
+		OrderStatus: m.OrderStatusWaitingForPayment,
+		TokenAmount: r.CoinAmount,
+		//ChainAmount:          types.NewDecimal(new(decimal.Big).SetFloat64(chainAmount)),
+		CurrencyDenomAmount:  chainAmountDenom.Int64(),
 		Chain:                r.Chain,
 		AddressIndex:         int64(index),
 		ChainAddress:         ret.Address,
 		ChainAddressSeed:     addressSeed,
 		UserStellarPublicKey: r.UserPublicKey,
-		OrderPhaseID:         r.IcoPhase,
+		//OrderPhaseID:         r.IcoPhase,
 	}
 	err = order.Insert(s.Env.DBC, boil.Infer())
 	if err != nil {
@@ -136,16 +134,16 @@ func (s *server) getPriceForCoins(chain string, coinCount int64) (chainAmount fl
 	chainAmount = 0.0
 	chainDenomAmount = big.NewInt(0)
 
-	if chain == m.ChainEth {
+	if chain == m.BlockChainEthereum {
 		chainAmount = s.Env.Config.Ethereum.TokenPrice * float64(coinCount)
 		chainDenomAmount, err = ethereum.EthToWei(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.ChainBTC {
+	} else if chain == m.BlockChainBitcoin {
 		chainAmount = s.Env.Config.Bitcoin.TokenPrice * float64(coinCount)
 		chainDenomAmount, err = bitcoin.BtcToSat(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.ChainXLM {
+	} else if chain == m.BlockChainStellar {
 		chainAmount = s.Env.Config.Stellar.TokenPrice * float64(coinCount)
 		chainDenomAmount, err = stellar.XLMToStroops(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.ChainFiat {
+	} else if chain == m.BlockChainFiat {
 		chainAmount = s.Env.Config.Fiat.TokenPrice * float64(coinCount)
 	}
 
@@ -180,21 +178,21 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	ret := new(pb.UserOrdersResponse)
 	ret.UserOrders = make([]*pb.UserOrder, len(orders))
 	for i := 0; i < len(orders); i++ {
-		v, ok := orders[i].ChainAmount.Float64()
+		/*v, ok := orders[i].ChainAmount.Float64()
 		if !ok {
 			v = 0
-		}
+		}*/
 		ret.UserOrders[i] = &pb.UserOrder{
-			Id:                   int64(orders[i].ID),
-			OrderStatus:          orders[i].OrderStatus,
-			CoinAmount:           orders[i].CoinAmount,
-			ChainAmount:          v,
-			ChainAmountDenom:     orders[i].ChainAmountDenom,
+			Id:          int64(orders[i].ID),
+			OrderStatus: orders[i].OrderStatus,
+			CoinAmount:  orders[i].TokenAmount,
+			//ChainAmount:          v,
+			//ChainAmountDenom:     orders[i].CurrencyDenomAmount,
 			Chain:                orders[i].Chain,
 			ChainAddress:         orders[i].ChainAddress,
 			UserStellarPublicKey: orders[i].UserStellarPublicKey,
 		}
-		if orders[i].Chain == m.ChainFiat {
+		if orders[i].Chain == m.BlockChainFiat {
 			ret.UserOrders[i].FiatBic = s.Env.Config.Fiat.BIC
 			ret.UserOrders[i].FiatIban = s.Env.Config.Fiat.IBAN
 			ret.UserOrders[i].FiatDestinationName = s.Env.Config.Fiat.DestiantionName
@@ -206,7 +204,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 }
 
 func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhaseResponse, error) {
-	p, err := m.IcoPhases(qm.Where(m.IcoPhaseColumns.IsActive+"=?", true)).One(s.Env.DBC)
+	p, err := m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(s.Env.DBC)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &pb.IcoPhaseResponse{}, nil
@@ -215,11 +213,11 @@ func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhas
 	}
 
 	return &pb.IcoPhaseResponse{
-		PhaseName:  p.PhaseName,
+		PhaseName:  p.IcoPhaseName,
 		StartTime:  int64(p.StartTime.Unix()),
 		EndTime:    int64(p.EndTime.Unix()),
-		CoinAmount: p.CoinAmount,
-		IsActive:   p.IsActive,
+		CoinAmount: p.TokensLeft,
+		IsActive:   true,
 	}, nil
 }
 

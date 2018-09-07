@@ -21,8 +21,8 @@ import (
 
 // ProcessedTransaction is an object representing the database table.
 type ProcessedTransaction struct {
-	Chain            string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
 	Status           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
+	Chain            string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
 	TransactionID    string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
 	ReceivingAddress string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
 	ChainAmountDenom string    `boil:"chain_amount_denom" json:"chain_amount_denom" toml:"chain_amount_denom" yaml:"chain_amount_denom"`
@@ -35,8 +35,8 @@ type ProcessedTransaction struct {
 }
 
 var ProcessedTransactionColumns = struct {
-	Chain            string
 	Status           string
+	Chain            string
 	TransactionID    string
 	ReceivingAddress string
 	ChainAmountDenom string
@@ -44,8 +44,8 @@ var ProcessedTransactionColumns = struct {
 	CreatedAt        string
 	UpdatedAt        string
 }{
-	Chain:            "chain",
 	Status:           "status",
+	Chain:            "chain",
 	TransactionID:    "transaction_id",
 	ReceivingAddress: "receiving_address",
 	ChainAmountDenom: "chain_amount_denom",
@@ -75,8 +75,8 @@ func (*processedTransactionR) NewStruct() *processedTransactionR {
 type processedTransactionL struct{}
 
 var (
-	processedTransactionColumns               = []string{"chain", "status", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id", "created_at", "updated_at"}
-	processedTransactionColumnsWithoutDefault = []string{"chain", "status", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id"}
+	processedTransactionColumns               = []string{"status", "chain", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id", "created_at", "updated_at"}
+	processedTransactionColumnsWithoutDefault = []string{"status", "chain", "transaction_id", "receiving_address", "chain_amount_denom", "user_order_id"}
 	processedTransactionColumnsWithDefault    = []string{"created_at", "updated_at"}
 	processedTransactionPrimaryKeyColumns     = []string{"chain", "transaction_id"}
 )

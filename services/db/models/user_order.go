@@ -17,28 +17,27 @@ import (
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"github.com/volatiletech/sqlboiler/strmangle"
-	"github.com/volatiletech/sqlboiler/types"
 )
 
 // UserOrder is an object representing the database table.
 type UserOrder struct {
-	ID                   int           `boil:"id" json:"id" toml:"id" yaml:"id"`
-	UserID               int           `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	OrderPhaseID         string        `boil:"order_phase_id" json:"order_phase_id" toml:"order_phase_id" yaml:"order_phase_id"`
-	OrderStatus          string        `boil:"order_status" json:"order_status" toml:"order_status" yaml:"order_status"`
-	CoinAmount           int64         `boil:"coin_amount" json:"coin_amount" toml:"coin_amount" yaml:"coin_amount"`
-	ChainAmount          types.Decimal `boil:"chain_amount" json:"chain_amount" toml:"chain_amount" yaml:"chain_amount"`
-	ChainAmountDenom     string        `boil:"chain_amount_denom" json:"chain_amount_denom" toml:"chain_amount_denom" yaml:"chain_amount_denom"`
-	Chain                string        `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
-	AddressIndex         int64         `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
-	ChainAddress         string        `boil:"chain_address" json:"chain_address" toml:"chain_address" yaml:"chain_address"`
-	ChainAddressSeed     string        `boil:"chain_address_seed" json:"chain_address_seed" toml:"chain_address_seed" yaml:"chain_address_seed"`
-	UserStellarPublicKey string        `boil:"user_stellar_public_key" json:"user_stellar_public_key" toml:"user_stellar_public_key" yaml:"user_stellar_public_key"`
-	PaymentErrorMessage  string        `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
-	PaymentTX            string        `boil:"payment_tx" json:"payment_tx" toml:"payment_tx" yaml:"payment_tx"`
-	CreatedAt            time.Time     `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt            time.Time     `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	UpdatedBy            string        `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	ID                   int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	UserID               int       `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	IcoPhaseID           int       `boil:"ico_phase_id" json:"ico_phase_id" toml:"ico_phase_id" yaml:"ico_phase_id"`
+	OrderStatus          string    `boil:"order_status" json:"order_status" toml:"order_status" yaml:"order_status"`
+	TokenAmount          int64     `boil:"token_amount" json:"token_amount" toml:"token_amount" yaml:"token_amount"`
+	CurrencyID           int       `boil:"currency_id" json:"currency_id" toml:"currency_id" yaml:"currency_id"`
+	CurrencyDenomAmount  int64     `boil:"currency_denom_amount" json:"currency_denom_amount" toml:"currency_denom_amount" yaml:"currency_denom_amount"`
+	Chain                string    `boil:"chain" json:"chain" toml:"chain" yaml:"chain"`
+	AddressIndex         int64     `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
+	ChainAddress         string    `boil:"chain_address" json:"chain_address" toml:"chain_address" yaml:"chain_address"`
+	ChainAddressSeed     string    `boil:"chain_address_seed" json:"chain_address_seed" toml:"chain_address_seed" yaml:"chain_address_seed"`
+	UserStellarPublicKey string    `boil:"user_stellar_public_key" json:"user_stellar_public_key" toml:"user_stellar_public_key" yaml:"user_stellar_public_key"`
+	PaymentErrorMessage  string    `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
+	PaymentTX            string    `boil:"payment_tx" json:"payment_tx" toml:"payment_tx" yaml:"payment_tx"`
+	CreatedAt            time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt            time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy            string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *userOrderR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userOrderL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -47,11 +46,11 @@ type UserOrder struct {
 var UserOrderColumns = struct {
 	ID                   string
 	UserID               string
-	OrderPhaseID         string
+	IcoPhaseID           string
 	OrderStatus          string
-	CoinAmount           string
-	ChainAmount          string
-	ChainAmountDenom     string
+	TokenAmount          string
+	CurrencyID           string
+	CurrencyDenomAmount  string
 	Chain                string
 	AddressIndex         string
 	ChainAddress         string
@@ -65,11 +64,11 @@ var UserOrderColumns = struct {
 }{
 	ID:                   "id",
 	UserID:               "user_id",
-	OrderPhaseID:         "order_phase_id",
+	IcoPhaseID:           "ico_phase_id",
 	OrderStatus:          "order_status",
-	CoinAmount:           "coin_amount",
-	ChainAmount:          "chain_amount",
-	ChainAmountDenom:     "chain_amount_denom",
+	TokenAmount:          "token_amount",
+	CurrencyID:           "currency_id",
+	CurrencyDenomAmount:  "currency_denom_amount",
 	Chain:                "chain",
 	AddressIndex:         "address_index",
 	ChainAddress:         "chain_address",
@@ -85,12 +84,14 @@ var UserOrderColumns = struct {
 // UserOrderRels is where relationship names are stored.
 var UserOrderRels = struct {
 	User                 string
-	OrderPhase           string
+	IcoPhase             string
+	Currency             string
 	MultipleTransaction  string
 	ProcessedTransaction string
 }{
 	User:                 "User",
-	OrderPhase:           "OrderPhase",
+	IcoPhase:             "IcoPhase",
+	Currency:             "Currency",
 	MultipleTransaction:  "MultipleTransaction",
 	ProcessedTransaction: "ProcessedTransaction",
 }
@@ -98,7 +99,8 @@ var UserOrderRels = struct {
 // userOrderR is where relationships are stored.
 type userOrderR struct {
 	User                 *UserProfile
-	OrderPhase           *IcoPhase
+	IcoPhase             *IcoPhase
+	Currency             *ExchangeCurrency
 	MultipleTransaction  *MultipleTransaction
 	ProcessedTransaction *ProcessedTransaction
 }
@@ -112,8 +114,8 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "order_phase_id", "order_status", "coin_amount", "chain_amount", "chain_amount_denom", "chain", "address_index", "chain_address", "chain_address_seed", "user_stellar_public_key", "payment_error_message", "payment_tx", "created_at", "updated_at", "updated_by"}
-	userOrderColumnsWithoutDefault = []string{"user_id", "order_phase_id", "order_status", "coin_amount", "chain_amount", "chain_amount_denom", "chain", "address_index", "chain_address", "chain_address_seed", "user_stellar_public_key", "payment_error_message", "payment_tx", "updated_by"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "currency_id", "currency_denom_amount", "chain", "address_index", "chain_address", "chain_address_seed", "user_stellar_public_key", "payment_error_message", "payment_tx", "created_at", "updated_at", "updated_by"}
+	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "currency_id", "currency_denom_amount", "chain", "address_index", "chain_address", "chain_address_seed", "user_stellar_public_key", "payment_error_message", "payment_tx", "updated_by"}
 	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )
@@ -387,16 +389,30 @@ func (o *UserOrder) User(mods ...qm.QueryMod) userProfileQuery {
 	return query
 }
 
-// OrderPhase pointed to by the foreign key.
-func (o *UserOrder) OrderPhase(mods ...qm.QueryMod) icoPhaseQuery {
+// IcoPhase pointed to by the foreign key.
+func (o *UserOrder) IcoPhase(mods ...qm.QueryMod) icoPhaseQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("phase_name=?", o.OrderPhaseID),
+		qm.Where("id=?", o.IcoPhaseID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
 	query := IcoPhases(queryMods...)
 	queries.SetFrom(query.Query, "\"ico_phase\"")
+
+	return query
+}
+
+// Currency pointed to by the foreign key.
+func (o *UserOrder) Currency(mods ...qm.QueryMod) exchangeCurrencyQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("id=?", o.CurrencyID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	query := ExchangeCurrencies(queryMods...)
+	queries.SetFrom(query.Query, "\"exchange_currency\"")
 
 	return query
 }
@@ -524,9 +540,9 @@ func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interf
 	return nil
 }
 
-// LoadOrderPhase allows an eager lookup of values, cached into the
+// LoadIcoPhase allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
+func (userOrderL) LoadIcoPhase(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
 	var slice []*UserOrder
 	var object *UserOrder
 
@@ -541,7 +557,7 @@ func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder 
 		if object.R == nil {
 			object.R = &userOrderR{}
 		}
-		args = append(args, object.OrderPhaseID)
+		args = append(args, object.IcoPhaseID)
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -550,16 +566,16 @@ func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder 
 			}
 
 			for _, a := range args {
-				if a == obj.OrderPhaseID {
+				if a == obj.IcoPhaseID {
 					continue Outer
 				}
 			}
 
-			args = append(args, obj.OrderPhaseID)
+			args = append(args, obj.IcoPhaseID)
 		}
 	}
 
-	query := NewQuery(qm.From(`ico_phase`), qm.WhereIn(`phase_name in ?`, args...))
+	query := NewQuery(qm.From(`ico_phase`), qm.WhereIn(`id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
@@ -595,22 +611,117 @@ func (userOrderL) LoadOrderPhase(e boil.Executor, singular bool, maybeUserOrder 
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.OrderPhase = foreign
+		object.R.IcoPhase = foreign
 		if foreign.R == nil {
 			foreign.R = &icoPhaseR{}
 		}
-		foreign.R.OrderPhaseUserOrders = append(foreign.R.OrderPhaseUserOrders, object)
+		foreign.R.UserOrders = append(foreign.R.UserOrders, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if local.OrderPhaseID == foreign.PhaseName {
-				local.R.OrderPhase = foreign
+			if local.IcoPhaseID == foreign.ID {
+				local.R.IcoPhase = foreign
 				if foreign.R == nil {
 					foreign.R = &icoPhaseR{}
 				}
-				foreign.R.OrderPhaseUserOrders = append(foreign.R.OrderPhaseUserOrders, local)
+				foreign.R.UserOrders = append(foreign.R.UserOrders, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadCurrency allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (userOrderL) LoadCurrency(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
+	var slice []*UserOrder
+	var object *UserOrder
+
+	if singular {
+		object = maybeUserOrder.(*UserOrder)
+	} else {
+		slice = *maybeUserOrder.(*[]*UserOrder)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userOrderR{}
+		}
+		args = append(args, object.CurrencyID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userOrderR{}
+			}
+
+			for _, a := range args {
+				if a == obj.CurrencyID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.CurrencyID)
+		}
+	}
+
+	query := NewQuery(qm.From(`exchange_currency`), qm.WhereIn(`id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load ExchangeCurrency")
+	}
+
+	var resultSlice []*ExchangeCurrency
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice ExchangeCurrency")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for exchange_currency")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for exchange_currency")
+	}
+
+	if len(userOrderAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Currency = foreign
+		if foreign.R == nil {
+			foreign.R = &exchangeCurrencyR{}
+		}
+		foreign.R.CurrencyUserOrders = append(foreign.R.CurrencyUserOrders, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.CurrencyID == foreign.ID {
+				local.R.Currency = foreign
+				if foreign.R == nil {
+					foreign.R = &exchangeCurrencyR{}
+				}
+				foreign.R.CurrencyUserOrders = append(foreign.R.CurrencyUserOrders, local)
 				break
 			}
 		}
@@ -862,18 +973,18 @@ func (o *UserOrder) SetUser(exec boil.Executor, insert bool, related *UserProfil
 	return nil
 }
 
-// SetOrderPhaseG of the userOrder to the related item.
-// Sets o.R.OrderPhase to related.
-// Adds o to related.R.OrderPhaseUserOrders.
+// SetIcoPhaseG of the userOrder to the related item.
+// Sets o.R.IcoPhase to related.
+// Adds o to related.R.UserOrders.
 // Uses the global database handle.
-func (o *UserOrder) SetOrderPhaseG(insert bool, related *IcoPhase) error {
-	return o.SetOrderPhase(boil.GetDB(), insert, related)
+func (o *UserOrder) SetIcoPhaseG(insert bool, related *IcoPhase) error {
+	return o.SetIcoPhase(boil.GetDB(), insert, related)
 }
 
-// SetOrderPhase of the userOrder to the related item.
-// Sets o.R.OrderPhase to related.
-// Adds o to related.R.OrderPhaseUserOrders.
-func (o *UserOrder) SetOrderPhase(exec boil.Executor, insert bool, related *IcoPhase) error {
+// SetIcoPhase of the userOrder to the related item.
+// Sets o.R.IcoPhase to related.
+// Adds o to related.R.UserOrders.
+func (o *UserOrder) SetIcoPhase(exec boil.Executor, insert bool, related *IcoPhase) error {
 	var err error
 	if insert {
 		if err = related.Insert(exec, boil.Infer()); err != nil {
@@ -883,10 +994,10 @@ func (o *UserOrder) SetOrderPhase(exec boil.Executor, insert bool, related *IcoP
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"user_order\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"order_phase_id"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"ico_phase_id"}),
 		strmangle.WhereClause("\"", "\"", 2, userOrderPrimaryKeyColumns),
 	)
-	values := []interface{}{related.PhaseName, o.ID}
+	values := []interface{}{related.ID, o.ID}
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, updateQuery)
@@ -897,21 +1008,76 @@ func (o *UserOrder) SetOrderPhase(exec boil.Executor, insert bool, related *IcoP
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.OrderPhaseID = related.PhaseName
+	o.IcoPhaseID = related.ID
 	if o.R == nil {
 		o.R = &userOrderR{
-			OrderPhase: related,
+			IcoPhase: related,
 		}
 	} else {
-		o.R.OrderPhase = related
+		o.R.IcoPhase = related
 	}
 
 	if related.R == nil {
 		related.R = &icoPhaseR{
-			OrderPhaseUserOrders: UserOrderSlice{o},
+			UserOrders: UserOrderSlice{o},
 		}
 	} else {
-		related.R.OrderPhaseUserOrders = append(related.R.OrderPhaseUserOrders, o)
+		related.R.UserOrders = append(related.R.UserOrders, o)
+	}
+
+	return nil
+}
+
+// SetCurrencyG of the userOrder to the related item.
+// Sets o.R.Currency to related.
+// Adds o to related.R.CurrencyUserOrders.
+// Uses the global database handle.
+func (o *UserOrder) SetCurrencyG(insert bool, related *ExchangeCurrency) error {
+	return o.SetCurrency(boil.GetDB(), insert, related)
+}
+
+// SetCurrency of the userOrder to the related item.
+// Sets o.R.Currency to related.
+// Adds o to related.R.CurrencyUserOrders.
+func (o *UserOrder) SetCurrency(exec boil.Executor, insert bool, related *ExchangeCurrency) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"user_order\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"currency_id"}),
+		strmangle.WhereClause("\"", "\"", 2, userOrderPrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.CurrencyID = related.ID
+	if o.R == nil {
+		o.R = &userOrderR{
+			Currency: related,
+		}
+	} else {
+		o.R.Currency = related
+	}
+
+	if related.R == nil {
+		related.R = &exchangeCurrencyR{
+			CurrencyUserOrders: UserOrderSlice{o},
+		}
+	} else {
+		related.R.CurrencyUserOrders = append(related.R.CurrencyUserOrders, o)
 	}
 
 	return nil

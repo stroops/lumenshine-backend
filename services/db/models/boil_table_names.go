@@ -8,10 +8,9 @@ var TableNames = struct {
 	ExchangeCurrency                  string
 	Ico                               string
 	IcoPhase                          string
+	IcoPhaseActivatedExchangeCurrency string
+	IcoPhaseBankAccount               string
 	IcoSupportedExchangeCurrency      string
-	Icophase                          string
-	IcophaseActivatedExchangeCurrency string
-	IcophaseBankAccount               string
 	JWTKey                            string
 	KeyValueStore                     string
 	Mail                              string
@@ -29,28 +28,27 @@ var TableNames = struct {
 	UserSecurity                      string
 	UserWallet                        string
 }{
-	Countries:                         "countries",
-	ExchangeCurrency:                  "exchange_currency",
-	Ico:                               "ico",
-	IcoPhase:                          "ico_phase",
+	Countries:        "countries",
+	ExchangeCurrency: "exchange_currency",
+	Ico:              "ico",
+	IcoPhase:         "ico_phase",
+	IcoPhaseActivatedExchangeCurrency: "ico_phase_activated_exchange_currency",
+	IcoPhaseBankAccount:               "ico_phase_bank_account",
 	IcoSupportedExchangeCurrency:      "ico_supported_exchange_currency",
-	Icophase:                          "icophase",
-	IcophaseActivatedExchangeCurrency: "icophase_activated_exchange_currency",
-	IcophaseBankAccount:               "icophase_bank_account",
-	JWTKey:                            "jwt_key",
-	KeyValueStore:                     "key_value_store",
-	Mail:                              "mail",
-	MultipleTransaction:               "multiple_transaction",
-	Notification:                      "notification",
-	NotificationArchive:               "notification_archive",
-	ProcessedTransaction:              "processed_transaction",
-	Salutations:                       "salutations",
-	UserKycDocument:                   "user_kyc_document",
-	UserMessage:                       "user_message",
-	UserMessageArchive:                "user_message_archive",
-	UserOrder:                         "user_order",
-	UserProfile:                       "user_profile",
-	UserPushtoken:                     "user_pushtoken",
-	UserSecurity:                      "user_security",
-	UserWallet:                        "user_wallet",
+	JWTKey:               "jwt_key",
+	KeyValueStore:        "key_value_store",
+	Mail:                 "mail",
+	MultipleTransaction:  "multiple_transaction",
+	Notification:         "notification",
+	NotificationArchive:  "notification_archive",
+	ProcessedTransaction: "processed_transaction",
+	Salutations:          "salutations",
+	UserKycDocument:      "user_kyc_document",
+	UserMessage:          "user_message",
+	UserMessageArchive:   "user_message_archive",
+	UserOrder:            "user_order",
+	UserProfile:          "user_profile",
+	UserPushtoken:        "user_pushtoken",
+	UserSecurity:         "user_security",
+	UserWallet:           "user_wallet",
 }

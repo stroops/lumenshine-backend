@@ -1,14 +1,15 @@
 package bitcoin
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
-	m "github.com/Soneso/lumenshine-backend/services/db/models"
-	"github.com/Soneso/lumenshine-backend/services/pay/config"
-	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"math/big"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
+	m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"github.com/Soneso/lumenshine-backend/services/pay/config"
+	"github.com/Soneso/lumenshine-backend/services/pay/db"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -243,7 +244,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	//get the order from the database
-	order, err := l.DB.GetOpenOrderForAddress(m.ChainBTC, toAddress)
+	order, err := l.DB.GetOpenOrderForAddress(m.BlockChainBitcoin, toAddress)
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -254,7 +255,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.ChainBTC, hash, toAddress, order.ID, valueSat)
+	processed, err := l.DB.AddNewTransaction(l.log, m.BlockChainBitcoin, hash, toAddress, order.ID, valueSat)
 	if err != nil {
 		return err
 	}

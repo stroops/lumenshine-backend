@@ -153,7 +153,7 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 			build.CreditAmount{
 				Code:   c.cnf.Stellar.TokenAssetCode,
 				Issuer: c.cnf.Stellar.IssuerPublicKey,
-				Amount: fmt.Sprintf("%d", o.CoinAmount),
+				Amount: fmt.Sprintf("%d", o.TokenAmount),
 			},
 		),
 	)
@@ -207,7 +207,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
 	if err != nil {
 		return errors.Wrap(err, "Amount to small")
 	}
-	if amount.Int64() != o.CoinAmount {
+	if amount.Int64() != o.TokenAmount {
 		return errors.New("Amount does not match")
 	}
 

@@ -62,17 +62,17 @@ var IcoColumns = struct {
 
 // IcoRels is where relationship names are stored.
 var IcoRels = struct {
+	IcoPhases                      string
 	IcoSupportedExchangeCurrencies string
-	Icophases                      string
 }{
+	IcoPhases:                      "IcoPhases",
 	IcoSupportedExchangeCurrencies: "IcoSupportedExchangeCurrencies",
-	Icophases:                      "Icophases",
 }
 
 // icoR is where relationships are stored.
 type icoR struct {
+	IcoPhases                      IcoPhaseSlice
 	IcoSupportedExchangeCurrencies IcoSupportedExchangeCurrencySlice
-	Icophases                      IcophaseSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -345,6 +345,27 @@ func (q icoQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
+// IcoPhases retrieves all the ico_phase's IcoPhases with an executor.
+func (o *Ico) IcoPhases(mods ...qm.QueryMod) icoPhaseQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"ico_phase\".\"ico_id\"=?", o.ID),
+	)
+
+	query := IcoPhases(queryMods...)
+	queries.SetFrom(query.Query, "\"ico_phase\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"ico_phase\".*"})
+	}
+
+	return query
+}
+
 // IcoSupportedExchangeCurrencies retrieves all the ico_supported_exchange_currency's IcoSupportedExchangeCurrencies with an executor.
 func (o *Ico) IcoSupportedExchangeCurrencies(mods ...qm.QueryMod) icoSupportedExchangeCurrencyQuery {
 	var queryMods []qm.QueryMod
@@ -366,25 +387,95 @@ func (o *Ico) IcoSupportedExchangeCurrencies(mods ...qm.QueryMod) icoSupportedEx
 	return query
 }
 
-// Icophases retrieves all the icophase's Icophases with an executor.
-func (o *Ico) Icophases(mods ...qm.QueryMod) icophaseQuery {
-	var queryMods []qm.QueryMod
-	if len(mods) != 0 {
-		queryMods = append(queryMods, mods...)
+// LoadIcoPhases allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (icoL) LoadIcoPhases(e boil.Executor, singular bool, maybeIco interface{}, mods queries.Applicator) error {
+	var slice []*Ico
+	var object *Ico
+
+	if singular {
+		object = maybeIco.(*Ico)
+	} else {
+		slice = *maybeIco.(*[]*Ico)
 	}
 
-	queryMods = append(queryMods,
-		qm.Where("\"icophase\".\"ico_id\"=?", o.ID),
-	)
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &icoR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &icoR{}
+			}
 
-	query := Icophases(queryMods...)
-	queries.SetFrom(query.Query, "\"icophase\"")
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
 
-	if len(queries.GetSelect(query.Query)) == 0 {
-		queries.SetSelect(query.Query, []string{"\"icophase\".*"})
+			args = append(args, obj.ID)
+		}
 	}
 
-	return query
+	query := NewQuery(qm.From(`ico_phase`), qm.WhereIn(`ico_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load ico_phase")
+	}
+
+	var resultSlice []*IcoPhase
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice ico_phase")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on ico_phase")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for ico_phase")
+	}
+
+	if len(icoPhaseAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.IcoPhases = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &icoPhaseR{}
+			}
+			foreign.R.Ico = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.IcoID {
+				local.R.IcoPhases = append(local.R.IcoPhases, foreign)
+				if foreign.R == nil {
+					foreign.R = &icoPhaseR{}
+				}
+				foreign.R.Ico = local
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
 // LoadIcoSupportedExchangeCurrencies allows an eager lookup of values, cached into the
@@ -478,94 +569,65 @@ func (icoL) LoadIcoSupportedExchangeCurrencies(e boil.Executor, singular bool, m
 	return nil
 }
 
-// LoadIcophases allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (icoL) LoadIcophases(e boil.Executor, singular bool, maybeIco interface{}, mods queries.Applicator) error {
-	var slice []*Ico
-	var object *Ico
+// AddIcoPhasesG adds the given related objects to the existing relationships
+// of the ico, optionally inserting them as new records.
+// Appends related to o.R.IcoPhases.
+// Sets related.R.Ico appropriately.
+// Uses the global database handle.
+func (o *Ico) AddIcoPhasesG(insert bool, related ...*IcoPhase) error {
+	return o.AddIcoPhases(boil.GetDB(), insert, related...)
+}
 
-	if singular {
-		object = maybeIco.(*Ico)
+// AddIcoPhases adds the given related objects to the existing relationships
+// of the ico, optionally inserting them as new records.
+// Appends related to o.R.IcoPhases.
+// Sets related.R.Ico appropriately.
+func (o *Ico) AddIcoPhases(exec boil.Executor, insert bool, related ...*IcoPhase) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.IcoID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"ico_phase\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"ico_id"}),
+				strmangle.WhereClause("\"", "\"", 2, icoPhasePrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.IcoID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &icoR{
+			IcoPhases: related,
+		}
 	} else {
-		slice = *maybeIco.(*[]*Ico)
+		o.R.IcoPhases = append(o.R.IcoPhases, related...)
 	}
 
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &icoR{}
-		}
-		args = append(args, object.ID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &icoR{}
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &icoPhaseR{
+				Ico: o,
 			}
-
-			for _, a := range args {
-				if a == obj.ID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ID)
+		} else {
+			rel.R.Ico = o
 		}
 	}
-
-	query := NewQuery(qm.From(`icophase`), qm.WhereIn(`ico_id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load icophase")
-	}
-
-	var resultSlice []*Icophase
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice icophase")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on icophase")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for icophase")
-	}
-
-	if len(icophaseAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-	if singular {
-		object.R.Icophases = resultSlice
-		for _, foreign := range resultSlice {
-			if foreign.R == nil {
-				foreign.R = &icophaseR{}
-			}
-			foreign.R.Ico = object
-		}
-		return nil
-	}
-
-	for _, foreign := range resultSlice {
-		for _, local := range slice {
-			if local.ID == foreign.IcoID {
-				local.R.Icophases = append(local.R.Icophases, foreign)
-				if foreign.R == nil {
-					foreign.R = &icophaseR{}
-				}
-				foreign.R.Ico = local
-				break
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -622,68 +684,6 @@ func (o *Ico) AddIcoSupportedExchangeCurrencies(exec boil.Executor, insert bool,
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &icoSupportedExchangeCurrencyR{
-				Ico: o,
-			}
-		} else {
-			rel.R.Ico = o
-		}
-	}
-	return nil
-}
-
-// AddIcophasesG adds the given related objects to the existing relationships
-// of the ico, optionally inserting them as new records.
-// Appends related to o.R.Icophases.
-// Sets related.R.Ico appropriately.
-// Uses the global database handle.
-func (o *Ico) AddIcophasesG(insert bool, related ...*Icophase) error {
-	return o.AddIcophases(boil.GetDB(), insert, related...)
-}
-
-// AddIcophases adds the given related objects to the existing relationships
-// of the ico, optionally inserting them as new records.
-// Appends related to o.R.Icophases.
-// Sets related.R.Ico appropriately.
-func (o *Ico) AddIcophases(exec boil.Executor, insert bool, related ...*Icophase) error {
-	var err error
-	for _, rel := range related {
-		if insert {
-			rel.IcoID = o.ID
-			if err = rel.Insert(exec, boil.Infer()); err != nil {
-				return errors.Wrap(err, "failed to insert into foreign table")
-			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"icophase\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"ico_id"}),
-				strmangle.WhereClause("\"", "\"", 2, icophasePrimaryKeyColumns),
-			)
-			values := []interface{}{o.ID, rel.ID}
-
-			if boil.DebugMode {
-				fmt.Fprintln(boil.DebugWriter, updateQuery)
-				fmt.Fprintln(boil.DebugWriter, values)
-			}
-
-			if _, err = exec.Exec(updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			rel.IcoID = o.ID
-		}
-	}
-
-	if o.R == nil {
-		o.R = &icoR{
-			Icophases: related,
-		}
-	} else {
-		o.R.Icophases = append(o.R.Icophases, related...)
-	}
-
-	for _, rel := range related {
-		if rel.R == nil {
-			rel.R = &icophaseR{
 				Ico: o,
 			}
 		} else {
