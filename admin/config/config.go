@@ -18,6 +18,11 @@ type DBConfig struct {
 	DBName     string
 }
 
+//ConfigKyc - kyc configuration
+type ConfigKyc struct {
+	DocumentsPath string
+}
+
 //Config for the app
 type Config struct {
 	AppName   string
@@ -32,6 +37,8 @@ type Config struct {
 	SQLMigrationDir string
 	ApplicationDir  string
 	IsDevSystem     bool
+
+	Kyc ConfigKyc
 }
 
 //Cnf holds the application configuration

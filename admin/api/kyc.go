@@ -2,13 +2,18 @@ package api
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
+	"github.com/Soneso/lumenshine-backend/admin/config"
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/route"
@@ -16,8 +21,13 @@ import (
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 )
 
+var mimeTypes map[string]string
+
 func init() {
 	route.AddRoute("GET", "/kyc_details/:id", KycDetails, []string{}, "kyc_details", CustomerRoutePrefix)
+	route.AddRoute("GET", "/kyc_document/:id", KycDocumentDownload, []string{}, "kyc_document", CustomerRoutePrefix)
+
+	mimeTypes = map[string]string{"pdf": "application/pdf", "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg"}
 }
 
 //KycDocument - document item
@@ -58,7 +68,6 @@ func KycDetails(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
 		return
 	}
-
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("id", cerr.UserNotExists, "User does not exist in db", ""))
 		return
@@ -69,6 +78,10 @@ func KycDetails(uc *mw.AdminContext, c *gin.Context) {
 			m.UserKycDocumentColumns.UploadDate,
 		),
 	).All(db.DBC)
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting documents from db", cerr.GeneralError))
+		return
+	}
 
 	resp := KycDetailsResponse{Status: u.KycStatus}
 
@@ -87,5 +100,46 @@ func KycDetails(uc *mw.AdminContext, c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, &resp)
+}
+
+//KycDocumentDownloadResponse - document content and details
+type KycDocumentDownloadResponse struct {
+	FileName string `json:"file_name"`
+	Content  string `json:"content"`
+	MimeType string `json:"mime_type"`
+}
+
+//KycDocumentDownload returns the document
+func KycDocumentDownload(uc *mw.AdminContext, c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, "Error parsing id", cerr.GeneralError))
+		return
+	}
+
+	doc, err := m.UserKycDocuments(qm.Where(m.UserKycDocumentColumns.ID+"=?", id)).One(db.DBC)
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting document from db", cerr.GeneralError))
+		return
+	}
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("id", cerr.InvalidArgument, "Document does not exist in db", ""))
+		return
+	}
+	fileName := fmt.Sprintf("%d.%v", id, doc.Format)
+	filePath := filepath.Join(config.Cnf.Kyc.DocumentsPath, fileName)
+
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading document file", cerr.GeneralError))
+		return
+	}
+
+	str := base64.StdEncoding.EncodeToString(content)
+	mimeType := mimeTypes[doc.Format]
+	c.JSON(http.StatusOK, &KycDocumentDownloadResponse{
+		FileName: fileName,
+		Content:  str,
+		MimeType: mimeType})
 }
