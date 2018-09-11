@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"runtime"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
-	"runtime"
 
 	"net/http"
 	"time"
@@ -92,14 +93,19 @@ func main() {
 	auth.Use(authMiddlewareFull.MiddlewareFunc())
 	auth.Use(mw.MessageCount()) //Messagecount only for fully logged in users
 	{
-		auth.POST("/refresh", authMiddlewareFull.RefreshHandler)
-		auth.GET("/price_for_coins", mw.UseIcopContext(PriceForCoin))
-		auth.POST("/create_order", mw.UseIcopContext(CreateOrder))
-		auth.GET("/order_list", mw.UseIcopContext(OrderList))
-		auth.GET("/order_details", mw.UseIcopContext(OrderDetails))
+		auth.POST("refresh", authMiddlewareFull.RefreshHandler)
+		auth.GET("price_for_coins", mw.UseIcopContext(PriceForCoin))
+		auth.POST("create_order", mw.UseIcopContext(CreateOrder))
+		auth.GET("order_list", mw.UseIcopContext(OrderList))
+		auth.GET("order_details", mw.UseIcopContext(OrderDetails))
 
-		auth.GET("/get_order_trust_status", mw.UseIcopContext(OrderGetTrustStatus))
-		auth.GET("/get_order_payment_transaction", mw.UseIcopContext(OrderGetTransaction))
+		auth.GET("get_issuer_data", mw.UseIcopContext(OrderDetails))
+		auth.POST("create_stellar_account", mw.UseIcopContext(ExecuteTransaction))
+		auth.GET("get_payment_transaction", mw.UseIcopContext(OrderDetails))
+		auth.POST("execute_payment_transaction", mw.UseIcopContext(ExecuteTransaction))
+
+		auth.GET("get_order_trust_status", mw.UseIcopContext(OrderGetTrustStatus))
+		auth.GET("get_order_payment_transaction", mw.UseIcopContext(OrderGetTransaction))
 		auth.POST("execute_transaction", mw.UseIcopContext(ExecuteTransaction))
 	}
 

@@ -51,12 +51,44 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	return str
 }
 
-// Enum values for chain
+// Enum values for exchange_currency_type
 const (
-	ChainFiat = "fiat"
-	ChainBTC  = "btc"
-	ChainEth  = "eth"
-	ChainXLM  = "xlm"
+	ExchangeCurrencyTypeStellar     = "stellar"
+	ExchangeCurrencyTypeOtherCrypto = "other_crypto"
+	ExchangeCurrencyTypeFiat        = "fiat"
+)
+
+// Enum values for payment_network
+const (
+	PaymentNetworkFiat     = "fiat"
+	PaymentNetworkStellar  = "stellar"
+	PaymentNetworkEthereum = "ethereum"
+	PaymentNetworkBitcoin  = "bitcoin"
+)
+
+// Enum values for ico_status
+const (
+	IcoStatusPlanning  = "planning"
+	IcoStatusReady     = "ready"
+	IcoStatusActive    = "active"
+	IcoStatusFinished  = "finished"
+	IcoStatusCompleted = "completed"
+	IcoStatusStopped   = "stopped"
+)
+
+// Enum values for ico_sales_model
+const (
+	IcoSalesModelFixed = "fixed"
+)
+
+// Enum values for ico_phase_status
+const (
+	IcoPhaseStatusPlanning  = "planning"
+	IcoPhaseStatusReady     = "ready"
+	IcoPhaseStatusActive    = "active"
+	IcoPhaseStatusFinished  = "finished"
+	IcoPhaseStatusCompleted = "completed"
+	IcoPhaseStatusStopped   = "stopped"
 )
 
 // Enum values for message_type
@@ -85,41 +117,40 @@ const (
 	TransactionStatusProcessed = "processed"
 )
 
-// Enum values for document_type
+// Enum values for kyc_document_type
 const (
-	DocumentTypePassport         = "passport"
-	DocumentTypeDriversLicense   = "drivers_license"
-	DocumentTypeIDCard           = "id_card"
-	DocumentTypeProofOfResidence = "proof_of_residence"
+	KycDocumentTypePassport         = "passport"
+	KycDocumentTypeDriversLicense   = "drivers_license"
+	KycDocumentTypeIDCard           = "id_card"
+	KycDocumentTypeProofOfResidence = "proof_of_residence"
 )
 
-// Enum values for document_format
+// Enum values for kyc_document_format
 const (
-	DocumentFormatPNG  = "png"
-	DocumentFormatPDF  = "pdf"
-	DocumentFormatJPG  = "jpg"
-	DocumentFormatJpeg = "jpeg"
+	KycDocumentFormatPNG  = "png"
+	KycDocumentFormatPDF  = "pdf"
+	KycDocumentFormatJPG  = "jpg"
+	KycDocumentFormatJpeg = "jpeg"
 )
 
-// Enum values for document_side
+// Enum values for kyc_document_side
 const (
-	DocumentSideFront = "front"
-	DocumentSideBack  = "back"
+	KycDocumentSideFront = "front"
+	KycDocumentSideBack  = "back"
 )
 
 // Enum values for order_status
 const (
-	OrderStatusWaitingForPayment = "waiting_for_payment"
-	OrderStatusPaymentReceived   = "payment_received"
-	OrderStatusWaitingUserTX     = "waiting_user_tx"
-	OrderStatusTXCreated         = "tx_created"
-	OrderStatusPaymentError      = "payment_error"
-	OrderStatusFinished          = "finished"
-	OrderStatusError             = "error"
-	OrderStatusUnderPay          = "under_pay"
-	OrderStatusOverPay           = "over_pay"
-	OrderStatusNoCoinsLeft       = "no_coins_left"
-	OrderStatusPhaseExpired      = "phase_expired"
+	OrderStatusWaitingForPayment      = "waiting_for_payment"
+	OrderStatusPaymentReceived        = "payment_received"
+	OrderStatusWaitingUserTransaction = "waiting_user_transaction"
+	OrderStatusPaymentError           = "payment_error"
+	OrderStatusFinished               = "finished"
+	OrderStatusError                  = "error"
+	OrderStatusUnderPay               = "under_pay"
+	OrderStatusOverPay                = "over_pay"
+	OrderStatusNoCoinsLeft            = "no_coins_left"
+	OrderStatusPhaseExpired           = "phase_expired"
 )
 
 // Enum values for payment_state

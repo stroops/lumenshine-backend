@@ -101,19 +101,19 @@ func (c *Configurator) GetTrustStatus(o *m.UserOrder) (bool, error) {
 	var err error
 	var exists bool
 
-	acc, exists, err = c.getAccount(o.UserStellarPublicKey)
+	acc, exists, err = c.getAccount(o.UserAccountPublicKey)
 	if err != nil {
 		return false, err
 	}
 
 	if !exists {
-		err := c.createAccount(o.UserStellarPublicKey)
+		err := c.createAccount(o.UserAccountPublicKey)
 		if err != nil {
 			return false, errors.Wrap(err, "Error creating account")
 		}
 
 		//need to relaod the account to get the sequence
-		acc, exists, err = c.getAccount(o.UserStellarPublicKey)
+		acc, exists, err = c.getAccount(o.UserAccountPublicKey)
 		if err != nil {
 			return false, err
 		}
@@ -129,7 +129,7 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 	var err error
 	var exists bool
 
-	acc, exists, err = c.getAccount(o.UserStellarPublicKey)
+	acc, exists, err = c.getAccount(o.UserAccountPublicKey)
 	if err != nil {
 		return "", 0, errors.Wrap(err, "Could not read stellar account")
 	}
@@ -144,16 +144,16 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 
 	//create the transaction and save it to DB
 	tx, err := build.Transaction(
-		build.SourceAccount{AddressOrSeed: o.UserStellarPublicKey},
+		build.SourceAccount{AddressOrSeed: o.UserAccountPublicKey},
 		build.Network{Passphrase: c.cnf.Stellar.NetworkPassphrase},
 		build.AutoSequence{SequenceProvider: c.Horizon},
 		build.Payment(
 			build.SourceAccount{AddressOrSeed: c.cnf.Stellar.DistributionPublicKey},
-			build.Destination{AddressOrSeed: o.UserStellarPublicKey},
+			build.Destination{AddressOrSeed: o.UserAccountPublicKey},
 			build.CreditAmount{
 				Code:   c.cnf.Stellar.TokenAssetCode,
 				Issuer: c.cnf.Stellar.IssuerPublicKey,
-				Amount: fmt.Sprintf("%d", o.CoinAmount),
+				Amount: fmt.Sprintf("%d", o.TokenAmount),
 			},
 		),
 	)
@@ -190,7 +190,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
 	}
 
 	//check the operations inside the transaction
-	if txe.E.Tx.SourceAccount.Address() != o.UserStellarPublicKey {
+	if txe.E.Tx.SourceAccount.Address() != o.UserAccountPublicKey {
 		return errors.New("Source not like order")
 	}
 	if len(txe.E.Tx.Operations) != 1 {
@@ -200,14 +200,14 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
 	if op == nil {
 		return errors.New("No Payment operation in tx")
 	}
-	if op.Destination.Address() != o.UserStellarPublicKey {
+	if op.Destination.Address() != o.UserAccountPublicKey {
 		return errors.New("Destination not like order")
 	}
 	amount, err := stellar.StroopToCoin(int64(op.Amount))
 	if err != nil {
 		return errors.Wrap(err, "Amount to small")
 	}
-	if amount.Int64() != o.CoinAmount {
+	if amount.Int64() != o.TokenAmount {
 		return errors.New("Amount does not match")
 	}
 

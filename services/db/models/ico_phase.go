@@ -21,46 +21,91 @@ import (
 
 // IcoPhase is an object representing the database table.
 type IcoPhase struct {
-	PhaseName  string    `boil:"phase_name" json:"phase_name" toml:"phase_name" yaml:"phase_name"`
-	StartTime  time.Time `boil:"start_time" json:"start_time" toml:"start_time" yaml:"start_time"`
-	EndTime    time.Time `boil:"end_time" json:"end_time" toml:"end_time" yaml:"end_time"`
-	CoinAmount int64     `boil:"coin_amount" json:"coin_amount" toml:"coin_amount" yaml:"coin_amount"`
-	IsActive   bool      `boil:"is_active" json:"is_active" toml:"is_active" yaml:"is_active"`
-	CreatedAt  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt  time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID                  int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	IcoID               int       `boil:"ico_id" json:"ico_id" toml:"ico_id" yaml:"ico_id"`
+	IcoPhaseName        string    `boil:"ico_phase_name" json:"ico_phase_name" toml:"ico_phase_name" yaml:"ico_phase_name"`
+	IcoPhaseStatus      string    `boil:"ico_phase_status" json:"ico_phase_status" toml:"ico_phase_status" yaml:"ico_phase_status"`
+	DistPK              string    `boil:"dist_pk" json:"dist_pk" toml:"dist_pk" yaml:"dist_pk"`
+	DistPresignerPK     string    `boil:"dist_presigner_pk" json:"dist_presigner_pk" toml:"dist_presigner_pk" yaml:"dist_presigner_pk"`
+	DistPresignerSeed   string    `boil:"dist_presigner_seed" json:"dist_presigner_seed" toml:"dist_presigner_seed" yaml:"dist_presigner_seed"`
+	DistPostsignerPK    string    `boil:"dist_postsigner_pk" json:"dist_postsigner_pk" toml:"dist_postsigner_pk" yaml:"dist_postsigner_pk"`
+	DistPostsignerSeed  string    `boil:"dist_postsigner_seed" json:"dist_postsigner_seed" toml:"dist_postsigner_seed" yaml:"dist_postsigner_seed"`
+	StartTime           time.Time `boil:"start_time" json:"start_time" toml:"start_time" yaml:"start_time"`
+	EndTime             time.Time `boil:"end_time" json:"end_time" toml:"end_time" yaml:"end_time"`
+	TokensToDistribute  int64     `boil:"tokens_to_distribute" json:"tokens_to_distribute" toml:"tokens_to_distribute" yaml:"tokens_to_distribute"`
+	TokensReleased      int64     `boil:"tokens_released" json:"tokens_released" toml:"tokens_released" yaml:"tokens_released"`
+	TokensBlocked       int64     `boil:"tokens_blocked" json:"tokens_blocked" toml:"tokens_blocked" yaml:"tokens_blocked"`
+	TokensLeft          int64     `boil:"tokens_left" json:"tokens_left" toml:"tokens_left" yaml:"tokens_left"`
+	TokenMaxOrderAmount int64     `boil:"token_max_order_amount" json:"token_max_order_amount" toml:"token_max_order_amount" yaml:"token_max_order_amount"`
+	TokenMinOrderAmount int64     `boil:"token_min_order_amount" json:"token_min_order_amount" toml:"token_min_order_amount" yaml:"token_min_order_amount"`
+	CreatedAt           time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt           time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy           string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *icoPhaseR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L icoPhaseL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var IcoPhaseColumns = struct {
-	PhaseName  string
-	StartTime  string
-	EndTime    string
-	CoinAmount string
-	IsActive   string
-	CreatedAt  string
-	UpdatedAt  string
+	ID                  string
+	IcoID               string
+	IcoPhaseName        string
+	IcoPhaseStatus      string
+	DistPK              string
+	DistPresignerPK     string
+	DistPresignerSeed   string
+	DistPostsignerPK    string
+	DistPostsignerSeed  string
+	StartTime           string
+	EndTime             string
+	TokensToDistribute  string
+	TokensReleased      string
+	TokensBlocked       string
+	TokensLeft          string
+	TokenMaxOrderAmount string
+	TokenMinOrderAmount string
+	CreatedAt           string
+	UpdatedAt           string
+	UpdatedBy           string
 }{
-	PhaseName:  "phase_name",
-	StartTime:  "start_time",
-	EndTime:    "end_time",
-	CoinAmount: "coin_amount",
-	IsActive:   "is_active",
-	CreatedAt:  "created_at",
-	UpdatedAt:  "updated_at",
+	ID:                  "id",
+	IcoID:               "ico_id",
+	IcoPhaseName:        "ico_phase_name",
+	IcoPhaseStatus:      "ico_phase_status",
+	DistPK:              "dist_pk",
+	DistPresignerPK:     "dist_presigner_pk",
+	DistPresignerSeed:   "dist_presigner_seed",
+	DistPostsignerPK:    "dist_postsigner_pk",
+	DistPostsignerSeed:  "dist_postsigner_seed",
+	StartTime:           "start_time",
+	EndTime:             "end_time",
+	TokensToDistribute:  "tokens_to_distribute",
+	TokensReleased:      "tokens_released",
+	TokensBlocked:       "tokens_blocked",
+	TokensLeft:          "tokens_left",
+	TokenMaxOrderAmount: "token_max_order_amount",
+	TokenMinOrderAmount: "token_min_order_amount",
+	CreatedAt:           "created_at",
+	UpdatedAt:           "updated_at",
+	UpdatedBy:           "updated_by",
 }
 
 // IcoPhaseRels is where relationship names are stored.
 var IcoPhaseRels = struct {
-	OrderPhaseUserOrders string
+	Ico                                 string
+	IcoPhaseActivatedExchangeCurrencies string
+	UserOrders                          string
 }{
-	OrderPhaseUserOrders: "OrderPhaseUserOrders",
+	Ico: "Ico",
+	IcoPhaseActivatedExchangeCurrencies: "IcoPhaseActivatedExchangeCurrencies",
+	UserOrders:                          "UserOrders",
 }
 
 // icoPhaseR is where relationships are stored.
 type icoPhaseR struct {
-	OrderPhaseUserOrders UserOrderSlice
+	Ico                                 *Ico
+	IcoPhaseActivatedExchangeCurrencies IcoPhaseActivatedExchangeCurrencySlice
+	UserOrders                          UserOrderSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -72,10 +117,10 @@ func (*icoPhaseR) NewStruct() *icoPhaseR {
 type icoPhaseL struct{}
 
 var (
-	icoPhaseColumns               = []string{"phase_name", "start_time", "end_time", "coin_amount", "is_active", "created_at", "updated_at"}
-	icoPhaseColumnsWithoutDefault = []string{"phase_name", "start_time", "end_time", "coin_amount", "is_active"}
-	icoPhaseColumnsWithDefault    = []string{"created_at", "updated_at"}
-	icoPhasePrimaryKeyColumns     = []string{"phase_name"}
+	icoPhaseColumns               = []string{"id", "ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "token_max_order_amount", "token_min_order_amount", "created_at", "updated_at", "updated_by"}
+	icoPhaseColumnsWithoutDefault = []string{"ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "updated_by"}
+	icoPhaseColumnsWithDefault    = []string{"id", "token_max_order_amount", "token_min_order_amount", "created_at", "updated_at"}
+	icoPhasePrimaryKeyColumns     = []string{"id"}
 )
 
 type (
@@ -333,15 +378,50 @@ func (q icoPhaseQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
-// OrderPhaseUserOrders retrieves all the user_order's UserOrders with an executor via order_phase_id column.
-func (o *IcoPhase) OrderPhaseUserOrders(mods ...qm.QueryMod) userOrderQuery {
+// Ico pointed to by the foreign key.
+func (o *IcoPhase) Ico(mods ...qm.QueryMod) icoQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("id=?", o.IcoID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	query := Icos(queryMods...)
+	queries.SetFrom(query.Query, "\"ico\"")
+
+	return query
+}
+
+// IcoPhaseActivatedExchangeCurrencies retrieves all the ico_phase_activated_exchange_currency's IcoPhaseActivatedExchangeCurrencies with an executor.
+func (o *IcoPhase) IcoPhaseActivatedExchangeCurrencies(mods ...qm.QueryMod) icoPhaseActivatedExchangeCurrencyQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"user_order\".\"order_phase_id\"=?", o.PhaseName),
+		qm.Where("\"ico_phase_activated_exchange_currency\".\"ico_phase_id\"=?", o.ID),
+	)
+
+	query := IcoPhaseActivatedExchangeCurrencies(queryMods...)
+	queries.SetFrom(query.Query, "\"ico_phase_activated_exchange_currency\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"ico_phase_activated_exchange_currency\".*"})
+	}
+
+	return query
+}
+
+// UserOrders retrieves all the user_order's UserOrders with an executor.
+func (o *IcoPhase) UserOrders(mods ...qm.QueryMod) userOrderQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"user_order\".\"ico_phase_id\"=?", o.ID),
 	)
 
 	query := UserOrders(queryMods...)
@@ -354,9 +434,9 @@ func (o *IcoPhase) OrderPhaseUserOrders(mods ...qm.QueryMod) userOrderQuery {
 	return query
 }
 
-// LoadOrderPhaseUserOrders allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (icoPhaseL) LoadOrderPhaseUserOrders(e boil.Executor, singular bool, maybeIcoPhase interface{}, mods queries.Applicator) error {
+// LoadIco allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (icoPhaseL) LoadIco(e boil.Executor, singular bool, maybeIcoPhase interface{}, mods queries.Applicator) error {
 	var slice []*IcoPhase
 	var object *IcoPhase
 
@@ -371,7 +451,7 @@ func (icoPhaseL) LoadOrderPhaseUserOrders(e boil.Executor, singular bool, maybeI
 		if object.R == nil {
 			object.R = &icoPhaseR{}
 		}
-		args = append(args, object.PhaseName)
+		args = append(args, object.IcoID)
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -380,16 +460,202 @@ func (icoPhaseL) LoadOrderPhaseUserOrders(e boil.Executor, singular bool, maybeI
 			}
 
 			for _, a := range args {
-				if a == obj.PhaseName {
+				if a == obj.IcoID {
 					continue Outer
 				}
 			}
 
-			args = append(args, obj.PhaseName)
+			args = append(args, obj.IcoID)
 		}
 	}
 
-	query := NewQuery(qm.From(`user_order`), qm.WhereIn(`order_phase_id in ?`, args...))
+	query := NewQuery(qm.From(`ico`), qm.WhereIn(`id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Ico")
+	}
+
+	var resultSlice []*Ico
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Ico")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for ico")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for ico")
+	}
+
+	if len(icoPhaseAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Ico = foreign
+		if foreign.R == nil {
+			foreign.R = &icoR{}
+		}
+		foreign.R.IcoPhases = append(foreign.R.IcoPhases, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.IcoID == foreign.ID {
+				local.R.Ico = foreign
+				if foreign.R == nil {
+					foreign.R = &icoR{}
+				}
+				foreign.R.IcoPhases = append(foreign.R.IcoPhases, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadIcoPhaseActivatedExchangeCurrencies allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (icoPhaseL) LoadIcoPhaseActivatedExchangeCurrencies(e boil.Executor, singular bool, maybeIcoPhase interface{}, mods queries.Applicator) error {
+	var slice []*IcoPhase
+	var object *IcoPhase
+
+	if singular {
+		object = maybeIcoPhase.(*IcoPhase)
+	} else {
+		slice = *maybeIcoPhase.(*[]*IcoPhase)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &icoPhaseR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &icoPhaseR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`ico_phase_activated_exchange_currency`), qm.WhereIn(`ico_phase_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load ico_phase_activated_exchange_currency")
+	}
+
+	var resultSlice []*IcoPhaseActivatedExchangeCurrency
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice ico_phase_activated_exchange_currency")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on ico_phase_activated_exchange_currency")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for ico_phase_activated_exchange_currency")
+	}
+
+	if len(icoPhaseActivatedExchangeCurrencyAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.IcoPhaseActivatedExchangeCurrencies = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &icoPhaseActivatedExchangeCurrencyR{}
+			}
+			foreign.R.IcoPhase = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.IcoPhaseID {
+				local.R.IcoPhaseActivatedExchangeCurrencies = append(local.R.IcoPhaseActivatedExchangeCurrencies, foreign)
+				if foreign.R == nil {
+					foreign.R = &icoPhaseActivatedExchangeCurrencyR{}
+				}
+				foreign.R.IcoPhase = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadUserOrders allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (icoPhaseL) LoadUserOrders(e boil.Executor, singular bool, maybeIcoPhase interface{}, mods queries.Applicator) error {
+	var slice []*IcoPhase
+	var object *IcoPhase
+
+	if singular {
+		object = maybeIcoPhase.(*IcoPhase)
+	} else {
+		slice = *maybeIcoPhase.(*[]*IcoPhase)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &icoPhaseR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &icoPhaseR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`user_order`), qm.WhereIn(`ico_phase_id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
@@ -419,24 +685,24 @@ func (icoPhaseL) LoadOrderPhaseUserOrders(e boil.Executor, singular bool, maybeI
 		}
 	}
 	if singular {
-		object.R.OrderPhaseUserOrders = resultSlice
+		object.R.UserOrders = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
 				foreign.R = &userOrderR{}
 			}
-			foreign.R.OrderPhase = object
+			foreign.R.IcoPhase = object
 		}
 		return nil
 	}
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if local.PhaseName == foreign.OrderPhaseID {
-				local.R.OrderPhaseUserOrders = append(local.R.OrderPhaseUserOrders, foreign)
+			if local.ID == foreign.IcoPhaseID {
+				local.R.UserOrders = append(local.R.UserOrders, foreign)
 				if foreign.R == nil {
 					foreign.R = &userOrderR{}
 				}
-				foreign.R.OrderPhase = local
+				foreign.R.IcoPhase = local
 				break
 			}
 		}
@@ -445,34 +711,89 @@ func (icoPhaseL) LoadOrderPhaseUserOrders(e boil.Executor, singular bool, maybeI
 	return nil
 }
 
-// AddOrderPhaseUserOrdersG adds the given related objects to the existing relationships
-// of the ico_phase, optionally inserting them as new records.
-// Appends related to o.R.OrderPhaseUserOrders.
-// Sets related.R.OrderPhase appropriately.
+// SetIcoG of the icoPhase to the related item.
+// Sets o.R.Ico to related.
+// Adds o to related.R.IcoPhases.
 // Uses the global database handle.
-func (o *IcoPhase) AddOrderPhaseUserOrdersG(insert bool, related ...*UserOrder) error {
-	return o.AddOrderPhaseUserOrders(boil.GetDB(), insert, related...)
+func (o *IcoPhase) SetIcoG(insert bool, related *Ico) error {
+	return o.SetIco(boil.GetDB(), insert, related)
 }
 
-// AddOrderPhaseUserOrders adds the given related objects to the existing relationships
+// SetIco of the icoPhase to the related item.
+// Sets o.R.Ico to related.
+// Adds o to related.R.IcoPhases.
+func (o *IcoPhase) SetIco(exec boil.Executor, insert bool, related *Ico) error {
+	var err error
+	if insert {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"ico_phase\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"ico_id"}),
+		strmangle.WhereClause("\"", "\"", 2, icoPhasePrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.IcoID = related.ID
+	if o.R == nil {
+		o.R = &icoPhaseR{
+			Ico: related,
+		}
+	} else {
+		o.R.Ico = related
+	}
+
+	if related.R == nil {
+		related.R = &icoR{
+			IcoPhases: IcoPhaseSlice{o},
+		}
+	} else {
+		related.R.IcoPhases = append(related.R.IcoPhases, o)
+	}
+
+	return nil
+}
+
+// AddIcoPhaseActivatedExchangeCurrenciesG adds the given related objects to the existing relationships
 // of the ico_phase, optionally inserting them as new records.
-// Appends related to o.R.OrderPhaseUserOrders.
-// Sets related.R.OrderPhase appropriately.
-func (o *IcoPhase) AddOrderPhaseUserOrders(exec boil.Executor, insert bool, related ...*UserOrder) error {
+// Appends related to o.R.IcoPhaseActivatedExchangeCurrencies.
+// Sets related.R.IcoPhase appropriately.
+// Uses the global database handle.
+func (o *IcoPhase) AddIcoPhaseActivatedExchangeCurrenciesG(insert bool, related ...*IcoPhaseActivatedExchangeCurrency) error {
+	return o.AddIcoPhaseActivatedExchangeCurrencies(boil.GetDB(), insert, related...)
+}
+
+// AddIcoPhaseActivatedExchangeCurrencies adds the given related objects to the existing relationships
+// of the ico_phase, optionally inserting them as new records.
+// Appends related to o.R.IcoPhaseActivatedExchangeCurrencies.
+// Sets related.R.IcoPhase appropriately.
+func (o *IcoPhase) AddIcoPhaseActivatedExchangeCurrencies(exec boil.Executor, insert bool, related ...*IcoPhaseActivatedExchangeCurrency) error {
 	var err error
 	for _, rel := range related {
 		if insert {
-			rel.OrderPhaseID = o.PhaseName
+			rel.IcoPhaseID = o.ID
 			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"user_order\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 1, []string{"order_phase_id"}),
-				strmangle.WhereClause("\"", "\"", 2, userOrderPrimaryKeyColumns),
+				"UPDATE \"ico_phase_activated_exchange_currency\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"ico_phase_id"}),
+				strmangle.WhereClause("\"", "\"", 2, icoPhaseActivatedExchangeCurrencyPrimaryKeyColumns),
 			)
-			values := []interface{}{o.PhaseName, rel.ID}
+			values := []interface{}{o.ID, rel.ID}
 
 			if boil.DebugMode {
 				fmt.Fprintln(boil.DebugWriter, updateQuery)
@@ -483,25 +804,87 @@ func (o *IcoPhase) AddOrderPhaseUserOrders(exec boil.Executor, insert bool, rela
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			rel.OrderPhaseID = o.PhaseName
+			rel.IcoPhaseID = o.ID
 		}
 	}
 
 	if o.R == nil {
 		o.R = &icoPhaseR{
-			OrderPhaseUserOrders: related,
+			IcoPhaseActivatedExchangeCurrencies: related,
 		}
 	} else {
-		o.R.OrderPhaseUserOrders = append(o.R.OrderPhaseUserOrders, related...)
+		o.R.IcoPhaseActivatedExchangeCurrencies = append(o.R.IcoPhaseActivatedExchangeCurrencies, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &icoPhaseActivatedExchangeCurrencyR{
+				IcoPhase: o,
+			}
+		} else {
+			rel.R.IcoPhase = o
+		}
+	}
+	return nil
+}
+
+// AddUserOrdersG adds the given related objects to the existing relationships
+// of the ico_phase, optionally inserting them as new records.
+// Appends related to o.R.UserOrders.
+// Sets related.R.IcoPhase appropriately.
+// Uses the global database handle.
+func (o *IcoPhase) AddUserOrdersG(insert bool, related ...*UserOrder) error {
+	return o.AddUserOrders(boil.GetDB(), insert, related...)
+}
+
+// AddUserOrders adds the given related objects to the existing relationships
+// of the ico_phase, optionally inserting them as new records.
+// Appends related to o.R.UserOrders.
+// Sets related.R.IcoPhase appropriately.
+func (o *IcoPhase) AddUserOrders(exec boil.Executor, insert bool, related ...*UserOrder) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.IcoPhaseID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"user_order\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"ico_phase_id"}),
+				strmangle.WhereClause("\"", "\"", 2, userOrderPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.IcoPhaseID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &icoPhaseR{
+			UserOrders: related,
+		}
+	} else {
+		o.R.UserOrders = append(o.R.UserOrders, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &userOrderR{
-				OrderPhase: o,
+				IcoPhase: o,
 			}
 		} else {
-			rel.R.OrderPhase = o
+			rel.R.IcoPhase = o
 		}
 	}
 	return nil
@@ -514,13 +897,13 @@ func IcoPhases(mods ...qm.QueryMod) icoPhaseQuery {
 }
 
 // FindIcoPhaseG retrieves a single record by ID.
-func FindIcoPhaseG(phaseName string, selectCols ...string) (*IcoPhase, error) {
-	return FindIcoPhase(boil.GetDB(), phaseName, selectCols...)
+func FindIcoPhaseG(iD int, selectCols ...string) (*IcoPhase, error) {
+	return FindIcoPhase(boil.GetDB(), iD, selectCols...)
 }
 
 // FindIcoPhase retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindIcoPhase(exec boil.Executor, phaseName string, selectCols ...string) (*IcoPhase, error) {
+func FindIcoPhase(exec boil.Executor, iD int, selectCols ...string) (*IcoPhase, error) {
 	icoPhaseObj := &IcoPhase{}
 
 	sel := "*"
@@ -528,10 +911,10 @@ func FindIcoPhase(exec boil.Executor, phaseName string, selectCols ...string) (*
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"ico_phase\" where \"phase_name\"=$1", sel,
+		"select %s from \"ico_phase\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(query, phaseName)
+	q := queries.Raw(query, iD)
 
 	err := q.Bind(nil, exec, icoPhaseObj)
 	if err != nil {
@@ -922,7 +1305,7 @@ func (o *IcoPhase) Delete(exec boil.Executor) (int64, error) {
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), icoPhasePrimaryKeyMapping)
-	sql := "DELETE FROM \"ico_phase\" WHERE \"phase_name\"=$1"
+	sql := "DELETE FROM \"ico_phase\" WHERE \"id\"=$1"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
@@ -1037,7 +1420,7 @@ func (o *IcoPhase) ReloadG() error {
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *IcoPhase) Reload(exec boil.Executor) error {
-	ret, err := FindIcoPhase(exec, o.PhaseName)
+	ret, err := FindIcoPhase(exec, o.ID)
 	if err != nil {
 		return err
 	}
@@ -1086,21 +1469,21 @@ func (o *IcoPhaseSlice) ReloadAll(exec boil.Executor) error {
 }
 
 // IcoPhaseExistsG checks if the IcoPhase row exists.
-func IcoPhaseExistsG(phaseName string) (bool, error) {
-	return IcoPhaseExists(boil.GetDB(), phaseName)
+func IcoPhaseExistsG(iD int) (bool, error) {
+	return IcoPhaseExists(boil.GetDB(), iD)
 }
 
 // IcoPhaseExists checks if the IcoPhase row exists.
-func IcoPhaseExists(exec boil.Executor, phaseName string) (bool, error) {
+func IcoPhaseExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"ico_phase\" where \"phase_name\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"ico_phase\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, phaseName)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, phaseName)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {

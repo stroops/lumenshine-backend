@@ -140,19 +140,6 @@
   revision = "fd153d5969d30bd701e10f3530228f001213047c"
 
 [[projects]]
-  digest = "1:357c22161d353614c6454c8250114286130c34a29f4aefb964afbd08de20084f"
-  name = "github.com/ericlagergren/decimal"
-  packages = [
-    ".",
-    "internal/arith",
-    "internal/arith/checked",
-    "internal/c",
-  ]
-  pruneopts = "UT"
-  revision = "2a5821154e156e9036761a55c2e820d8653a5a60"
-  version = "v3.2"
-
-[[projects]]
   digest = "1:6b1da9a4218633206033188ff3791db121405140dac7b20389447504f7b1d077"
   name = "github.com/ethereum/go-ethereum"
   packages = [
@@ -694,7 +681,7 @@
   version = "v8.0.0"
 
 [[projects]]
-  digest = "1:5a5c04316615ca53e9de961b571683c0684dc2c20723fd7303ca6a4ada6146c0"
+  digest = "1:588b82006ca25308dbdf3c9fd8eac63b8706ed93a82da277874aefd8686f4c0a"
   name = "github.com/volatiletech/sqlboiler"
   packages = [
     "boil",
@@ -704,7 +691,6 @@
     "queries/qm",
     "randomize",
     "strmangle",
-    "types",
   ]
   pruneopts = "UT"
   revision = "7d3d954a4be10dc06b9464fb3e6d74836274c467"
@@ -954,7 +940,6 @@
     "github.com/volatiletech/sqlboiler/queries",
     "github.com/volatiletech/sqlboiler/queries/qm",
     "github.com/volatiletech/sqlboiler/strmangle",
-    "github.com/volatiletech/sqlboiler/types",
     "golang.org/x/crypto/bcrypt",
     "golang.org/x/net/context",
     "golang.org/x/text/language",

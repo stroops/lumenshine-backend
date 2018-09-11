@@ -170,6 +170,7 @@ func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 	c.JSON(http.StatusOK, r)
 }
 
+// CustomerDetailsResponse - customer details response
 type CustomerDetailsResponse struct {
 	ID               int       `json:"id"`
 	Forename         string    `json:"forename"`
@@ -246,6 +247,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 	})
 }
 
+// CustomerEditRequest - request data
 type CustomerEditRequest struct {
 	ID            int    `form:"id" json:"id"`
 	Forename      string `form:"forename" json:"forename" validate:"required,max=64"`
@@ -397,9 +399,9 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 	q := []qm.QueryMod{
 		qm.Select(
 			m.UserOrderColumns.ID,
-			m.UserOrderColumns.CoinAmount,
-			m.UserOrderColumns.ChainAmount,
-			m.UserOrderColumns.Chain,
+			m.UserOrderColumns.TokenAmount,
+			m.UserOrderColumns.ExchangeCurrencyDenominationAmount,
+			m.UserOrderColumns.PaymentNetwork,
 			m.UserOrderColumns.OrderStatus,
 			m.UserOrderColumns.CreatedAt,
 		),
@@ -425,7 +427,7 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	r.Items = make([]OrderListItem, len(orders))
-	for i, o := range orders {
+	/*for i, o := range orders {
 		v, ok := o.ChainAmount.Float64()
 		if !ok {
 			v = 0
@@ -433,12 +435,12 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 		r.Items[i] = OrderListItem{
 			ID:     o.ID,
 			Date:   o.CreatedAt,
-			Amount: o.CoinAmount,
+			Amount: o.TokenAmount,
 			Price:  v,
 			Chain:  o.Chain,
 			Status: o.OrderStatus,
 		}
-	}
+	}*/
 	c.JSON(http.StatusOK, r)
 }
 

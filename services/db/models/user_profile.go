@@ -47,11 +47,11 @@ type UserProfile struct {
 	MnemonicConfirmed          bool      `boil:"mnemonic_confirmed" json:"mnemonic_confirmed" toml:"mnemonic_confirmed" yaml:"mnemonic_confirmed"`
 	MessageCount               int       `boil:"message_count" json:"message_count" toml:"message_count" yaml:"message_count"`
 	PaymentState               string    `boil:"payment_state" json:"payment_state" toml:"payment_state" yaml:"payment_state"`
+	KycStatus                  string    `boil:"kyc_status" json:"kyc_status" toml:"kyc_status" yaml:"kyc_status"`
 	Password                   string    `boil:"password" json:"password" toml:"password" yaml:"password"`
 	CreatedAt                  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                  time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                  string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
-	KycStatus                  string    `boil:"kyc_status" json:"kyc_status" toml:"kyc_status" yaml:"kyc_status"`
 
 	R *userProfileR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userProfileL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -84,11 +84,11 @@ var UserProfileColumns = struct {
 	MnemonicConfirmed          string
 	MessageCount               string
 	PaymentState               string
+	KycStatus                  string
 	Password                   string
 	CreatedAt                  string
 	UpdatedAt                  string
 	UpdatedBy                  string
-	KycStatus                  string
 }{
 	ID:                         "id",
 	Email:                      "email",
@@ -116,11 +116,11 @@ var UserProfileColumns = struct {
 	MnemonicConfirmed:          "mnemonic_confirmed",
 	MessageCount:               "message_count",
 	PaymentState:               "payment_state",
+	KycStatus:                  "kyc_status",
 	Password:                   "password",
 	CreatedAt:                  "created_at",
 	UpdatedAt:                  "updated_at",
 	UpdatedBy:                  "updated_by",
-	KycStatus:                  "kyc_status",
 }
 
 // UserProfileRels is where relationship names are stored.
@@ -168,9 +168,9 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "password", "created_at", "updated_at", "updated_by", "kyc_status"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "created_at", "updated_at", "updated_by"}
 	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
-	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "created_at", "updated_at", "kyc_status"}
+	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "created_at", "updated_at"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )
 

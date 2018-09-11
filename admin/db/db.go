@@ -13,9 +13,13 @@ import (
 	"github.com/volatiletech/sqlboiler/boil"
 )
 
-//DB is the outer db connection
+//DB is the admin database
 var DB *sql.DB
+
+//DBC is the customer database
 var DBC *sql.DB
+
+//DBSC is the stellar core database
 var DBSC *sql.DB
 
 //CreateNewDB creates a new DB connection
@@ -59,19 +63,21 @@ func CreateNewDB(cnf *config.Config) error {
 		log.Fatalf("Failed to ping customer-database: %v", err)
 	}
 
-	//connect the stellar core database
-	psqlInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cnf.StellarCoreDB.DBHost, cnf.StellarCoreDB.DBPort, cnf.StellarCoreDB.DBUser, cnf.StellarCoreDB.DBPassword, cnf.StellarCoreDB.DBName)
+	if cnf.ConnectToCoreDB {
+		//connect the stellar core database
+		psqlInfo = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			cnf.StellarCoreDB.DBHost, cnf.StellarCoreDB.DBPort, cnf.StellarCoreDB.DBUser, cnf.StellarCoreDB.DBPassword, cnf.StellarCoreDB.DBName)
 
-	DBSC, err = sql.Open("postgres", psqlInfo)
+		DBSC, err = sql.Open("postgres", psqlInfo)
 
-	if err != nil {
-		log.Fatalf("Failed to connect to stellar-core-db: %v", err)
-	}
+		if err != nil {
+			log.Fatalf("Failed to connect to stellar-core-db: %v", err)
+		}
 
-	err = DBSC.Ping()
-	if err != nil {
-		log.Fatalf("Failed to ping stellar-core-database: %v", err)
+		err = DBSC.Ping()
+		if err != nil {
+			log.Fatalf("Failed to ping stellar-core-database: %v", err)
+		}
 	}
 
 	return nil

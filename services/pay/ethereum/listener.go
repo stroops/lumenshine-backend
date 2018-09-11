@@ -2,12 +2,13 @@ package ethereum
 
 import (
 	"context"
-	"github.com/Soneso/lumenshine-backend/helpers"
-	"github.com/Soneso/lumenshine-backend/services/pay/config"
-	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"math/big"
 	"os"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
+	"github.com/Soneso/lumenshine-backend/services/pay/config"
+	"github.com/Soneso/lumenshine-backend/services/pay/db"
 
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 
@@ -212,7 +213,7 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	//get the order from the database
-	order, err := l.DB.GetOpenOrderForAddress(m.ChainEth, toAddress)
+	order, err := l.DB.GetOpenOrderForAddress(m.PaymentNetworkEthereum, toAddress)
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -223,7 +224,7 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.ChainEth, hash, toAddress, order.ID, valueWei)
+	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
 	if err != nil {
 		return err
 	}

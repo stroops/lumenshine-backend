@@ -4,27 +4,37 @@
 package models
 
 var TableNames = struct {
-	Countries            string
-	IcoPhase             string
-	JWTKey               string
-	KeyValueStore        string
-	Mail                 string
-	MultipleTransaction  string
-	Notification         string
-	NotificationArchive  string
-	ProcessedTransaction string
-	Salutations          string
-	UserKycDocument      string
-	UserMessage          string
-	UserMessageArchive   string
-	UserOrder            string
-	UserProfile          string
-	UserPushtoken        string
-	UserSecurity         string
-	UserWallet           string
+	Countries                         string
+	ExchangeCurrency                  string
+	Ico                               string
+	IcoPhase                          string
+	IcoPhaseActivatedExchangeCurrency string
+	IcoPhaseBankAccount               string
+	IcoSupportedExchangeCurrency      string
+	JWTKey                            string
+	KeyValueStore                     string
+	Mail                              string
+	MultipleTransaction               string
+	Notification                      string
+	NotificationArchive               string
+	ProcessedTransaction              string
+	Salutations                       string
+	UserKycDocument                   string
+	UserMessage                       string
+	UserMessageArchive                string
+	UserOrder                         string
+	UserProfile                       string
+	UserPushtoken                     string
+	UserSecurity                      string
+	UserWallet                        string
 }{
-	Countries:            "countries",
-	IcoPhase:             "ico_phase",
+	Countries:        "countries",
+	ExchangeCurrency: "exchange_currency",
+	Ico:              "ico",
+	IcoPhase:         "ico_phase",
+	IcoPhaseActivatedExchangeCurrency: "ico_phase_activated_exchange_currency",
+	IcoPhaseBankAccount:               "ico_phase_bank_account",
+	IcoSupportedExchangeCurrency:      "ico_supported_exchange_currency",
 	JWTKey:               "jwt_key",
 	KeyValueStore:        "key_value_store",
 	Mail:                 "mail",
