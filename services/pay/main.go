@@ -9,14 +9,12 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/cmd"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"github.com/Soneso/lumenshine-backend/services/pay/environment"
-	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/bitcoin"
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
 
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
 )
@@ -67,37 +65,6 @@ func createServices() {
 	cfg := env.Config
 
 	env.AccountConfigurator = account.NewAccountConfigurator(env.DBC, env.Config)
-
-	//create bitcoin address generator
-	var bitcoinChainParams *chaincfg.Params
-	if cfg.Bitcoin.Testnet {
-		bitcoinChainParams = &chaincfg.TestNet3Params
-	} else {
-		bitcoinChainParams = &chaincfg.MainNetParams
-	}
-
-	bitcoinAddressGenerator, err := bitcoin.NewAddressGenerator(cfg.Bitcoin.MasterPublicKey, bitcoinChainParams)
-	if err != nil {
-		log.Error(err)
-		os.Exit(-1)
-	}
-	env.BitcoinAddressGenerator = bitcoinAddressGenerator
-
-	//create Ethereum address generator
-	ethereumAddressGenerator, err := ethereum.NewAddressGenerator(cfg.Bitcoin.MasterPublicKey)
-	if err != nil {
-		log.Error(err)
-		os.Exit(-1)
-	}
-	env.EthereumAddressGenerator = ethereumAddressGenerator
-
-	//create Stellar address generator
-	stellarAddressGenerator, err := stellar.NewAddressGenerator()
-	if err != nil {
-		log.Error(err)
-		os.Exit(-1)
-	}
-	env.StellarAddressGenerator = stellarAddressGenerator
 
 	//start the listener
 	if cfg.Bitcoin.Enabled {

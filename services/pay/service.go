@@ -169,7 +169,21 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	}
 
 	paymentAddress := ""
-	addressIndex := 0
+	paymentSeed := ""
+	var addressIndex uint32
+
+	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
+		if ec.PaymentNetwork == m.PaymentNetworkStellar {
+			paymentAddress = aec.StellarPaymentAccountPK
+			paymentSeed = aec.StellarPaymentAccountSeed
+		} else {
+			paymentAddress, paymentSeed, addressIndex, err = s.GeneratePaymentAddress(ec.PaymentNetwork, aec.ExchangeMasterKey)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	}
 
 	//save order to db
 	o := &m.UserOrder{
@@ -181,6 +195,9 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		ExchangeCurrencyID:                 ec.ID,
 		ExchangeCurrencyDenominationAmount: denomAmount.String(),
 		PaymentNetwork:                     ec.PaymentNetwork,
+		PaymentAddress:                     paymentAddress,
+		PaymentSeed:                        paymentSeed,
+		AddressIndex:                       int64(addressIndex),
 	}
 	err = o.Insert(s.Env.DBC, boil.Infer())
 	if err != nil {

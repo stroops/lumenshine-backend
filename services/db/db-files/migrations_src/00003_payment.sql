@@ -62,7 +62,7 @@ CREATE TABLE user_order (
   CONSTRAINT valid_address_index CHECK (address_index >= 0)
 );
 create index idx_user_order_user_profile on user_order(user_id);
-create unique index idx_user_order_ix1 on user_order(exchange_currency_id, payment_address);
+create unique index idx_user_order_ix1 on user_order(exchange_currency_id, payment_address) where payment_network <> 'stellar' and payment_network <> 'fiat';
 create index idx_user_order_ix2 on user_order(updated_at); /* need this for fast filtering */
 create index idx_user_order_ix3 on user_order(order_status);
 create index idx_user_order_ix4 on user_order(stellar_user_public_key);

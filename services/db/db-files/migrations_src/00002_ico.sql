@@ -128,6 +128,8 @@ CREATE TABLE ico_phase_activated_exchange_currency (
   exchange_master_key text not null, /* master key for generating the addresses and seeds in the payment network */
   denom_price_per_token BIGINT NOT NULL,
   stellar_starting_balance_denom varchar(64) NOT NULL, /*starting-balannce (in denomination) for creating the stellar-account */
+  stellar_payment_account_pk varchar(56) not null, /* this is the public key for the payment recipient */
+  stellar_payment_account_seed varchar(56) not null, /* this is the seed for the stellar payment account */
   tokens_released BIGINT NOT NULL,
   tokens_blocked BIGINT NOT NULL,
   /* only needed if the customer wants to transfer fiat to our bank account*/
@@ -158,11 +160,11 @@ insert into ico_phase_bank_account(id, account_name, recepient_name, bank_name, 
   (1, 'Bank-Acc1', 'Udo Polder', 'MyBank', 'DE12344', 'LZ1233', 'Payment for %s', 'system'),
   (2, 'Bank-Acc2', 'Chris Rogobete', 'HisBank', 'DE12366', 'LZ1266', 'HisPayment for %s', 'system');
 
-insert into ico_phase_activated_exchange_currency (id, ico_phase_id, exchange_currency_id, denom_price_per_token, tokens_released, tokens_blocked, ico_phase_bank_account_id, exchange_master_key, stellar_starting_balance_denom, updated_by) values
-  (1, 1, 1, 1000000, 0, 0, null, 'xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u', '30000000', 'setup'), /*  btc 0,10000000*/
-  (2, 1, 2, 2000000, 0, 0, null, 'xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u', '40000000', 'setup'), /*  eth 0,20000000*/
-  (3, 1, 3, 3000000, 0, 0, null, '', '15000000', 'setup'), /*  xlm 0,30000000*/
- /* EUR 1,50*/ (4, 1, 5, 150, 0, 0, 1, '', '20000000', 'setup'); 
+insert into ico_phase_activated_exchange_currency (id, ico_phase_id, exchange_currency_id, denom_price_per_token, tokens_released, tokens_blocked, ico_phase_bank_account_id, exchange_master_key, stellar_starting_balance_denom, stellar_payment_account_pk, stellar_payment_account_seed, updated_by) values
+  (1, 1, 1, 1000000, 0, 0, null, 'xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u', '30000000', '', '', 'setup'), /*  btc 0,10000000*/
+  (2, 1, 2, 2000000, 0, 0, null, 'xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u', '40000000', '', '','setup'), /*  eth 0,20000000*/
+  (3, 1, 3, 3000000, 0, 0, null, '', '15000000', 'GCYIEL5FDHS7EGPA6BYZDJAZF5TMNB4V2YCAL3PJ34YMVIG2UUNOYIGZ', 'SAQU2LVNPJP3QFTQCIXG5MO5A6N3GASXJO2G4PCFRLBT6NRWZWKPZJE4', 'setup'), /*  xlm 0,30000000*/
+ /* EUR 1,50*/ (4, 1, 5, 150, 0, 0, 1, '', '20000000', '', '', 'setup'); 
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.

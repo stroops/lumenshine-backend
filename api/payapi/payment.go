@@ -207,6 +207,7 @@ type CreateOrderResponse struct {
 	OrderStatus           string `json:"order_status"`
 	OrderedTokenAmount    int64  `json:"ordered_token_amount"`
 	OrderedTokenAssetCode string `json:"ordered_token_asset_code"`
+	PaymentNetwork        string `json:"payment_network"`
 
 	//AssetCode in the payment Network
 	ExchangeAssetCode string `json:"exchange_asset_code"`
@@ -347,6 +348,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		OrderStatus:                 o.OrderStatus,
 		OrderedTokenAmount:          l.OrderedTokenAmount,
 		OrderedTokenAssetCode:       phase.IcoTokenAsset,
+		PaymentNetwork:              ec.PaymentNetwork,
 		ExchangeAssetCode:           ec.AssetCode,
 		ExchangeValueToPay:          o.ExchangeValueToPay,
 		ExchangeCurrencyType:        ec.ExchangeCurrencyType,

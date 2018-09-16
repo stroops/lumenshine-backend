@@ -28,6 +28,8 @@ type IcoPhaseActivatedExchangeCurrency struct {
 	ExchangeMasterKey           string    `boil:"exchange_master_key" json:"exchange_master_key" toml:"exchange_master_key" yaml:"exchange_master_key"`
 	DenomPricePerToken          int64     `boil:"denom_price_per_token" json:"denom_price_per_token" toml:"denom_price_per_token" yaml:"denom_price_per_token"`
 	StellarStartingBalanceDenom string    `boil:"stellar_starting_balance_denom" json:"stellar_starting_balance_denom" toml:"stellar_starting_balance_denom" yaml:"stellar_starting_balance_denom"`
+	StellarPaymentAccountPK     string    `boil:"stellar_payment_account_pk" json:"stellar_payment_account_pk" toml:"stellar_payment_account_pk" yaml:"stellar_payment_account_pk"`
+	StellarPaymentAccountSeed   string    `boil:"stellar_payment_account_seed" json:"stellar_payment_account_seed" toml:"stellar_payment_account_seed" yaml:"stellar_payment_account_seed"`
 	TokensReleased              int64     `boil:"tokens_released" json:"tokens_released" toml:"tokens_released" yaml:"tokens_released"`
 	TokensBlocked               int64     `boil:"tokens_blocked" json:"tokens_blocked" toml:"tokens_blocked" yaml:"tokens_blocked"`
 	IcoPhaseBankAccountID       null.Int  `boil:"ico_phase_bank_account_id" json:"ico_phase_bank_account_id,omitempty" toml:"ico_phase_bank_account_id" yaml:"ico_phase_bank_account_id,omitempty"`
@@ -46,6 +48,8 @@ var IcoPhaseActivatedExchangeCurrencyColumns = struct {
 	ExchangeMasterKey           string
 	DenomPricePerToken          string
 	StellarStartingBalanceDenom string
+	StellarPaymentAccountPK     string
+	StellarPaymentAccountSeed   string
 	TokensReleased              string
 	TokensBlocked               string
 	IcoPhaseBankAccountID       string
@@ -59,6 +63,8 @@ var IcoPhaseActivatedExchangeCurrencyColumns = struct {
 	ExchangeMasterKey:           "exchange_master_key",
 	DenomPricePerToken:          "denom_price_per_token",
 	StellarStartingBalanceDenom: "stellar_starting_balance_denom",
+	StellarPaymentAccountPK:     "stellar_payment_account_pk",
+	StellarPaymentAccountSeed:   "stellar_payment_account_seed",
 	TokensReleased:              "tokens_released",
 	TokensBlocked:               "tokens_blocked",
 	IcoPhaseBankAccountID:       "ico_phase_bank_account_id",
@@ -94,8 +100,8 @@ func (*icoPhaseActivatedExchangeCurrencyR) NewStruct() *icoPhaseActivatedExchang
 type icoPhaseActivatedExchangeCurrencyL struct{}
 
 var (
-	icoPhaseActivatedExchangeCurrencyColumns               = []string{"id", "ico_phase_id", "exchange_currency_id", "exchange_master_key", "denom_price_per_token", "stellar_starting_balance_denom", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "created_at", "updated_at", "updated_by"}
-	icoPhaseActivatedExchangeCurrencyColumnsWithoutDefault = []string{"ico_phase_id", "exchange_currency_id", "exchange_master_key", "denom_price_per_token", "stellar_starting_balance_denom", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "updated_by"}
+	icoPhaseActivatedExchangeCurrencyColumns               = []string{"id", "ico_phase_id", "exchange_currency_id", "exchange_master_key", "denom_price_per_token", "stellar_starting_balance_denom", "stellar_payment_account_pk", "stellar_payment_account_seed", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "created_at", "updated_at", "updated_by"}
+	icoPhaseActivatedExchangeCurrencyColumnsWithoutDefault = []string{"ico_phase_id", "exchange_currency_id", "exchange_master_key", "denom_price_per_token", "stellar_starting_balance_denom", "stellar_payment_account_pk", "stellar_payment_account_seed", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "updated_by"}
 	icoPhaseActivatedExchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	icoPhaseActivatedExchangeCurrencyPrimaryKeyColumns     = []string{"id"}
 )

@@ -216,7 +216,7 @@ definitions:
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   InfoStruct:
-    description: Some data is generated on compile time and some is calculated online
+    description: InfoStruct represents the information for the application
     properties:
       BuildDate:
         type: string
@@ -235,7 +235,6 @@ definitions:
         type: integer
       Version:
         type: string
-    title: InfoStruct represents the information for the application
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   OrderDetailsRequest:

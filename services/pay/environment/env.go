@@ -20,14 +20,11 @@ type Environment struct {
 	//connection to the customer database
 	DBC *db.DB
 
-	BitcoinListener         *bitcoin.Listener
-	BitcoinAddressGenerator *bitcoin.AddressGenerator
+	BitcoinListener *bitcoin.Listener
 
-	EthereumListener         *ethereum.Listener
-	EthereumAddressGenerator *ethereum.AddressGenerator
+	EthereumListener *ethereum.Listener
 
-	StellarListener         *stellar.Listener
-	StellarAddressGenerator *stellar.AddressGenerator
+	StellarListener *stellar.Listener
 
 	AccountConfigurator *account.Configurator
 

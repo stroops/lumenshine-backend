@@ -5,9 +5,6 @@ import (
 	"math/big"
 )
 
-//AddressGenerator generates a new address
-type AddressGenerator struct{}
-
 // Status describes status of account processing
 type Status string
 

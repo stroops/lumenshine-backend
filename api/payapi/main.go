@@ -162,10 +162,6 @@ var (
 )
 
 // InfoStruct represents the information for the application
-//
-// Some data is generated on compile time and some is calculated online
-//
-//
 // swagger:model InfoStruct
 type InfoStruct struct {
 	Version             string
