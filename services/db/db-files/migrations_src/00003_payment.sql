@@ -26,6 +26,9 @@ CREATE TABLE user_order (
   ico_phase_id int not null REFERENCES ico_phase(id),
   order_status order_status not null,
   token_amount bigint not null,
+  /* the users public key for the payment */
+  /* coins will be transfered here on success */
+  stellar_user_public_key varchar(56) NOT NULL, 
 
   exchange_currency_id int not null REFERENCES exchange_currency(id),
   exchange_currency_denomination_amount varchar(64) not null, /* denomination for selected currency */
@@ -41,9 +44,11 @@ CREATE TABLE user_order (
   payment_address varchar(56) NOT NULL, /* public key in the target network, based on payment_network */
   payment_seed varchar(56) NOT NULL, /* used only for stellar accounts */  
 
-  /* this is the destination address where the coins must be transfered to */
-  /* if we use more than one public_key, default should be key_0, therefore not related via user_id */
-  user_account_public_key varchar(56) NOT NULL, 
+  payment_tx_id text not null, /* payment hash/id from the PaymentNetwork */
+  payment_refund_tx_id text not null, /* refund payment hash/id from the PaymentNetwork */
+  payment_qr_image bytea null, /* qr-image for the payment transaction */
+
+  fiat_payment_usage varchar(255) not null, /* used only for fiat payments */
 
   /* this field is used to save any error message that happened during the client payment */
   payment_error_message text not null,
@@ -60,7 +65,7 @@ create index idx_user_order_user_profile on user_order(user_id);
 create unique index idx_user_order_ix1 on user_order(exchange_currency_id, payment_address);
 create index idx_user_order_ix2 on user_order(updated_at); /* need this for fast filtering */
 create index idx_user_order_ix3 on user_order(order_status);
-create index idx_user_order_ix4 on user_order(user_account_public_key);
+create index idx_user_order_ix4 on user_order(stellar_user_public_key);
 create index idx_user_order_ix5 on user_order(ico_phase_id);
 
 CREATE TYPE transaction_status AS ENUM ('new', 'processed');

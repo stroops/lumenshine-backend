@@ -1,6 +1,7 @@
 package modext
 
 import (
+	"fmt"
 	"math/big"
 
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
@@ -14,4 +15,9 @@ func UserOrderDenomination(o *m.UserOrder) *big.Int {
 		i = i.SetInt64(0)
 	}
 	return i
+}
+
+//UserOrderFiatPaymentUsage creates the usage string for an order
+func UserOrderFiatPaymentUsage(usageString string, o *m.UserOrder) string {
+	return fmt.Sprintf(usageString, fmt.Sprintf("%d", o.ID))
 }

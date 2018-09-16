@@ -22,43 +22,49 @@ import (
 
 // IcoPhaseActivatedExchangeCurrency is an object representing the database table.
 type IcoPhaseActivatedExchangeCurrency struct {
-	ID                    int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	IcoPhaseID            int       `boil:"ico_phase_id" json:"ico_phase_id" toml:"ico_phase_id" yaml:"ico_phase_id"`
-	ExchangeCurrencyID    int       `boil:"exchange_currency_id" json:"exchange_currency_id" toml:"exchange_currency_id" yaml:"exchange_currency_id"`
-	PricePerToken         int64     `boil:"price_per_token" json:"price_per_token" toml:"price_per_token" yaml:"price_per_token"`
-	TokensReleased        int64     `boil:"tokens_released" json:"tokens_released" toml:"tokens_released" yaml:"tokens_released"`
-	TokensBlocked         int64     `boil:"tokens_blocked" json:"tokens_blocked" toml:"tokens_blocked" yaml:"tokens_blocked"`
-	IcoPhaseBankAccountID null.Int  `boil:"ico_phase_bank_account_id" json:"ico_phase_bank_account_id,omitempty" toml:"ico_phase_bank_account_id" yaml:"ico_phase_bank_account_id,omitempty"`
-	CreatedAt             time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt             time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	UpdatedBy             string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	ID                          int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	IcoPhaseID                  int       `boil:"ico_phase_id" json:"ico_phase_id" toml:"ico_phase_id" yaml:"ico_phase_id"`
+	ExchangeCurrencyID          int       `boil:"exchange_currency_id" json:"exchange_currency_id" toml:"exchange_currency_id" yaml:"exchange_currency_id"`
+	ExchangeMasterKey           string    `boil:"exchange_master_key" json:"exchange_master_key" toml:"exchange_master_key" yaml:"exchange_master_key"`
+	DenomPricePerToken          int64     `boil:"denom_price_per_token" json:"denom_price_per_token" toml:"denom_price_per_token" yaml:"denom_price_per_token"`
+	StellarStartingBalanceDenom string    `boil:"stellar_starting_balance_denom" json:"stellar_starting_balance_denom" toml:"stellar_starting_balance_denom" yaml:"stellar_starting_balance_denom"`
+	TokensReleased              int64     `boil:"tokens_released" json:"tokens_released" toml:"tokens_released" yaml:"tokens_released"`
+	TokensBlocked               int64     `boil:"tokens_blocked" json:"tokens_blocked" toml:"tokens_blocked" yaml:"tokens_blocked"`
+	IcoPhaseBankAccountID       null.Int  `boil:"ico_phase_bank_account_id" json:"ico_phase_bank_account_id,omitempty" toml:"ico_phase_bank_account_id" yaml:"ico_phase_bank_account_id,omitempty"`
+	CreatedAt                   time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                   time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy                   string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *icoPhaseActivatedExchangeCurrencyR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L icoPhaseActivatedExchangeCurrencyL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var IcoPhaseActivatedExchangeCurrencyColumns = struct {
-	ID                    string
-	IcoPhaseID            string
-	ExchangeCurrencyID    string
-	PricePerToken         string
-	TokensReleased        string
-	TokensBlocked         string
-	IcoPhaseBankAccountID string
-	CreatedAt             string
-	UpdatedAt             string
-	UpdatedBy             string
+	ID                          string
+	IcoPhaseID                  string
+	ExchangeCurrencyID          string
+	ExchangeMasterKey           string
+	DenomPricePerToken          string
+	StellarStartingBalanceDenom string
+	TokensReleased              string
+	TokensBlocked               string
+	IcoPhaseBankAccountID       string
+	CreatedAt                   string
+	UpdatedAt                   string
+	UpdatedBy                   string
 }{
-	ID:                    "id",
-	IcoPhaseID:            "ico_phase_id",
-	ExchangeCurrencyID:    "exchange_currency_id",
-	PricePerToken:         "price_per_token",
-	TokensReleased:        "tokens_released",
-	TokensBlocked:         "tokens_blocked",
-	IcoPhaseBankAccountID: "ico_phase_bank_account_id",
-	CreatedAt:             "created_at",
-	UpdatedAt:             "updated_at",
-	UpdatedBy:             "updated_by",
+	ID:                          "id",
+	IcoPhaseID:                  "ico_phase_id",
+	ExchangeCurrencyID:          "exchange_currency_id",
+	ExchangeMasterKey:           "exchange_master_key",
+	DenomPricePerToken:          "denom_price_per_token",
+	StellarStartingBalanceDenom: "stellar_starting_balance_denom",
+	TokensReleased:              "tokens_released",
+	TokensBlocked:               "tokens_blocked",
+	IcoPhaseBankAccountID:       "ico_phase_bank_account_id",
+	CreatedAt:                   "created_at",
+	UpdatedAt:                   "updated_at",
+	UpdatedBy:                   "updated_by",
 }
 
 // IcoPhaseActivatedExchangeCurrencyRels is where relationship names are stored.
@@ -88,8 +94,8 @@ func (*icoPhaseActivatedExchangeCurrencyR) NewStruct() *icoPhaseActivatedExchang
 type icoPhaseActivatedExchangeCurrencyL struct{}
 
 var (
-	icoPhaseActivatedExchangeCurrencyColumns               = []string{"id", "ico_phase_id", "exchange_currency_id", "price_per_token", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "created_at", "updated_at", "updated_by"}
-	icoPhaseActivatedExchangeCurrencyColumnsWithoutDefault = []string{"ico_phase_id", "exchange_currency_id", "price_per_token", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "updated_by"}
+	icoPhaseActivatedExchangeCurrencyColumns               = []string{"id", "ico_phase_id", "exchange_currency_id", "exchange_master_key", "denom_price_per_token", "stellar_starting_balance_denom", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "created_at", "updated_at", "updated_by"}
+	icoPhaseActivatedExchangeCurrencyColumnsWithoutDefault = []string{"ico_phase_id", "exchange_currency_id", "exchange_master_key", "denom_price_per_token", "stellar_starting_balance_denom", "tokens_released", "tokens_blocked", "ico_phase_bank_account_id", "updated_by"}
 	icoPhaseActivatedExchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	icoPhaseActivatedExchangeCurrencyPrimaryKeyColumns     = []string{"id"}
 )

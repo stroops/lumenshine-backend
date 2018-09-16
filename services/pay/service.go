@@ -2,20 +2,14 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
-	"math/big"
 	"net"
 
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"github.com/Soneso/lumenshine-backend/services/db/modext"
 	"github.com/Soneso/lumenshine-backend/services/pay/environment"
-
-	"github.com/Soneso/lumenshine-backend/services/pay/bitcoin"
-	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
-	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
@@ -59,116 +53,194 @@ func StartGrpcService(env *environment.Environment, log *logrus.Entry) error {
 	return nil
 }
 
-func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+func (s *server) GetPhaseData(ctx context.Context, r *pb.IDRequest) (*pb.PhaseDataResponse, error) {
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
-
-	var err error
-	chainAmount, _, err := s.getPriceForCoins(r.Chain, r.CoinAmount)
+	p, err := s.Env.DBC.GetICOPhaseByID(int(r.Id), log)
 	if err != nil {
-		log.WithError(err).Error("Error getting price")
 		return nil, err
 	}
 
-	if chainAmount == 0.0 {
-		return nil, errors.New("Could not get Chain amount")
-	}
-	ret := &pb.CreateOrderResponse{
-		ChainAmount: chainAmount,
-		Chain:       r.Chain,
-	}
+	ecs := []*pb.ExchangeCurrency{}
 
-	addressSeed := ""
-	var index uint32
-	index = 0
-	if r.Chain == m.PaymentNetworkEthereum || r.Chain == m.PaymentNetworkBitcoin {
-		//get new chain address
-		index, err = env.DBC.GetNextChainAddressIndex(r.Chain)
-		if r.Chain == m.PaymentNetworkEthereum {
-			ret.Address, err = s.Env.EthereumAddressGenerator.Generate(index)
-		} else {
-			ret.Address, err = s.Env.BitcoinAddressGenerator.Generate(index)
+	for _, aec := range p.R.IcoPhaseActivatedExchangeCurrencies {
+		ec, err := s.Env.DBC.GetExchangeCurrecnyByID(aec.R.ExchangeCurrency.ID, log)
+
+		denom, nativAmount, err := s.Env.DBC.PriceForCoins(1, ec, p)
+		if err != nil {
+			return nil, err
 		}
-	} else if r.Chain == m.PaymentNetworkStellar {
-		ret.Address, addressSeed, err = s.Env.StellarAddressGenerator.Generate()
-	} else if r.Chain == m.PaymentNetworkFiat {
-		//return the fiat data
-		ret.FiatBic = s.Env.Config.Fiat.BIC
-		ret.FiatIban = s.Env.Config.Fiat.IBAN
-		ret.FiatDestinationName = s.Env.Config.Fiat.DestiantionName
-		ret.FiatPaymentUsage = s.Env.Config.Fiat.PaymentUsage
-	} else {
-		return nil, errors.New("Wrong chain")
+
+		ecs = append(ecs, &pb.ExchangeCurrency{
+			Id:                   int64(ec.ID),
+			ExchangeCurrencyType: ec.ExchangeCurrencyType,
+			AssetCode:            ec.AssetCode,
+			DenomAssetCode:       ec.DenomAssetCode,
+			Decimals:             int64(ec.Decimals),
+			PaymentNetwork:       ec.PaymentNetwork,
+			IssuerPk:             ec.IssuerPK,
+			DenomPricePerToken:   denom.String(),
+			PricePerToken:        nativAmount,
+		})
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	//save order to db
-	order := &m.UserOrder{
-		UserID:      int(r.UserId),
-		OrderStatus: m.OrderStatusWaitingForPayment,
-		TokenAmount: r.CoinAmount,
-		//ChainAmount:          types.NewDecimal(new(decimal.Big).SetFloat64(chainAmount)),
-		//CurrencyDenomAmount:  chainAmountDenom.Int64(),
-		PaymentNetwork:       r.Chain,
-		AddressIndex:         int64(index),
-		PaymentAddress:       ret.Address,
-		PaymentSeed:          addressSeed,
-		UserAccountPublicKey: r.UserPublicKey,
-		//OrderPhaseID:         r.IcoPhase,
-	}
-	err = order.Insert(s.Env.DBC, boil.Infer())
-	if err != nil {
-		log.WithError(err).WithFields(logrus.Fields{
-			"chain": r.Chain, "address": ret.Address, "index": index,
-		}).Error("Could not create order")
-	}
-
-	ret.OrderId = int64(order.ID)
-	return ret, err
+	return &pb.PhaseDataResponse{
+		Id:                       int64(p.ID),
+		IcoId:                    int64(p.IcoID),
+		IcoPhaseName:             p.IcoPhaseName,
+		IcoPhaseStatus:           p.IcoPhaseStatus,
+		StartTime:                p.StartTime.Unix(),
+		EndTime:                  p.EndTime.Unix(),
+		TokensLeft:               p.TokensLeft,
+		TokenMaxOrderAmount:      p.TokenMaxOrderAmount,
+		TokenMinOrderAmount:      p.TokenMinOrderAmount,
+		ActiveExchangeCurrencies: ecs,
+		MaxUserOrders:            int64(p.MaxUserOrders),
+		IcoTokenAsset:            p.R.Ico.AssetCode,
+	}, nil
 }
 
-// getPriceForCoins returns the price for the given coin amount in the corresponding chain value
-func (s *server) getPriceForCoins(chain string, coinCount int64) (chainAmount float64, chainDenomAmount *big.Int, err error) {
-	chainAmount = 0.0
-	chainDenomAmount = big.NewInt(0)
-
-	if chain == m.PaymentNetworkEthereum {
-		chainAmount = s.Env.Config.Ethereum.TokenPrice * float64(coinCount)
-		chainDenomAmount, err = ethereum.EthToWei(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.PaymentNetworkBitcoin {
-		chainAmount = s.Env.Config.Bitcoin.TokenPrice * float64(coinCount)
-		chainDenomAmount, err = bitcoin.BtcToSat(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.PaymentNetworkStellar {
-		chainAmount = s.Env.Config.Stellar.TokenPrice * float64(coinCount)
-		chainDenomAmount, err = stellar.XLMToStroops(fmt.Sprintf("%f", chainAmount))
-	} else if chain == m.PaymentNetworkFiat {
-		chainAmount = s.Env.Config.Fiat.TokenPrice * float64(coinCount)
+func (s *server) GetUserOrderCount(ctx context.Context, r *pb.UserOrdersCountRequest) (*pb.IntResponse, error) {
+	cnt, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and "+m.UserOrderColumns.IcoPhaseID+"=?", r.UserId, r.PhaseId)).Count(s.Env.DBC)
+	if err != nil {
+		return nil, err
 	}
+	return &pb.IntResponse{
+		Value: cnt,
+	}, nil
+}
 
-	return
+func (s *server) GetExchangeCurrencyData(ctx context.Context, r *pb.IDRequest) (*pb.ExchangeCurrency, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+	p, err := s.Env.DBC.GetExchangeCurrecnyByID(int(r.Id), log)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ExchangeCurrency{
+		Id:                   int64(p.ID),
+		ExchangeCurrencyType: p.ExchangeCurrencyType,
+		AssetCode:            p.AssetCode,
+		DenomAssetCode:       p.DenomAssetCode,
+		Decimals:             int64(p.Decimals),
+		PaymentNetwork:       p.PaymentNetwork,
+		IssuerPk:             p.IssuerPK,
+	}, nil
 }
 
 func (s *server) GetCoinPrice(ctx context.Context, r *pb.CoinPriceRequest) (*pb.CoinPriceResponse, error) {
-	chainAmount, chainDenomAmount, err := s.getPriceForCoins(r.Chain, r.CoinAmount)
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+	ec, err := s.Env.DBC.GetExchangeCurrecnyByID(int(r.ExchangeCurrencyId), log)
+	if err != nil {
+		return nil, err
+	}
+
+	phase, err := s.Env.DBC.GetICOPhaseByID(int(r.IcoPhaseId), log)
+	if err != nil {
+		return nil, err
+	}
+
+	denomAmount, nativAmount, err := s.Env.DBC.PriceForCoins(r.CoinAmount, ec, phase)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.CoinPriceResponse{
-		ChainAmount:             chainAmount,
-		ChainAmountDenomination: chainDenomAmount.String(),
-	}, err
+		ExchangeAmount:             nativAmount,
+		ExchangeAmountDenomination: denomAmount.String(),
+		ExchangeAssetCode:          ec.AssetCode,
+	}, nil
+}
+
+func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb.CreateOrderResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	phase, err := s.Env.DBC.GetICOPhaseByID(int(r.IcoPhaseId), log)
+	if err != nil {
+		return nil, err
+	}
+
+	ec, aec, err := s.Env.DBC.GetActiveExchangeCurrecnyByID(int(r.ExchangeCurrencyId), int(phase.ID), log)
+	if err != nil {
+		return nil, err
+	}
+
+	denomAmount, nativAmount, err := s.Env.DBC.PriceForCoins(r.TokenAmount, ec, phase)
+	if err != nil {
+		return nil, err
+	}
+
+	paymentAddress := ""
+	addressIndex := 0
+
+	//save order to db
+	o := &m.UserOrder{
+		UserID:                             int(r.UserId),
+		IcoPhaseID:                         phase.ID,
+		OrderStatus:                        m.OrderStatusWaitingForPayment,
+		TokenAmount:                        r.TokenAmount,
+		StellarUserPublicKey:               r.UserPublicKey,
+		ExchangeCurrencyID:                 ec.ID,
+		ExchangeCurrencyDenominationAmount: denomAmount.String(),
+		PaymentNetwork:                     ec.PaymentNetwork,
+	}
+	err = o.Insert(s.Env.DBC, boil.Infer())
+	if err != nil {
+		log.WithError(err).WithFields(logrus.Fields{
+			"payment_network": ec.PaymentNetwork, "address": paymentAddress, "index": addressIndex,
+		}).Error("Could not create order")
+		return nil, err
+	}
+
+	ret := &pb.CreateOrderResponse{
+		OrderId:                     int64(o.ID),
+		OrderStatus:                 o.OrderStatus,
+		ExchangeValueToPay:          nativAmount,
+		ExchangeValueDenominator:    denomAmount.String(),
+		ExchangeValueDenomAssetCode: ec.DenomAssetCode,
+	}
+	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeFiat {
+		//set the usage in the order
+		o.FiatPaymentUsage = modext.UserOrderFiatPaymentUsage(aec.R.IcoPhaseBankAccount.PaymendUsageString, o)
+		_, err := o.Update(s.Env.DBC, boil.Whitelist(m.UserOrderColumns.FiatPaymentUsage))
+		if err != nil {
+			//only log the error
+			log.WithError(err).WithFields(logrus.Fields{
+				"order-id": o.ID,
+			}).Error("Could not update payment")
+		}
+
+		ret.FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
+		ret.FiatIban = aec.R.IcoPhaseBankAccount.Iban
+		ret.FiatRecepientName = aec.R.IcoPhaseBankAccount.RecepientName
+		ret.FiatPaymentUsage = o.FiatPaymentUsage
+		ret.FiatBankName = aec.R.IcoPhaseBankAccount.BankName
+	}
+
+	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
+		ret.DepositPk = paymentAddress
+		//TODO
+		//ret.PaymentQrImage = o.PaymentQRImage
+	}
+
+	//TODO address generation
+	return ret, nil
 }
 
 func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*pb.UserOrdersResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	q := []qm.QueryMod{
 		qm.Where(m.UserOrderColumns.UserID+"=?", r.UserId),
 	}
 
-	if r.Status != "" {
-		q = append(q, qm.Where(m.UserOrderColumns.OrderStatus+"=?", r.Status))
+	if r.OrderStatus != "" {
+		q = append(q, qm.Where(m.UserOrderColumns.OrderStatus+"=?", r.OrderStatus))
 	}
 
 	if r.OrderId != 0 {
 		q = append(q, qm.Where("id=?", r.OrderId))
+	}
+
+	if r.IcoPhaseId != 0 {
+		q = append(q, qm.Where(m.UserOrderColumns.IcoPhaseID+"=?", r.IcoPhaseId))
 	}
 
 	orders, err := m.UserOrders(q...).All(s.Env.DBC)
@@ -178,47 +250,50 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	ret := new(pb.UserOrdersResponse)
 	ret.UserOrders = make([]*pb.UserOrder, len(orders))
 	for i := 0; i < len(orders); i++ {
-		/*v, ok := orders[i].ChainAmount.Float64()
-		if !ok {
-			v = 0
-		}*/
-		ret.UserOrders[i] = &pb.UserOrder{
-			Id:          int64(orders[i].ID),
-			OrderStatus: orders[i].OrderStatus,
-			CoinAmount:  orders[i].TokenAmount,
-			//ChainAmount:          v,
-			//ChainAmountDenom:     orders[i].CurrencyDenomAmount,
-			Chain:                orders[i].PaymentNetwork,
-			ChainAddress:         orders[i].PaymentAddress,
-			UserStellarPublicKey: orders[i].UserAccountPublicKey,
+		o := orders[i]
+		ec, aec, err := s.Env.DBC.GetActiveExchangeCurrecnyByID(o.ExchangeCurrencyID, o.IcoPhaseID, log)
+		if err != nil {
+			return nil, err
 		}
-		if orders[i].PaymentNetwork == m.PaymentNetworkFiat {
-			ret.UserOrders[i].FiatBic = s.Env.Config.Fiat.BIC
-			ret.UserOrders[i].FiatIban = s.Env.Config.Fiat.IBAN
-			ret.UserOrders[i].FiatDestinationName = s.Env.Config.Fiat.DestiantionName
-			ret.UserOrders[i].FiatPaymentUsage = s.Env.Config.Fiat.PaymentUsage
+
+		denom, err := ec.DenomFromString(o.ExchangeCurrencyDenominationAmount)
+		if err != nil {
+			return nil, err
+		}
+
+		ret.UserOrders[i] = &pb.UserOrder{
+			Id:                                 int64(o.ID),
+			OrderStatus:                        o.OrderStatus,
+			IcoPhaseId:                         int64(o.IcoPhaseID),
+			TokenAmount:                        o.TokenAmount,
+			StellarUserPublicKey:               o.StellarUserPublicKey,
+			ExchangeCurrencyId:                 int64(o.ExchangeCurrencyID),
+			ExchangeCurrencyDenominationAmount: o.ExchangeCurrencyDenominationAmount,
+			PaymentNetwork:                     o.PaymentNetwork,
+			ExchangeAmount:                     ec.ToNativ(denom),
+			ExchangeAssetCode:                  ec.AssetCode,
+			ExchangeDenomAssetCode:             ec.DenomAssetCode,
+			ExchangeCurrencyType:               ec.ExchangeCurrencyType,
+		}
+
+		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeFiat {
+			ret.UserOrders[i].FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
+			ret.UserOrders[i].FiatIban = aec.R.IcoPhaseBankAccount.Iban
+			ret.UserOrders[i].FiatRecepientName = aec.R.IcoPhaseBankAccount.RecepientName
+			ret.UserOrders[i].FiatPaymentUsage = o.FiatPaymentUsage
+			ret.UserOrders[i].FiatBankName = aec.R.IcoPhaseBankAccount.BankName
+		}
+
+		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
+			ret.UserOrders[i].DepositPk = o.PaymentAddress
+			ret.UserOrders[i].PaymentTxId = o.PaymentTXID
+			ret.UserOrders[i].PaymentRefundTxId = o.PaymentRefundTXID
+			//TODO
+			//ret.UserOrders[i].PaymentQrImage = o.PaymentQRImage
 		}
 	}
 
 	return ret, nil
-}
-
-func (s *server) GetActveICOPhase(ctx context.Context, r *pb.Empty) (*pb.IcoPhaseResponse, error) {
-	p, err := m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(s.Env.DBC)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return &pb.IcoPhaseResponse{}, nil
-		}
-		return nil, err
-	}
-
-	return &pb.IcoPhaseResponse{
-		PhaseName:  p.IcoPhaseName,
-		StartTime:  int64(p.StartTime.Unix()),
-		EndTime:    int64(p.EndTime.Unix()),
-		CoinAmount: p.TokensLeft,
-		IsActive:   true,
-	}, nil
 }
 
 func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusRequest) (*pb.PayGetTrustStatusResponse, error) {

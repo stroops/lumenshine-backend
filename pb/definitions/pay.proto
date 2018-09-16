@@ -4,58 +4,108 @@ import "global.proto";
 
 package pb;
 
+message ExchangeCurrency{
+    int64 id = 1;
+    string exchange_currency_type = 2;
+    string asset_code = 3;
+    string denom_asset_code = 4;
+    int64 decimals = 5;
+    string payment_network = 6;
+    string issuer_pk = 7;
+    string denom_price_per_token = 8;
+    string price_per_token = 9;    
+}
+
+message PhaseDataResponse{
+    int64 id = 1;
+    int64 ico_id = 2;
+    string ico_phase_name = 3;
+    string ico_phase_status = 4;
+    string ico_token_asset = 5;
+    int64 start_time = 6;
+    int64 end_time = 7;
+    int64 tokens_left = 8;
+    int64 token_max_order_amount = 9;
+    int64 token_min_order_amount = 10;
+    int64 max_user_orders = 11;
+    repeated ExchangeCurrency active_exchange_currencies = 12;
+}
+
 message CoinPriceRequest{
-    BaseRequest base = 1;
-    string chain = 2;
-    int64 coin_amount = 3;
+    BaseRequest base = 1;    
+    int64 coin_amount = 2;
+    int64 exchange_currency_id = 3;
+    int64 ico_phase_id = 4;
 }
 
 message CoinPriceResponse{
-    double chain_amount = 1;
-    string chain_amount_denomination = 2;
+    string exchange_amount = 1;
+    string exchange_amount_denomination = 2;
+    string exchange_asset_code = 3;
 }
 
 message CreateOrderRequest{
     BaseRequest base = 1;
-    int64 user_id = 2;
-    string chain = 3; 
-    string user_public_key = 4;   
-    int64 coin_amount = 5;
-    string ico_phase = 6;
+    int64 user_id = 2;    
+    int64 ico_phase_id = 3;
+    int64 token_amount = 4;
+    int64 exchange_currency_id = 5;    
+    string user_public_key = 6;       
 }
 
 message CreateOrderResponse {
     int64 order_id = 1;
-    string address = 2;
-    string chain = 3;
-    double chain_amount = 4;    
-    string fiat_bic = 5;
-    string fiat_iban = 6;
-    string fiat_destination_name = 7;
-    string fiat_payment_usage = 8;
+    string order_status = 2;
+    string exchange_value_to_pay = 3;
+    string exchange_value_denominator = 4;
+    string exchange_value_denom_asset_code = 5;
+    string deposit_pk = 6;
+    bytes payment_qr_image = 7;    
+    string fiat_bic = 8;
+    string fiat_iban = 9;
+    string fiat_recepient_name = 10;
+    string fiat_payment_usage = 11;
+    string fiat_bank_name = 12;
+}
+
+message UserOrdersCountRequest{
+    BaseRequest base = 1;    
+    int64 user_id = 2;
+    int64 phase_id = 3;
 }
 
 message UserOrdersRequest{
     BaseRequest base = 1;
     int64 user_id = 2;    
-    string status = 3;
+    string order_status = 3;
     int64 order_id = 4;
+    int64 ico_phase_id = 5;
 }
 
 message UserOrder{
     int64 id = 1;
     string order_status = 2;
-    int64 coin_amount = 3;
-    double chain_amount = 4;
-    string chain_amount_denom = 5;
-    string chain = 6;    
-    string chain_address = 7;
-    string user_stellar_public_key = 8;
-    string fiat_bic = 9;
-    string fiat_iban = 10;
-    string fiat_destination_name = 11;
-    string fiat_payment_usage = 12;
+    int64 ico_phase_id = 3;    
+    int64 token_amount = 4;
+    string stellar_user_public_key = 5;
+    int64 exchange_currency_id = 6;
+    string exchange_currency_denomination_amount = 7;
+    string payment_network = 8;
+    string deposit_pk = 9;
+    string payment_tx_id = 10;
+    string payment_refund_tx_id = 11;
+    bytes payment_qr_image = 12;
+    string exchange_amount = 13;
+    string exchange_asset_code = 14;
+    string exchange_denom_asset_code = 15; 
+    string fiat_bic = 16;
+    string fiat_iban = 17;
+    string fiat_recepient_name = 18;
+    string fiat_payment_usage = 19;
+    string fiat_bank_name = 20;
+    string exchange_currency_type = 21;
 }
+
 message UserOrdersResponse{
     repeated UserOrder UserOrders=1;
 }
@@ -98,12 +148,14 @@ message PayExecuteTransactionRequest{
     string transaction = 4;
 }
 
-service PayService {
+service PayService {    
+  rpc GetPhaseData (IDRequest) returns (PhaseDataResponse) {}  
+  rpc GetExchangeCurrencyData (IDRequest) returns (ExchangeCurrency) {}
+  rpc GetUserOrderCount (UserOrdersCountRequest) returns (IntResponse) {}  
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
   rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
   rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}    
-  rpc GetActveICOPhase (Empty) returns (IcoPhaseResponse) {}
-  
+    
   rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (PayGetTrustStatusResponse) {}
   rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}
   rpc PayExecuteTransaction (PayExecuteTransactionRequest) returns (Empty) {}

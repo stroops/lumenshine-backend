@@ -29,6 +29,10 @@ message BoolResponse {
   bool value = 1;
 }
 
+message IntResponse {
+  int64 value = 1;
+}
+
 message Empty {
   BaseRequest base = 1;
 }

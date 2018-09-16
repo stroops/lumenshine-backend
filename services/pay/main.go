@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/Soneso/lumenshine-backend/services/pay/account"
@@ -8,7 +10,6 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"github.com/Soneso/lumenshine-backend/services/pay/environment"
 	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
-	"os"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 

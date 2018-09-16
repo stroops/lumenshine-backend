@@ -1,0 +1,577 @@
+basePath: /portal/pay
+definitions:
+  CreateOrderRequest:
+    description: CreateOrderRequest is the data for creating an order
+    properties:
+      exchange_currency_id:
+        description: ID of the Exchange currency
+        format: int64
+        type: integer
+        x-go-name: ExchangeCurrencyID
+      ico_phase_id:
+        description: ID of the Ico-Phase
+        format: int64
+        type: integer
+        x-go-name: IcoPhaseID
+      ordered_token_amount:
+        description: Ammount of tokens orderd
+        format: int64
+        type: integer
+        x-go-name: OrderedTokenAmount
+      stellar_user_public_key:
+        description: Stellar Public Key of the user for the payment/coins
+        type: string
+        x-go-name: StellarUserPublicKey
+    required:
+    - ico_phase_id
+    - ordered_token_amount
+    - exchange_currency_id
+    - stellar_user_public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  CreateOrderResponse:
+    description: CreateOrderResponse is the return data , for creating a new order
+    properties:
+      deposit_pk:
+        description: DepositPK is the address in the PaymentNetwork, where the user
+          must transfer the Exchange-Asset
+        type: string
+        x-go-name: DepositPK
+      exchange_asset_code:
+        description: AssetCode in the payment Network
+        type: string
+        x-go-name: ExchangeAssetCode
+      exchange_currency_type:
+        description: 'Type for payment: stellar, other_crypto, fiat'
+        type: string
+        x-go-name: ExchangeCurrencyType
+      exchange_value_denom_asset_code:
+        description: This is values denomitator-assetcode
+        type: string
+        x-go-name: ExchangeValueDenomAssetCode
+      exchange_value_denominator:
+        description: This is values denomitator
+        type: string
+        x-go-name: ExchangeValueDenominator
+      exchange_value_to_pay:
+        description: Value to pay in the selected payment Network asset code
+        type: string
+        x-go-name: ExchangeValueToPay
+      fiat_bank_name:
+        type: string
+        x-go-name: FiatBankName
+      fiat_bic:
+        type: string
+        x-go-name: FiatBIC
+      fiat_destination_name:
+        type: string
+        x-go-name: FiatDestinationName
+      fiat_iban:
+        type: string
+        x-go-name: FiatIBAN
+      fiat_payment_usage:
+        type: string
+        x-go-name: FiatPaymentUsage
+      order_id:
+        format: int64
+        type: integer
+        x-go-name: OrderID
+      order_status:
+        type: string
+        x-go-name: OrderStatus
+      ordered_token_amount:
+        format: int64
+        type: integer
+        x-go-name: OrderedTokenAmount
+      ordered_token_asset_code:
+        type: string
+        x-go-name: OrderedTokenAssetCode
+      qr_code:
+        description: |-
+          QRCode is a bitmap for the transaction in the Payment-Network
+          TODO
+        items:
+          format: uint8
+          type: integer
+        type: array
+        x-go-name: QRCode
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  ExchangeCurrency:
+    description: ExchangeCurrency represents one exchange currency used everywhere
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      decimals:
+        description: Number of decimal places for the denominator
+        format: int64
+        type: integer
+        x-go-name: Decimals
+      denom_asset_code:
+        type: string
+        x-go-name: DenomAssetCode
+      denom_price_per_token:
+        description: Denominator-Value for one token
+        type: string
+        x-go-name: DenomPricePerToken
+      exchange_currency_type:
+        type: string
+        x-go-name: ExchangeCurrencyType
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      price_per_token:
+        description: Includes the UoM of the asset (EUR/XLM,BTC...)
+        type: string
+        x-go-name: PricePerToken
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  ExecuteTransactionRequest:
+    description: ExecuteTransactionRequest -
+    properties:
+      order_id:
+        format: int64
+        type: integer
+        x-go-name: OrderID
+      transaction:
+        type: string
+        x-go-name: Transaction
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  GetOrdersRequest:
+    description: GetOrdersRequest is the data for filtering the user orders
+    properties:
+      ico_phase_id:
+        description: ID of the Ico-Phase
+        format: int64
+        type: integer
+        x-go-name: IcoPhaseID
+      order_id:
+        description: ID of the Order
+        format: int64
+        type: integer
+        x-go-name: OrderID
+      order_status:
+        description: ID of the Order
+        type: string
+        x-go-name: OrderStatus
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  IcoPhaseDetailsRequest:
+    description: IcoPhaseDetailsRequest is the request data
+    properties:
+      ico_phase_id:
+        description: ID of the ICO-Phase
+        format: int64
+        type: integer
+        x-go-name: ICOPhaseID
+    required:
+    - ico_phase_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  IcoPhaseDetailsResponse:
+    description: IcoPhaseDetailsResponse lists details of the specified IPC-Phase
+    properties:
+      active_exchange_currencies:
+        items:
+          $ref: '#/definitions/ExchangeCurrency'
+        type: array
+        x-go-name: ActiveExchangeCurrencies
+      end_time:
+        format: date-time
+        type: string
+        x-go-name: EndTime
+      ico_id:
+        format: int64
+        type: integer
+        x-go-name: IcoID
+      ico_phase_name:
+        type: string
+        x-go-name: IcoPhaseName
+      ico_phase_status:
+        type: string
+        x-go-name: IcoPhaseStatus
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      start_time:
+        format: date-time
+        type: string
+        x-go-name: StartTime
+      token_max_order_amount:
+        format: int64
+        type: integer
+        x-go-name: TokenMaxOrderAmount
+      token_min_order_amount:
+        format: int64
+        type: integer
+        x-go-name: TokenMinOrderAmount
+      tokens_left:
+        format: int64
+        type: integer
+        x-go-name: TokensLeft
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  InfoStruct:
+    description: Some data is generated on compile time and some is calculated online
+    properties:
+      BuildDate:
+        type: string
+      GitRemote:
+        type: string
+      GitVersion:
+        type: string
+      MemMbUsedAlloc:
+        format: uint64
+        type: integer
+      MemMbUsedTotalAlloc:
+        format: uint64
+        type: integer
+      NumGoRutines:
+        format: int64
+        type: integer
+      Version:
+        type: string
+    title: InfoStruct represents the information for the application
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  OrderDetailsRequest:
+    description: OrderDetailsRequest request-data
+    properties:
+      order_id:
+        description: ID of the Order
+        format: int64
+        type: integer
+        x-go-name: OrderID
+    required:
+    - order_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  OrderGetTransactionRequest:
+    description: OrderGetTransactionRequest request data
+    properties:
+      order_id:
+        format: int64
+        type: integer
+        x-go-name: OrderID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  OrderGetTransactionResponse:
+    description: OrderGetTransactionResponse response onbect
+    properties:
+      transaction:
+        type: string
+        x-go-name: Transaction
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  OrderGetTrustStatusRequest:
+    description: OrderGetTrustStatusRequest request data
+    properties:
+      order_id:
+        format: int64
+        type: integer
+        x-go-name: OrderID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  OrderGetTrustStatusResponse:
+    description: OrderGetTrustStatusResponse response onbect
+    properties:
+      has_trustline:
+        type: boolean
+        x-go-name: HasTrustline
+      stellar_asset_code:
+        type: string
+        x-go-name: StellarAssetCode
+      stellar_issuer_account:
+        type: string
+        x-go-name: StellarIssuerAccount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  PriceForCoinRequest:
+    description: PriceForCoinRequest is the request data
+    properties:
+      coin_amount:
+        description: Amount of coins for the price-calculation
+        format: int64
+        type: integer
+        x-go-name: CoinAmount
+      exchange_currency_id:
+        description: ID of the Exchange currency
+        format: int64
+        type: integer
+        x-go-name: ExchangeCurrencyID
+      ico_phase_id:
+        description: ID of the ICO-Phase
+        format: int64
+        type: integer
+        x-go-name: ICOPhaseID
+    required:
+    - coin_amount
+    - exchange_currency_id
+    - ico_phase_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  PriceForCoinResponse:
+    description: PriceForCoinResponse price for coin amount, based on the configuration
+    properties:
+      exchange_amount:
+        type: string
+        x-go-name: ExchangeAmount
+      exchange_amount_denomination:
+        type: string
+        x-go-name: ExchangeAmountDenomination
+      exchange_asset_code:
+        type: string
+        x-go-name: ExchangeAssetCode
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  UserOrderResponse:
+    description: UserOrderResponse represents a UserOrder
+    properties:
+      deposit_pk:
+        type: string
+        x-go-name: DepositPK
+      exchange_amount:
+        description: TODO PaymentQrImage string `json:"payment_qr_image"`
+        type: string
+        x-go-name: ExchangeAmount
+      exchange_asset_code:
+        type: string
+        x-go-name: ExchangeAssetCode
+      exchange_currency_denomination_amount:
+        type: string
+        x-go-name: ExchangeCurrencyDenominationAmount
+      exchange_currency_id:
+        format: int64
+        type: integer
+        x-go-name: ExchangeCurrencyID
+      exchange_currency_type:
+        type: string
+        x-go-name: ExchangeCurrencyType
+      exchange_denom_asset_code:
+        type: string
+        x-go-name: ExchangeDenomAssetCode
+      fiat_bank_name:
+        type: string
+        x-go-name: FiatBankName
+      fiat_bic:
+        type: string
+        x-go-name: FiatBic
+      fiat_iban:
+        type: string
+        x-go-name: FiatIban
+      fiat_payment_usage:
+        type: string
+        x-go-name: FiatPaymentUsage
+      fiat_recepient_name:
+        type: string
+        x-go-name: FiatRecepientName
+      ico_phase_id:
+        format: int64
+        type: integer
+        x-go-name: IcoPhaseID
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      order_status:
+        type: string
+        x-go-name: OrderStatus
+      payment_network:
+        type: string
+        x-go-name: PaymentNetwork
+      payment_refund_tx_id:
+        type: string
+        x-go-name: PaymentRefundTxID
+      payment_tx_id:
+        type: string
+        x-go-name: PaymentTxID
+      stellar_user_public_key:
+        type: string
+        x-go-name: StellarUserPublicKey
+      token_amount:
+        format: int64
+        type: integer
+        x-go-name: TokenAmount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+host: demoapi.lumenshine.com
+info:
+  description: the package for payment
+  termsOfService: there is not TOS right now
+  title: Payment API.
+  version: 0.0.1
+paths:
+  /create_order:
+    post:
+      consumes:
+      - multipart/form-data
+      description: CreateOrder creates a new order for the current user and returns
+        the order-data for the next step
+      operationId: CreateOrder
+      parameters:
+      - description: ID of the Ico-Phase
+        format: int64
+        in: query
+        name: ico_phase_id
+        required: true
+        type: integer
+        x-go-name: IcoPhaseID
+      - description: Ammount of tokens orderd
+        format: int64
+        in: query
+        name: ordered_token_amount
+        required: true
+        type: integer
+        x-go-name: OrderedTokenAmount
+      - description: ID of the Exchange currency
+        format: int64
+        in: query
+        name: exchange_currency_id
+        required: true
+        type: integer
+        x-go-name: ExchangeCurrencyID
+      - description: Stellar Public Key of the user for the payment/coins
+        in: query
+        name: stellar_user_public_key
+        required: true
+        type: string
+        x-go-name: StellarUserPublicKey
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CreateOrderResponse
+          schema:
+            $ref: '#/definitions/CreateOrderResponse'
+  /ico_phase_details:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the details of a given ICO-Phase, including all activated
+        Exchange-Currencies
+      operationId: IcoPhaseDetails
+      parameters:
+      - description: ID of the ICO-Phase
+        format: int64
+        in: query
+        name: ico_phase_id
+        required: true
+        type: integer
+        x-go-name: ICOPhaseID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: IcoPhaseDetailsResponse
+          schema:
+            $ref: '#/definitions/IcoPhaseDetailsResponse'
+  /ico_phase_price_for_amount:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the price for a given coin amount
+      operationId: PriceForCoin
+      parameters:
+      - description: Amount of coins for the price-calculation
+        format: int64
+        in: query
+        name: coin_amount
+        required: true
+        type: integer
+        x-go-name: CoinAmount
+      - description: ID of the Exchange currency
+        format: int64
+        in: query
+        name: exchange_currency_id
+        required: true
+        type: integer
+        x-go-name: ExchangeCurrencyID
+      - description: ID of the ICO-Phase
+        format: int64
+        in: query
+        name: ico_phase_id
+        required: true
+        type: integer
+        x-go-name: ICOPhaseID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PriceForCoinResponse
+          schema:
+            $ref: '#/definitions/PriceForCoinResponse'
+  /info:
+    get:
+      description: Prints some information on the binary and runtime
+      operationId: InfoPage
+      responses:
+        "200":
+          description: InfoStruct
+          schema:
+            $ref: '#/definitions/InfoStruct'
+  /order_details:
+    get:
+      consumes:
+      - multipart/form-data
+      description: returns the details for the specified order
+      operationId: OrderDetails
+      parameters:
+      - description: ID of the Order
+        format: int64
+        in: query
+        name: order_id
+        required: true
+        type: integer
+        x-go-name: OrderID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserOrderResponse
+          schema:
+            $ref: '#/definitions/UserOrderResponse'
+  /order_list:
+    get:
+      consumes:
+      - multipart/form-data
+      description: returns the filtered list of orders for the current user
+      operationId: OrderList
+      parameters:
+      - description: ID of the Ico-Phase
+        format: int64
+        in: query
+        name: ico_phase_id
+        type: integer
+        x-go-name: IcoPhaseID
+      - description: ID of the Order
+        format: int64
+        in: query
+        name: order_id
+        type: integer
+        x-go-name: OrderID
+      - description: ID of the Order
+        in: query
+        name: order_status
+        type: string
+        x-go-name: OrderStatus
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserOrderResponse
+          schema:
+            items:
+              $ref: '#/definitions/UserOrderResponse'
+            type: array
+schemes:
+- https
+securityDefinitions:
+  fullAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

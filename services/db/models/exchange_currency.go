@@ -24,6 +24,7 @@ type ExchangeCurrency struct {
 	ID                   int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	ExchangeCurrencyType string    `boil:"exchange_currency_type" json:"exchange_currency_type" toml:"exchange_currency_type" yaml:"exchange_currency_type"`
 	AssetCode            string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
+	DenomAssetCode       string    `boil:"denom_asset_code" json:"denom_asset_code" toml:"denom_asset_code" yaml:"denom_asset_code"`
 	PaymentNetwork       string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
 	IssuerPK             string    `boil:"issuer_pk" json:"issuer_pk" toml:"issuer_pk" yaml:"issuer_pk"`
 	Decimals             int       `boil:"decimals" json:"decimals" toml:"decimals" yaml:"decimals"`
@@ -39,6 +40,7 @@ var ExchangeCurrencyColumns = struct {
 	ID                   string
 	ExchangeCurrencyType string
 	AssetCode            string
+	DenomAssetCode       string
 	PaymentNetwork       string
 	IssuerPK             string
 	Decimals             string
@@ -49,6 +51,7 @@ var ExchangeCurrencyColumns = struct {
 	ID:                   "id",
 	ExchangeCurrencyType: "exchange_currency_type",
 	AssetCode:            "asset_code",
+	DenomAssetCode:       "denom_asset_code",
 	PaymentNetwork:       "payment_network",
 	IssuerPK:             "issuer_pk",
 	Decimals:             "decimals",
@@ -84,8 +87,8 @@ func (*exchangeCurrencyR) NewStruct() *exchangeCurrencyR {
 type exchangeCurrencyL struct{}
 
 var (
-	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "payment_network", "issuer_pk", "decimals", "created_at", "updated_at", "updated_by"}
-	exchangeCurrencyColumnsWithoutDefault = []string{"exchange_currency_type", "asset_code", "payment_network", "issuer_pk", "decimals", "updated_by"}
+	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "issuer_pk", "decimals", "created_at", "updated_at", "updated_by"}
+	exchangeCurrencyColumnsWithoutDefault = []string{"exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "issuer_pk", "decimals", "updated_by"}
 	exchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	exchangeCurrencyPrimaryKeyColumns     = []string{"id"}
 )

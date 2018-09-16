@@ -6,13 +6,14 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"github.com/Soneso/lumenshine-backend/helpers"
-	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	"github.com/Soneso/lumenshine-backend/pb"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
+	cerr "github.com/Soneso/lumenshine-backend/icop_error"
+	"github.com/Soneso/lumenshine-backend/pb"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/dgrijalva/jwt-go.v3"

@@ -53,9 +53,8 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 
 // Enum values for exchange_currency_type
 const (
-	ExchangeCurrencyTypeStellar     = "stellar"
-	ExchangeCurrencyTypeOtherCrypto = "other_crypto"
-	ExchangeCurrencyTypeFiat        = "fiat"
+	ExchangeCurrencyTypeCrypto = "crypto"
+	ExchangeCurrencyTypeFiat   = "fiat"
 )
 
 // Enum values for payment_network

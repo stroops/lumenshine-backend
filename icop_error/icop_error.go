@@ -29,6 +29,7 @@ const (
 	InsufficientCoins          = 1021 //returned if there are not suffuciant coins for the order
 	StellarAccountNotExists    = 1022 //returned if the stellar account does not exists
 	StellarTrustlineNotExists  = 1023 //returned if the trustline does not exists
+	ToMuchOrdersPerPhase       = 1024 //returned if the user exceeded the max numbers of orders per phase
 
 	ValidBadInputData = "Bad input data"
 )

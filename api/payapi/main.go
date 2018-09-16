@@ -1,3 +1,11 @@
+//go:generate swagger generate spec -o ./pay_api_swagger.yml -m
+//open swagger with swagger-template:
+//  swagger serve pay_api_swagger.yml -F swagger --port=8088 --host=localhost --no-open
+//  browser: http://petstore.swagger.io/?url=http%3A%2F%2F127.0.0.1%3A8088%2Fswagger.json
+//open swagger with redoc-template:
+//  swagger serve pay_api_swagger.yml --port=8088 --host=localhost --no-open
+//  browser: http://127.0.0.1:8088/docs
+
 package main
 
 import (
@@ -94,7 +102,9 @@ func main() {
 	auth.Use(mw.MessageCount()) //Messagecount only for fully logged in users
 	{
 		auth.POST("refresh", authMiddlewareFull.RefreshHandler)
-		auth.GET("price_for_coins", mw.UseIcopContext(PriceForCoin))
+		auth.GET("ico_phase_price_for_amount", mw.UseIcopContext(PriceForCoin))
+		auth.GET("ico_phase_details", mw.UseIcopContext(IcoPhaseDetails))
+
 		auth.POST("create_order", mw.UseIcopContext(CreateOrder))
 		auth.GET("order_list", mw.UseIcopContext(OrderList))
 		auth.GET("order_details", mw.UseIcopContext(OrderDetails))
@@ -151,8 +161,13 @@ var (
 	gitRemote  string
 )
 
-//Info show some info
-type infoStruct struct {
+// InfoStruct represents the information for the application
+//
+// Some data is generated on compile time and some is calculated online
+//
+//
+// swagger:model InfoStruct
+type InfoStruct struct {
 	Version             string
 	NumGoRutines        int
 	MemMbUsedAlloc      uint64
@@ -166,9 +181,15 @@ func bToMb(b uint64) uint64 {
 	return b / 1024 / 1024
 }
 
-//Info Prints some information on the binary
+// Info Prints some information on the binary
+// swagger:route GET /info InfoPage
+//
+// Prints some information on the binary and runtime
+//
+// Responses:
+//   200: InfoStruct
 func Info(c *gin.Context) {
-	d := new(infoStruct)
+	d := new(InfoStruct)
 	d.Version = "1"
 	d.NumGoRutines = runtime.NumGoroutine()
 

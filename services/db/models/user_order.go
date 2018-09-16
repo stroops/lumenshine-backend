@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -21,22 +22,26 @@ import (
 
 // UserOrder is an object representing the database table.
 type UserOrder struct {
-	ID                                 int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	UserID                             int       `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	IcoPhaseID                         int       `boil:"ico_phase_id" json:"ico_phase_id" toml:"ico_phase_id" yaml:"ico_phase_id"`
-	OrderStatus                        string    `boil:"order_status" json:"order_status" toml:"order_status" yaml:"order_status"`
-	TokenAmount                        int64     `boil:"token_amount" json:"token_amount" toml:"token_amount" yaml:"token_amount"`
-	ExchangeCurrencyID                 int       `boil:"exchange_currency_id" json:"exchange_currency_id" toml:"exchange_currency_id" yaml:"exchange_currency_id"`
-	ExchangeCurrencyDenominationAmount string    `boil:"exchange_currency_denomination_amount" json:"exchange_currency_denomination_amount" toml:"exchange_currency_denomination_amount" yaml:"exchange_currency_denomination_amount"`
-	PaymentNetwork                     string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
-	AddressIndex                       int64     `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
-	PaymentAddress                     string    `boil:"payment_address" json:"payment_address" toml:"payment_address" yaml:"payment_address"`
-	PaymentSeed                        string    `boil:"payment_seed" json:"payment_seed" toml:"payment_seed" yaml:"payment_seed"`
-	UserAccountPublicKey               string    `boil:"user_account_public_key" json:"user_account_public_key" toml:"user_account_public_key" yaml:"user_account_public_key"`
-	PaymentErrorMessage                string    `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
-	CreatedAt                          time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt                          time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	UpdatedBy                          string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	ID                                 int        `boil:"id" json:"id" toml:"id" yaml:"id"`
+	UserID                             int        `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	IcoPhaseID                         int        `boil:"ico_phase_id" json:"ico_phase_id" toml:"ico_phase_id" yaml:"ico_phase_id"`
+	OrderStatus                        string     `boil:"order_status" json:"order_status" toml:"order_status" yaml:"order_status"`
+	TokenAmount                        int64      `boil:"token_amount" json:"token_amount" toml:"token_amount" yaml:"token_amount"`
+	StellarUserPublicKey               string     `boil:"stellar_user_public_key" json:"stellar_user_public_key" toml:"stellar_user_public_key" yaml:"stellar_user_public_key"`
+	ExchangeCurrencyID                 int        `boil:"exchange_currency_id" json:"exchange_currency_id" toml:"exchange_currency_id" yaml:"exchange_currency_id"`
+	ExchangeCurrencyDenominationAmount string     `boil:"exchange_currency_denomination_amount" json:"exchange_currency_denomination_amount" toml:"exchange_currency_denomination_amount" yaml:"exchange_currency_denomination_amount"`
+	PaymentNetwork                     string     `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
+	AddressIndex                       int64      `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
+	PaymentAddress                     string     `boil:"payment_address" json:"payment_address" toml:"payment_address" yaml:"payment_address"`
+	PaymentSeed                        string     `boil:"payment_seed" json:"payment_seed" toml:"payment_seed" yaml:"payment_seed"`
+	PaymentTXID                        string     `boil:"payment_tx_id" json:"payment_tx_id" toml:"payment_tx_id" yaml:"payment_tx_id"`
+	PaymentRefundTXID                  string     `boil:"payment_refund_tx_id" json:"payment_refund_tx_id" toml:"payment_refund_tx_id" yaml:"payment_refund_tx_id"`
+	PaymentQRImage                     null.Bytes `boil:"payment_qr_image" json:"payment_qr_image,omitempty" toml:"payment_qr_image" yaml:"payment_qr_image,omitempty"`
+	FiatPaymentUsage                   string     `boil:"fiat_payment_usage" json:"fiat_payment_usage" toml:"fiat_payment_usage" yaml:"fiat_payment_usage"`
+	PaymentErrorMessage                string     `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
+	CreatedAt                          time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                          time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy                          string     `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *userOrderR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userOrderL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -48,13 +53,17 @@ var UserOrderColumns = struct {
 	IcoPhaseID                         string
 	OrderStatus                        string
 	TokenAmount                        string
+	StellarUserPublicKey               string
 	ExchangeCurrencyID                 string
 	ExchangeCurrencyDenominationAmount string
 	PaymentNetwork                     string
 	AddressIndex                       string
 	PaymentAddress                     string
 	PaymentSeed                        string
-	UserAccountPublicKey               string
+	PaymentTXID                        string
+	PaymentRefundTXID                  string
+	PaymentQRImage                     string
+	FiatPaymentUsage                   string
 	PaymentErrorMessage                string
 	CreatedAt                          string
 	UpdatedAt                          string
@@ -65,13 +74,17 @@ var UserOrderColumns = struct {
 	IcoPhaseID:                         "ico_phase_id",
 	OrderStatus:                        "order_status",
 	TokenAmount:                        "token_amount",
+	StellarUserPublicKey:               "stellar_user_public_key",
 	ExchangeCurrencyID:                 "exchange_currency_id",
 	ExchangeCurrencyDenominationAmount: "exchange_currency_denomination_amount",
 	PaymentNetwork:                     "payment_network",
 	AddressIndex:                       "address_index",
 	PaymentAddress:                     "payment_address",
 	PaymentSeed:                        "payment_seed",
-	UserAccountPublicKey:               "user_account_public_key",
+	PaymentTXID:                        "payment_tx_id",
+	PaymentRefundTXID:                  "payment_refund_tx_id",
+	PaymentQRImage:                     "payment_qr_image",
+	FiatPaymentUsage:                   "fiat_payment_usage",
 	PaymentErrorMessage:                "payment_error_message",
 	CreatedAt:                          "created_at",
 	UpdatedAt:                          "updated_at",
@@ -111,8 +124,8 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "user_account_public_key", "payment_error_message", "created_at", "updated_at", "updated_by"}
-	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "user_account_public_key", "payment_error_message", "updated_by"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "payment_tx_id", "payment_refund_tx_id", "payment_qr_image", "fiat_payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by"}
+	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "payment_tx_id", "payment_refund_tx_id", "payment_qr_image", "fiat_payment_usage", "payment_error_message", "updated_by"}
 	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )

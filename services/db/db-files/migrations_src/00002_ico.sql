@@ -28,22 +28,25 @@ CREATE TABLE ico (
 
 CREATE TYPE payment_network AS ENUM('fiat', 'stellar', 'ethereum', 'bitcoin');
 
-/* other_crypto is a crypto currency that is not in the stellar blockchain */
-CREATE TYPE exchange_currency_type AS ENUM('stellar', 'other_crypto', 'fiat');
+CREATE TYPE exchange_currency_type AS ENUM('crypto', 'fiat');
 
 CREATE TABLE exchange_currency (
   id SERIAL PRIMARY KEY NOT null,
   exchange_currency_type exchange_currency_type NOT NULL,
+
   /* e.g. BTC, ETH, XLM, MOBI, USD, EUR */
   asset_code VARCHAR(12) NOT NULL,
-    
+
+  /* e.g. Wei, Satoshi, Stroop, Cent */
+  denom_asset_code VARCHAR(64) NOT NULL,
+
   payment_network payment_network not null,
 
   /* only needed for currency/token from the stellar blockchain */
   issuer_pk VARCHAR(56) NOT NULL check(
-    (exchange_currency_type='other_crypto' or exchange_currency_type='fiat')
+    (payment_network<>'stellar')
     or
-    (exchange_currency_type='stellar' and issuer_pk<>'')
+    (payment_network='stellar' and issuer_pk<>'')
   ),
   /* number of max decimals for the currency */
   decimals int not null,
@@ -53,11 +56,11 @@ CREATE TABLE exchange_currency (
 );
 
 /* list of exchange currencies that can be supported by an ICO */
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (1, 'other_crypto', 'BTC', 'bitcoin', '', 8, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (2, 'other_crypto', 'ETH', 'ethereum', '', 8, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (3, 'stellar', 'XLM', 'stellar', 'Gxxxxx', 7, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (4, 'fiat', 'USD', 'fiat', '', 2, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (5, 'fiat', 'EUR', 'fiat', '', 2, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (1, 'crypto', 'BTC', 'Satoshi', 'bitcoin', '', 8, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (2, 'crypto', 'ETH', 'Wei', 'ethereum', '', 8, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (3, 'crypto', 'XLM', 'Stroop', 'stellar', 'Gxxxxx', 7, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (4, 'fiat', 'USD', 'Cent', 'fiat', '', 2, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (5, 'fiat', 'EUR', 'Cent', 'fiat', '', 2, 'chris');
 
 /* currencies that are currently supported by an ICO */
 CREATE TABLE ico_supported_exchange_currency (
@@ -94,6 +97,7 @@ CREATE TABLE ico_phase (
   tokens_left BIGINT NOT NULL,
   token_max_order_amount bigint not null default 0,
   token_min_order_amount bigint not null default 0,
+  max_user_orders int not null,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL default current_timestamp,
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL default current_timestamp,
   updated_by VARCHAR NOT NULL
@@ -120,8 +124,10 @@ CREATE TABLE ico_phase_bank_account (
 CREATE TABLE ico_phase_activated_exchange_currency (
   id SERIAL PRIMARY KEY NOT NULL,
   ico_phase_id INTEGER NOT NULL REFERENCES ico_phase(id),
-  exchange_currency_id INTEGER NOT NULL REFERENCES exchange_currency(id),
-  price_per_token BIGINT NOT NULL,
+  exchange_currency_id INTEGER NOT NULL REFERENCES exchange_currency(id),  
+  exchange_master_key text not null, /* master key for generating the addresses and seeds in the payment network */
+  denom_price_per_token BIGINT NOT NULL,
+  stellar_starting_balance_denom varchar(64) NOT NULL, /*starting-balannce (in denomination) for creating the stellar-account */
   tokens_released BIGINT NOT NULL,
   tokens_blocked BIGINT NOT NULL,
   /* only needed if the customer wants to transfer fiat to our bank account*/
@@ -136,10 +142,10 @@ CREATE TABLE ico_phase_activated_exchange_currency (
 insert into ico(id, ico_name, ico_status, kyc, sales_model, issuer_pk, asset_code, updated_by) values 
   (1, 'Demo-ICO', 'active', true, 'fixed', 'GCCBLT6VFEUODLP36C675TJDNZNHQFD5P6L3BBCYUMU2TIO3UQCVXXX3', 'CaliCoin', 'setup');
 
-insert into ico_phase(id, ico_id, ico_phase_name, ico_phase_status, dist_pk, dist_presigner_pk, dist_presigner_seed, dist_postsigner_pk, dist_postsigner_seed, start_time, end_time, tokens_to_distribute, tokens_released,tokens_blocked,tokens_left,updated_by) values
-  (1,1, 'Phase 1', 'active', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'GCSC4YWWKTAFSKMYP25THDQNLYLWHZFCLTEXVBLBDHSEUFWDEKWWPUL7', 'SAOBW63XEFF7H5OLX53VZVA56MW2XNY33K4QPJEST4THZMSRV7TRE35U', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'SDREDOAGCJUHJQYNFVV6IRO5LTMHA3JACCDKRAIXTABWAXRHAUKP6SU6', '2018-1-1'::timestamp, '2020-1-1'::timestamp, 1000000, 0, 0, 1000000, 'setup'),
-  (2,1, 'Phase 2', 'planning', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'GCSC4YWWKTAFSKMYP25THDQNLYLWHZFCLTEXVBLBDHSEUFWDEKWWPUL7', 'SAOBW63XEFF7H5OLX53VZVA56MW2XNY33K4QPJEST4THZMSRV7TRE35U', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'SDREDOAGCJUHJQYNFVV6IRO5LTMHA3JACCDKRAIXTABWAXRHAUKP6SU6', '2018-1-1'::timestamp, '2020-1-1'::timestamp, 1000000, 0, 0, 1000000, 'setup'),
-  (3,1, 'Phase 3', 'ready', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'GCSC4YWWKTAFSKMYP25THDQNLYLWHZFCLTEXVBLBDHSEUFWDEKWWPUL7', 'SAOBW63XEFF7H5OLX53VZVA56MW2XNY33K4QPJEST4THZMSRV7TRE35U', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'SDREDOAGCJUHJQYNFVV6IRO5LTMHA3JACCDKRAIXTABWAXRHAUKP6SU6', '2018-1-1'::timestamp, '2020-1-1'::timestamp, 1000000, 0, 0, 1000000, 'setup');
+insert into ico_phase(id, ico_id, ico_phase_name, ico_phase_status, dist_pk, dist_presigner_pk, dist_presigner_seed, dist_postsigner_pk, dist_postsigner_seed, start_time, end_time, tokens_to_distribute, tokens_released,tokens_blocked,tokens_left,token_max_order_amount,token_min_order_amount,max_user_orders,updated_by) values
+  (1,1, 'Phase 1', 'active', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'GCSC4YWWKTAFSKMYP25THDQNLYLWHZFCLTEXVBLBDHSEUFWDEKWWPUL7', 'SAOBW63XEFF7H5OLX53VZVA56MW2XNY33K4QPJEST4THZMSRV7TRE35U', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'SDREDOAGCJUHJQYNFVV6IRO5LTMHA3JACCDKRAIXTABWAXRHAUKP6SU6', '2018-1-1'::timestamp, '2020-1-1'::timestamp, 1000000, 0, 0, 1000000, 1000, 1, 10, 'setup'),
+  (2,1, 'Phase 2', 'planning', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'GCSC4YWWKTAFSKMYP25THDQNLYLWHZFCLTEXVBLBDHSEUFWDEKWWPUL7', 'SAOBW63XEFF7H5OLX53VZVA56MW2XNY33K4QPJEST4THZMSRV7TRE35U', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'SDREDOAGCJUHJQYNFVV6IRO5LTMHA3JACCDKRAIXTABWAXRHAUKP6SU6', '2018-1-1'::timestamp, '2020-1-1'::timestamp, 1000000, 0, 0, 1000000, 2000, 10, 5, 'setup'),
+  (3,1, 'Phase 3', 'ready', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'GCSC4YWWKTAFSKMYP25THDQNLYLWHZFCLTEXVBLBDHSEUFWDEKWWPUL7', 'SAOBW63XEFF7H5OLX53VZVA56MW2XNY33K4QPJEST4THZMSRV7TRE35U', 'GA2XZU7BHRI6VWKAR5GYWMGAPQKFFFMYGVZNBS7QD3QSR5K2HKP7Y672', 'SDREDOAGCJUHJQYNFVV6IRO5LTMHA3JACCDKRAIXTABWAXRHAUKP6SU6', '2018-1-1'::timestamp, '2020-1-1'::timestamp, 1000000, 0, 0, 1000000, 1000, 5, 1, 'setup');
 
 insert into ico_supported_exchange_currency(id, ico_id, exchange_currency_id, updated_by) values
   (1, 1, 1, 'setup'),
@@ -152,11 +158,11 @@ insert into ico_phase_bank_account(id, account_name, recepient_name, bank_name, 
   (1, 'Bank-Acc1', 'Udo Polder', 'MyBank', 'DE12344', 'LZ1233', 'Payment for %s', 'system'),
   (2, 'Bank-Acc2', 'Chris Rogobete', 'HisBank', 'DE12366', 'LZ1266', 'HisPayment for %s', 'system');
 
-insert into ico_phase_activated_exchange_currency (id, ico_phase_id, exchange_currency_id, price_per_token, tokens_released, tokens_blocked, ico_phase_bank_account_id, updated_by) values
-  (1, 1, 1, 2345678, 0, 0, null, 'setup'), /*  btc 0,02345678*/
-  (2, 1, 2, 345678, 0, 0, null, 'setup'), /*  eth 0,00345678*/
-  (3, 1, 3, 45678, 0, 0, null, 'setup'), /*  xlm 0,00045678*/
- /* EUR 1,50*/ (4, 1, 5, 150, 0, 0, 1, 'setup'); 
+insert into ico_phase_activated_exchange_currency (id, ico_phase_id, exchange_currency_id, denom_price_per_token, tokens_released, tokens_blocked, ico_phase_bank_account_id, exchange_master_key, stellar_starting_balance_denom, updated_by) values
+  (1, 1, 1, 1000000, 0, 0, null, 'xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u', '30000000', 'setup'), /*  btc 0,10000000*/
+  (2, 1, 2, 2000000, 0, 0, null, 'xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u', '40000000', 'setup'), /*  eth 0,20000000*/
+  (3, 1, 3, 3000000, 0, 0, null, '', '15000000', 'setup'), /*  xlm 0,30000000*/
+ /* EUR 1,50*/ (4, 1, 5, 150, 0, 0, 1, '', '20000000', 'setup'); 
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.

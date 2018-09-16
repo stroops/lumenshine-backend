@@ -38,6 +38,7 @@ type IcoPhase struct {
 	TokensLeft          int64     `boil:"tokens_left" json:"tokens_left" toml:"tokens_left" yaml:"tokens_left"`
 	TokenMaxOrderAmount int64     `boil:"token_max_order_amount" json:"token_max_order_amount" toml:"token_max_order_amount" yaml:"token_max_order_amount"`
 	TokenMinOrderAmount int64     `boil:"token_min_order_amount" json:"token_min_order_amount" toml:"token_min_order_amount" yaml:"token_min_order_amount"`
+	MaxUserOrders       int       `boil:"max_user_orders" json:"max_user_orders" toml:"max_user_orders" yaml:"max_user_orders"`
 	CreatedAt           time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt           time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy           string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
@@ -64,6 +65,7 @@ var IcoPhaseColumns = struct {
 	TokensLeft          string
 	TokenMaxOrderAmount string
 	TokenMinOrderAmount string
+	MaxUserOrders       string
 	CreatedAt           string
 	UpdatedAt           string
 	UpdatedBy           string
@@ -85,6 +87,7 @@ var IcoPhaseColumns = struct {
 	TokensLeft:          "tokens_left",
 	TokenMaxOrderAmount: "token_max_order_amount",
 	TokenMinOrderAmount: "token_min_order_amount",
+	MaxUserOrders:       "max_user_orders",
 	CreatedAt:           "created_at",
 	UpdatedAt:           "updated_at",
 	UpdatedBy:           "updated_by",
@@ -117,8 +120,8 @@ func (*icoPhaseR) NewStruct() *icoPhaseR {
 type icoPhaseL struct{}
 
 var (
-	icoPhaseColumns               = []string{"id", "ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "token_max_order_amount", "token_min_order_amount", "created_at", "updated_at", "updated_by"}
-	icoPhaseColumnsWithoutDefault = []string{"ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "updated_by"}
+	icoPhaseColumns               = []string{"id", "ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "token_max_order_amount", "token_min_order_amount", "max_user_orders", "created_at", "updated_at", "updated_by"}
+	icoPhaseColumnsWithoutDefault = []string{"ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "max_user_orders", "updated_by"}
 	icoPhaseColumnsWithDefault    = []string{"id", "token_max_order_amount", "token_min_order_amount", "created_at", "updated_at"}
 	icoPhasePrimaryKeyColumns     = []string{"id"}
 )

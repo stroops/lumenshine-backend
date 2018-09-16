@@ -2,29 +2,53 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 	"github.com/Soneso/lumenshine-backend/pb"
 
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	m "github.com/Soneso/lumenshine-backend/services/db/models"
 
+	m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"github.com/gin-gonic/gin"
 )
 
-//PriceForCoinRequest struct
+// PriceForCoinRequest is the request data
+// swagger:parameters PriceForCoinRequest PriceForCoin
 type PriceForCoinRequest struct {
-	CoinAmount int64  `form:"coin_amount" json:"coin_amount" validate:"required"`
-	Chain      string `form:"chain" json:"chain" validate:"required,oneof=eth btc xlm fiat"`
+	// Amount of coins for the price-calculation
+	// required: true
+	CoinAmount int64 `json:"coin_amount" form:"coin_amount" query:"coin_amount" validate:"required,min=1"`
+
+	// ID of the Exchange currency
+	// required: true
+	ExchangeCurrencyID int `json:"exchange_currency_id" form:"exchange_currency_id" query:"exchange_currency_id" validate:"required"`
+
+	// ID of the ICO-Phase
+	// required: true
+	ICOPhaseID int `json:"ico_phase_id" form:"ico_phase_id" query:"ico_phase_id" validate:"required"`
 }
 
-//PriceForCoinResponse return struct
+// PriceForCoinResponse price for coin amount, based on the configuration
+// swagger:model
 type PriceForCoinResponse struct {
-	ChainAmount             float64 `json:"chain_amount"`
-	ChainAmountDenomination string  `json:"chain_amount_denomination"`
+	ExchangeAmount             string `json:"exchange_amount"`
+	ExchangeAmountDenomination string `json:"exchange_amount_denomination"`
+	ExchangeAssetCode          string `json:"exchange_asset_code"`
 }
 
-//PriceForCoin returns the price for a given coin amount, related to the currency given
+// PriceForCoin returns the price for a given coin amount, related to the currency given
+// swagger:route GET /ico_phase_price_for_amount PriceForCoin
+//
+// Returns the price for a given coin amount
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: PriceForCoinResponse
 func PriceForCoin(uc *mw.IcopContext, c *gin.Context) {
 	var l PriceForCoinRequest
 	if err := c.Bind(&l); err != nil {
@@ -37,12 +61,12 @@ func PriceForCoin(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	// TODO: Checks for payment
 	// correct state,amount, etc.
 	price, err := payClient.GetCoinPrice(c, &pb.CoinPriceRequest{
-		Base:       NewBaseRequest(uc),
-		Chain:      l.Chain,
-		CoinAmount: l.CoinAmount,
+		Base:               NewBaseRequest(uc),
+		ExchangeCurrencyId: int64(l.ExchangeCurrencyID),
+		CoinAmount:         l.CoinAmount,
+		IcoPhaseId:         int64(l.ICOPhaseID),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting price", cerr.GeneralError))
@@ -50,31 +74,177 @@ func PriceForCoin(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &PriceForCoinResponse{
-		ChainAmount:             price.ChainAmount,
-		ChainAmountDenomination: price.ChainAmountDenomination,
+		ExchangeAmount:             price.ExchangeAmount,
+		ExchangeAmountDenomination: price.ExchangeAmountDenomination,
+		ExchangeAssetCode:          price.ExchangeAssetCode,
 	})
 }
 
-//CreateOrderRequest is the data needed for tmaking a payment
+// IcoPhaseDetailsRequest is the request data
+// swagger:parameters IcoPhaseDetailsRequest IcoPhaseDetails
+type IcoPhaseDetailsRequest struct {
+	// ID of the ICO-Phase
+	// required: true
+	ICOPhaseID int `json:"ico_phase_id" form:"ico_phase_id" query:"ico_phase_id" validate:"required"`
+}
+
+// ExchangeCurrency represents one exchange currency used everywhere
+// swagger:model
+type ExchangeCurrency struct {
+	ID                   int    `json:"id"`
+	ExchangeCurrencyType string `json:"exchange_currency_type"`
+	AssetCode            string `json:"asset_code"`
+	DenomAssetCode       string `json:"denom_asset_code"`
+
+	// Number of decimal places for the denominator
+	Decimals int64 `json:"decimals"`
+
+	// Denominator-Value for one token
+	DenomPricePerToken string `json:"denom_price_per_token"`
+
+	// Includes the UoM of the asset (EUR/XLM,BTC...)
+	PricePerToken string `json:"price_per_token"`
+}
+
+// IcoPhaseDetailsResponse lists details of the specified IPC-Phase
+// swagger:model
+type IcoPhaseDetailsResponse struct {
+	ID                       int                `json:"id"`
+	IcoID                    int                `json:"ico_id"`
+	IcoPhaseName             string             `json:"ico_phase_name"`
+	IcoPhaseStatus           string             `json:"ico_phase_status"`
+	StartTime                time.Time          `json:"start_time"`
+	EndTime                  time.Time          `json:"end_time"`
+	TokensLeft               int64              `json:"tokens_left"`
+	TokenMaxOrderAmount      int64              `json:"token_max_order_amount"`
+	TokenMinOrderAmount      int64              `json:"token_min_order_amount"`
+	ActiveExchangeCurrencies []ExchangeCurrency `json:"active_exchange_currencies"`
+}
+
+// IcoPhaseDetails lists details of the specified IPC-Phase
+// swagger:route GET /ico_phase_details IcoPhaseDetails
+//
+// Returns the details of a given ICO-Phase, including all activated Exchange-Currencies
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: IcoPhaseDetailsResponse
+func IcoPhaseDetails(uc *mw.IcopContext, c *gin.Context) {
+	var l IcoPhaseDetailsRequest
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	// correct state,amount, etc.
+	ec, err := payClient.GetPhaseData(c, &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   int64(l.ICOPhaseID),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting phase data", cerr.GeneralError))
+		return
+	}
+
+	ret := &IcoPhaseDetailsResponse{
+		ID:                  int(ec.Id),
+		IcoID:               int(ec.IcoId),
+		IcoPhaseName:        ec.IcoPhaseName,
+		IcoPhaseStatus:      ec.IcoPhaseStatus,
+		StartTime:           time.Unix(ec.StartTime, 0),
+		EndTime:             time.Unix(ec.EndTime, 0),
+		TokensLeft:          ec.TokensLeft,
+		TokenMaxOrderAmount: ec.TokenMaxOrderAmount,
+		TokenMinOrderAmount: ec.TokenMinOrderAmount,
+	}
+	ret.ActiveExchangeCurrencies = make([]ExchangeCurrency, len(ec.ActiveExchangeCurrencies))
+	for i, aec := range ec.ActiveExchangeCurrencies {
+		ret.ActiveExchangeCurrencies[i].AssetCode = aec.AssetCode
+		ret.ActiveExchangeCurrencies[i].Decimals = aec.Decimals
+		ret.ActiveExchangeCurrencies[i].DenomAssetCode = aec.DenomAssetCode
+		ret.ActiveExchangeCurrencies[i].DenomPricePerToken = aec.DenomPricePerToken
+		ret.ActiveExchangeCurrencies[i].ExchangeCurrencyType = aec.ExchangeCurrencyType
+		ret.ActiveExchangeCurrencies[i].ID = int(aec.Id)
+		ret.ActiveExchangeCurrencies[i].PricePerToken = aec.PricePerToken
+	}
+
+	c.JSON(http.StatusOK, ret)
+}
+
+// CreateOrderRequest is the data for creating an order
+// swagger:parameters CreateOrderRequest CreateOrder
 type CreateOrderRequest struct {
-	CoinAmount    int64  `form:"coin_amount" json:"coin_amount" validate:"required"`
-	Chain         string `form:"chain" json:"chain" validate:"required,oneof=xlm eth btc fiat"`
-	UserPublicKey string `form:"user_public_key"`
+	// ID of the Ico-Phase
+	// required: true
+	IcoPhaseID int64 `form:"ico_phase_id" json:"ico_phase_id" validate:"required"`
+
+	// Ammount of tokens orderd
+	// required: true
+	OrderedTokenAmount int64 `form:"ordered_token_amount" json:"ordered_token_amount" validate:"required,min=1"`
+
+	// ID of the Exchange currency
+	// required: true
+	ExchangeCurrencyID int64 `json:"exchange_currency_id" form:"exchange_currency_id" validate:"required"`
+
+	// Stellar Public Key of the user for the payment/coins
+	// required: true
+	StellarUserPublicKey string `json:"stellar_user_public_key" form:"stellar_user_public_key" validate:"required"`
 }
 
-//CreateOrderResponse return struct
+// CreateOrderResponse is the return data , for creating a new order
+// swagger:model
 type CreateOrderResponse struct {
-	OrderID             int64   `json:"order_id"`
-	ChainAddress        string  `json:"chain_address,omitempty"`
-	Chain               string  `json:"chain"`
-	ChainAmount         float64 `json:"chain_amount"`
-	FiatBIC             string  `json:"fiat_bic,omitempty"`
-	FiatIBAN            string  `json:"fiat_iban,omitempty"`
-	FiatDestinationName string  `json:"fiat_destination_name,omitempty"`
-	FiatPaymentUsage    string  `json:"fiat_payment_usage,omitempty"`
+	OrderID               int64  `json:"order_id"`
+	OrderStatus           string `json:"order_status"`
+	OrderedTokenAmount    int64  `json:"ordered_token_amount"`
+	OrderedTokenAssetCode string `json:"ordered_token_asset_code"`
+
+	//AssetCode in the payment Network
+	ExchangeAssetCode string `json:"exchange_asset_code"`
+	//Value to pay in the selected payment Network asset code
+	ExchangeValueToPay string `json:"exchange_value_to_pay"`
+	//Type for payment: stellar, other_crypto, fiat
+	ExchangeCurrencyType string `json:"exchange_currency_type"`
+
+	//This is values denomitator
+	ExchangeValueDenominator string `json:"exchange_value_denominator"`
+	//This is values denomitator-assetcode
+	ExchangeValueDenomAssetCode string `json:"exchange_value_denom_asset_code"`
+
+	//DepositPK is the address in the PaymentNetwork, where the user must transfer the Exchange-Asset
+	DepositPK string `json:"deposit_pk,omitempty"`
+
+	//QRCode is a bitmap for the transaction in the Payment-Network
+	//TODO
+	QRCode []byte `json:"qr_code,omitempty"`
+
+	FiatBIC             string `json:"fiat_bic,omitempty"`
+	FiatIBAN            string `json:"fiat_iban,omitempty"`
+	FiatDestinationName string `json:"fiat_destination_name,omitempty"`
+	FiatPaymentUsage    string `json:"fiat_payment_usage,omitempty"`
+	FiatBankName        string `json:"fiat_bank_name,omitempty"`
 }
 
-//CreateOrder called from the API
+// CreateOrder creates a new order for the current user and returns the order-data for the next step
+// swagger:route POST /create_order CreateOrder
+//	   CreateOrder creates a new order for the current user and returns the order-data for the next step
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: CreateOrderResponse
 func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 	var l CreateOrderRequest
 	if err := c.Bind(&l); err != nil {
@@ -87,78 +257,183 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	phase, err := payClient.GetActveICOPhase(c, &pb.Empty{Base: NewBaseRequest(uc)})
+	phase, err := payClient.GetPhaseData(c, &pb.IDRequest{Base: NewBaseRequest(uc), Id: l.IcoPhaseID})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting ico phase", cerr.GeneralError))
 		return
 	}
 
-	if phase == nil || phase.PhaseName == "" {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Chain", cerr.NoActivePhase, "No active Phase", ""))
+	if phase == nil {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Phase", cerr.NoActivePhase, "No Phase configured", ""))
 		return
 	}
 
-	if phase.CoinAmount < l.CoinAmount {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Chain", cerr.InsufficientCoins, "Insuffitiant coins for phase", ""))
+	if phase.IcoPhaseStatus != m.IcoStatusActive {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Phase", cerr.NoActivePhase, "Phase is not active", ""))
 		return
 	}
 
-	// TODO: Checks for payment
-	// correct amount, ordercount, check for fiat, etc.
-	if l.Chain != m.PaymentNetworkFiat && l.UserPublicKey == "" {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("user_public_key", cerr.MissingMandatoryField, "Need stellar public key", ""))
+	now := time.Now()
+	pStart := time.Unix(phase.StartTime, 0)
+	pEnd := time.Unix(phase.EndTime, 0)
+	if now.Before(pStart) {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Phase", cerr.NoActivePhase, "Phase not started yet", ""))
+		return
+	}
+
+	if now.After(pEnd) {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Phase", cerr.NoActivePhase, "Phase ended", ""))
+		return
+	}
+
+	if l.OrderedTokenAmount < phase.TokenMinOrderAmount {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMinOrderAmount", cerr.InsufficientCoins, "To lees coins", ""))
+		return
+	}
+
+	if l.OrderedTokenAmount > phase.TokenMaxOrderAmount {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMaxOrderAmount", cerr.InsufficientCoins, "To much coins", ""))
+		return
+	}
+
+	if l.OrderedTokenAmount > phase.TokensLeft {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMaxOrderAmount", cerr.InsufficientCoins, "Not enough coins left", ""))
+		return
+	}
+
+	//check that passed exchange currency is active
+	var ec *pb.ExchangeCurrency
+	for _, aec := range phase.ActiveExchangeCurrencies {
+		if aec.Id == l.ExchangeCurrencyID {
+			ec = aec
+		}
+	}
+	if ec == nil {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("exchange_currency_id", cerr.InvalidArgument, "ExchangeCurrency is not activated", ""))
+		return
+	}
+
+	//check that user-order-count per phase is not excedeed
+	cnt, err := payClient.GetUserOrderCount(c, &pb.UserOrdersCountRequest{
+		UserId:  mw.GetAuthUser(c).UserID,
+		PhaseId: l.IcoPhaseID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user order count", cerr.GeneralError))
+		return
+	}
+
+	if cnt.Value >= phase.MaxUserOrders {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("ordered_token_amount", cerr.ToMuchOrdersPerPhase, "To much orders for phase", ""))
 		return
 	}
 
 	orderReq := &pb.CreateOrderRequest{
-		Base:          NewBaseRequest(uc),
-		UserId:        mw.GetAuthUser(c).UserID,
-		Chain:         l.Chain,
-		UserPublicKey: l.UserPublicKey,
-		CoinAmount:    l.CoinAmount,
-		IcoPhase:      phase.PhaseName,
+		Base:               NewBaseRequest(uc),
+		UserId:             mw.GetAuthUser(c).UserID,
+		IcoPhaseId:         l.IcoPhaseID,
+		TokenAmount:        l.OrderedTokenAmount,
+		ExchangeCurrencyId: l.ExchangeCurrencyID,
+		UserPublicKey:      l.StellarUserPublicKey,
 	}
-	order, err := payClient.CreateOrder(c, orderReq)
+	o, err := payClient.CreateOrder(c, orderReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating order", cerr.GeneralError))
 		return
 	}
 
-	var r CreateOrderResponse
-	r.Chain = order.Chain
-	r.ChainAmount = order.ChainAmount
-	r.ChainAddress = order.Address
-	r.OrderID = order.OrderId
-	r.FiatBIC = order.FiatBic
-	r.FiatDestinationName = order.FiatDestinationName
-	r.FiatIBAN = order.FiatIban
-	r.FiatPaymentUsage = order.FiatPaymentUsage
-
-	c.JSON(http.StatusOK, r)
+	c.JSON(http.StatusOK, &CreateOrderResponse{
+		OrderID:                     o.OrderId,
+		OrderStatus:                 o.OrderStatus,
+		OrderedTokenAmount:          l.OrderedTokenAmount,
+		OrderedTokenAssetCode:       phase.IcoTokenAsset,
+		ExchangeAssetCode:           ec.AssetCode,
+		ExchangeValueToPay:          o.ExchangeValueToPay,
+		ExchangeCurrencyType:        ec.ExchangeCurrencyType,
+		ExchangeValueDenominator:    o.ExchangeValueDenominator,
+		ExchangeValueDenomAssetCode: o.ExchangeValueDenomAssetCode,
+		DepositPK:                   o.DepositPk,
+		QRCode:                      o.PaymentQrImage,
+		FiatBIC:                     o.FiatBic,
+		FiatIBAN:                    o.FiatIban,
+		FiatDestinationName:         o.FiatRecepientName,
+		FiatPaymentUsage:            o.FiatPaymentUsage,
+		FiatBankName:                o.FiatBankName,
+	})
 }
 
-//UserOrderResponse resp object
+// GetOrdersRequest is the data for filtering the user orders
+// swagger:parameters GetOrdersRequest OrderList
+type GetOrdersRequest struct {
+	// ID of the Ico-Phase
+	// required: false
+	IcoPhaseID int64 `form:"ico_phase_id" json:"ico_phase_id"`
+
+	// ID of the Order
+	// required: false
+	OrderID int64 `form:"order_id" json:"order_id"`
+
+	// ID of the Order
+	// required: false
+	OrderStatus string `form:"order_status" json:"order_status"`
+}
+
+// UserOrderResponse represents a UserOrder
+// swagger:model
 type UserOrderResponse struct {
-	ID                   int64   `json:"id"`
-	OrderStatus          string  `json:"order_status"`
-	CoinAmount           int64   `json:"coin_amount"`
-	ChainAmount          float64 `json:"chain_amount"`
-	ChainAmountDenom     string  `json:"chain_amount_denom"`
-	Chain                string  `json:"chain,omitempty"`
-	ChainAddress         string  `json:"chain_address,omitempty"`
-	UserStellarPublicKey string  `json:"user_stellar_public_key,omitempty"`
-	FiatBic              string  `json:"fiat_bic,omitempty"`
-	FiatIban             string  `json:"fiat_iban,omitempty"`
-	FiatDestinationName  string  `json:"fiat_destination_name,omitempty"`
-	FiatPaymentUsage     string  `json:"fiat_payment_usage,omitempty"`
+	ID                                 int64  `json:"id"`
+	OrderStatus                        string `json:"order_status"`
+	IcoPhaseID                         int64  `json:"ico_phase_id"`
+	TokenAmount                        int64  `json:"token_amount"`
+	StellarUserPublicKey               string `json:"stellar_user_public_key"`
+	ExchangeCurrencyID                 int64  `json:"exchange_currency_id"`
+	ExchangeCurrencyDenominationAmount string `json:"exchange_currency_denomination_amount"`
+	ExchangeCurrencyType               string `json:"exchange_currency_type"`
+	PaymentNetwork                     string `json:"payment_network"`
+	DepositPK                          string `json:"deposit_pk,omitempty"`
+	PaymentTxID                        string `json:"payment_tx_id,omitempty"`
+	PaymentRefundTxID                  string `json:"payment_refund_tx_id,omitempty"`
+	//TODO PaymentQrImage string `json:"payment_qr_image"`
+	ExchangeAmount         string `json:"exchange_amount"`
+	ExchangeAssetCode      string `json:"exchange_asset_code"`
+	ExchangeDenomAssetCode string `json:"exchange_denom_asset_code"`
+	FiatBic                string `json:"fiat_bic,omitempty"`
+	FiatIban               string `json:"fiat_iban,omitempty"`
+	FiatRecepientName      string `json:"fiat_recepient_name,omitempty"`
+	FiatPaymentUsage       string `json:"fiat_payment_usage,omitempty"`
+	FiatBankName           string `json:"fiat_bank_name,omitempty"`
 }
 
-//OrderList returns the list of all orders for the user
+// OrderList returns the filtered list of orders for the current user.
+// swagger:route GET /order_list OrderList
+//     returns the filtered list of orders for the current user
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []UserOrderResponse
 func OrderList(uc *mw.IcopContext, c *gin.Context) {
+	var l GetOrdersRequest
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
 	userID := mw.GetAuthUser(c).UserID
+
 	orders, err := payClient.GetUserOrders(c, &pb.UserOrdersRequest{
-		Base:   NewBaseRequest(uc),
-		UserId: userID,
+		Base:        NewBaseRequest(uc),
+		UserId:      userID,
+		OrderStatus: l.OrderStatus,
+		IcoPhaseId:  l.IcoPhaseID,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting orders", cerr.GeneralError))
@@ -167,30 +442,56 @@ func OrderList(uc *mw.IcopContext, c *gin.Context) {
 
 	ret := make([]UserOrderResponse, len(orders.UserOrders))
 	for i := 0; i < len(orders.UserOrders); i++ {
-		o := orders.UserOrders[i]
-		ret[i].ID = o.Id
-		ret[i].OrderStatus = o.OrderStatus
-		ret[i].CoinAmount = o.CoinAmount
-		ret[i].ChainAmount = o.ChainAmount
-		ret[i].ChainAmountDenom = o.ChainAmountDenom
-		ret[i].Chain = o.Chain
-		ret[i].ChainAddress = o.ChainAddress
-		ret[i].UserStellarPublicKey = o.UserStellarPublicKey
-		ret[i].FiatBic = o.FiatBic
-		ret[i].FiatIban = o.FiatIban
-		ret[i].FiatDestinationName = o.FiatDestinationName
-		ret[i].FiatPaymentUsage = o.FiatPaymentUsage
+		ret[i] = getRespOrder(orders.UserOrders[i])
 	}
 
 	c.JSON(http.StatusOK, ret)
 }
 
-//OrderDetailsRequest request-data
+func getRespOrder(o *pb.UserOrder) UserOrderResponse {
+	return UserOrderResponse{
+		ID:                                 o.Id,
+		OrderStatus:                        o.OrderStatus,
+		TokenAmount:                        o.TokenAmount,
+		StellarUserPublicKey:               o.StellarUserPublicKey,
+		ExchangeCurrencyID:                 o.ExchangeCurrencyId,
+		ExchangeCurrencyDenominationAmount: o.ExchangeCurrencyDenominationAmount,
+		ExchangeCurrencyType:               o.ExchangeCurrencyType,
+		PaymentNetwork:                     o.PaymentNetwork,
+		DepositPK:                          o.DepositPk,
+		PaymentTxID:                        o.PaymentTxId,
+		PaymentRefundTxID:                  o.PaymentRefundTxId,
+		//TODO PaymentQrImage : o.PaymentQrImage,
+		ExchangeAmount:         o.ExchangeAmount,
+		ExchangeAssetCode:      o.ExchangeAssetCode,
+		ExchangeDenomAssetCode: o.ExchangeDenomAssetCode,
+		FiatBic:                o.FiatBic,
+		FiatIban:               o.FiatIban,
+		FiatRecepientName:      o.FiatRecepientName,
+		FiatPaymentUsage:       o.FiatPaymentUsage,
+		FiatBankName:           o.FiatBankName,
+	}
+}
+
+// OrderDetailsRequest request-data
+// swagger:parameters OrderDetailsRequest OrderDetails
 type OrderDetailsRequest struct {
+	// ID of the Order
+	// required: true
 	OrderID int64 `form:"order_id" json:"order_id" validate:"required"`
 }
 
-//OrderDetails returns the detail of one order
+// OrderDetails returns the details for the specified order
+// swagger:route GET /order_details OrderDetails
+//     returns the details for the specified order
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: UserOrderResponse
 func OrderDetails(uc *mw.IcopContext, c *gin.Context) {
 	var l OrderDetailsRequest
 	if err := c.Bind(&l); err != nil {
@@ -219,21 +520,7 @@ func OrderDetails(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	o := orders.UserOrders[0]
-	c.JSON(http.StatusOK, &UserOrderResponse{
-		ID:                   o.Id,
-		OrderStatus:          o.OrderStatus,
-		CoinAmount:           o.CoinAmount,
-		ChainAmount:          o.ChainAmount,
-		ChainAmountDenom:     o.ChainAmountDenom,
-		Chain:                o.Chain,
-		ChainAddress:         o.ChainAddress,
-		UserStellarPublicKey: o.UserStellarPublicKey,
-		FiatBic:              o.FiatBic,
-		FiatIban:             o.FiatIban,
-		FiatDestinationName:  o.FiatDestinationName,
-		FiatPaymentUsage:     o.FiatPaymentUsage,
-	})
+	c.JSON(http.StatusOK, getRespOrder(orders.UserOrders[0]))
 }
 
 //OrderGetTrustStatusRequest request data
