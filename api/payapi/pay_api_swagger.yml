@@ -45,14 +45,6 @@ definitions:
         description: 'Type for payment: stellar, other_crypto, fiat'
         type: string
         x-go-name: ExchangeCurrencyType
-      exchange_value_denom_asset_code:
-        description: This is values denomitator-assetcode
-        type: string
-        x-go-name: ExchangeValueDenomAssetCode
-      exchange_value_denominator:
-        description: This is values denomitator
-        type: string
-        x-go-name: ExchangeValueDenominator
       exchange_value_to_pay:
         description: Value to pay in the selected payment Network asset code
         type: string
@@ -86,6 +78,9 @@ definitions:
       ordered_token_asset_code:
         type: string
         x-go-name: OrderedTokenAssetCode
+      payment_network:
+        type: string
+        x-go-name: PaymentNetwork
       qr_code:
         description: |-
           QRCode is a bitmap for the transaction in the Payment-Network
@@ -108,13 +103,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: Decimals
-      denom_asset_code:
-        type: string
-        x-go-name: DenomAssetCode
-      denom_price_per_token:
-        description: Denominator-Value for one token
-        type: string
-        x-go-name: DenomPricePerToken
       exchange_currency_type:
         type: string
         x-go-name: ExchangeCurrencyType
@@ -148,11 +136,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: IcoPhaseID
-      order_id:
-        description: ID of the Order
-        format: int64
-        type: integer
-        x-go-name: OrderID
       order_status:
         description: ID of the Order
         type: string
@@ -319,9 +302,6 @@ definitions:
       exchange_amount:
         type: string
         x-go-name: ExchangeAmount
-      exchange_amount_denomination:
-        type: string
-        x-go-name: ExchangeAmountDenomination
       exchange_asset_code:
         type: string
         x-go-name: ExchangeAssetCode
@@ -334,15 +314,11 @@ definitions:
         type: string
         x-go-name: DepositPK
       exchange_amount:
-        description: TODO PaymentQrImage string `json:"payment_qr_image"`
         type: string
         x-go-name: ExchangeAmount
       exchange_asset_code:
         type: string
         x-go-name: ExchangeAssetCode
-      exchange_currency_denomination_amount:
-        type: string
-        x-go-name: ExchangeCurrencyDenominationAmount
       exchange_currency_id:
         format: int64
         type: integer
@@ -350,9 +326,6 @@ definitions:
       exchange_currency_type:
         type: string
         x-go-name: ExchangeCurrencyType
-      exchange_denom_asset_code:
-        type: string
-        x-go-name: ExchangeDenomAssetCode
       fiat_bank_name:
         type: string
         x-go-name: FiatBankName
@@ -546,12 +519,6 @@ paths:
         name: ico_phase_id
         type: integer
         x-go-name: IcoPhaseID
-      - description: ID of the Order
-        format: int64
-        in: query
-        name: order_id
-        type: integer
-        x-go-name: OrderID
       - description: ID of the Order
         in: query
         name: order_status

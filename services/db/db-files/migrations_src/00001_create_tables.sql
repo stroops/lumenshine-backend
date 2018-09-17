@@ -43,6 +43,8 @@ CREATE TABLE user_profile
 
     password character varying not null,
 
+    stellar_account_created boolean not null default false,
+
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp,
     updated_by character varying not null

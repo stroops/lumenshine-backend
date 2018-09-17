@@ -32,9 +32,8 @@ type PriceForCoinRequest struct {
 // PriceForCoinResponse price for coin amount, based on the configuration
 // swagger:model
 type PriceForCoinResponse struct {
-	ExchangeAmount             string `json:"exchange_amount"`
-	ExchangeAmountDenomination string `json:"exchange_amount_denomination"`
-	ExchangeAssetCode          string `json:"exchange_asset_code"`
+	ExchangeAmount    string `json:"exchange_amount"`
+	ExchangeAssetCode string `json:"exchange_asset_code"`
 }
 
 // PriceForCoin returns the price for a given coin amount, related to the currency given
@@ -74,9 +73,8 @@ func PriceForCoin(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &PriceForCoinResponse{
-		ExchangeAmount:             price.ExchangeAmount,
-		ExchangeAmountDenomination: price.ExchangeAmountDenomination,
-		ExchangeAssetCode:          price.ExchangeAssetCode,
+		ExchangeAmount:    price.ExchangeAmount,
+		ExchangeAssetCode: price.ExchangeAssetCode,
 	})
 }
 
@@ -94,13 +92,9 @@ type ExchangeCurrency struct {
 	ID                   int    `json:"id"`
 	ExchangeCurrencyType string `json:"exchange_currency_type"`
 	AssetCode            string `json:"asset_code"`
-	DenomAssetCode       string `json:"denom_asset_code"`
 
 	// Number of decimal places for the denominator
 	Decimals int64 `json:"decimals"`
-
-	// Denominator-Value for one token
-	DenomPricePerToken string `json:"denom_price_per_token"`
 
 	// Includes the UoM of the asset (EUR/XLM,BTC...)
 	PricePerToken string `json:"price_per_token"`
@@ -170,8 +164,6 @@ func IcoPhaseDetails(uc *mw.IcopContext, c *gin.Context) {
 	for i, aec := range ec.ActiveExchangeCurrencies {
 		ret.ActiveExchangeCurrencies[i].AssetCode = aec.AssetCode
 		ret.ActiveExchangeCurrencies[i].Decimals = aec.Decimals
-		ret.ActiveExchangeCurrencies[i].DenomAssetCode = aec.DenomAssetCode
-		ret.ActiveExchangeCurrencies[i].DenomPricePerToken = aec.DenomPricePerToken
 		ret.ActiveExchangeCurrencies[i].ExchangeCurrencyType = aec.ExchangeCurrencyType
 		ret.ActiveExchangeCurrencies[i].ID = int(aec.Id)
 		ret.ActiveExchangeCurrencies[i].PricePerToken = aec.PricePerToken
@@ -215,11 +207,6 @@ type CreateOrderResponse struct {
 	ExchangeValueToPay string `json:"exchange_value_to_pay"`
 	//Type for payment: stellar, other_crypto, fiat
 	ExchangeCurrencyType string `json:"exchange_currency_type"`
-
-	//This is values denomitator
-	ExchangeValueDenominator string `json:"exchange_value_denominator"`
-	//This is values denomitator-assetcode
-	ExchangeValueDenomAssetCode string `json:"exchange_value_denom_asset_code"`
 
 	//DepositPK is the address in the PaymentNetwork, where the user must transfer the Exchange-Asset
 	DepositPK string `json:"deposit_pk,omitempty"`
@@ -344,23 +331,21 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &CreateOrderResponse{
-		OrderID:                     o.OrderId,
-		OrderStatus:                 o.OrderStatus,
-		OrderedTokenAmount:          l.OrderedTokenAmount,
-		OrderedTokenAssetCode:       phase.IcoTokenAsset,
-		PaymentNetwork:              ec.PaymentNetwork,
-		ExchangeAssetCode:           ec.AssetCode,
-		ExchangeValueToPay:          o.ExchangeValueToPay,
-		ExchangeCurrencyType:        ec.ExchangeCurrencyType,
-		ExchangeValueDenominator:    o.ExchangeValueDenominator,
-		ExchangeValueDenomAssetCode: o.ExchangeValueDenomAssetCode,
-		DepositPK:                   o.DepositPk,
-		QRCode:                      o.PaymentQrImage,
-		FiatBIC:                     o.FiatBic,
-		FiatIBAN:                    o.FiatIban,
-		FiatDestinationName:         o.FiatRecepientName,
-		FiatPaymentUsage:            o.FiatPaymentUsage,
-		FiatBankName:                o.FiatBankName,
+		OrderID:               o.OrderId,
+		OrderStatus:           o.OrderStatus,
+		OrderedTokenAmount:    l.OrderedTokenAmount,
+		OrderedTokenAssetCode: phase.IcoTokenAsset,
+		PaymentNetwork:        ec.PaymentNetwork,
+		ExchangeAssetCode:     ec.AssetCode,
+		ExchangeValueToPay:    o.ExchangeValueToPay,
+		ExchangeCurrencyType:  ec.ExchangeCurrencyType,
+		DepositPK:             o.DepositPk,
+		QRCode:                o.PaymentQrImage,
+		FiatBIC:               o.FiatBic,
+		FiatIBAN:              o.FiatIban,
+		FiatDestinationName:   o.FiatRecepientName,
+		FiatPaymentUsage:      o.FiatPaymentUsage,
+		FiatBankName:          o.FiatBankName,
 	})
 }
 
@@ -373,7 +358,7 @@ type GetOrdersRequest struct {
 
 	// ID of the Order
 	// required: false
-	OrderID int64 `form:"order_id" json:"order_id"`
+	// OrderID int64 `form:"order_id" json:"order_id"`
 
 	// ID of the Order
 	// required: false
@@ -383,27 +368,29 @@ type GetOrdersRequest struct {
 // UserOrderResponse represents a UserOrder
 // swagger:model
 type UserOrderResponse struct {
-	ID                                 int64  `json:"id"`
-	OrderStatus                        string `json:"order_status"`
-	IcoPhaseID                         int64  `json:"ico_phase_id"`
-	TokenAmount                        int64  `json:"token_amount"`
-	StellarUserPublicKey               string `json:"stellar_user_public_key"`
-	ExchangeCurrencyID                 int64  `json:"exchange_currency_id"`
-	ExchangeCurrencyDenominationAmount string `json:"exchange_currency_denomination_amount"`
-	ExchangeCurrencyType               string `json:"exchange_currency_type"`
-	PaymentNetwork                     string `json:"payment_network"`
-	DepositPK                          string `json:"deposit_pk,omitempty"`
-	PaymentTxID                        string `json:"payment_tx_id,omitempty"`
-	PaymentRefundTxID                  string `json:"payment_refund_tx_id,omitempty"`
+	ID                   int64  `json:"id"`
+	OrderStatus          string `json:"order_status"`
+	IcoPhaseID           int64  `json:"ico_phase_id"`
+	TokenAmount          int64  `json:"token_amount"`
+	StellarUserPublicKey string `json:"stellar_user_public_key"`
+	ExchangeCurrencyID   int64  `json:"exchange_currency_id"`
+
+	ExchangeCurrencyType string `json:"exchange_currency_type"`
+	PaymentNetwork       string `json:"payment_network"`
+	DepositPK            string `json:"deposit_pk,omitempty"`
+	PaymentTxID          string `json:"payment_tx_id,omitempty"`
+	PaymentRefundTxID    string `json:"payment_refund_tx_id,omitempty"`
+
 	//TODO PaymentQrImage string `json:"payment_qr_image"`
-	ExchangeAmount         string `json:"exchange_amount"`
-	ExchangeAssetCode      string `json:"exchange_asset_code"`
-	ExchangeDenomAssetCode string `json:"exchange_denom_asset_code"`
-	FiatBic                string `json:"fiat_bic,omitempty"`
-	FiatIban               string `json:"fiat_iban,omitempty"`
-	FiatRecepientName      string `json:"fiat_recepient_name,omitempty"`
-	FiatPaymentUsage       string `json:"fiat_payment_usage,omitempty"`
-	FiatBankName           string `json:"fiat_bank_name,omitempty"`
+
+	ExchangeAmount    string `json:"exchange_amount"`
+	ExchangeAssetCode string `json:"exchange_asset_code"`
+
+	FiatBic           string `json:"fiat_bic,omitempty"`
+	FiatIban          string `json:"fiat_iban,omitempty"`
+	FiatRecepientName string `json:"fiat_recepient_name,omitempty"`
+	FiatPaymentUsage  string `json:"fiat_payment_usage,omitempty"`
+	FiatBankName      string `json:"fiat_bank_name,omitempty"`
 }
 
 // OrderList returns the filtered list of orders for the current user.
@@ -452,26 +439,24 @@ func OrderList(uc *mw.IcopContext, c *gin.Context) {
 
 func getRespOrder(o *pb.UserOrder) UserOrderResponse {
 	return UserOrderResponse{
-		ID:                                 o.Id,
-		OrderStatus:                        o.OrderStatus,
-		TokenAmount:                        o.TokenAmount,
-		StellarUserPublicKey:               o.StellarUserPublicKey,
-		ExchangeCurrencyID:                 o.ExchangeCurrencyId,
-		ExchangeCurrencyDenominationAmount: o.ExchangeCurrencyDenominationAmount,
-		ExchangeCurrencyType:               o.ExchangeCurrencyType,
-		PaymentNetwork:                     o.PaymentNetwork,
-		DepositPK:                          o.DepositPk,
-		PaymentTxID:                        o.PaymentTxId,
-		PaymentRefundTxID:                  o.PaymentRefundTxId,
+		ID:                   o.Id,
+		OrderStatus:          o.OrderStatus,
+		TokenAmount:          o.TokenAmount,
+		StellarUserPublicKey: o.StellarUserPublicKey,
+		ExchangeCurrencyID:   o.ExchangeCurrencyId,
+		ExchangeCurrencyType: o.ExchangeCurrencyType,
+		PaymentNetwork:       o.PaymentNetwork,
+		DepositPK:            o.DepositPk,
+		PaymentTxID:          o.PaymentTxId,
+		PaymentRefundTxID:    o.PaymentRefundTxId,
 		//TODO PaymentQrImage : o.PaymentQrImage,
-		ExchangeAmount:         o.ExchangeAmount,
-		ExchangeAssetCode:      o.ExchangeAssetCode,
-		ExchangeDenomAssetCode: o.ExchangeDenomAssetCode,
-		FiatBic:                o.FiatBic,
-		FiatIban:               o.FiatIban,
-		FiatRecepientName:      o.FiatRecepientName,
-		FiatPaymentUsage:       o.FiatPaymentUsage,
-		FiatBankName:           o.FiatBankName,
+		ExchangeAmount:    o.ExchangeAmount,
+		ExchangeAssetCode: o.ExchangeAssetCode,
+		FiatBic:           o.FiatBic,
+		FiatIban:          o.FiatIban,
+		FiatRecepientName: o.FiatRecepientName,
+		FiatPaymentUsage:  o.FiatPaymentUsage,
+		FiatBankName:      o.FiatBankName,
 	}
 }
 
