@@ -133,6 +133,36 @@ definitions:
         x-go-name: Transaction
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
+  FakeTransactionRequest:
+    description: FakeTransactionRequest request-data
+    properties:
+      denomination_amount:
+        description: This is the denomination amount in the UoM of the payment network
+          that the transaction should fake
+        format: int64
+        type: integer
+        x-go-name: DenominationAmount
+      order_id:
+        format: int64
+        type: integer
+        x-go-name: OrderID
+      payment_channel:
+        type: string
+        x-go-name: PaymentChannel
+      recipient_address:
+        description: This is the payment-address that we genrated for the order
+        type: string
+        x-go-name: RecipientAddress
+      tx_hash:
+        type: string
+        x-go-name: TxHash
+    required:
+    - payment_channel
+    - recipient_address
+    - order_id
+    - denomination_amount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   GetOrdersRequest:
     description: GetOrdersRequest is the data for filtering the user orders
     properties:
@@ -318,6 +348,10 @@ definitions:
   UserOrderResponse:
     description: UserOrderResponse represents a UserOrder
     properties:
+      amount_received:
+        description: This is the exchange amount received in the first transaction
+        type: string
+        x-go-name: AmountReceived
       deposit_pk:
         type: string
         x-go-name: DepositPK
@@ -427,6 +461,47 @@ paths:
           description: CreateOrderResponse
           schema:
             $ref: '#/definitions/CreateOrderResponse'
+  /fake_transaction:
+    post:
+      consumes:
+      - multipart/form-data
+      description: create a fake transaction from a payment network
+      operationId: FakeTransaction
+      parameters:
+      - in: query
+        name: payment_channel
+        required: true
+        type: string
+        x-go-name: PaymentChannel
+      - in: query
+        name: tx_hash
+        type: string
+        x-go-name: TxHash
+      - description: This is the payment-address that we genrated for the order
+        in: query
+        name: recipient_address
+        required: true
+        type: string
+        x-go-name: RecipientAddress
+      - format: int64
+        in: query
+        name: order_id
+        required: true
+        type: integer
+        x-go-name: OrderID
+      - description: This is the denomination amount in the UoM of the payment network
+          that the transaction should fake
+        format: int64
+        in: query
+        name: denomination_amount
+        required: true
+        type: integer
+        x-go-name: DenominationAmount
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/%27boolean%27'
   /ico_phase_details:
     get:
       consumes:
