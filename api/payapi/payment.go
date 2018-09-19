@@ -98,6 +98,9 @@ type ExchangeCurrency struct {
 
 	// Includes the UoM of the asset (EUR/XLM,BTC...)
 	PricePerToken string `json:"price_per_token"`
+
+	// this is the issuer public key for an stellar asset for the exchange currency. only set for stellar
+	EcAssetIssuerPK string `json:"ec_asset_issuer_pk,omitempty"`
 }
 
 // IcoPhaseDetailsResponse lists details of the specified IPC-Phase
@@ -107,6 +110,7 @@ type IcoPhaseDetailsResponse struct {
 	IcoID                    int                `json:"ico_id"`
 	IcoPhaseName             string             `json:"ico_phase_name"`
 	IcoPhaseStatus           string             `json:"ico_phase_status"`
+	IcoIssuerPK              string             `json:"ico_issuer_pk"`
 	StartTime                time.Time          `json:"start_time"`
 	EndTime                  time.Time          `json:"end_time"`
 	TokensLeft               int64              `json:"tokens_left"`
@@ -140,7 +144,7 @@ func IcoPhaseDetails(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	// correct state,amount, etc.
-	ec, err := payClient.GetPhaseData(c, &pb.IDRequest{
+	p, err := payClient.GetPhaseData(c, &pb.IDRequest{
 		Base: NewBaseRequest(uc),
 		Id:   int64(l.ICOPhaseID),
 	})
@@ -150,23 +154,25 @@ func IcoPhaseDetails(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	ret := &IcoPhaseDetailsResponse{
-		ID:                  int(ec.Id),
-		IcoID:               int(ec.IcoId),
-		IcoPhaseName:        ec.IcoPhaseName,
-		IcoPhaseStatus:      ec.IcoPhaseStatus,
-		StartTime:           time.Unix(ec.StartTime, 0),
-		EndTime:             time.Unix(ec.EndTime, 0),
-		TokensLeft:          ec.TokensLeft,
-		TokenMaxOrderAmount: ec.TokenMaxOrderAmount,
-		TokenMinOrderAmount: ec.TokenMinOrderAmount,
+		ID:                  int(p.Id),
+		IcoID:               int(p.IcoId),
+		IcoPhaseName:        p.IcoPhaseName,
+		IcoPhaseStatus:      p.IcoPhaseStatus,
+		IcoIssuerPK:         p.IcoIssuerPk,
+		StartTime:           time.Unix(p.StartTime, 0),
+		EndTime:             time.Unix(p.EndTime, 0),
+		TokensLeft:          p.TokensLeft,
+		TokenMaxOrderAmount: p.TokenMaxOrderAmount,
+		TokenMinOrderAmount: p.TokenMinOrderAmount,
 	}
-	ret.ActiveExchangeCurrencies = make([]ExchangeCurrency, len(ec.ActiveExchangeCurrencies))
-	for i, aec := range ec.ActiveExchangeCurrencies {
+	ret.ActiveExchangeCurrencies = make([]ExchangeCurrency, len(p.ActiveExchangeCurrencies))
+	for i, aec := range p.ActiveExchangeCurrencies {
 		ret.ActiveExchangeCurrencies[i].AssetCode = aec.AssetCode
 		ret.ActiveExchangeCurrencies[i].Decimals = aec.Decimals
 		ret.ActiveExchangeCurrencies[i].ExchangeCurrencyType = aec.ExchangeCurrencyType
 		ret.ActiveExchangeCurrencies[i].ID = int(aec.Id)
 		ret.ActiveExchangeCurrencies[i].PricePerToken = aec.PricePerToken
+		ret.ActiveExchangeCurrencies[i].EcAssetIssuerPK = aec.EcAssetIssuerPk
 	}
 
 	c.JSON(http.StatusOK, ret)
@@ -375,6 +381,9 @@ type UserOrderResponse struct {
 	StellarUserPublicKey string `json:"stellar_user_public_key"`
 	ExchangeCurrencyID   int64  `json:"exchange_currency_id"`
 
+	//This is the exchange amount received in the first transaction
+	AmountReceived string `json:"amount_received"`
+
 	ExchangeCurrencyType string `json:"exchange_currency_type"`
 	PaymentNetwork       string `json:"payment_network"`
 	DepositPK            string `json:"deposit_pk,omitempty"`
@@ -449,7 +458,9 @@ func getRespOrder(o *pb.UserOrder) UserOrderResponse {
 		DepositPK:            o.DepositPk,
 		PaymentTxID:          o.PaymentTxId,
 		PaymentRefundTxID:    o.PaymentRefundTxId,
+
 		//TODO PaymentQrImage : o.PaymentQrImage,
+
 		ExchangeAmount:    o.ExchangeAmount,
 		ExchangeAssetCode: o.ExchangeAssetCode,
 		FiatBic:           o.FiatBic,
@@ -457,6 +468,7 @@ func getRespOrder(o *pb.UserOrder) UserOrderResponse {
 		FiatRecepientName: o.FiatRecepientName,
 		FiatPaymentUsage:  o.FiatPaymentUsage,
 		FiatBankName:      o.FiatBankName,
+		AmountReceived:    o.AmountReceived,
 	}
 }
 
@@ -633,4 +645,61 @@ func ExecuteTransaction(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "{}")
+}
+
+// FakeTransactionRequest request-data
+// swagger:parameters FakeTransactionRequest FakeTransaction
+type FakeTransactionRequest struct {
+	// required: true
+	PaymentChannel string `form:"payment_channel" json:"payment_channel" validate:"required"`
+	TxHash         string `form:"tx_hash" json:"tx_hash"`
+
+	//This is the payment-address that we genrated for the order
+	// required: true
+	RecipientAddress string `form:"recipient_address" json:"recipient_address" validate:"required"`
+
+	// required: true
+	OrderID int64 `form:"order_id" json:"order_id"`
+
+	//This is the denomination amount in the UoM of the payment network that the transaction should fake
+	// required: true
+	DenominationAmount int64 `form:"denomination_amount" json:"denomination_amount"`
+}
+
+// FakeTransaction create a fake transaction from a payment network
+// swagger:route POST /fake_transaction FakeTransaction
+//     create a fake transaction from a payment network
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: 'boolean'
+func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
+	var l FakeTransactionRequest
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	b, err := payClient.FakePaymentTransaction(c, &pb.TestTransaction{
+		Base:             NewBaseRequest(uc),
+		PaymentChannel:   l.PaymentChannel,
+		TxHash:           l.TxHash,
+		RecipientAddress: l.RecipientAddress,
+		DenomAmount:      l.DenominationAmount,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating fake-transaction", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, b.Value)
 }

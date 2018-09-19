@@ -52,17 +52,6 @@ func NewListener(DB *db.DB, cnf *config.Config) *Listener {
 	}
 	l.Client = bitcoinClient
 
-	l.cnf.Bitcoin.MinimumValueBTC, err = BtcToSat(cnf.Bitcoin.MinimumValueBTCStr)
-	if err != nil {
-		l.log.Error("Invalid minimum accepted Bitcoin transaction value")
-		os.Exit(-1)
-	}
-
-	if l.cnf.Bitcoin.MinimumValueBTC.Cmp(new(big.Int)) == 0 {
-		l.log.Error("Minimum accepted Bitcoin transaction value must be larger than 0")
-		os.Exit(-1)
-	}
-
 	l.log.Info("Bitcoin-Listener created")
 	return l
 }
@@ -237,11 +226,6 @@ func (l *Listener) processBlock(block *wire.MsgBlock) error {
 func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big.Int, toAddress string) error {
 	localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "index": txOutIndex, "rail": "bitcoin"})
 	localLog.Debug("Processing transaction")
-
-	if valueSat.Cmp(l.cnf.Bitcoin.MinimumValueBTC) < 0 {
-		localLog.Debug("Value is below minimum required amount, skipping")
-		return nil
-	}
 
 	//get the order from the database
 	order, err := l.DB.GetOpenOrderForAddress(m.PaymentNetworkBitcoin, toAddress)

@@ -1,10 +1,10 @@
 package config
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
-	"math/big"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,41 +27,27 @@ type Service struct {
 
 //Bitcoin data for bitcoin client
 type Bitcoin struct {
-	Enabled            bool
-	MasterPublicKey    string
-	RPCServer          string
-	RPCUser            string
-	RPCPass            string
-	Testnet            bool
-	MinimumValueBTC    *big.Int
-	MinimumValueBTCStr string
-	TokenPrice         float64
+	Enabled   bool
+	RPCServer string
+	RPCUser   string
+	RPCPass   string
+	Testnet   bool
 }
 
 //Ethereum data for ethereum client
 type Ethereum struct {
-	Enabled               bool
-	MasterPublicKey       string
-	RPCServer             string
-	NetworkID             string
-	MinimumWeiValueEthStr string
-	MinimumWeiValueEth    *big.Int
-	TokenPrice            float64
-	Testnet               bool
+	Enabled   bool
+	RPCServer string
+	NetworkID string
+	Testnet   bool
 }
 
 //Stellar data for stellar network
 type Stellar struct {
-	Enabled               bool
-	IssuerPublicKey       string
-	DistributionPublicKey string
-	DistributionSeed      string
-	TokenAssetCode        string
-	Horizon               string
-	NetworkPassphrase     string
-	StartingBalance       string
-	Testnet               bool
-	TokenPrice            float64
+	Enabled           bool
+	Horizon           string
+	NetworkPassphrase string
+	Testnet           bool
 }
 
 //Fiat is the definition for the fiat payment
@@ -75,9 +61,10 @@ type Fiat struct {
 
 //Config for the app
 type Config struct {
-	Port           int
-	ApplicationDir string
-	IsDevSystem    bool
+	Port                  int
+	ApplicationDir        string
+	IsDevSystem           bool
+	AllowFakeTransactions bool
 
 	DBService        Service
 	CustomerDB       DBConfig

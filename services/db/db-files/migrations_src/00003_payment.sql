@@ -100,7 +100,7 @@ CREATE TABLE multiple_transaction (
   created_at timestamp with time zone NOT NULL default current_timestamp,
   updated_at timestamp with time zone NOT NULL default current_timestamp  
 );
-create unique index idx_multiple_transaction_ix1 on multiple_transaction(user_order_id);
+create unique index idx_multiple_transaction_ix1 on multiple_transaction(user_order_id, transaction_id);
 create index idx_multiple_transaction_ix2 on multiple_transaction(payment_network, transaction_id);
 create index idx_multiple_transaction_ix3 on multiple_transaction(payment_network, receiving_address);
 

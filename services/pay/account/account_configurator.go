@@ -1,28 +1,21 @@
 package account
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/Soneso/lumenshine-backend/helpers"
-	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
-	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
 	"github.com/pkg/errors"
 
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/sirupsen/logrus"
-	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
-	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/support/log"
-	"github.com/stellar/go/xdr"
 )
 
 // General information on run-down
@@ -36,7 +29,6 @@ import (
 type Configurator struct {
 	DB      *db.DB
 	log     *logrus.Entry
-	Client  *rpcclient.Client
 	cnf     *config.Config
 	Horizon *horizon.Client
 }
@@ -50,7 +42,7 @@ func NewAccountConfigurator(DB *db.DB, cnf *config.Config) *Configurator {
 	l.cnf = cnf
 	l.log = helpers.GetDefaultLog("Account-Configurator", "")
 
-	_, err = keypair.Parse(cnf.Stellar.IssuerPublicKey)
+	/*_, err = keypair.Parse(cnf.Stellar.IssuerPublicKey)
 	if err != nil || (err == nil && cnf.Stellar.IssuerPublicKey[0] != 'G') {
 		log.WithField("err", err).Error("Invalid IssuerPublicKey")
 		os.Exit(-1)
@@ -60,7 +52,7 @@ func NewAccountConfigurator(DB *db.DB, cnf *config.Config) *Configurator {
 	if err != nil || (err == nil && cnf.Stellar.DistributionPublicKey[0] != 'G') {
 		log.WithField("err", err).Error("Invalid DistributionPublicKey")
 		os.Exit(-1)
-	}
+	}*/
 
 	l.Horizon = &horizon.Client{
 		URL: cnf.Stellar.Horizon,
@@ -85,12 +77,12 @@ func NewAccountConfigurator(DB *db.DB, cnf *config.Config) *Configurator {
 }
 
 func (c *Configurator) hasTrustline(acc *horizon.Account) bool {
-	//check if trustline present
+	/*//check if trustline present
 	for _, b := range acc.Balances {
 		if b.Asset.Code == c.cnf.Stellar.TokenAssetCode && b.Asset.Issuer == c.cnf.Stellar.IssuerPublicKey {
 			return true
 		}
-	}
+	}*/
 	return false
 }
 
@@ -125,7 +117,7 @@ func (c *Configurator) GetTrustStatus(o *m.UserOrder) (bool, error) {
 //GetPaymentTransaction creates the transaction for a valid payment
 //returns the transaction or an error code
 func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, error) {
-	var acc horizon.Account
+	/*var acc horizon.Account
 	var err error
 	var exists bool
 
@@ -179,12 +171,13 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 		return "", 0, errors.Wrap(err, "Could not bas64 encode TransactionEnvelopeBuilder")
 	}
 
-	return txes, 0, nil
+	return txes, 0, nil*/
+	return "", 0, nil
 }
 
 //ExecuteTransaction checks the transaction, signs it and executes it
 func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
-	txe, err := c.decodeFromBase64(tx)
+	/*txe, err := c.decodeFromBase64(tx)
 	if err != nil {
 		return errors.Wrap(err, "Could not decode transaction")
 	}
@@ -241,13 +234,14 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
 		return errors.Wrap(err, "Transaction does not match saved transaction")
 	}*/
 
-	return c.submitTransaction(tx)
+	//return c.submitTransaction(tx)
+	return nil
 }
 
 //createAccount create the user stellar account
 //it uses the configured distribution account as source and uses autosequence
 func (c *Configurator) createAccount(account string) error {
-	tx, err := c.buildTransaction(
+	/*tx, err := c.buildTransaction(
 		c.cnf.Stellar.DistributionPublicKey,
 		c.cnf.Stellar.DistributionSeed,
 		0,
@@ -266,7 +260,7 @@ func (c *Configurator) createAccount(account string) error {
 	if err != nil {
 		return errors.Wrap(err, "Error creating user stellar account")
 	}
-
+	*/
 	return nil
 }
 

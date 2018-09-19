@@ -1,13 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/Soneso/lumenshine-backend/services/jwt/cmd"
-	"net"
-	"time"
+	context "golang.org/x/net/context"
 
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/sirupsen/logrus"

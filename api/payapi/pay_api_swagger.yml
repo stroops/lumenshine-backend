@@ -103,6 +103,11 @@ definitions:
         format: int64
         type: integer
         x-go-name: Decimals
+      ec_asset_issuer_pk:
+        description: this is the issuer public key for an stellar asset for the exchange
+          currency. only set for stellar
+        type: string
+        x-go-name: EcAssetIssuerPK
       exchange_currency_type:
         type: string
         x-go-name: ExchangeCurrencyType
@@ -170,6 +175,9 @@ definitions:
         format: int64
         type: integer
         x-go-name: IcoID
+      ico_issuer_pk:
+        type: string
+        x-go-name: IcoIssuerPK
       ico_phase_name:
         type: string
         x-go-name: IcoPhaseName

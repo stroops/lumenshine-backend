@@ -22,7 +22,6 @@ debug.*
 debug
 media/
 .idea/
-.vs_code/
 vendor/
 db/migrations/
 
@@ -60,8 +59,6 @@ services/notification/notification.exe
 
 services/messaging/messaging
 services/messaging/messaging.exe
-
-.vscode/
 
 log/
 

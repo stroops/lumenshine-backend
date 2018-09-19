@@ -18,6 +18,7 @@ import (
 	"github.com/stellar/go/support/errors"
 )
 
+// Listener is a listener for the Ethereum blocckchain
 type Listener struct {
 	DB     *db.DB
 	log    *logrus.Entry
@@ -40,17 +41,6 @@ func NewListener(DB *db.DB, cnf *config.Config) *Listener {
 		os.Exit(-1)
 	}
 	l.Client = ethereumClient
-
-	l.cnf.Ethereum.MinimumWeiValueEth, err = EthToWei(cnf.Ethereum.MinimumWeiValueEthStr)
-	if err != nil {
-		l.log.Error("Invalid minimum accepted Ethereum transaction value")
-		os.Exit(-1)
-	}
-
-	if l.cnf.Ethereum.MinimumWeiValueEth.Cmp(new(big.Int)) == 0 {
-		l.log.Error("Minimum accepted Ethereum transaction value must be larger than 0")
-		os.Exit(-1)
-	}
 
 	l.log.Info("Ethereum-Listener created")
 	return l
@@ -203,14 +193,6 @@ func (l *Listener) processBlock(block *types.Block) error {
 func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress string) error {
 	localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "rail": "ethereum"})
 	localLog.Debug("Processing transaction")
-
-	// Let's check if tx is valid first.
-
-	// Check if value is above minimum required
-	if valueWei.Cmp(l.cnf.Ethereum.MinimumWeiValueEth) < 0 {
-		localLog.Debug("Value is below minimum required amount, skipping")
-		return nil
-	}
 
 	//get the order from the database
 	order, err := l.DB.GetOpenOrderForAddress(m.PaymentNetworkEthereum, toAddress)

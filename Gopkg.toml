@@ -25,10 +25,138 @@
 #   unused-packages = true
 
 
-[prune]
-  go-tests = true
-  unused-packages = true
+[[constraint]]
+  branch = "master"
+  name = "github.com/GeertJohan/go.rice"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/NaySoftware/go-fcm"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/bradfitz/gomemcache"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/btcsuite/btcd"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/btcsuite/btcutil"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/dgryski/dgoogauth"
+
+[[constraint]]
+  name = "github.com/ethereum/go-ethereum"
+  version = "1.8.15"
+
+[[constraint]]
+  name = "github.com/fatih/structtag"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/fsnotify/fsnotify"
+  version = "1.4.7"
+
+[[constraint]]
+  name = "github.com/gin-contrib/cors"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+  version = "1.3.0"
+
+[[constraint]]
+  name = "github.com/golang/protobuf"
+  version = "1.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/haltingstate/secp256k1-go"
+
+[[constraint]]
+  name = "github.com/labstack/echo"
+  version = "3.3.6"
+
+[[constraint]]
+  name = "github.com/labstack/gommon"
+  version = "0.2.7"
+
+[[constraint]]
+  name = "github.com/lib/pq"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/pressly/goose"
+  version = "2.3.0"
+
+[[constraint]]
+  name = "github.com/rsc/qr"
+  version = "0.1.0"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/sideshow/apns2"
+  version = "0.14.0"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.3"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/stellar/go"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/tyler-smith/go-bip32"
+
+[[constraint]]
+  name = "github.com/volatiletech/null"
+  version = "8.0.0"
 
 [[constraint]]
   name = "github.com/volatiletech/sqlboiler"
-  version = "3.0.0"
+  version = "3.0.1"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+
+[[constraint]]
+  name = "golang.org/x/text"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "google.golang.org/grpc"
+  version = "1.15.0"
+
+[[constraint]]
+  name = "gopkg.in/dgrijalva/jwt-go.v3"
+  version = "3.2.0"
+
+[[constraint]]
+  name = "gopkg.in/go-playground/validator.v9"
+  version = "9.21.0"
+
+[[constraint]]
+  name = "gopkg.in/mail.v2"
+  version = "2.2.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true

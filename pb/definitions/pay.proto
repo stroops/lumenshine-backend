@@ -11,7 +11,7 @@ message ExchangeCurrency{
     string denom_asset_code = 4;
     int64 decimals = 5;
     string payment_network = 6;
-    string issuer_pk = 7;
+    string ec_asset_issuer_pk = 7;
     string denom_price_per_token = 8;
     string price_per_token = 9;    
 }
@@ -21,7 +21,7 @@ message PhaseDataResponse{
     int64 ico_id = 2;
     string ico_phase_name = 3;
     string ico_phase_status = 4;
-    string ico_token_asset = 5;
+    string ico_token_asset = 5;    
     int64 start_time = 6;
     int64 end_time = 7;
     int64 tokens_left = 8;
@@ -29,6 +29,7 @@ message PhaseDataResponse{
     int64 token_min_order_amount = 10;
     int64 max_user_orders = 11;
     repeated ExchangeCurrency active_exchange_currencies = 12;
+    string ico_issuer_pk = 13;
 }
 
 message CoinPriceRequest{
@@ -104,6 +105,7 @@ message UserOrder{
     string fiat_payment_usage = 19;
     string fiat_bank_name = 20;
     string exchange_currency_type = 21;
+    string amount_received = 22;
 }
 
 message UserOrdersResponse{
@@ -148,13 +150,23 @@ message PayExecuteTransactionRequest{
     string transaction = 4;
 }
 
+message TestTransaction {
+    BaseRequest base = 1;
+    string payment_channel = 2;
+    string tx_hash = 3;
+    string recipient_address = 4;    
+    int64 denom_amount = 5;    
+}
+
 service PayService {    
   rpc GetPhaseData (IDRequest) returns (PhaseDataResponse) {}  
   rpc GetExchangeCurrencyData (IDRequest) returns (ExchangeCurrency) {}
   rpc GetUserOrderCount (UserOrdersCountRequest) returns (IntResponse) {}  
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
   rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
-  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}    
+  rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}
+
+  rpc FakePaymentTransaction (TestTransaction) returns (BoolResponse) {}    
     
   rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (PayGetTrustStatusResponse) {}
   rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
+	context "golang.org/x/net/context"
 
 	"github.com/sirupsen/logrus"
 	mail "gopkg.in/mail.v2"

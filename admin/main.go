@@ -4,11 +4,12 @@ package main
 //go:generate sqlboiler --wipe --no-tests --no-context --add-global-variants --output=../db/stellarcore/models --pkgname=stellarcore --config $HOME/.config/sqlboiler/sqlboiler_stellar_core.toml psql
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
 	"time"
+
+	context "golang.org/x/net/context"
 
 	"github.com/Soneso/lumenshine-backend/admin/api"
 	"github.com/Soneso/lumenshine-backend/admin/cmd"

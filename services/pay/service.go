@@ -1,9 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"math/big"
 	"net"
+
+	context "golang.org/x/net/context"
 
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
@@ -77,7 +79,7 @@ func (s *server) GetPhaseData(ctx context.Context, r *pb.IDRequest) (*pb.PhaseDa
 			DenomAssetCode:       ec.DenomAssetCode,
 			Decimals:             int64(ec.Decimals),
 			PaymentNetwork:       ec.PaymentNetwork,
-			IssuerPk:             ec.IssuerPK,
+			EcAssetIssuerPk:      ec.EcAssetIssuerPK,
 			DenomPricePerToken:   denom.String(),
 			PricePerToken:        nativAmount,
 		})
@@ -88,6 +90,7 @@ func (s *server) GetPhaseData(ctx context.Context, r *pb.IDRequest) (*pb.PhaseDa
 		IcoId:                    int64(p.IcoID),
 		IcoPhaseName:             p.IcoPhaseName,
 		IcoPhaseStatus:           p.IcoPhaseStatus,
+		IcoIssuerPk:              p.R.Ico.IssuerPK,
 		StartTime:                p.StartTime.Unix(),
 		EndTime:                  p.EndTime.Unix(),
 		TokensLeft:               p.TokensLeft,
@@ -122,7 +125,7 @@ func (s *server) GetExchangeCurrencyData(ctx context.Context, r *pb.IDRequest) (
 		DenomAssetCode:       p.DenomAssetCode,
 		Decimals:             int64(p.Decimals),
 		PaymentNetwork:       p.PaymentNetwork,
-		IssuerPk:             p.IssuerPK,
+		EcAssetIssuerPk:      p.EcAssetIssuerPK,
 	}, nil
 }
 
@@ -246,6 +249,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	q := []qm.QueryMod{
 		qm.Where(m.UserOrderColumns.UserID+"=?", r.UserId),
+		qm.Load(m.UserOrderRels.ProcessedTransaction),
 	}
 
 	if r.OrderStatus != "" {
@@ -293,6 +297,16 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 			ExchangeCurrencyType:               ec.ExchangeCurrencyType,
 		}
 
+		if o.R.ProcessedTransaction != nil {
+			if o.R.ProcessedTransaction.PaymentNetworkAmountDenomination != "" {
+				denomReceived, err := ec.DenomFromString(o.R.ProcessedTransaction.PaymentNetworkAmountDenomination)
+				if err != nil {
+					return nil, err
+				}
+				ret.UserOrders[i].AmountReceived = ec.ToNativ(denomReceived)
+			}
+		}
+
 		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeFiat {
 			ret.UserOrders[i].FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
 			ret.UserOrders[i].FiatIban = aec.R.IcoPhaseBankAccount.Iban
@@ -314,17 +328,18 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 }
 
 func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusRequest) (*pb.PayGetTrustStatusResponse, error) {
-	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
-	if err != nil {
-		return nil, err
-	}
+	/*	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
+		if err != nil {
+			return nil, err
+		}
 
-	hasTrust, err := s.Env.AccountConfigurator.GetTrustStatus(order)
-	return &pb.PayGetTrustStatusResponse{
-		HasStrust:            hasTrust,
-		StellarAssetCode:     s.Env.Config.Stellar.TokenAssetCode,
-		StellarIssuerAccount: s.Env.Config.Stellar.IssuerPublicKey,
-	}, err
+		hasTrust, err := s.Env.AccountConfigurator.GetTrustStatus(order)
+		return &pb.PayGetTrustStatusResponse{
+			HasStrust:            hasTrust,
+			StellarAssetCode:     s.Env.Config.Stellar.TokenAssetCode,
+			StellarIssuerAccount: s.Env.Config.Stellar.IssuerPublicKey,
+		}, err*/
+	return nil, nil
 }
 
 func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionRequest) (*pb.PayGetTransactionResponse, error) {
@@ -359,4 +374,26 @@ func (s *server) PayExecuteTransaction(ctx context.Context, r *pb.PayExecuteTran
 		return nil, err
 	}
 	return &pb.Empty{}, s.Env.AccountConfigurator.ExecuteTransaction(order, r.Transaction)
+}
+
+func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransaction) (*pb.BoolResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+	if s.Env.Config.AllowFakeTransactions {
+		// Need to read the order first, because this is the normal "procedure". This will also update the order-status
+		o, err := s.Env.DBC.GetOpenOrderForAddress(r.PaymentChannel, r.RecipientAddress)
+		if err != nil {
+			return &pb.BoolResponse{Value: false}, nil
+		}
+
+		tx := helpers.RandomString(10)
+		if r.TxHash != "" {
+			tx = r.TxHash
+		}
+		v := big.NewInt(r.DenomAmount)
+		fmt.Println(v.String())
+		ok, err := s.Env.DBC.AddNewTransaction(log, r.PaymentChannel, tx, r.RecipientAddress, o.ID, v)
+		return &pb.BoolResponse{Value: ok}, err
+	}
+
+	return &pb.BoolResponse{Value: false}, nil
 }

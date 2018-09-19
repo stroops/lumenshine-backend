@@ -43,10 +43,10 @@ CREATE TABLE exchange_currency (
   payment_network payment_network not null,
 
   /* only needed for currency/token from the stellar blockchain */
-  issuer_pk VARCHAR(56) NOT NULL check(
+  ec_asset_issuer_pk VARCHAR(56) NOT NULL check(
     (payment_network<>'stellar')
     or
-    (payment_network='stellar' and issuer_pk<>'')
+    (payment_network='stellar' and ec_asset_issuer_pk<>'')
   ),
   /* number of max decimals for the currency */
   decimals int not null,
@@ -56,11 +56,11 @@ CREATE TABLE exchange_currency (
 );
 
 /* list of exchange currencies that can be supported by an ICO */
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (1, 'crypto', 'BTC', 'Satoshi', 'bitcoin', '', 8, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (2, 'crypto', 'ETH', 'Wei', 'ethereum', '', 8, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (3, 'crypto', 'XLM', 'Stroop', 'stellar', 'Gxxxxx', 7, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (4, 'fiat', 'USD', 'Cent', 'fiat', '', 2, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, issuer_pk, decimals, updated_by) VALUES (5, 'fiat', 'EUR', 'Cent', 'fiat', '', 2, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (1, 'crypto', 'BTC', 'Satoshi', 'bitcoin', '', 8, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (2, 'crypto', 'ETH', 'Wei', 'ethereum', '', 8, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (3, 'crypto', 'XLM', 'Stroop', 'stellar', 'Gxxxxx', 7, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (4, 'fiat', 'USD', 'Cent', 'fiat', '', 2, 'chris');
+INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (5, 'fiat', 'EUR', 'Cent', 'fiat', '', 2, 'chris');
 
 /* currencies that are currently supported by an ICO */
 CREATE TABLE ico_supported_exchange_currency (
@@ -141,6 +141,8 @@ CREATE TABLE ico_phase_activated_exchange_currency (
 );
 
 /* create some demo data */
+/* seed issuer SCLLRXN435H2D5LT5OE7Y2ZUFZO4NEXFAA7PUM2VLDBNW55YSBT7TDCC */
+
 insert into ico(id, ico_name, ico_status, kyc, sales_model, issuer_pk, asset_code, updated_by) values 
   (1, 'Demo-ICO', 'active', true, 'fixed', 'GCCBLT6VFEUODLP36C675TJDNZNHQFD5P6L3BBCYUMU2TIO3UQCVXXX3', 'CaliCoin', 'setup');
 

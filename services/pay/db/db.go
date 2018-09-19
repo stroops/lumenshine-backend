@@ -160,37 +160,37 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 //GetOpenOrderForAddress reads the user orders for open payments for the specified address and chain
 //the method also updates the order to refelect, that it has been processed
 //it will set the order in status OrderStatusPaymentReceived
-func (db *DB) GetOpenOrderForAddress(chain string, address string) (*m.UserOrder, error) {
-	/*	userOrder := new(m.UserOrder)
-		sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
-			(select id from @user_order where chain=$2 and chain_address=$3 and @order_status=$4  limit 1 for update) returning
+func (db *DB) GetOpenOrderForAddress(paymentChannel string, address string) (*m.UserOrder, error) {
+	userOrder := new(m.UserOrder)
+	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
+			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4  limit 1 for update) returning
 			*`,
-			map[string]string{
-				"@user_order":   m.TableNames.UserOrder,
-				"@order_status": m.UserOrderColumns.OrderStatus,
-				"@updated_at":   m.UserOrderColumns.UpdatedAt,
-			})
+		map[string]string{
+			"@user_order":      m.TableNames.UserOrder,
+			"@order_status":    m.UserOrderColumns.OrderStatus,
+			"@updated_at":      m.UserOrderColumns.UpdatedAt,
+			"@payment_network": m.UserOrderColumns.PaymentNetwork,
+			"@payment_address": m.UserOrderColumns.PaymentAddress,
+		})
 
-		//set order to payment recived
-		err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, chain, address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				//if we did not find an open order, we need to search for all orders on the user, in order to get the multiple transaction triggered
-				userOrder, err = m.UserOrders(qm.Where("chain=? and chain_address=?", chain, address)).One(db)
-				if err != nil {
-					if err == sql.ErrNoRows {
-						return nil, nil
-					}
-					return nil, err
+	//set order to payment recived
+	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, paymentChannel, address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			//if we did not find an open order, we need to search for all orders on the user, in order to get the multiple transaction triggered
+			userOrder, err = m.UserOrders(qm.Where(m.UserOrderColumns.PaymentNetwork+"=? and "+m.UserOrderColumns.PaymentAddress+"=?", paymentChannel, address)).One(db)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					return nil, nil
 				}
-			} else {
 				return nil, err
 			}
+		} else {
+			return nil, err
 		}
+	}
 
-		return userOrder, nil
-	*/
-	return nil, nil
+	return userOrder, nil
 }
 
 func isDuplicateError(err error) bool {
@@ -198,132 +198,138 @@ func isDuplicateError(err error) bool {
 }
 
 //AddNewTransaction adds a transaction to the database and returns true, if it was allready present
-func (db DB) AddNewTransaction(log *logrus.Entry, chain string, hash string, toAddress string, orderID int, denomAmount *big.Int) (bool, error) {
-	/*
-		d := new(m.ProcessedTransaction)
-		d.Chain = chain
-		d.ReceivingAddress = toAddress
-		d.TransactionID = hash
-		d.UserOrderID = orderID
-		d.Status = m.TransactionStatusNew
-		d.ChainAmountDenom = denomAmount.String()
+func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash string, toAddress string, orderID int, denomAmount *big.Int) (bool, error) {
 
-		err := d.Insert(db, boil.Infer())
-		if err != nil && isDuplicateError(err) {
-			//add the transaction to the multiple table for manual handling
-			b := new(m.MultipleTransaction)
-			b.Chain = chain
-			b.ReceivingAddress = toAddress
-			b.TransactionID = hash
-			b.UserOrderID = orderID
-			b.ChainAmountDenom = denomAmount.String()
-			errB := b.Insert(db, boil.Infer())
-			if errB != nil {
-				log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": hash}).Error("Error saving multiple transaction")
-			}
-			//we don't handle this error, just log it
-			return true, nil
+	d := new(m.ProcessedTransaction)
+	d.PaymentNetwork = paymentChannel
+	d.ReceivingAddress = toAddress
+	d.TransactionID = txHash
+	d.UserOrderID = orderID
+	d.Status = m.TransactionStatusNew
+	d.PaymentNetworkAmountDenomination = denomAmount.String()
+
+	err := d.Insert(db, boil.Infer())
+	if err != nil && isDuplicateError(err) {
+		//add the transaction to the multiple table for manual handling
+		b := new(m.MultipleTransaction)
+		b.PaymentNetwork = paymentChannel
+		b.ReceivingAddress = toAddress
+		b.TransactionID = txHash
+		b.UserOrderID = orderID
+		b.PaymentNetworkAmountDenom = denomAmount.String()
+		errB := b.Insert(db, boil.Infer())
+		if errB != nil {
+			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": txHash}).Error("Error saving multiple transaction")
 		}
+		//we don't handle this error, just log it
+		return true, nil
+	}
 
-		if err != nil {
-			return true, err
-		}
+	if err != nil {
+		return true, err
+	}
 
-		return db.handleNewTransaction(log, d, denomAmount)
-	*/
-	return true, nil
+	return db.handleNewTransaction(log, d, denomAmount)
 }
 
 //handleNewTransaction checks the transaction data and updates the user_profile to reflect the payment
 //the order must be in status OrderStatusPaymentReceived and will be set to status OrderStatusWaitingUserTX
 func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (processed bool, err error) {
 
-	/*	order := new(m.UserOrder)
+	order := new(m.UserOrder)
 
-		sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
+	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
 			(select id from @user_order where id=$2 and @order_status=$3 limit 1 for update) returning
 			*`,
+		map[string]string{
+			"@user_order":   m.TableNames.UserOrder,
+			"@order_status": m.UserOrderColumns.OrderStatus,
+			"@updated_at":   m.UserOrderColumns.UpdatedAt,
+		})
+
+	err = queries.Raw(sqlStr, m.OrderStatusWaitingForPayment, tx.UserOrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
+	if err != nil {
+		log.WithError(err).WithFields(logrus.Fields{"order_id": tx.UserOrderID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
+		return true, err
+	}
+
+	//check order amount
+	oa := new(big.Int)
+	oa.SetString(order.ExchangeCurrencyDenominationAmount, 0)
+
+	cmp := oa.Cmp(denomAmount)
+	if cmp == -1 || cmp == 1 {
+		if cmp == -1 {
+			//order amount < denomAmount
+			order.OrderStatus = m.OrderStatusOverPay
+		} else if cmp == 1 {
+			order.OrderStatus = m.OrderStatusUnderPay
+		}
+
+		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
+		if err != nil {
+			return false, err
+		}
+	} else {
+		//amount payed is exactly the amount bought. we can check/update, if there are coins left
+		ph := new(m.IcoPhase)
+
+		sqlStr = querying.GetSQLKeyString(`update @ico_phase set @tokens_left=@tokens_left-$1, @updated_at=current_timestamp where id=$2 and @ico_phase_status=$3 and 
+		  start_time<=current_timestamp and end_time>=current_timestamp returning *`,
 			map[string]string{
-				"@user_order":   m.TableNames.UserOrder,
-				"@order_status": m.UserOrderColumns.OrderStatus,
-				"@updated_at":   m.UserOrderColumns.UpdatedAt,
+				"@ico_phase":   m.TableNames.IcoPhase,
+				"@tokens_left": m.IcoPhaseColumns.TokensLeft,
+				"@updated_at":  m.IcoPhaseColumns.UpdatedAt,
 			})
 
-		err = queries.Raw(sqlStr, m.OrderStatusWaitingUserTX, tx.UserOrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
+		err = queries.Raw(sqlStr, order.TokenAmount, order.IcoPhaseID, m.IcoPhaseStatusActive).Bind(nil, db, ph)
+		if err != nil {
+			//something is not ok
+			//either amount was to small, or phase is already gone... we will read the data againe and check
+			if err != sql.ErrNoRows {
+				// log error
+				log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": order.PaymentTXID}).Error("Error selecting phasedata")
+				return true, err
+			}
+			ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(db)
+			if err != nil {
+				return true, err
+			}
+			if ph.TokensLeft < order.TokenAmount {
+				order.OrderStatus = m.OrderStatusNoCoinsLeft
+			} else {
+				order.OrderStatus = m.OrderStatusPhaseExpired
+			}
+			_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
+			if err != nil {
+				return true, err
+			}
+		}
+
+		//everything seems ok -> update the order
+		order.OrderStatus = m.OrderStatusWaitingUserTransaction
+		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 		if err != nil {
 			return true, err
 		}
+	}
 
-		//check order amount
-		oa := new(big.Int)
-		oa.SetString(order.ChainAmountDenom, 0)
+	//check all user orders and if one is payed, set flag, if not, remove flag
+	user, err := m.UserProfiles(qm.Where("id=?", order.UserID)).One(db)
+	if err != nil {
+		return false, err
+	}
 
-		cmp := oa.Cmp(denomAmount)
-		if cmp == -1 || cmp == 1 {
-			if cmp == -1 {
-				//order amount < denomAmount
-				order.OrderStatus = m.OrderStatusOverPay
-			} else if cmp == 1 {
-				order.OrderStatus = m.OrderStatusUnderPay
-			}
+	cnt, err := m.UserOrders(qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTransaction)).Count(db)
+	if cnt > 0 {
+		user.PaymentState = m.PaymentStateOpen
+	} else {
+		user.PaymentState = m.PaymentStateClose
+	}
+	_, err = user.Update(db, boil.Whitelist(m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt))
+	if err != nil {
+		return false, err
+	}
 
-			_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
-			if err != nil {
-				return false, err
-			}
-		} else {
-			//amount payed is exactly the amount bought. we can check/update, if there are coins left
-			ph := new(m.IcoPhase)
-
-			sqlStr = querying.GetSQLKeyString(`update @ico_phase set @coin_amount=@coin_amount-$1, @updated_at=current_timestamp where phase_name =
-			(select phase_name from @ico_phase where @coin_amount>=$2 and
-				start_time<=current_timestamp and end_time>=current_timestamp limit 1 for update) returning *`,
-				map[string]string{
-					"@ico_phase":   m.TableNames.IcoPhase,
-					"@coin_amount": m.IcoPhaseColumns.CoinAmount,
-					"@updated_at":  m.IcoPhaseColumns.UpdatedAt,
-				})
-
-			err = queries.Raw(sqlStr, order.CoinAmount, order.CoinAmount).Bind(nil, db, ph)
-			if err != nil {
-				//something is not ok
-				//either amount was to small, or phase is already gone... we will read the data againe and check
-				if err != sql.ErrNoRows {
-					return true, err
-				} else {
-					ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IsActive + "=true")).One(db)
-					if err != nil {
-						return true, err
-					}
-					if ph.CoinAmount < order.CoinAmount {
-						order.OrderStatus = m.OrderStatusNoCoinsLeft
-					} else {
-						order.OrderStatus = m.OrderStatusPhaseExpired
-					}
-					_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
-					if err != nil {
-						return true, err
-					}
-				}
-			}
-		}
-
-		//check all user orders and if one is payed, set flag, if not, remove flag
-		user, err := m.UserProfiles(qm.Where("id=?", order.UserID)).One(db)
-		if err != nil {
-			return false, err
-		}
-
-		cnt, err := m.UserOrders(qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTX)).Count(db)
-		if cnt > 0 {
-			user.PaymentState = m.PaymentStateOpen
-		} else {
-			user.PaymentState = m.PaymentStateClose
-		}
-		_, err = user.Update(db, boil.Whitelist(m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt))
-		if err != nil {
-			return false, err
-		}
-	*/
 	return false, nil
 }

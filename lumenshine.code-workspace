@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "admin"
+		},
+		{
+			"path": "api"
+		},
+		{
+			"path": "services"
+		},
+		{
+			"path": "pb"
+		},
+		{
+			"path": "addons"
+		},
+		{
+			"path": "constants"
+		},
+		{
+			"path": "helpers"
+		},
+		{
+			"path": "."
+		}
+	]
+}
