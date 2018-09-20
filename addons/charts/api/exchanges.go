@@ -52,8 +52,8 @@ var errorCodesExchange = map[string]errorCodesData{
 }
 
 type rateDataExchange struct {
-	Date time.Time `json:"date"`
-	Rate float64   `json:"rate"`
+	Date string  `json:"date"`
+	Rate float64 `json:"rate"`
 }
 
 type exchangeDataExchange struct {
@@ -269,9 +269,9 @@ func getRates(sourceCurrency *models.Currency, destinationCurrency *models.Curre
 			continue
 		}
 
-		t := x.ExchangeRateTime
+		t := x.ExchangeRateTime.Format(config.TimeFormat)
 		if table == "history_chart_data" {
-			t = x.ExchangeRateDate
+			t = x.ExchangeRateDate.Format(config.DateFormat)
 		}
 
 		data = append(data, rateDataExchange{
