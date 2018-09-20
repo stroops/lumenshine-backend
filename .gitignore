@@ -78,3 +78,5 @@ dist/
 .icop_config/
 
 sqlboiler.toml
+
+example-data/icop-config/docker-files/stellar/stellar-config/
