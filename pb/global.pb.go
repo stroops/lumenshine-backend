@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -29,6 +31,7 @@ var EmailContentType_name = map[int32]string{
 	0: "text",
 	1: "html",
 }
+
 var EmailContentType_value = map[string]int32{
 	"text": 0,
 	"html": 1,
@@ -37,8 +40,9 @@ var EmailContentType_value = map[string]int32{
 func (x EmailContentType) String() string {
 	return proto.EnumName(EmailContentType_name, int32(x))
 }
+
 func (EmailContentType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{0}
+	return fileDescriptor_4baa8fc7dedf329e, []int{0}
 }
 
 type NotificationType int32
@@ -54,6 +58,7 @@ var NotificationType_name = map[int32]string{
 	1: "android",
 	2: "mail",
 }
+
 var NotificationType_value = map[string]int32{
 	"ios":     0,
 	"android": 1,
@@ -63,8 +68,9 @@ var NotificationType_value = map[string]int32{
 func (x NotificationType) String() string {
 	return proto.EnumName(NotificationType_name, int32(x))
 }
+
 func (NotificationType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{1}
+	return fileDescriptor_4baa8fc7dedf329e, []int{1}
 }
 
 type NotificationStatusCode int32
@@ -78,6 +84,7 @@ var NotificationStatusCode_name = map[int32]string{
 	0: "success",
 	1: "error",
 }
+
 var NotificationStatusCode_value = map[string]int32{
 	"success": 0,
 	"error":   1,
@@ -86,8 +93,9 @@ var NotificationStatusCode_value = map[string]int32{
 func (x NotificationStatusCode) String() string {
 	return proto.EnumName(NotificationStatusCode_name, int32(x))
 }
+
 func (NotificationStatusCode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{2}
+	return fileDescriptor_4baa8fc7dedf329e, []int{2}
 }
 
 type DeviceType int32
@@ -101,6 +109,7 @@ var DeviceType_name = map[int32]string{
 	0: "apple",
 	1: "google",
 }
+
 var DeviceType_value = map[string]int32{
 	"apple":  0,
 	"google": 1,
@@ -109,8 +118,9 @@ var DeviceType_value = map[string]int32{
 func (x DeviceType) String() string {
 	return proto.EnumName(DeviceType_name, int32(x))
 }
+
 func (DeviceType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{3}
+	return fileDescriptor_4baa8fc7dedf329e, []int{3}
 }
 
 type DocumentType int32
@@ -128,6 +138,7 @@ var DocumentType_name = map[int32]string{
 	2: "id_card",
 	3: "proof_of_residence",
 }
+
 var DocumentType_value = map[string]int32{
 	"passport":           0,
 	"drivers_license":    1,
@@ -138,8 +149,9 @@ var DocumentType_value = map[string]int32{
 func (x DocumentType) String() string {
 	return proto.EnumName(DocumentType_name, int32(x))
 }
+
 func (DocumentType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{4}
+	return fileDescriptor_4baa8fc7dedf329e, []int{4}
 }
 
 type DocumentFormat int32
@@ -157,6 +169,7 @@ var DocumentFormat_name = map[int32]string{
 	2: "jpg",
 	3: "jpeg",
 }
+
 var DocumentFormat_value = map[string]int32{
 	"png":  0,
 	"pdf":  1,
@@ -167,8 +180,9 @@ var DocumentFormat_value = map[string]int32{
 func (x DocumentFormat) String() string {
 	return proto.EnumName(DocumentFormat_name, int32(x))
 }
+
 func (DocumentFormat) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{5}
+	return fileDescriptor_4baa8fc7dedf329e, []int{5}
 }
 
 type DocumentSide int32
@@ -182,6 +196,7 @@ var DocumentSide_name = map[int32]string{
 	0: "front",
 	1: "back",
 }
+
 var DocumentSide_value = map[string]int32{
 	"front": 0,
 	"back":  1,
@@ -190,8 +205,9 @@ var DocumentSide_value = map[string]int32{
 func (x DocumentSide) String() string {
 	return proto.EnumName(DocumentSide_name, int32(x))
 }
+
 func (DocumentSide) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{6}
+	return fileDescriptor_4baa8fc7dedf329e, []int{6}
 }
 
 type BaseRequest struct {
@@ -206,16 +222,17 @@ func (m *BaseRequest) Reset()         { *m = BaseRequest{} }
 func (m *BaseRequest) String() string { return proto.CompactTextString(m) }
 func (*BaseRequest) ProtoMessage()    {}
 func (*BaseRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{0}
+	return fileDescriptor_4baa8fc7dedf329e, []int{0}
 }
+
 func (m *BaseRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BaseRequest.Unmarshal(m, b)
 }
 func (m *BaseRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_BaseRequest.Marshal(b, m, deterministic)
 }
-func (dst *BaseRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BaseRequest.Merge(dst, src)
+func (m *BaseRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BaseRequest.Merge(m, src)
 }
 func (m *BaseRequest) XXX_Size() int {
 	return xxx_messageInfo_BaseRequest.Size(m)
@@ -252,16 +269,17 @@ func (m *IDRequest) Reset()         { *m = IDRequest{} }
 func (m *IDRequest) String() string { return proto.CompactTextString(m) }
 func (*IDRequest) ProtoMessage()    {}
 func (*IDRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{1}
+	return fileDescriptor_4baa8fc7dedf329e, []int{1}
 }
+
 func (m *IDRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_IDRequest.Unmarshal(m, b)
 }
 func (m *IDRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_IDRequest.Marshal(b, m, deterministic)
 }
-func (dst *IDRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_IDRequest.Merge(dst, src)
+func (m *IDRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IDRequest.Merge(m, src)
 }
 func (m *IDRequest) XXX_Size() int {
 	return xxx_messageInfo_IDRequest.Size(m)
@@ -297,16 +315,17 @@ func (m *IDResponse) Reset()         { *m = IDResponse{} }
 func (m *IDResponse) String() string { return proto.CompactTextString(m) }
 func (*IDResponse) ProtoMessage()    {}
 func (*IDResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{2}
+	return fileDescriptor_4baa8fc7dedf329e, []int{2}
 }
+
 func (m *IDResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_IDResponse.Unmarshal(m, b)
 }
 func (m *IDResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_IDResponse.Marshal(b, m, deterministic)
 }
-func (dst *IDResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_IDResponse.Merge(dst, src)
+func (m *IDResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IDResponse.Merge(m, src)
 }
 func (m *IDResponse) XXX_Size() int {
 	return xxx_messageInfo_IDResponse.Size(m)
@@ -336,16 +355,17 @@ func (m *KeyRequest) Reset()         { *m = KeyRequest{} }
 func (m *KeyRequest) String() string { return proto.CompactTextString(m) }
 func (*KeyRequest) ProtoMessage()    {}
 func (*KeyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{3}
+	return fileDescriptor_4baa8fc7dedf329e, []int{3}
 }
+
 func (m *KeyRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyRequest.Unmarshal(m, b)
 }
 func (m *KeyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_KeyRequest.Marshal(b, m, deterministic)
 }
-func (dst *KeyRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyRequest.Merge(dst, src)
+func (m *KeyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyRequest.Merge(m, src)
 }
 func (m *KeyRequest) XXX_Size() int {
 	return xxx_messageInfo_KeyRequest.Size(m)
@@ -381,16 +401,17 @@ func (m *StringResponse) Reset()         { *m = StringResponse{} }
 func (m *StringResponse) String() string { return proto.CompactTextString(m) }
 func (*StringResponse) ProtoMessage()    {}
 func (*StringResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{4}
+	return fileDescriptor_4baa8fc7dedf329e, []int{4}
 }
+
 func (m *StringResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StringResponse.Unmarshal(m, b)
 }
 func (m *StringResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_StringResponse.Marshal(b, m, deterministic)
 }
-func (dst *StringResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StringResponse.Merge(dst, src)
+func (m *StringResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StringResponse.Merge(m, src)
 }
 func (m *StringResponse) XXX_Size() int {
 	return xxx_messageInfo_StringResponse.Size(m)
@@ -419,16 +440,17 @@ func (m *BoolResponse) Reset()         { *m = BoolResponse{} }
 func (m *BoolResponse) String() string { return proto.CompactTextString(m) }
 func (*BoolResponse) ProtoMessage()    {}
 func (*BoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{5}
+	return fileDescriptor_4baa8fc7dedf329e, []int{5}
 }
+
 func (m *BoolResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BoolResponse.Unmarshal(m, b)
 }
 func (m *BoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_BoolResponse.Marshal(b, m, deterministic)
 }
-func (dst *BoolResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BoolResponse.Merge(dst, src)
+func (m *BoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BoolResponse.Merge(m, src)
 }
 func (m *BoolResponse) XXX_Size() int {
 	return xxx_messageInfo_BoolResponse.Size(m)
@@ -457,16 +479,17 @@ func (m *IntResponse) Reset()         { *m = IntResponse{} }
 func (m *IntResponse) String() string { return proto.CompactTextString(m) }
 func (*IntResponse) ProtoMessage()    {}
 func (*IntResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{6}
+	return fileDescriptor_4baa8fc7dedf329e, []int{6}
 }
+
 func (m *IntResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_IntResponse.Unmarshal(m, b)
 }
 func (m *IntResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_IntResponse.Marshal(b, m, deterministic)
 }
-func (dst *IntResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_IntResponse.Merge(dst, src)
+func (m *IntResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IntResponse.Merge(m, src)
 }
 func (m *IntResponse) XXX_Size() int {
 	return xxx_messageInfo_IntResponse.Size(m)
@@ -495,16 +518,17 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{7}
+	return fileDescriptor_4baa8fc7dedf329e, []int{7}
 }
+
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
 }
 func (m *Empty) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Empty.Marshal(b, m, deterministic)
 }
-func (dst *Empty) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Empty.Merge(dst, src)
+func (m *Empty) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Empty.Merge(m, src)
 }
 func (m *Empty) XXX_Size() int {
 	return xxx_messageInfo_Empty.Size(m)
@@ -535,16 +559,17 @@ func (m *KeyValueRequest) Reset()         { *m = KeyValueRequest{} }
 func (m *KeyValueRequest) String() string { return proto.CompactTextString(m) }
 func (*KeyValueRequest) ProtoMessage()    {}
 func (*KeyValueRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_global_32df9260b6044f96, []int{8}
+	return fileDescriptor_4baa8fc7dedf329e, []int{8}
 }
+
 func (m *KeyValueRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyValueRequest.Unmarshal(m, b)
 }
 func (m *KeyValueRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_KeyValueRequest.Marshal(b, m, deterministic)
 }
-func (dst *KeyValueRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyValueRequest.Merge(dst, src)
+func (m *KeyValueRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyValueRequest.Merge(m, src)
 }
 func (m *KeyValueRequest) XXX_Size() int {
 	return xxx_messageInfo_KeyValueRequest.Size(m)
@@ -577,6 +602,13 @@ func (m *KeyValueRequest) GetValue() string {
 }
 
 func init() {
+	proto.RegisterEnum("pb.EmailContentType", EmailContentType_name, EmailContentType_value)
+	proto.RegisterEnum("pb.NotificationType", NotificationType_name, NotificationType_value)
+	proto.RegisterEnum("pb.NotificationStatusCode", NotificationStatusCode_name, NotificationStatusCode_value)
+	proto.RegisterEnum("pb.DeviceType", DeviceType_name, DeviceType_value)
+	proto.RegisterEnum("pb.DocumentType", DocumentType_name, DocumentType_value)
+	proto.RegisterEnum("pb.DocumentFormat", DocumentFormat_name, DocumentFormat_value)
+	proto.RegisterEnum("pb.DocumentSide", DocumentSide_name, DocumentSide_value)
 	proto.RegisterType((*BaseRequest)(nil), "pb.BaseRequest")
 	proto.RegisterType((*IDRequest)(nil), "pb.IDRequest")
 	proto.RegisterType((*IDResponse)(nil), "pb.IDResponse")
@@ -586,18 +618,11 @@ func init() {
 	proto.RegisterType((*IntResponse)(nil), "pb.IntResponse")
 	proto.RegisterType((*Empty)(nil), "pb.Empty")
 	proto.RegisterType((*KeyValueRequest)(nil), "pb.KeyValueRequest")
-	proto.RegisterEnum("pb.EmailContentType", EmailContentType_name, EmailContentType_value)
-	proto.RegisterEnum("pb.NotificationType", NotificationType_name, NotificationType_value)
-	proto.RegisterEnum("pb.NotificationStatusCode", NotificationStatusCode_name, NotificationStatusCode_value)
-	proto.RegisterEnum("pb.DeviceType", DeviceType_name, DeviceType_value)
-	proto.RegisterEnum("pb.DocumentType", DocumentType_name, DocumentType_value)
-	proto.RegisterEnum("pb.DocumentFormat", DocumentFormat_name, DocumentFormat_value)
-	proto.RegisterEnum("pb.DocumentSide", DocumentSide_name, DocumentSide_value)
 }
 
-func init() { proto.RegisterFile("global.proto", fileDescriptor_global_32df9260b6044f96) }
+func init() { proto.RegisterFile("global.proto", fileDescriptor_4baa8fc7dedf329e) }
 
-var fileDescriptor_global_32df9260b6044f96 = []byte{
+var fileDescriptor_4baa8fc7dedf329e = []byte{
 	// 481 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xc1, 0x6a, 0xdb, 0x40,
 	0x10, 0xb5, 0xa4, 0x38, 0xb1, 0xc6, 0x26, 0x59, 0xd4, 0x12, 0x02, 0x6d, 0xa1, 0xc8, 0x25, 0x14,

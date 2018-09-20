@@ -257,11 +257,6 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if phase == nil {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Phase", cerr.NoActivePhase, "No Phase configured", ""))
-		return
-	}
-
 	if phase.IcoPhaseStatus != m.IcoStatusActive {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("Phase", cerr.NoActivePhase, "Phase is not active", ""))
 		return
@@ -281,12 +276,12 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	if l.OrderedTokenAmount < phase.TokenMinOrderAmount {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMinOrderAmount", cerr.InsufficientCoins, "To lees coins", ""))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMinOrderAmount", cerr.OrderMinTokens, "To lees coins", ""))
 		return
 	}
 
 	if l.OrderedTokenAmount > phase.TokenMaxOrderAmount {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMaxOrderAmount", cerr.InsufficientCoins, "To much coins", ""))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("TokenMaxOrderAmount", cerr.OrderMaxTokens, "To much coins", ""))
 		return
 	}
 

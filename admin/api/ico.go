@@ -103,7 +103,7 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 			ID:        exc.ID,
 			Type:      exc.ExchangeCurrencyType,
 			AssetCode: exc.AssetCode,
-			Issuer:    exc.IssuerPK,
+			Issuer:    exc.EcAssetIssuerPK,
 			Enabled:   false, // TODO
 		})
 

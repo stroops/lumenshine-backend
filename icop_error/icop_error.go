@@ -30,6 +30,8 @@ const (
 	StellarAccountNotExists    = 1022 //returned if the stellar account does not exists
 	StellarTrustlineNotExists  = 1023 //returned if the trustline does not exists
 	ToMuchOrdersPerPhase       = 1024 //returned if the user exceeded the max numbers of orders per phase
+	OrderMinTokens             = 1025 //returned if to less tokens ordered
+	OrderMaxTokens             = 1026 //returned if to much tokens ordered
 
 	ValidBadInputData = "Bad input data"
 )

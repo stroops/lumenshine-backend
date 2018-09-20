@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -42,16 +44,17 @@ func (m *ExchangeCurrency) Reset()         { *m = ExchangeCurrency{} }
 func (m *ExchangeCurrency) String() string { return proto.CompactTextString(m) }
 func (*ExchangeCurrency) ProtoMessage()    {}
 func (*ExchangeCurrency) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{0}
+	return fileDescriptor_0564d675d5c516e0, []int{0}
 }
+
 func (m *ExchangeCurrency) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExchangeCurrency.Unmarshal(m, b)
 }
 func (m *ExchangeCurrency) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ExchangeCurrency.Marshal(b, m, deterministic)
 }
-func (dst *ExchangeCurrency) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ExchangeCurrency.Merge(dst, src)
+func (m *ExchangeCurrency) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExchangeCurrency.Merge(m, src)
 }
 func (m *ExchangeCurrency) XXX_Size() int {
 	return xxx_messageInfo_ExchangeCurrency.Size(m)
@@ -148,16 +151,17 @@ func (m *PhaseDataResponse) Reset()         { *m = PhaseDataResponse{} }
 func (m *PhaseDataResponse) String() string { return proto.CompactTextString(m) }
 func (*PhaseDataResponse) ProtoMessage()    {}
 func (*PhaseDataResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{1}
+	return fileDescriptor_0564d675d5c516e0, []int{1}
 }
+
 func (m *PhaseDataResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PhaseDataResponse.Unmarshal(m, b)
 }
 func (m *PhaseDataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PhaseDataResponse.Marshal(b, m, deterministic)
 }
-func (dst *PhaseDataResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PhaseDataResponse.Merge(dst, src)
+func (m *PhaseDataResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PhaseDataResponse.Merge(m, src)
 }
 func (m *PhaseDataResponse) XXX_Size() int {
 	return xxx_messageInfo_PhaseDataResponse.Size(m)
@@ -273,16 +277,17 @@ func (m *CoinPriceRequest) Reset()         { *m = CoinPriceRequest{} }
 func (m *CoinPriceRequest) String() string { return proto.CompactTextString(m) }
 func (*CoinPriceRequest) ProtoMessage()    {}
 func (*CoinPriceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{2}
+	return fileDescriptor_0564d675d5c516e0, []int{2}
 }
+
 func (m *CoinPriceRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CoinPriceRequest.Unmarshal(m, b)
 }
 func (m *CoinPriceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CoinPriceRequest.Marshal(b, m, deterministic)
 }
-func (dst *CoinPriceRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CoinPriceRequest.Merge(dst, src)
+func (m *CoinPriceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CoinPriceRequest.Merge(m, src)
 }
 func (m *CoinPriceRequest) XXX_Size() int {
 	return xxx_messageInfo_CoinPriceRequest.Size(m)
@@ -334,16 +339,17 @@ func (m *CoinPriceResponse) Reset()         { *m = CoinPriceResponse{} }
 func (m *CoinPriceResponse) String() string { return proto.CompactTextString(m) }
 func (*CoinPriceResponse) ProtoMessage()    {}
 func (*CoinPriceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{3}
+	return fileDescriptor_0564d675d5c516e0, []int{3}
 }
+
 func (m *CoinPriceResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CoinPriceResponse.Unmarshal(m, b)
 }
 func (m *CoinPriceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CoinPriceResponse.Marshal(b, m, deterministic)
 }
-func (dst *CoinPriceResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CoinPriceResponse.Merge(dst, src)
+func (m *CoinPriceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CoinPriceResponse.Merge(m, src)
 }
 func (m *CoinPriceResponse) XXX_Size() int {
 	return xxx_messageInfo_CoinPriceResponse.Size(m)
@@ -391,16 +397,17 @@ func (m *CreateOrderRequest) Reset()         { *m = CreateOrderRequest{} }
 func (m *CreateOrderRequest) String() string { return proto.CompactTextString(m) }
 func (*CreateOrderRequest) ProtoMessage()    {}
 func (*CreateOrderRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{4}
+	return fileDescriptor_0564d675d5c516e0, []int{4}
 }
+
 func (m *CreateOrderRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateOrderRequest.Unmarshal(m, b)
 }
 func (m *CreateOrderRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CreateOrderRequest.Marshal(b, m, deterministic)
 }
-func (dst *CreateOrderRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateOrderRequest.Merge(dst, src)
+func (m *CreateOrderRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateOrderRequest.Merge(m, src)
 }
 func (m *CreateOrderRequest) XXX_Size() int {
 	return xxx_messageInfo_CreateOrderRequest.Size(m)
@@ -475,16 +482,17 @@ func (m *CreateOrderResponse) Reset()         { *m = CreateOrderResponse{} }
 func (m *CreateOrderResponse) String() string { return proto.CompactTextString(m) }
 func (*CreateOrderResponse) ProtoMessage()    {}
 func (*CreateOrderResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{5}
+	return fileDescriptor_0564d675d5c516e0, []int{5}
 }
+
 func (m *CreateOrderResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CreateOrderResponse.Unmarshal(m, b)
 }
 func (m *CreateOrderResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_CreateOrderResponse.Marshal(b, m, deterministic)
 }
-func (dst *CreateOrderResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CreateOrderResponse.Merge(dst, src)
+func (m *CreateOrderResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateOrderResponse.Merge(m, src)
 }
 func (m *CreateOrderResponse) XXX_Size() int {
 	return xxx_messageInfo_CreateOrderResponse.Size(m)
@@ -592,16 +600,17 @@ func (m *UserOrdersCountRequest) Reset()         { *m = UserOrdersCountRequest{}
 func (m *UserOrdersCountRequest) String() string { return proto.CompactTextString(m) }
 func (*UserOrdersCountRequest) ProtoMessage()    {}
 func (*UserOrdersCountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{6}
+	return fileDescriptor_0564d675d5c516e0, []int{6}
 }
+
 func (m *UserOrdersCountRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserOrdersCountRequest.Unmarshal(m, b)
 }
 func (m *UserOrdersCountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserOrdersCountRequest.Marshal(b, m, deterministic)
 }
-func (dst *UserOrdersCountRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserOrdersCountRequest.Merge(dst, src)
+func (m *UserOrdersCountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserOrdersCountRequest.Merge(m, src)
 }
 func (m *UserOrdersCountRequest) XXX_Size() int {
 	return xxx_messageInfo_UserOrdersCountRequest.Size(m)
@@ -648,16 +657,17 @@ func (m *UserOrdersRequest) Reset()         { *m = UserOrdersRequest{} }
 func (m *UserOrdersRequest) String() string { return proto.CompactTextString(m) }
 func (*UserOrdersRequest) ProtoMessage()    {}
 func (*UserOrdersRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{7}
+	return fileDescriptor_0564d675d5c516e0, []int{7}
 }
+
 func (m *UserOrdersRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserOrdersRequest.Unmarshal(m, b)
 }
 func (m *UserOrdersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserOrdersRequest.Marshal(b, m, deterministic)
 }
-func (dst *UserOrdersRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserOrdersRequest.Merge(dst, src)
+func (m *UserOrdersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserOrdersRequest.Merge(m, src)
 }
 func (m *UserOrdersRequest) XXX_Size() int {
 	return xxx_messageInfo_UserOrdersRequest.Size(m)
@@ -735,16 +745,17 @@ func (m *UserOrder) Reset()         { *m = UserOrder{} }
 func (m *UserOrder) String() string { return proto.CompactTextString(m) }
 func (*UserOrder) ProtoMessage()    {}
 func (*UserOrder) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{8}
+	return fileDescriptor_0564d675d5c516e0, []int{8}
 }
+
 func (m *UserOrder) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserOrder.Unmarshal(m, b)
 }
 func (m *UserOrder) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserOrder.Marshal(b, m, deterministic)
 }
-func (dst *UserOrder) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserOrder.Merge(dst, src)
+func (m *UserOrder) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserOrder.Merge(m, src)
 }
 func (m *UserOrder) XXX_Size() int {
 	return xxx_messageInfo_UserOrder.Size(m)
@@ -920,16 +931,17 @@ func (m *UserOrdersResponse) Reset()         { *m = UserOrdersResponse{} }
 func (m *UserOrdersResponse) String() string { return proto.CompactTextString(m) }
 func (*UserOrdersResponse) ProtoMessage()    {}
 func (*UserOrdersResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{9}
+	return fileDescriptor_0564d675d5c516e0, []int{9}
 }
+
 func (m *UserOrdersResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserOrdersResponse.Unmarshal(m, b)
 }
 func (m *UserOrdersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserOrdersResponse.Marshal(b, m, deterministic)
 }
-func (dst *UserOrdersResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserOrdersResponse.Merge(dst, src)
+func (m *UserOrdersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserOrdersResponse.Merge(m, src)
 }
 func (m *UserOrdersResponse) XXX_Size() int {
 	return xxx_messageInfo_UserOrdersResponse.Size(m)
@@ -962,16 +974,17 @@ func (m *IcoPhaseResponse) Reset()         { *m = IcoPhaseResponse{} }
 func (m *IcoPhaseResponse) String() string { return proto.CompactTextString(m) }
 func (*IcoPhaseResponse) ProtoMessage()    {}
 func (*IcoPhaseResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{10}
+	return fileDescriptor_0564d675d5c516e0, []int{10}
 }
+
 func (m *IcoPhaseResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_IcoPhaseResponse.Unmarshal(m, b)
 }
 func (m *IcoPhaseResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_IcoPhaseResponse.Marshal(b, m, deterministic)
 }
-func (dst *IcoPhaseResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_IcoPhaseResponse.Merge(dst, src)
+func (m *IcoPhaseResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_IcoPhaseResponse.Merge(m, src)
 }
 func (m *IcoPhaseResponse) XXX_Size() int {
 	return xxx_messageInfo_IcoPhaseResponse.Size(m)
@@ -1030,16 +1043,17 @@ func (m *PayGetTrustStatusRequest) Reset()         { *m = PayGetTrustStatusReque
 func (m *PayGetTrustStatusRequest) String() string { return proto.CompactTextString(m) }
 func (*PayGetTrustStatusRequest) ProtoMessage()    {}
 func (*PayGetTrustStatusRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{11}
+	return fileDescriptor_0564d675d5c516e0, []int{11}
 }
+
 func (m *PayGetTrustStatusRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PayGetTrustStatusRequest.Unmarshal(m, b)
 }
 func (m *PayGetTrustStatusRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PayGetTrustStatusRequest.Marshal(b, m, deterministic)
 }
-func (dst *PayGetTrustStatusRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PayGetTrustStatusRequest.Merge(dst, src)
+func (m *PayGetTrustStatusRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PayGetTrustStatusRequest.Merge(m, src)
 }
 func (m *PayGetTrustStatusRequest) XXX_Size() int {
 	return xxx_messageInfo_PayGetTrustStatusRequest.Size(m)
@@ -1084,16 +1098,17 @@ func (m *PayGetTrustStatusResponse) Reset()         { *m = PayGetTrustStatusResp
 func (m *PayGetTrustStatusResponse) String() string { return proto.CompactTextString(m) }
 func (*PayGetTrustStatusResponse) ProtoMessage()    {}
 func (*PayGetTrustStatusResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{12}
+	return fileDescriptor_0564d675d5c516e0, []int{12}
 }
+
 func (m *PayGetTrustStatusResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PayGetTrustStatusResponse.Unmarshal(m, b)
 }
 func (m *PayGetTrustStatusResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PayGetTrustStatusResponse.Marshal(b, m, deterministic)
 }
-func (dst *PayGetTrustStatusResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PayGetTrustStatusResponse.Merge(dst, src)
+func (m *PayGetTrustStatusResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PayGetTrustStatusResponse.Merge(m, src)
 }
 func (m *PayGetTrustStatusResponse) XXX_Size() int {
 	return xxx_messageInfo_PayGetTrustStatusResponse.Size(m)
@@ -1138,16 +1153,17 @@ func (m *PayGetTransactionRequest) Reset()         { *m = PayGetTransactionReque
 func (m *PayGetTransactionRequest) String() string { return proto.CompactTextString(m) }
 func (*PayGetTransactionRequest) ProtoMessage()    {}
 func (*PayGetTransactionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{13}
+	return fileDescriptor_0564d675d5c516e0, []int{13}
 }
+
 func (m *PayGetTransactionRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PayGetTransactionRequest.Unmarshal(m, b)
 }
 func (m *PayGetTransactionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PayGetTransactionRequest.Marshal(b, m, deterministic)
 }
-func (dst *PayGetTransactionRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PayGetTransactionRequest.Merge(dst, src)
+func (m *PayGetTransactionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PayGetTransactionRequest.Merge(m, src)
 }
 func (m *PayGetTransactionRequest) XXX_Size() int {
 	return xxx_messageInfo_PayGetTransactionRequest.Size(m)
@@ -1191,16 +1207,17 @@ func (m *PayGetTransactionResponse) Reset()         { *m = PayGetTransactionResp
 func (m *PayGetTransactionResponse) String() string { return proto.CompactTextString(m) }
 func (*PayGetTransactionResponse) ProtoMessage()    {}
 func (*PayGetTransactionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{14}
+	return fileDescriptor_0564d675d5c516e0, []int{14}
 }
+
 func (m *PayGetTransactionResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PayGetTransactionResponse.Unmarshal(m, b)
 }
 func (m *PayGetTransactionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PayGetTransactionResponse.Marshal(b, m, deterministic)
 }
-func (dst *PayGetTransactionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PayGetTransactionResponse.Merge(dst, src)
+func (m *PayGetTransactionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PayGetTransactionResponse.Merge(m, src)
 }
 func (m *PayGetTransactionResponse) XXX_Size() int {
 	return xxx_messageInfo_PayGetTransactionResponse.Size(m)
@@ -1239,16 +1256,17 @@ func (m *PayExecuteTransactionRequest) Reset()         { *m = PayExecuteTransact
 func (m *PayExecuteTransactionRequest) String() string { return proto.CompactTextString(m) }
 func (*PayExecuteTransactionRequest) ProtoMessage()    {}
 func (*PayExecuteTransactionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{15}
+	return fileDescriptor_0564d675d5c516e0, []int{15}
 }
+
 func (m *PayExecuteTransactionRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PayExecuteTransactionRequest.Unmarshal(m, b)
 }
 func (m *PayExecuteTransactionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PayExecuteTransactionRequest.Marshal(b, m, deterministic)
 }
-func (dst *PayExecuteTransactionRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PayExecuteTransactionRequest.Merge(dst, src)
+func (m *PayExecuteTransactionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PayExecuteTransactionRequest.Merge(m, src)
 }
 func (m *PayExecuteTransactionRequest) XXX_Size() int {
 	return xxx_messageInfo_PayExecuteTransactionRequest.Size(m)
@@ -1302,16 +1320,17 @@ func (m *TestTransaction) Reset()         { *m = TestTransaction{} }
 func (m *TestTransaction) String() string { return proto.CompactTextString(m) }
 func (*TestTransaction) ProtoMessage()    {}
 func (*TestTransaction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_pay_be98c3bfdc14615e, []int{16}
+	return fileDescriptor_0564d675d5c516e0, []int{16}
 }
+
 func (m *TestTransaction) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_TestTransaction.Unmarshal(m, b)
 }
 func (m *TestTransaction) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_TestTransaction.Marshal(b, m, deterministic)
 }
-func (dst *TestTransaction) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TestTransaction.Merge(dst, src)
+func (m *TestTransaction) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TestTransaction.Merge(m, src)
 }
 func (m *TestTransaction) XXX_Size() int {
 	return xxx_messageInfo_TestTransaction.Size(m)
@@ -1746,9 +1765,9 @@ var _PayService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "pay.proto",
 }
 
-func init() { proto.RegisterFile("pay.proto", fileDescriptor_pay_be98c3bfdc14615e) }
+func init() { proto.RegisterFile("pay.proto", fileDescriptor_0564d675d5c516e0) }
 
-var fileDescriptor_pay_be98c3bfdc14615e = []byte{
+var fileDescriptor_0564d675d5c516e0 = []byte{
 	// 1692 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0x5f, 0x6f, 0x1b, 0xc7,
 	0x11, 0x17, 0x45, 0x49, 0x24, 0x87, 0xa4, 0x48, 0xae, 0xfe, 0x51, 0xb4, 0x05, 0xab, 0xd7, 0xd6,
