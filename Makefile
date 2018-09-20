@@ -53,7 +53,7 @@ api-payapi:
 	cd api/payapi; rice embed-go; go build -ldflags "-X main.buildDate=$(DATE) -X main.gitVersion=$(HASH) -X main.gitRemote=$(BRANCH)"
 
 service-pay: 
-	/usr/bin/cp -rf "${GOPATH}/src/github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1" "vendor/github.com/ethereum/go-ethereum/crypto/secp256k1/"
+	/usr/cp -rf "${GOPATH}/src/github.com/ethereum/go-ethereum/crypto/secp256k1/libsecp256k1" "vendor/github.com/ethereum/go-ethereum/crypto/secp256k1/"
 	cd services/pay; go build	
 
 admin-api: 
