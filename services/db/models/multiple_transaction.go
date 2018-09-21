@@ -425,7 +425,7 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 		if foreign.R == nil {
 			foreign.R = &userOrderR{}
 		}
-		foreign.R.MultipleTransaction = object
+		foreign.R.MultipleTransactions = append(foreign.R.MultipleTransactions, object)
 		return nil
 	}
 
@@ -436,7 +436,7 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 				if foreign.R == nil {
 					foreign.R = &userOrderR{}
 				}
-				foreign.R.MultipleTransaction = local
+				foreign.R.MultipleTransactions = append(foreign.R.MultipleTransactions, local)
 				break
 			}
 		}
@@ -447,7 +447,7 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 
 // SetUserOrderG of the multipleTransaction to the related item.
 // Sets o.R.UserOrder to related.
-// Adds o to related.R.MultipleTransaction.
+// Adds o to related.R.MultipleTransactions.
 // Uses the global database handle.
 func (o *MultipleTransaction) SetUserOrderG(insert bool, related *UserOrder) error {
 	return o.SetUserOrder(boil.GetDB(), insert, related)
@@ -455,7 +455,7 @@ func (o *MultipleTransaction) SetUserOrderG(insert bool, related *UserOrder) err
 
 // SetUserOrder of the multipleTransaction to the related item.
 // Sets o.R.UserOrder to related.
-// Adds o to related.R.MultipleTransaction.
+// Adds o to related.R.MultipleTransactions.
 func (o *MultipleTransaction) SetUserOrder(exec boil.Executor, insert bool, related *UserOrder) error {
 	var err error
 	if insert {
@@ -491,10 +491,10 @@ func (o *MultipleTransaction) SetUserOrder(exec boil.Executor, insert bool, rela
 
 	if related.R == nil {
 		related.R = &userOrderR{
-			MultipleTransaction: o,
+			MultipleTransactions: MultipleTransactionSlice{o},
 		}
 	} else {
-		related.R.MultipleTransaction = o
+		related.R.MultipleTransactions = append(related.R.MultipleTransactions, o)
 	}
 
 	return nil

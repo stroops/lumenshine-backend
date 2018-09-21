@@ -96,14 +96,14 @@ var UserOrderRels = struct {
 	User                 string
 	IcoPhase             string
 	ExchangeCurrency     string
-	MultipleTransaction  string
 	ProcessedTransaction string
+	MultipleTransactions string
 }{
 	User:                 "User",
 	IcoPhase:             "IcoPhase",
 	ExchangeCurrency:     "ExchangeCurrency",
-	MultipleTransaction:  "MultipleTransaction",
 	ProcessedTransaction: "ProcessedTransaction",
+	MultipleTransactions: "MultipleTransactions",
 }
 
 // userOrderR is where relationships are stored.
@@ -111,8 +111,8 @@ type userOrderR struct {
 	User                 *UserProfile
 	IcoPhase             *IcoPhase
 	ExchangeCurrency     *ExchangeCurrency
-	MultipleTransaction  *MultipleTransaction
 	ProcessedTransaction *ProcessedTransaction
+	MultipleTransactions MultipleTransactionSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -427,20 +427,6 @@ func (o *UserOrder) ExchangeCurrency(mods ...qm.QueryMod) exchangeCurrencyQuery 
 	return query
 }
 
-// MultipleTransaction pointed to by the foreign key.
-func (o *UserOrder) MultipleTransaction(mods ...qm.QueryMod) multipleTransactionQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("user_order_id=?", o.ID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := MultipleTransactions(queryMods...)
-	queries.SetFrom(query.Query, "\"multiple_transaction\"")
-
-	return query
-}
-
 // ProcessedTransaction pointed to by the foreign key.
 func (o *UserOrder) ProcessedTransaction(mods ...qm.QueryMod) processedTransactionQuery {
 	queryMods := []qm.QueryMod{
@@ -451,6 +437,27 @@ func (o *UserOrder) ProcessedTransaction(mods ...qm.QueryMod) processedTransacti
 
 	query := ProcessedTransactions(queryMods...)
 	queries.SetFrom(query.Query, "\"processed_transaction\"")
+
+	return query
+}
+
+// MultipleTransactions retrieves all the multiple_transaction's MultipleTransactions with an executor.
+func (o *UserOrder) MultipleTransactions(mods ...qm.QueryMod) multipleTransactionQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"multiple_transaction\".\"user_order_id\"=?", o.ID),
+	)
+
+	query := MultipleTransactions(queryMods...)
+	queries.SetFrom(query.Query, "\"multiple_transaction\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"multiple_transaction\".*"})
+	}
 
 	return query
 }
@@ -740,100 +747,6 @@ func (userOrderL) LoadExchangeCurrency(e boil.Executor, singular bool, maybeUser
 	return nil
 }
 
-// LoadMultipleTransaction allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-1 relationship.
-func (userOrderL) LoadMultipleTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
-	var slice []*UserOrder
-	var object *UserOrder
-
-	if singular {
-		object = maybeUserOrder.(*UserOrder)
-	} else {
-		slice = *maybeUserOrder.(*[]*UserOrder)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &userOrderR{}
-		}
-		args = append(args, object.ID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userOrderR{}
-			}
-
-			for _, a := range args {
-				if a == obj.ID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ID)
-		}
-	}
-
-	query := NewQuery(qm.From(`multiple_transaction`), qm.WhereIn(`user_order_id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load MultipleTransaction")
-	}
-
-	var resultSlice []*MultipleTransaction
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice MultipleTransaction")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for multiple_transaction")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for multiple_transaction")
-	}
-
-	if len(userOrderAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.MultipleTransaction = foreign
-		if foreign.R == nil {
-			foreign.R = &multipleTransactionR{}
-		}
-		foreign.R.UserOrder = object
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.ID == foreign.UserOrderID {
-				local.R.MultipleTransaction = foreign
-				if foreign.R == nil {
-					foreign.R = &multipleTransactionR{}
-				}
-				foreign.R.UserOrder = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
 // LoadProcessedTransaction allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-1 relationship.
 func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
@@ -918,6 +831,97 @@ func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybe
 				local.R.ProcessedTransaction = foreign
 				if foreign.R == nil {
 					foreign.R = &processedTransactionR{}
+				}
+				foreign.R.UserOrder = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadMultipleTransactions allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userOrderL) LoadMultipleTransactions(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
+	var slice []*UserOrder
+	var object *UserOrder
+
+	if singular {
+		object = maybeUserOrder.(*UserOrder)
+	} else {
+		slice = *maybeUserOrder.(*[]*UserOrder)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userOrderR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userOrderR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`multiple_transaction`), qm.WhereIn(`user_order_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load multiple_transaction")
+	}
+
+	var resultSlice []*MultipleTransaction
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice multiple_transaction")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on multiple_transaction")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for multiple_transaction")
+	}
+
+	if len(multipleTransactionAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.MultipleTransactions = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &multipleTransactionR{}
+			}
+			foreign.R.UserOrder = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.UserOrderID {
+				local.R.MultipleTransactions = append(local.R.MultipleTransactions, foreign)
+				if foreign.R == nil {
+					foreign.R = &multipleTransactionR{}
 				}
 				foreign.R.UserOrder = local
 				break
@@ -1093,65 +1097,6 @@ func (o *UserOrder) SetExchangeCurrency(exec boil.Executor, insert bool, related
 	return nil
 }
 
-// SetMultipleTransactionG of the userOrder to the related item.
-// Sets o.R.MultipleTransaction to related.
-// Adds o to related.R.UserOrder.
-// Uses the global database handle.
-func (o *UserOrder) SetMultipleTransactionG(insert bool, related *MultipleTransaction) error {
-	return o.SetMultipleTransaction(boil.GetDB(), insert, related)
-}
-
-// SetMultipleTransaction of the userOrder to the related item.
-// Sets o.R.MultipleTransaction to related.
-// Adds o to related.R.UserOrder.
-func (o *UserOrder) SetMultipleTransaction(exec boil.Executor, insert bool, related *MultipleTransaction) error {
-	var err error
-
-	if insert {
-		related.UserOrderID = o.ID
-
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	} else {
-		updateQuery := fmt.Sprintf(
-			"UPDATE \"multiple_transaction\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 1, []string{"user_order_id"}),
-			strmangle.WhereClause("\"", "\"", 2, multipleTransactionPrimaryKeyColumns),
-		)
-		values := []interface{}{o.ID, related.ID}
-
-		if boil.DebugMode {
-			fmt.Fprintln(boil.DebugWriter, updateQuery)
-			fmt.Fprintln(boil.DebugWriter, values)
-		}
-
-		if _, err = exec.Exec(updateQuery, values...); err != nil {
-			return errors.Wrap(err, "failed to update foreign table")
-		}
-
-		related.UserOrderID = o.ID
-
-	}
-
-	if o.R == nil {
-		o.R = &userOrderR{
-			MultipleTransaction: related,
-		}
-	} else {
-		o.R.MultipleTransaction = related
-	}
-
-	if related.R == nil {
-		related.R = &multipleTransactionR{
-			UserOrder: o,
-		}
-	} else {
-		related.R.UserOrder = o
-	}
-	return nil
-}
-
 // SetProcessedTransactionG of the userOrder to the related item.
 // Sets o.R.ProcessedTransaction to related.
 // Adds o to related.R.UserOrder.
@@ -1207,6 +1152,68 @@ func (o *UserOrder) SetProcessedTransaction(exec boil.Executor, insert bool, rel
 		}
 	} else {
 		related.R.UserOrder = o
+	}
+	return nil
+}
+
+// AddMultipleTransactionsG adds the given related objects to the existing relationships
+// of the user_order, optionally inserting them as new records.
+// Appends related to o.R.MultipleTransactions.
+// Sets related.R.UserOrder appropriately.
+// Uses the global database handle.
+func (o *UserOrder) AddMultipleTransactionsG(insert bool, related ...*MultipleTransaction) error {
+	return o.AddMultipleTransactions(boil.GetDB(), insert, related...)
+}
+
+// AddMultipleTransactions adds the given related objects to the existing relationships
+// of the user_order, optionally inserting them as new records.
+// Appends related to o.R.MultipleTransactions.
+// Sets related.R.UserOrder appropriately.
+func (o *UserOrder) AddMultipleTransactions(exec boil.Executor, insert bool, related ...*MultipleTransaction) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.UserOrderID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"multiple_transaction\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"user_order_id"}),
+				strmangle.WhereClause("\"", "\"", 2, multipleTransactionPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.UserOrderID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userOrderR{
+			MultipleTransactions: related,
+		}
+	} else {
+		o.R.MultipleTransactions = append(o.R.MultipleTransactions, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &multipleTransactionR{
+				UserOrder: o,
+			}
+		} else {
+			rel.R.UserOrder = o
+		}
 	}
 	return nil
 }

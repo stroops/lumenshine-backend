@@ -177,15 +177,18 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 
 	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
 		if ec.PaymentNetwork == m.PaymentNetworkStellar {
+			// this is the public key for the payment recipient
+			// for stellar this is one special account, where the user must withdraw his payment
+			// this pk will be used in the order as the payment account
 			paymentAddress = aec.StellarPaymentAccountPK
 			paymentSeed = aec.StellarPaymentAccountSeed
 		} else {
+			// ofr other cryptos, we will generate a dedicated address for every order
 			paymentAddress, paymentSeed, addressIndex, err = s.GeneratePaymentAddress(ec.PaymentNetwork, aec.ExchangeMasterKey)
 			if err != nil {
 				return nil, err
 			}
 		}
-
 	}
 
 	//save order to db
@@ -241,7 +244,21 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		//ret.PaymentQrImage = o.PaymentQRImage
 	}
 
-	//TODO address generation
+	//check that user did not fiddle the account data
+	if r.GetUserPublicKey != nil {
+		//we need to do this in a goroutine, becuase it can take some time to connect horizon
+		/*	go func(userPublicKey string) {
+			//the account must exist
+			acc, exists, err := s.Env.AccountConfigurator.GetAccount(r.GetUserPublicKey)
+			if err != nil {
+				return nil, err
+			}
+			if !exists {
+				return nil, errors.New("Account does not exist, but it should")
+			}
+		}(r.GetUserPublicKey)*/
+	}
+
 	return ret, nil
 }
 

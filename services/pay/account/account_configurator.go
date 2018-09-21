@@ -9,8 +9,6 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
 
-	"github.com/pkg/errors"
-
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 
 	"github.com/sirupsen/logrus"
@@ -89,29 +87,32 @@ func (c *Configurator) hasTrustline(acc *horizon.Account) bool {
 //GetTrustStatus checks if the user exists and creates him otherwise.
 //returns if the trustline to the coin is present on the useraccount
 func (c *Configurator) GetTrustStatus(o *m.UserOrder) (bool, error) {
-	var acc horizon.Account
-	var err error
-	var exists bool
+	/*
+		var acc horizon.Account
+		var err error
+		var exists bool
 
-	acc, exists, err = c.getAccount(o.StellarUserPublicKey)
-	if err != nil {
-		return false, err
-	}
-
-	if !exists {
-		err := c.createAccount(o.StellarUserPublicKey)
-		if err != nil {
-			return false, errors.Wrap(err, "Error creating account")
-		}
-
-		//need to relaod the account to get the sequence
 		acc, exists, err = c.getAccount(o.StellarUserPublicKey)
 		if err != nil {
 			return false, err
 		}
-	}
 
-	return c.hasTrustline(&acc), nil
+		if !exists {
+			err := c.createAccount(o.StellarUserPublicKey)
+			if err != nil {
+				return false, errors.Wrap(err, "Error creating account")
+			}
+
+			//need to relaod the account to get the sequence
+			acc, exists, err = c.getAccount(o.StellarUserPublicKey)
+			if err != nil {
+				return false, err
+			}
+		}
+
+		return c.hasTrustline(&acc), nil
+	*/
+	return false, nil
 }
 
 //GetPaymentTransaction creates the transaction for a valid payment
@@ -264,7 +265,8 @@ func (c *Configurator) createAccount(account string) error {
 	return nil
 }
 
-func (c *Configurator) getAccount(account string) (horizon.Account, bool, error) {
+//GetAccount returns the horizon-account for the given address or false if it does not exist
+func (c *Configurator) GetAccount(account string) (horizon.Account, bool, error) {
 	var hAccount horizon.Account
 	hAccount, err := c.Horizon.LoadAccount(account)
 	if err != nil {

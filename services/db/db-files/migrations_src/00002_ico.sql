@@ -128,8 +128,13 @@ CREATE TABLE ico_phase_activated_exchange_currency (
   exchange_master_key text not null, /* master key for generating the addresses and seeds in the payment network */
   denom_price_per_token BIGINT NOT NULL,
   stellar_starting_balance_denom varchar(64) NOT NULL, /*starting-balannce (in denomination) for creating the stellar-account */
-  stellar_payment_account_pk varchar(56) not null, /* this is the public key for the payment recipient */
+
+  /* this is the public key for the payment recipient */
+  /* for stellar this is one special account, where the user must withdraw his payment */
+  /* this pk will be used in the order as the payment account */
+  stellar_payment_account_pk varchar(56) not null,
   stellar_payment_account_seed varchar(56) not null, /* this is the seed for the stellar payment account */
+  
   tokens_released BIGINT NOT NULL,
   tokens_blocked BIGINT NOT NULL,
   /* only needed if the customer wants to transfer fiat to our bank account*/

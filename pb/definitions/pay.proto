@@ -67,6 +67,7 @@ message CreateOrderResponse {
     string fiat_recepient_name = 10;
     string fiat_payment_usage = 11;
     string fiat_bank_name = 12;
+    string user_public_key = 13;
 }
 
 message UserOrdersCountRequest{

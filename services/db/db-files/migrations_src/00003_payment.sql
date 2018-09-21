@@ -15,7 +15,7 @@ INSERT INTO key_value_store (key, str_value, int_value) VALUES ('btc_last_block'
 
 INSERT INTO key_value_store (key, str_value, int_value) VALUES ('xlm_last_ledger_id', '0', 0);
 
-CREATE TYPE order_status AS ENUM ('waiting_for_payment', 'payment_received', 'waiting_user_transaction', 'payment_error', 'finished', 'error', 'under_pay', 'over_pay', 'no_coins_left', 'phase_expired');
+CREATE TYPE order_status AS ENUM ('new', 'waiting_for_payment', 'payment_received', 'waiting_user_transaction', 'payment_error', 'finished', 'error', 'under_pay', 'over_pay', 'no_coins_left', 'phase_expired');
 
 CREATE TABLE user_order (
   id SERIAL PRIMARY KEY NOT null,

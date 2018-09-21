@@ -52,12 +52,7 @@ EOSQL
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d admin <<-EOSQL
     CREATE EXTENSION pg_trgm;
     CREATE EXTENSION postgres_fdw
-
-    CREATE SERVER fdw_stellarcore_server FOREIGN DATA WRAPPER postgres_fdw OPTIONS (host 'localhost', dbname 'stellar', port '5641');
-    CREATE USER MAPPING FOR icop SERVER fdw_stellarcore_server OPTIONS (user 'postgres', password 'mysecretpassword');
-
-    CREATE SERVER fdw_icop_server FOREIGN DATA WRAPPER postgres_fdw OPTIONS (host 'localhost', dbname 'icop', port '5433');
-    CREATE USER MAPPING FOR icop SERVER fdw_icop_server OPTIONS (user 'icop', password 'jw8s0F4');
+    GRANT ALL ON FOREIGN DATA WRAPPER postgres_fdw to icop;    
 EOSQL
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d chart <<-EOSQL

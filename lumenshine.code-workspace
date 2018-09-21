@@ -23,6 +23,12 @@
 		},
 		{
 			"path": "."
+		},
+		{
+			"path": "/home/udo/Projects/soneso/lumenshine-admin-web-client"
+		},
+		{
+			"path": "/home/udo/Projects/soneso/lumenshine-web-wallet"
 		}
 	]
 }

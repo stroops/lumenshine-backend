@@ -1,6 +1,12 @@
 -- +goose Up
 -- SQL in this section is executed when the migration is applied.
 
+CREATE SERVER fdw_stellarcore_server FOREIGN DATA WRAPPER postgres_fdw OPTIONS (host '172.18.0.4', dbname 'core', port '5432');
+CREATE USER MAPPING FOR icop SERVER fdw_stellarcore_server OPTIONS (user 'stellar', password 'jw8s0F4');
+
+CREATE SERVER fdw_icop_server FOREIGN DATA WRAPPER postgres_fdw OPTIONS (host 'localhost', dbname 'icop', port '5432');
+CREATE USER MAPPING FOR icop SERVER fdw_icop_server OPTIONS (user 'icop', password 'jw8s0F4');
+
 -- Create foreign table trustlines
 CREATE FOREIGN TABLE trustlines
 (
@@ -15,7 +21,7 @@ CREATE FOREIGN TABLE trustlines
     buyingliabilities bigint,
     sellingliabilities bigint
 )
-SERVER fdw_stellarcore_server;
+SERVER fdw_stellarcore_server OPTIONS (schema_name 'public', table_name 'trustlines');
 
 -- Create foreign table user_profile
 CREATE FOREIGN TABLE user_profile
@@ -79,3 +85,7 @@ DROP VIEW IF EXISTS admin_trustlines;
 drop FOREIGN table IF EXISTS trustlines;
 drop FOREIGN table IF EXISTS user_profile;
 drop FOREIGN table IF EXISTS user_security;
+drop USER MAPPING FOR icop SERVER fdw_stellarcore_server;
+drop SERVER fdw_stellarcore_server;
+drop USER MAPPING FOR icop SERVER fdw_icop_server;
+drop SERVER fdw_icop_server;

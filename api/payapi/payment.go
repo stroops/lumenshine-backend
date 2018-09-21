@@ -195,7 +195,7 @@ type CreateOrderRequest struct {
 
 	// Stellar Public Key of the user for the payment/coins
 	// required: true
-	StellarUserPublicKey string `json:"stellar_user_public_key" form:"stellar_user_public_key" validate:"required"`
+	StellarUserPublicKey string `json:"stellar_user_public_key" form:"stellar_user_public_key"`
 }
 
 // CreateOrderResponse is the return data , for creating a new order
@@ -206,6 +206,9 @@ type CreateOrderResponse struct {
 	OrderedTokenAmount    int64  `json:"ordered_token_amount"`
 	OrderedTokenAssetCode string `json:"ordered_token_asset_code"`
 	PaymentNetwork        string `json:"payment_network"`
+
+	//StellarUserPublicKey is the stellar public key of the user for this order. If omited on CreateOrder, the service will grab the first 'free' one from the user wallets
+	StellarUserPublicKey string `json:"stellar_user_public_key"`
 
 	//AssetCode in the payment Network
 	ExchangeAssetCode string `json:"exchange_asset_code"`
@@ -347,6 +350,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		FiatDestinationName:   o.FiatRecepientName,
 		FiatPaymentUsage:      o.FiatPaymentUsage,
 		FiatBankName:          o.FiatBankName,
+		StellarUserPublicKey:  o.UserPublicKey,
 	})
 }
 
