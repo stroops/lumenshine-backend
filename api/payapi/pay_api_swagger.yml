@@ -32,11 +32,6 @@ definitions:
   CreateOrderResponse:
     description: CreateOrderResponse is the return data , for creating a new order
     properties:
-      deposit_pk:
-        description: DepositPK is the address in the PaymentNetwork, where the user
-          must transfer the Exchange-Asset
-        type: string
-        x-go-name: DepositPK
       exchange_asset_code:
         description: AssetCode in the payment Network
         type: string
@@ -78,6 +73,11 @@ definitions:
       ordered_token_asset_code:
         type: string
         x-go-name: OrderedTokenAssetCode
+      payment_address:
+        description: PaymentAddress is the address in the PaymentNetwork, where the
+          user must transfer the Exchange-Asset
+        type: string
+        x-go-name: PaymentAddress
       payment_network:
         type: string
         x-go-name: PaymentNetwork
@@ -90,6 +90,13 @@ definitions:
           type: integer
         type: array
         x-go-name: QRCode
+      stellar_user_public_key:
+        description: StellarUserPublicKey is the stellar public key of the user for
+          this order. If omited on CreateOrder, the service will grab the first 'free'
+          one from the user wallets, when the payment arrives, in order to connect
+          only once to horizen. So this might be empty
+        type: string
+        x-go-name: StellarUserPublicKey
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   ExchangeCurrency:
@@ -352,9 +359,6 @@ definitions:
         description: This is the exchange amount received in the first transaction
         type: string
         x-go-name: AmountReceived
-      deposit_pk:
-        type: string
-        x-go-name: DepositPK
       exchange_amount:
         type: string
         x-go-name: ExchangeAmount
@@ -394,15 +398,22 @@ definitions:
       order_status:
         type: string
         x-go-name: OrderStatus
+      payment_address:
+        description: This is the public key in the PaymentNetwork, where the exchange-currency
+          must be transfered to
+        type: string
+        x-go-name: PaymentAddress
       payment_network:
         type: string
         x-go-name: PaymentNetwork
       payment_refund_tx_id:
+        description: this is the refund transaction id in the PaymentNetwork
         type: string
         x-go-name: PaymentRefundTxID
-      payment_tx_id:
+      stellar_transaction_id:
+        description: this is the coin payment tx in the stellar network
         type: string
-        x-go-name: PaymentTxID
+        x-go-name: StellarTransactionID
       stellar_user_public_key:
         type: string
         x-go-name: StellarUserPublicKey

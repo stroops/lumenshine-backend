@@ -15,7 +15,7 @@ INSERT INTO key_value_store (key, str_value, int_value) VALUES ('btc_last_block'
 
 INSERT INTO key_value_store (key, str_value, int_value) VALUES ('xlm_last_ledger_id', '0', 0);
 
-CREATE TYPE order_status AS ENUM ('new', 'waiting_for_payment', 'payment_received', 'waiting_user_transaction', 'payment_error', 'finished', 'error', 'under_pay', 'over_pay', 'no_coins_left', 'phase_expired');
+CREATE TYPE order_status AS ENUM ('waiting_for_payment', 'payment_received', 'waiting_user_transaction', 'payment_error', 'finished', 'error', 'under_pay', 'over_pay', 'no_coins_left', 'phase_expired');
 
 CREATE TABLE user_order (
   id SERIAL PRIMARY KEY NOT null,
@@ -44,8 +44,9 @@ CREATE TABLE user_order (
   payment_address varchar(56) NOT NULL, /* public key in the target network, based on payment_network */
   payment_seed varchar(56) NOT NULL, /* used only for stellar accounts */  
 
-  payment_tx_id text not null, /* payment hash/id from the PaymentNetwork */
-  payment_refund_tx_id text not null, /* refund payment hash/id from the PaymentNetwork */
+  stellar_transaction_id text not null, /* this is the coin payment tx in the stellar network */
+  processed_transaction_id int null, /* FK to the processed transactions */
+  
   payment_qr_image bytea null, /* qr-image for the payment transaction */
 
   fiat_payment_usage varchar(255) not null, /* used only for fiat payments */
@@ -70,46 +71,54 @@ create index idx_user_order_ix5 on user_order(ico_phase_id);
 
 CREATE TYPE transaction_status AS ENUM ('new', 'processed');
 CREATE TABLE processed_transaction (
+  id SERIAL PRIMARY KEY NOT null,
   status transaction_status not null,
 
   payment_network payment_network NOT NULL,
+
   /* Ethereum: "0x"+hash (so 64+2) */
   transaction_id varchar(66) NOT NULL,
   /* bitcoin 34 characters */
   /* ethereum 42 characters */
    /* stellar 56 characters */  
+  refund_tx_id text not null, /* refund payment hash/id from the PaymentNetwork */
+
   receiving_address varchar(56) NOT NULL,
   payment_network_amount_denomination varchar(64) not null, /* max one billion */
 
-  user_order_id integer not null REFERENCES user_order(id),
+  order_id integer not null REFERENCES user_order(id),
 
   created_at timestamp with time zone NOT NULL default current_timestamp,
-  updated_at timestamp with time zone NOT NULL default current_timestamp,
-  PRIMARY KEY (payment_network, transaction_id)
+  updated_at timestamp with time zone NOT NULL default current_timestamp  
 );
-create unique index idx_processed_transaction_ix1 on processed_transaction(user_order_id);
+create unique index idx_processed_transaction_ix1 on processed_transaction(order_id);
 create unique index idx_processed_transaction_ix2 on processed_transaction(payment_network, transaction_id);
+alter table user_order add FOREIGN KEY(processed_transaction_id) REFERENCES processed_transaction(id);
 
 CREATE TABLE multiple_transaction (
   id SERIAL PRIMARY KEY NOT null,
   payment_network payment_network NOT NULL,
   transaction_id varchar(66) NOT NULL,
+  refund_tx_id text not null,
   receiving_address varchar(56) NOT NULL,
   payment_network_amount_denom varchar(64) not null,
-  user_order_id integer not null REFERENCES user_order(id),
+  order_id integer not null REFERENCES user_order(id),
   created_at timestamp with time zone NOT NULL default current_timestamp,
   updated_at timestamp with time zone NOT NULL default current_timestamp  
 );
-create unique index idx_multiple_transaction_ix1 on multiple_transaction(user_order_id, transaction_id);
+create unique index idx_multiple_transaction_ix1 on multiple_transaction(order_id, transaction_id);
 create index idx_multiple_transaction_ix2 on multiple_transaction(payment_network, transaction_id);
 create index idx_multiple_transaction_ix3 on multiple_transaction(payment_network, receiving_address);
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 drop table IF EXISTS key_value_store;
+ALTER TABLE user_order DROP CONSTRAINT "user_order_processed_transaction_id_fkey";
+ALTER TABLE processed_transaction DROP CONSTRAINT "processed_transaction_order_id_fkey";
+ALTER TABLE multiple_transaction DROP CONSTRAINT "multiple_transaction_order_id_fkey";
+drop table IF EXISTS user_order;
 drop table if exists processed_transaction;
 drop table if exists multiple_transaction;
-drop table IF EXISTS user_order;
 drop type if exists order_status;
 drop type if exists transaction_status;
 drop type if exists denomination_amount;

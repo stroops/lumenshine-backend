@@ -60,7 +60,7 @@ message CreateOrderResponse {
     string exchange_value_to_pay = 3;
     string exchange_value_denominator = 4;
     string exchange_value_denom_asset_code = 5;
-    string deposit_pk = 6;
+    string payment_address = 6;
     bytes payment_qr_image = 7;    
     string fiat_bic = 8;
     string fiat_iban = 9;
@@ -93,8 +93,8 @@ message UserOrder{
     int64 exchange_currency_id = 6;
     string exchange_currency_denomination_amount = 7;
     string payment_network = 8;
-    string deposit_pk = 9;
-    string payment_tx_id = 10;
+    string payment_address = 9;
+    string stellar_transaction_id = 10;
     string payment_refund_tx_id = 11;
     bytes payment_qr_image = 12;
     string exchange_amount = 13;

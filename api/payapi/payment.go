@@ -207,7 +207,7 @@ type CreateOrderResponse struct {
 	OrderedTokenAssetCode string `json:"ordered_token_asset_code"`
 	PaymentNetwork        string `json:"payment_network"`
 
-	//StellarUserPublicKey is the stellar public key of the user for this order. If omited on CreateOrder, the service will grab the first 'free' one from the user wallets
+	//StellarUserPublicKey is the stellar public key of the user for this order. If omited on CreateOrder, the service will grab the first 'free' one from the user wallets, when the payment arrives, in order to connect only once to horizen. So this might be empty
 	StellarUserPublicKey string `json:"stellar_user_public_key"`
 
 	//AssetCode in the payment Network
@@ -217,8 +217,8 @@ type CreateOrderResponse struct {
 	//Type for payment: stellar, other_crypto, fiat
 	ExchangeCurrencyType string `json:"exchange_currency_type"`
 
-	//DepositPK is the address in the PaymentNetwork, where the user must transfer the Exchange-Asset
-	DepositPK string `json:"deposit_pk,omitempty"`
+	//PaymentAddress is the address in the PaymentNetwork, where the user must transfer the Exchange-Asset
+	PaymentAddress string `json:"payment_address,omitempty"`
 
 	//QRCode is a bitmap for the transaction in the Payment-Network
 	//TODO
@@ -343,7 +343,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		ExchangeAssetCode:     ec.AssetCode,
 		ExchangeValueToPay:    o.ExchangeValueToPay,
 		ExchangeCurrencyType:  ec.ExchangeCurrencyType,
-		DepositPK:             o.DepositPk,
+		PaymentAddress:        o.PaymentAddress,
 		QRCode:                o.PaymentQrImage,
 		FiatBIC:               o.FiatBic,
 		FiatIBAN:              o.FiatIban,
@@ -385,9 +385,15 @@ type UserOrderResponse struct {
 
 	ExchangeCurrencyType string `json:"exchange_currency_type"`
 	PaymentNetwork       string `json:"payment_network"`
-	DepositPK            string `json:"deposit_pk,omitempty"`
-	PaymentTxID          string `json:"payment_tx_id,omitempty"`
-	PaymentRefundTxID    string `json:"payment_refund_tx_id,omitempty"`
+
+	//This is the public key in the PaymentNetwork, where the exchange-currency must be transfered to
+	PaymentAddress string `json:"payment_address,omitempty"`
+
+	//this is the coin payment tx in the stellar network
+	StellarTransactionID string `json:"stellar_transaction_id,omitempty"`
+
+	//this is the refund transaction id in the PaymentNetwork
+	PaymentRefundTxID string `json:"payment_refund_tx_id,omitempty"`
 
 	//TODO PaymentQrImage string `json:"payment_qr_image"`
 
@@ -454,8 +460,8 @@ func getRespOrder(o *pb.UserOrder) UserOrderResponse {
 		ExchangeCurrencyID:   o.ExchangeCurrencyId,
 		ExchangeCurrencyType: o.ExchangeCurrencyType,
 		PaymentNetwork:       o.PaymentNetwork,
-		DepositPK:            o.DepositPk,
-		PaymentTxID:          o.PaymentTxId,
+		PaymentAddress:       o.PaymentAddress,
+		StellarTransactionID: o.StellarTransactionId,
 		PaymentRefundTxID:    o.PaymentRefundTxId,
 
 		//TODO PaymentQrImage : o.PaymentQrImage,

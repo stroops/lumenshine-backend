@@ -140,7 +140,6 @@ const (
 
 // Enum values for order_status
 const (
-	OrderStatusNew                    = "new"
 	OrderStatusWaitingForPayment      = "waiting_for_payment"
 	OrderStatusPaymentReceived        = "payment_received"
 	OrderStatusWaitingUserTransaction = "waiting_user_transaction"

@@ -284,3 +284,37 @@ func (c *Configurator) GetAccount(account string) (horizon.Account, bool, error)
 func (c *Configurator) SignAndRunTransaction(tx string, seed string) error {
 	return c.signAndSubmitTransaction(tx, seed)
 }
+
+//ValidateAccount validates a stellar account and checks that the account data was not fiddled
+func (c *Configurator) ValidateAccount(userPublicKey string, l *logrus.Entry) (accountExists bool) {
+	/*if l == nil {
+		l = c.log
+	}
+
+	acc, accountExists, err := c.GetAccount(userPublicKey)
+	if err != nil {
+		l.WithError(err).WithFields(logrus.Fields{"userPublicKey": userPublicKey}).Error("Could not read stellar account")
+		return
+	}
+
+	if !accountExists {
+		return
+	}
+
+	//check that user did not fiddle the account data
+	if r.UserPublicKey != "" {
+		//we need to do this in a goroutine, because it can take some time to connect horizon
+		go func(userPublicKey string, l *logrus.Entry) {
+			//the account must exist
+			acc, exists, err := s.Env.AccountConfigurator.GetAccount(userPublicKey)
+			if err != nil {
+				l.WithError(err).WithFields(logrus.Fields{"userPublicKey": userPublicKey}).Error("Could not read stellar account")
+				return
+			}
+			if !exists {
+				return nil, errors.New("Account does not exist, but it should")
+			}
+		}(r.UserPublicKey, log)
+	}*/
+	return
+}

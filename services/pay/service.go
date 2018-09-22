@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"net"
@@ -192,6 +193,7 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	}
 
 	//save order to db
+	//StellarUserPublicKey might be null. we will determin the account, when the payment arrives, in order to connect only once to horizen
 	o := &m.UserOrder{
 		UserID:                             int(r.UserId),
 		IcoPhaseID:                         phase.ID,
@@ -225,10 +227,10 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		o.FiatPaymentUsage = modext.UserOrderFiatPaymentUsage(aec.R.IcoPhaseBankAccount.PaymendUsageString, o)
 		_, err := o.Update(s.Env.DBC, boil.Whitelist(m.UserOrderColumns.FiatPaymentUsage))
 		if err != nil {
-			//only log the error
 			log.WithError(err).WithFields(logrus.Fields{
 				"order-id": o.ID,
-			}).Error("Could not update payment")
+			}).Error("Could not update payment usage")
+			return nil, err
 		}
 
 		ret.FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
@@ -239,24 +241,8 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	}
 
 	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
-		ret.DepositPk = paymentAddress
 		//TODO
 		//ret.PaymentQrImage = o.PaymentQRImage
-	}
-
-	//check that user did not fiddle the account data
-	if r.GetUserPublicKey != nil {
-		//we need to do this in a goroutine, becuase it can take some time to connect horizon
-		/*	go func(userPublicKey string) {
-			//the account must exist
-			acc, exists, err := s.Env.AccountConfigurator.GetAccount(r.GetUserPublicKey)
-			if err != nil {
-				return nil, err
-			}
-			if !exists {
-				return nil, errors.New("Account does not exist, but it should")
-			}
-		}(r.GetUserPublicKey)*/
 	}
 
 	return ret, nil
@@ -333,9 +319,12 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 		}
 
 		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
-			ret.UserOrders[i].DepositPk = o.PaymentAddress
-			ret.UserOrders[i].PaymentTxId = o.PaymentTXID
-			ret.UserOrders[i].PaymentRefundTxId = o.PaymentRefundTXID
+			ret.UserOrders[i].PaymentAddress = o.PaymentAddress
+			ret.UserOrders[i].StellarTransactionId = o.StellarTransactionID
+			if o.R.ProcessedTransaction != nil {
+				ret.UserOrders[i].PaymentRefundTxId = o.R.ProcessedTransaction.RefundTXID
+			}
+
 			//TODO
 			//ret.UserOrders[i].PaymentQrImage = o.PaymentQRImage
 		}
@@ -397,9 +386,13 @@ func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransacti
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	if s.Env.Config.AllowFakeTransactions {
 		// Need to read the order first, because this is the normal "procedure". This will also update the order-status
-		o, err := s.Env.DBC.GetOpenOrderForAddress(r.PaymentChannel, r.RecipientAddress)
+		o, err := s.Env.DBC.GetOrderForAddress(r.PaymentChannel, r.RecipientAddress)
 		if err != nil {
 			return &pb.BoolResponse{Value: false}, nil
+		}
+
+		if o == nil {
+			return &pb.BoolResponse{Value: false}, errors.New("No order found")
 		}
 
 		tx := helpers.RandomString(10)

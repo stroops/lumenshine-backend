@@ -19,6 +19,7 @@ import (
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/queries"
 )
 
@@ -157,13 +158,15 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 	return err
 }
 
-//GetOpenOrderForAddress reads the user orders for open payments for the specified address and chain
-//the method also updates the order to refelect, that it has been processed
-//it will set the order in status OrderStatusPaymentReceived
-func (db *DB) GetOpenOrderForAddress(paymentChannel string, address string) (*m.UserOrder, error) {
+//GetOrderForAddress reads the user orders for open payments for the specified address and chain
+//The method updates the order to refelect, that it has been processed, if the order was waiting_for_payment
+//It will set the order in status OrderStatusPaymentReceived
+//If no open order was found(OrderStatusWaitingForPayment), the function will return either nil or filter for any other order with the given address
+//The function will be called for EVERY payment transaction in the external PaymentNetworks
+func (db *DB) GetOrderForAddress(paymentChannel string, address string) (*m.UserOrder, error) {
 	userOrder := new(m.UserOrder)
 	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
-			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4  limit 1 for update) returning
+			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 limit 1 for update) returning
 			*`,
 		map[string]string{
 			"@user_order":      m.TableNames.UserOrder,
@@ -204,7 +207,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	d.PaymentNetwork = paymentChannel
 	d.ReceivingAddress = toAddress
 	d.TransactionID = txHash
-	d.UserOrderID = orderID
+	d.OrderID = orderID
 	d.Status = m.TransactionStatusNew
 	d.PaymentNetworkAmountDenomination = denomAmount.String()
 
@@ -215,16 +218,27 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 		b.PaymentNetwork = paymentChannel
 		b.ReceivingAddress = toAddress
 		b.TransactionID = txHash
-		b.UserOrderID = orderID
+		b.OrderID = orderID
 		b.PaymentNetworkAmountDenom = denomAmount.String()
 		errB := b.Insert(db, boil.Infer())
 		if errB != nil {
+			//we don't handle this error, just log it
 			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": txHash}).Error("Error saving multiple transaction")
 		}
-		//we don't handle this error, just log it
 		return true, nil
 	}
 
+	if err != nil {
+		return true, err
+	}
+
+	//update the order to hold the transaction-ref
+	order, err := m.FindUserOrder(db, orderID, "id")
+	if err != nil {
+		return true, err
+	}
+	order.ProcessedTransactionID = null.IntFrom(d.ID)
+	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.ProcessedTransactionID, m.UserKycDocumentColumns.UpdatedAt))
 	if err != nil {
 		return true, err
 	}
@@ -247,9 +261,9 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			"@updated_at":   m.UserOrderColumns.UpdatedAt,
 		})
 
-	err = queries.Raw(sqlStr, m.OrderStatusWaitingForPayment, tx.UserOrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
+	err = queries.Raw(sqlStr, m.OrderStatusWaitingForPayment, tx.OrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
 	if err != nil {
-		log.WithError(err).WithFields(logrus.Fields{"order_id": tx.UserOrderID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
+		log.WithError(err).WithFields(logrus.Fields{"order_id": tx.OrderID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
 		return true, err
 	}
 
@@ -288,7 +302,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			//either amount was to small, or phase is already gone... we will read the data againe and check
 			if err != sql.ErrNoRows {
 				// log error
-				log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": order.PaymentTXID}).Error("Error selecting phasedata")
+				log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
 				return true, err
 			}
 			ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(db)

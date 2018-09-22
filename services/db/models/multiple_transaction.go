@@ -24,9 +24,10 @@ type MultipleTransaction struct {
 	ID                        int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	PaymentNetwork            string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
 	TransactionID             string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
+	RefundTXID                string    `boil:"refund_tx_id" json:"refund_tx_id" toml:"refund_tx_id" yaml:"refund_tx_id"`
 	ReceivingAddress          string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
 	PaymentNetworkAmountDenom string    `boil:"payment_network_amount_denom" json:"payment_network_amount_denom" toml:"payment_network_amount_denom" yaml:"payment_network_amount_denom"`
-	UserOrderID               int       `boil:"user_order_id" json:"user_order_id" toml:"user_order_id" yaml:"user_order_id"`
+	OrderID                   int       `boil:"order_id" json:"order_id" toml:"order_id" yaml:"order_id"`
 	CreatedAt                 time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                 time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -38,32 +39,34 @@ var MultipleTransactionColumns = struct {
 	ID                        string
 	PaymentNetwork            string
 	TransactionID             string
+	RefundTXID                string
 	ReceivingAddress          string
 	PaymentNetworkAmountDenom string
-	UserOrderID               string
+	OrderID                   string
 	CreatedAt                 string
 	UpdatedAt                 string
 }{
 	ID:                        "id",
 	PaymentNetwork:            "payment_network",
 	TransactionID:             "transaction_id",
+	RefundTXID:                "refund_tx_id",
 	ReceivingAddress:          "receiving_address",
 	PaymentNetworkAmountDenom: "payment_network_amount_denom",
-	UserOrderID:               "user_order_id",
+	OrderID:                   "order_id",
 	CreatedAt:                 "created_at",
 	UpdatedAt:                 "updated_at",
 }
 
 // MultipleTransactionRels is where relationship names are stored.
 var MultipleTransactionRels = struct {
-	UserOrder string
+	Order string
 }{
-	UserOrder: "UserOrder",
+	Order: "Order",
 }
 
 // multipleTransactionR is where relationships are stored.
 type multipleTransactionR struct {
-	UserOrder *UserOrder
+	Order *UserOrder
 }
 
 // NewStruct creates a new relationship struct
@@ -75,8 +78,8 @@ func (*multipleTransactionR) NewStruct() *multipleTransactionR {
 type multipleTransactionL struct{}
 
 var (
-	multipleTransactionColumns               = []string{"id", "payment_network", "transaction_id", "receiving_address", "payment_network_amount_denom", "user_order_id", "created_at", "updated_at"}
-	multipleTransactionColumnsWithoutDefault = []string{"payment_network", "transaction_id", "receiving_address", "payment_network_amount_denom", "user_order_id"}
+	multipleTransactionColumns               = []string{"id", "payment_network", "transaction_id", "refund_tx_id", "receiving_address", "payment_network_amount_denom", "order_id", "created_at", "updated_at"}
+	multipleTransactionColumnsWithoutDefault = []string{"payment_network", "transaction_id", "refund_tx_id", "receiving_address", "payment_network_amount_denom", "order_id"}
 	multipleTransactionColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	multipleTransactionPrimaryKeyColumns     = []string{"id"}
 )
@@ -336,10 +339,10 @@ func (q multipleTransactionQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
-// UserOrder pointed to by the foreign key.
-func (o *MultipleTransaction) UserOrder(mods ...qm.QueryMod) userOrderQuery {
+// Order pointed to by the foreign key.
+func (o *MultipleTransaction) Order(mods ...qm.QueryMod) userOrderQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.UserOrderID),
+		qm.Where("id=?", o.OrderID),
 	}
 
 	queryMods = append(queryMods, mods...)
@@ -350,9 +353,9 @@ func (o *MultipleTransaction) UserOrder(mods ...qm.QueryMod) userOrderQuery {
 	return query
 }
 
-// LoadUserOrder allows an eager lookup of values, cached into the
+// LoadOrder allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeMultipleTransaction interface{}, mods queries.Applicator) error {
+func (multipleTransactionL) LoadOrder(e boil.Executor, singular bool, maybeMultipleTransaction interface{}, mods queries.Applicator) error {
 	var slice []*MultipleTransaction
 	var object *MultipleTransaction
 
@@ -367,7 +370,7 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 		if object.R == nil {
 			object.R = &multipleTransactionR{}
 		}
-		args = append(args, object.UserOrderID)
+		args = append(args, object.OrderID)
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -376,12 +379,12 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 			}
 
 			for _, a := range args {
-				if a == obj.UserOrderID {
+				if a == obj.OrderID {
 					continue Outer
 				}
 			}
 
-			args = append(args, obj.UserOrderID)
+			args = append(args, obj.OrderID)
 		}
 	}
 
@@ -421,22 +424,22 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.UserOrder = foreign
+		object.R.Order = foreign
 		if foreign.R == nil {
 			foreign.R = &userOrderR{}
 		}
-		foreign.R.MultipleTransactions = append(foreign.R.MultipleTransactions, object)
+		foreign.R.OrderMultipleTransactions = append(foreign.R.OrderMultipleTransactions, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if local.UserOrderID == foreign.ID {
-				local.R.UserOrder = foreign
+			if local.OrderID == foreign.ID {
+				local.R.Order = foreign
 				if foreign.R == nil {
 					foreign.R = &userOrderR{}
 				}
-				foreign.R.MultipleTransactions = append(foreign.R.MultipleTransactions, local)
+				foreign.R.OrderMultipleTransactions = append(foreign.R.OrderMultipleTransactions, local)
 				break
 			}
 		}
@@ -445,18 +448,18 @@ func (multipleTransactionL) LoadUserOrder(e boil.Executor, singular bool, maybeM
 	return nil
 }
 
-// SetUserOrderG of the multipleTransaction to the related item.
-// Sets o.R.UserOrder to related.
-// Adds o to related.R.MultipleTransactions.
+// SetOrderG of the multipleTransaction to the related item.
+// Sets o.R.Order to related.
+// Adds o to related.R.OrderMultipleTransactions.
 // Uses the global database handle.
-func (o *MultipleTransaction) SetUserOrderG(insert bool, related *UserOrder) error {
-	return o.SetUserOrder(boil.GetDB(), insert, related)
+func (o *MultipleTransaction) SetOrderG(insert bool, related *UserOrder) error {
+	return o.SetOrder(boil.GetDB(), insert, related)
 }
 
-// SetUserOrder of the multipleTransaction to the related item.
-// Sets o.R.UserOrder to related.
-// Adds o to related.R.MultipleTransactions.
-func (o *MultipleTransaction) SetUserOrder(exec boil.Executor, insert bool, related *UserOrder) error {
+// SetOrder of the multipleTransaction to the related item.
+// Sets o.R.Order to related.
+// Adds o to related.R.OrderMultipleTransactions.
+func (o *MultipleTransaction) SetOrder(exec boil.Executor, insert bool, related *UserOrder) error {
 	var err error
 	if insert {
 		if err = related.Insert(exec, boil.Infer()); err != nil {
@@ -466,7 +469,7 @@ func (o *MultipleTransaction) SetUserOrder(exec boil.Executor, insert bool, rela
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"multiple_transaction\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"user_order_id"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"order_id"}),
 		strmangle.WhereClause("\"", "\"", 2, multipleTransactionPrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
@@ -480,21 +483,21 @@ func (o *MultipleTransaction) SetUserOrder(exec boil.Executor, insert bool, rela
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.UserOrderID = related.ID
+	o.OrderID = related.ID
 	if o.R == nil {
 		o.R = &multipleTransactionR{
-			UserOrder: related,
+			Order: related,
 		}
 	} else {
-		o.R.UserOrder = related
+		o.R.Order = related
 	}
 
 	if related.R == nil {
 		related.R = &userOrderR{
-			MultipleTransactions: MultipleTransactionSlice{o},
+			OrderMultipleTransactions: MultipleTransactionSlice{o},
 		}
 	} else {
-		related.R.MultipleTransactions = append(related.R.MultipleTransactions, o)
+		related.R.OrderMultipleTransactions = append(related.R.OrderMultipleTransactions, o)
 	}
 
 	return nil
