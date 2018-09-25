@@ -63,7 +63,7 @@ type exchangeDataExchange struct {
 	} `json:"source_currency"`
 	DestinationCurrency string             `json:"destination_currency"`
 	CurrentRate         float64            `json:"current_rate"`
-	LastUpdated         string         `json:"last_updated"`
+	LastUpdated         string             `json:"last_updated"`
 	Rates               []rateDataExchange `json:"rates"`
 }
 
