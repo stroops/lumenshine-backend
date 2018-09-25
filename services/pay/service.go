@@ -6,13 +6,13 @@ import (
 	"math/big"
 	"net"
 
-	context "golang.org/x/net/context"
-
 	"github.com/Soneso/lumenshine-backend/helpers"
+	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"github.com/Soneso/lumenshine-backend/services/db/modext"
 	"github.com/Soneso/lumenshine-backend/services/pay/environment"
+	context "golang.org/x/net/context"
 
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
@@ -333,25 +333,17 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	return ret, nil
 }
 
-func (s *server) PayGetTrustStatus(ctx context.Context, r *pb.PayGetTrustStatusRequest) (*pb.PayGetTrustStatusResponse, error) {
-	/*	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
-		if err != nil {
-			return nil, err
-		}
-
-		hasTrust, err := s.Env.AccountConfigurator.GetTrustStatus(order)
-		return &pb.PayGetTrustStatusResponse{
-			HasStrust:            hasTrust,
-			StellarAssetCode:     s.Env.Config.Stellar.TokenAssetCode,
-			StellarIssuerAccount: s.Env.Config.Stellar.IssuerPublicKey,
-		}, err*/
-	return nil, nil
-}
-
 func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionRequest) (*pb.PayGetTransactionResponse, error) {
 	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
+	}
+
+	if order.OrderStatus != m.OrderStatusWaitingUserTransaction {
+		return &pb.PayGetTransactionResponse{
+			ErrorCode:   cerr.OrderWrongStatus,
+			Transaction: "",
+		}, nil
 	}
 
 	tx, errCode, err := s.Env.AccountConfigurator.GetPaymentTransaction(order)

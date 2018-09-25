@@ -194,7 +194,6 @@ type CreateOrderRequest struct {
 	ExchangeCurrencyID int64 `json:"exchange_currency_id" form:"exchange_currency_id" validate:"required"`
 
 	// Stellar Public Key of the user for the payment/coins
-	// required: true
 	StellarUserPublicKey string `json:"stellar_user_public_key" form:"stellar_user_public_key"`
 }
 
@@ -527,62 +526,29 @@ func OrderDetails(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, getRespOrder(orders.UserOrders[0]))
 }
 
-//OrderGetTrustStatusRequest request data
-type OrderGetTrustStatusRequest struct {
-	OrderID int64 `form:"order_id" json:"order_id" validate:"required"`
-}
-
-//OrderGetTrustStatusResponse response onbect
-type OrderGetTrustStatusResponse struct {
-	HasTrustline         bool   `json:"has_trustline"`
-	StellarIssuerAccount string `json:"stellar_issuer_account"`
-	StellarAssetCode     string `json:"stellar_asset_code"`
-}
-
-//OrderGetTrustStatus returns the status for the trustline
-//also creates the stellar user account, if it does not exist
-func OrderGetTrustStatus(uc *mw.IcopContext, c *gin.Context) {
-	var l OrderGetTrustStatusRequest
-	if err := c.Bind(&l); err != nil {
-		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
-		return
-	}
-
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
-	userID := mw.GetAuthUser(c).UserID
-
-	t, err := payClient.PayGetTrustStatus(c, &pb.PayGetTrustStatusRequest{
-		Base:    NewBaseRequest(uc),
-		UserId:  userID,
-		OrderId: l.OrderID,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting trust status", cerr.GeneralError))
-		return
-	}
-
-	c.JSON(http.StatusOK, &OrderGetTrustStatusResponse{
-		HasTrustline:         t.HasStrust,
-		StellarIssuerAccount: t.StellarIssuerAccount,
-		StellarAssetCode:     t.StellarAssetCode,
-	})
-}
-
-//OrderGetTransactionRequest request data
+// OrderGetTransactionRequest request data
+// swagger:parameters OrderGetTransactionRequest OrderGetTransaction
 type OrderGetTransactionRequest struct {
 	OrderID int64 `form:"order_id" json:"order_id" validate:"required"`
 }
 
-//OrderGetTransactionResponse response onbect
+// OrderGetTransactionResponse response object
+// swagger:model
 type OrderGetTransactionResponse struct {
 	Transaction string `json:"transaction"`
 }
 
-//OrderGetTransaction returns the payment transaction unsigned
+// OrderGetTransaction returns the unsigned payment transaction
+// swagger:route GET /order_details OrderDetails
+//     returns the unsigned payment transaction
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: OrderGetTransactionResponse
 func OrderGetTransaction(uc *mw.IcopContext, c *gin.Context) {
 	var l OrderGetTransactionRequest
 	if err := c.Bind(&l); err != nil {

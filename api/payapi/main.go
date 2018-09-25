@@ -114,7 +114,6 @@ func main() {
 		auth.GET("get_payment_transaction", mw.UseIcopContext(OrderDetails))
 		auth.POST("execute_payment_transaction", mw.UseIcopContext(ExecuteTransaction))
 
-		auth.GET("get_order_trust_status", mw.UseIcopContext(OrderGetTrustStatus))
 		auth.GET("get_order_payment_transaction", mw.UseIcopContext(OrderGetTransaction))
 		auth.POST("execute_transaction", mw.UseIcopContext(ExecuteTransaction))
 		auth.POST("fake_transaction", mw.UseIcopContext(FakeTransaction))

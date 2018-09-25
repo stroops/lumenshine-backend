@@ -7,6 +7,10 @@
 
 CREATE TYPE ico_status AS ENUM ('planning', 'ready', 'active', 'finished', 'completed','stopped');
 
+CREATE TYPE payment_network AS ENUM('fiat', 'stellar', 'ethereum', 'bitcoin');
+
+CREATE TYPE exchange_currency_type AS ENUM('crypto', 'fiat');
+
 /* other sales model values for later 'dutch' and 'hybrid' */
 CREATE TYPE ico_sales_model AS ENUM ('fixed');
 
@@ -25,10 +29,6 @@ CREATE TABLE ico (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL default current_timestamp,
   updated_by VARCHAR NOT NULL
 );
-
-CREATE TYPE payment_network AS ENUM('fiat', 'stellar', 'ethereum', 'bitcoin');
-
-CREATE TYPE exchange_currency_type AS ENUM('crypto', 'fiat');
 
 CREATE TABLE exchange_currency (
   id SERIAL PRIMARY KEY NOT null,
@@ -72,6 +72,8 @@ CREATE TABLE ico_supported_exchange_currency (
   updated_by VARCHAR NOT NULL,
   CONSTRAINT ico_currency_unique UNIQUE(ico_id, exchange_currency_id)
 );
+create index idx_ico_supported_exchange_currency_ico on ico_supported_exchange_currency(ico_id);
+create index idx_ico_exchange_currency on ico_supported_exchange_currency(exchange_currency_id);
 
 CREATE TYPE ico_phase_status AS ENUM ('planning', 'ready', 'active', 'finished', 'completed','stopped');
 
@@ -102,7 +104,7 @@ CREATE TABLE ico_phase (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL default current_timestamp,
   updated_by VARCHAR NOT NULL
 );
-
+create index idx_ico_phase_ico on ico_phase(ico_id);
 create unique index on ico_phase (ico_id, ico_phase_status) where ico_phase_status = 'active'; /* only one active per ico at a time */
 
 CREATE TABLE ico_phase_bank_account (
@@ -144,6 +146,9 @@ CREATE TABLE ico_phase_activated_exchange_currency (
   updated_by VARCHAR NOT NULL,
   CONSTRAINT ico_phase_currency_unique UNIQUE(ico_phase_id, exchange_currency_id)
 );
+create index idx_ico_phase_activated_exchange_currency_ico_phase on ico_phase_activated_exchange_currency(ico_phase_id);
+create index idx_ico_phase_activated_exchange_currency_exchange_currency on ico_phase_activated_exchange_currency(exchange_currency_id);
+create index idx_ico_phase_activated_exchange_currency_ico_phase_bank_account on ico_phase_activated_exchange_currency(ico_phase_bank_account_id);
 
 /* create some demo data */
 /* seed issuer SCLLRXN435H2D5LT5OE7Y2ZUFZO4NEXFAA7PUM2VLDBNW55YSBT7TDCC */
