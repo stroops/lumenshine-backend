@@ -50,6 +50,7 @@ type UserProfile struct {
 	KycStatus                  string    `boil:"kyc_status" json:"kyc_status" toml:"kyc_status" yaml:"kyc_status"`
 	Password                   string    `boil:"password" json:"password" toml:"password" yaml:"password"`
 	StellarAccountCreated      bool      `boil:"stellar_account_created" json:"stellar_account_created" toml:"stellar_account_created" yaml:"stellar_account_created"`
+	Reset2faByAdmin            bool      `boil:"reset2fa_by_admin" json:"reset2fa_by_admin" toml:"reset2fa_by_admin" yaml:"reset2fa_by_admin"`
 	CreatedAt                  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                  time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                  string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
@@ -88,6 +89,7 @@ var UserProfileColumns = struct {
 	KycStatus                  string
 	Password                   string
 	StellarAccountCreated      string
+	Reset2faByAdmin            string
 	CreatedAt                  string
 	UpdatedAt                  string
 	UpdatedBy                  string
@@ -121,6 +123,7 @@ var UserProfileColumns = struct {
 	KycStatus:                  "kyc_status",
 	Password:                   "password",
 	StellarAccountCreated:      "stellar_account_created",
+	Reset2faByAdmin:            "reset2fa_by_admin",
 	CreatedAt:                  "created_at",
 	UpdatedAt:                  "updated_at",
 	UpdatedBy:                  "updated_by",
@@ -171,9 +174,9 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "created_at", "updated_at", "updated_by"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by"}
 	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
-	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "created_at", "updated_at"}
+	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )
 

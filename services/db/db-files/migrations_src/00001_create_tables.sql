@@ -45,6 +45,8 @@ CREATE TABLE user_profile
 
     stellar_account_created boolean not null default false,
 
+    reset2fa_by_admin boolean not null default false,
+
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp,
     updated_by character varying not null

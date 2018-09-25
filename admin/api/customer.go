@@ -2,19 +2,28 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/Soneso/lumenshine-backend/pb"
+
+	"github.com/Soneso/lumenshine-backend/admin/client"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
+
+	"github.com/Soneso/lumenshine-backend/constants"
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/Soneso/lumenshine-backend/admin/config"
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	"github.com/Soneso/lumenshine-backend/admin/route"
+	tt "github.com/Soneso/lumenshine-backend/admin/templates"
 	"github.com/Soneso/lumenshine-backend/db/pageinate"
 	qq "github.com/Soneso/lumenshine-backend/db/querying"
 
@@ -36,6 +45,7 @@ func init() {
 	route.AddRoute("GET", "/orders/:id", CustomerOrders, []string{}, "customer_orders", CustomerRoutePrefix)
 	route.AddRoute("GET", "/wallets/:id", CustomerWallets, []string{}, "customer_wallets", CustomerRoutePrefix)
 	route.AddRoute("POST", "/update_kyc_status", CustomerUpdateKYCStatus, []string{}, "update_kyc_status", CustomerRoutePrefix)
+	route.AddRoute("POST", "/reset2fa", Reset2fa, []string{}, "customer_reset2fa", CustomerRoutePrefix)
 }
 
 //AddCustomerRoutes adds all the routes for the user handling
@@ -318,6 +328,8 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	u.CountryCode = rr.CountryCode
 	u.Nationality = rr.Nationality
 	u.BirthPlace = rr.BirthPlace
+	u.UpdatedBy = getUpdatedBy(c)
+	u.UpdatedAt = time.Now().In(boil.GetLocation())
 
 	_, err = u.Update(db.DBC, boil.Whitelist(m.UserProfileColumns.ID,
 		m.UserProfileColumns.Forename,
@@ -330,7 +342,9 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		m.UserProfileColumns.State,
 		m.UserProfileColumns.CountryCode,
 		m.UserProfileColumns.Nationality,
-		m.UserProfileColumns.BirthPlace))
+		m.UserProfileColumns.BirthPlace,
+		m.UserProfileColumns.UpdatedBy,
+		m.UserProfileColumns.UpdatedAt))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
@@ -564,11 +578,98 @@ func CustomerUpdateKYCStatus(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	u.KycStatus = rr.KycStatus
+	u.UpdatedBy = getUpdatedBy(c)
+	u.UpdatedAt = time.Now().In(boil.GetLocation())
+
 	_, err = u.Update(db.DBC, boil.Whitelist(m.UserProfileColumns.ID,
-		m.UserProfileColumns.KycStatus))
+		m.UserProfileColumns.KycStatus,
+		m.UserProfileColumns.UpdatedBy,
+		m.UserProfileColumns.UpdatedAt))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
+}
+
+//Reset2faRequest - request
+type Reset2faRequest struct {
+	ID int `form:"id" json:"id"`
+}
+
+//Reset2fa resets the flag and sends the email
+func Reset2fa(uc *mw.AdminContext, c *gin.Context) {
+	var err error
+	var rr Reset2faRequest
+	if err = c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	u, err := m.UserProfiles(
+		qm.Where("id=?", rr.ID),
+		qm.Select(
+			m.UserProfileColumns.ID,
+			m.UserProfileColumns.Email,
+			m.UserProfileColumns.Forename,
+			m.UserProfileColumns.Lastname,
+			m.UserProfileColumns.Reset2faByAdmin,
+		),
+	).One(db.DBC)
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
+		return
+	}
+
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("id", cerr.UserNotExists, "User does not exist in db", ""))
+		return
+	}
+
+	u.Reset2faByAdmin = true
+	u.MailConfirmationKey = helpers.RandomString(constants.DefaultMailkeyLength)
+	u.MailConfirmationExpiryDate = time.Unix(time.Now().AddDate(0, 0, constants.DefaultMailkeyExpiryDays).Unix(), 0)
+	u.UpdatedBy = getUpdatedBy(c)
+	u.UpdatedAt = time.Now().In(boil.GetLocation())
+
+	_, err = u.Update(db.DBC, boil.Whitelist(m.UserProfileColumns.ID,
+		m.UserProfileColumns.Reset2faByAdmin,
+		m.UserProfileColumns.MailConfirmationKey,
+		m.UserProfileColumns.MailConfirmationExpiryDate,
+		m.UserProfileColumns.UpdatedBy,
+		m.UserProfileColumns.UpdatedAt))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
+		return
+	}
+
+	msgSubject := fmt.Sprintf("%s :: Lost 2FA Secret", config.Cnf.Site.SiteName)
+	msgBody := tt.RenderTemplateToString(uc, c, "lost_tfa_mail", gin.H{
+		"Forename": u.Forename,
+		"Lastname": u.Lastname,
+		"TokeUrl":  config.Cnf.WebLinks.LostTFA + u.MailConfirmationKey,
+		"TokenValidTo": helpers.TimeToString(
+			u.MailConfirmationExpiryDate, uc.Language,
+		),
+	})
+
+	_, err = client.MailClient.SendMail(c, &pb.SendMailRequest{
+		Base:    &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: getUpdatedBy(c)},
+		From:    config.Cnf.Site.EmailSender,
+		To:      u.Email,
+		Subject: msgSubject,
+		Body:    msgBody,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))
 		return
 	}
 

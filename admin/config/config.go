@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+//DBConfig - database configuration
 type DBConfig struct {
 	DBUser     string
 	DBPassword string
@@ -18,8 +19,25 @@ type DBConfig struct {
 	DBName     string
 }
 
-//ConfigKyc - kyc configuration
-type ConfigKyc struct {
+//ServicesConfig holds the config for all services
+type ServicesConfig struct {
+	MailSrvPort int64
+	MailSrvHost string
+}
+
+//SiteConfig globals that define the site behaviour
+type SiteConfig struct {
+	SiteName    string
+	EmailSender string
+}
+
+//WebLinksConfig links that are used in the clients (e.g. token confirm)
+type WebLinksConfig struct {
+	LostTFA string
+}
+
+//KycConfig - kyc configuration
+type KycConfig struct {
 	DocumentsPath string
 }
 
@@ -34,12 +52,16 @@ type Config struct {
 	CustomerDB    DBConfig
 	StellarCoreDB DBConfig
 
+	Services ServicesConfig
+	Site     SiteConfig
+	WebLinks WebLinksConfig
+
 	SQLMigrationDir string
 	ApplicationDir  string
 	IsDevSystem     bool
 	ConnectToCoreDB bool
 
-	Kyc ConfigKyc
+	Kyc KycConfig
 }
 
 //Cnf holds the application configuration

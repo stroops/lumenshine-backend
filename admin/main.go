@@ -12,7 +12,9 @@ import (
 	context "golang.org/x/net/context"
 
 	"github.com/Soneso/lumenshine-backend/admin/api"
+	"github.com/Soneso/lumenshine-backend/admin/client"
 	"github.com/Soneso/lumenshine-backend/admin/cmd"
+	tt "github.com/Soneso/lumenshine-backend/admin/templates"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/gin-contrib/cors"
@@ -57,7 +59,9 @@ func main() {
 		log.WithError(err).Fatalf("Error creating db connection")
 	}
 
+	connectServices(log)
 	initBoxes()
+	tt.LoadTemplates(log)
 
 	go startGRPC()
 
@@ -134,6 +138,15 @@ func startGRPC() {
 		log.WithError(err).Fatalf("Failed to serve")
 		panic(err)
 	}
+}
+
+func connectServices(log *logrus.Entry) {
+	//connect mail service
+	connMail, err := grpc.Dial(fmt.Sprintf("%s:%d", config.Cnf.Services.MailSrvHost, config.Cnf.Services.MailSrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	client.MailClient = pb.NewMailServiceClient(connMail)
 }
 
 //GetKnownCurrency returns the currency for the id
