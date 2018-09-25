@@ -228,7 +228,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress)
+	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}

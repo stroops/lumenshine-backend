@@ -163,18 +163,41 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 //It will set the order in status OrderStatusPaymentReceived
 //If no open order was found(OrderStatusWaitingForPayment), the function will return either nil or filter for any other order with the given address
 //The function will be called for EVERY payment transaction in the external PaymentNetworks
-func (db *DB) GetOrderForAddress(paymentChannel string, address string) (*m.UserOrder, error) {
+//paymentUsage is either an empty string or, for stellar the MEMO with the orderID
+func (db *DB) GetOrderForAddress(paymentChannel string, address string, paymentUsage string) (*m.UserOrder, error) {
 	userOrder := new(m.UserOrder)
-	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
-			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 limit 1 for update) returning
+
+	var sqlStr string
+	if paymentUsage == m.PaymentNetworkStellar {
+		//payment must be the order ID
+		paymentUsage = strings.Trim(paymentUsage, " \n\t")
+		if _, err := strconv.ParseInt(paymentUsage, 10, 64); err != nil {
+			return nil, fmt.Errorf("Could not convert paymentUsage '%s' to id", paymentUsage)
+		}
+
+		sqlStr = querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
+			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 and id=@id limit 1 for update) returning
 			*`,
-		map[string]string{
-			"@user_order":      m.TableNames.UserOrder,
-			"@order_status":    m.UserOrderColumns.OrderStatus,
-			"@updated_at":      m.UserOrderColumns.UpdatedAt,
-			"@payment_network": m.UserOrderColumns.PaymentNetwork,
-			"@payment_address": m.UserOrderColumns.PaymentAddress,
-		})
+			map[string]string{
+				"@user_order":      m.TableNames.UserOrder,
+				"@order_status":    m.UserOrderColumns.OrderStatus,
+				"@updated_at":      m.UserOrderColumns.UpdatedAt,
+				"@payment_network": m.UserOrderColumns.PaymentNetwork,
+				"@payment_address": m.UserOrderColumns.PaymentAddress,
+				"@id":              paymentUsage,
+			})
+	} else {
+		sqlStr = querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
+		(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 limit 1 for update) returning
+		*`,
+			map[string]string{
+				"@user_order":      m.TableNames.UserOrder,
+				"@order_status":    m.UserOrderColumns.OrderStatus,
+				"@updated_at":      m.UserOrderColumns.UpdatedAt,
+				"@payment_network": m.UserOrderColumns.PaymentNetwork,
+				"@payment_address": m.UserOrderColumns.PaymentAddress,
+			})
+	}
 
 	//set order to payment recived
 	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, paymentChannel, address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)

@@ -206,6 +206,9 @@ type CreateOrderResponse struct {
 	OrderedTokenAssetCode string `json:"ordered_token_asset_code"`
 	PaymentNetwork        string `json:"payment_network"`
 
+	//This is used for fiat and stellar payments. for stellar, this needs to be send via MEMO
+	PaymentUsage string `json:"payment_usage,omitempty"`
+
 	//StellarUserPublicKey is the stellar public key of the user for this order. If omited on CreateOrder, the service will grab the first 'free' one from the user wallets, when the payment arrives, in order to connect only once to horizen. So this might be empty
 	StellarUserPublicKey string `json:"stellar_user_public_key"`
 
@@ -226,7 +229,6 @@ type CreateOrderResponse struct {
 	FiatBIC             string `json:"fiat_bic,omitempty"`
 	FiatIBAN            string `json:"fiat_iban,omitempty"`
 	FiatDestinationName string `json:"fiat_destination_name,omitempty"`
-	FiatPaymentUsage    string `json:"fiat_payment_usage,omitempty"`
 	FiatBankName        string `json:"fiat_bank_name,omitempty"`
 }
 
@@ -339,6 +341,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		OrderedTokenAmount:    l.OrderedTokenAmount,
 		OrderedTokenAssetCode: phase.IcoTokenAsset,
 		PaymentNetwork:        ec.PaymentNetwork,
+		PaymentUsage:          o.PaymentUsage,
 		ExchangeAssetCode:     ec.AssetCode,
 		ExchangeValueToPay:    o.ExchangeValueToPay,
 		ExchangeCurrencyType:  ec.ExchangeCurrencyType,
@@ -347,7 +350,6 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		FiatBIC:               o.FiatBic,
 		FiatIBAN:              o.FiatIban,
 		FiatDestinationName:   o.FiatRecepientName,
-		FiatPaymentUsage:      o.FiatPaymentUsage,
 		FiatBankName:          o.FiatBankName,
 		StellarUserPublicKey:  o.UserPublicKey,
 	})
@@ -385,6 +387,9 @@ type UserOrderResponse struct {
 	ExchangeCurrencyType string `json:"exchange_currency_type"`
 	PaymentNetwork       string `json:"payment_network"`
 
+	//used for fiat and stellar payments. for stellar, this must be send via MEMO
+	PaymentUsage string `json:"payment_usage,omitempty"`
+
 	//This is the public key in the PaymentNetwork, where the exchange-currency must be transfered to
 	PaymentAddress string `json:"payment_address,omitempty"`
 
@@ -402,7 +407,6 @@ type UserOrderResponse struct {
 	FiatBic           string `json:"fiat_bic,omitempty"`
 	FiatIban          string `json:"fiat_iban,omitempty"`
 	FiatRecepientName string `json:"fiat_recepient_name,omitempty"`
-	FiatPaymentUsage  string `json:"fiat_payment_usage,omitempty"`
 	FiatBankName      string `json:"fiat_bank_name,omitempty"`
 }
 
@@ -462,6 +466,7 @@ func getRespOrder(o *pb.UserOrder) UserOrderResponse {
 		PaymentAddress:       o.PaymentAddress,
 		StellarTransactionID: o.StellarTransactionId,
 		PaymentRefundTxID:    o.PaymentRefundTxId,
+		PaymentUsage:         o.PaymentUsage,
 
 		//TODO PaymentQrImage : o.PaymentQrImage,
 
@@ -470,9 +475,9 @@ func getRespOrder(o *pb.UserOrder) UserOrderResponse {
 		FiatBic:           o.FiatBic,
 		FiatIban:          o.FiatIban,
 		FiatRecepientName: o.FiatRecepientName,
-		FiatPaymentUsage:  o.FiatPaymentUsage,
-		FiatBankName:      o.FiatBankName,
-		AmountReceived:    o.AmountReceived,
+
+		FiatBankName:   o.FiatBankName,
+		AmountReceived: o.AmountReceived,
 	}
 }
 
@@ -635,6 +640,9 @@ type FakeTransactionRequest struct {
 	//This is the denomination amount in the UoM of the payment network that the transaction should fake
 	// required: true
 	DenominationAmount int64 `form:"denomination_amount" json:"denomination_amount"`
+
+	//This is the MEMO field for stellar payments. Must be a valid order ID
+	PaymentUsage string `form:"payment_usage" json:"payment_usage"`
 }
 
 // FakeTransaction create a fake transaction from a payment network
@@ -657,6 +665,11 @@ func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
 
 	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
 		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	if l.PaymentChannel == m.PaymentNetworkStellar && l.PaymentUsage == "" {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("payment_usage", cerr.MissingMandatoryField, "Missing usage for stellartransaction", ""))
 		return
 	}
 

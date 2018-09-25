@@ -21,76 +21,79 @@ import (
 
 // IcoPhase is an object representing the database table.
 type IcoPhase struct {
-	ID                  int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	IcoID               int       `boil:"ico_id" json:"ico_id" toml:"ico_id" yaml:"ico_id"`
-	IcoPhaseName        string    `boil:"ico_phase_name" json:"ico_phase_name" toml:"ico_phase_name" yaml:"ico_phase_name"`
-	IcoPhaseStatus      string    `boil:"ico_phase_status" json:"ico_phase_status" toml:"ico_phase_status" yaml:"ico_phase_status"`
-	DistPK              string    `boil:"dist_pk" json:"dist_pk" toml:"dist_pk" yaml:"dist_pk"`
-	DistPresignerPK     string    `boil:"dist_presigner_pk" json:"dist_presigner_pk" toml:"dist_presigner_pk" yaml:"dist_presigner_pk"`
-	DistPresignerSeed   string    `boil:"dist_presigner_seed" json:"dist_presigner_seed" toml:"dist_presigner_seed" yaml:"dist_presigner_seed"`
-	DistPostsignerPK    string    `boil:"dist_postsigner_pk" json:"dist_postsigner_pk" toml:"dist_postsigner_pk" yaml:"dist_postsigner_pk"`
-	DistPostsignerSeed  string    `boil:"dist_postsigner_seed" json:"dist_postsigner_seed" toml:"dist_postsigner_seed" yaml:"dist_postsigner_seed"`
-	StartTime           time.Time `boil:"start_time" json:"start_time" toml:"start_time" yaml:"start_time"`
-	EndTime             time.Time `boil:"end_time" json:"end_time" toml:"end_time" yaml:"end_time"`
-	TokensToDistribute  int64     `boil:"tokens_to_distribute" json:"tokens_to_distribute" toml:"tokens_to_distribute" yaml:"tokens_to_distribute"`
-	TokensReleased      int64     `boil:"tokens_released" json:"tokens_released" toml:"tokens_released" yaml:"tokens_released"`
-	TokensBlocked       int64     `boil:"tokens_blocked" json:"tokens_blocked" toml:"tokens_blocked" yaml:"tokens_blocked"`
-	TokensLeft          int64     `boil:"tokens_left" json:"tokens_left" toml:"tokens_left" yaml:"tokens_left"`
-	TokenMaxOrderAmount int64     `boil:"token_max_order_amount" json:"token_max_order_amount" toml:"token_max_order_amount" yaml:"token_max_order_amount"`
-	TokenMinOrderAmount int64     `boil:"token_min_order_amount" json:"token_min_order_amount" toml:"token_min_order_amount" yaml:"token_min_order_amount"`
-	MaxUserOrders       int       `boil:"max_user_orders" json:"max_user_orders" toml:"max_user_orders" yaml:"max_user_orders"`
-	CreatedAt           time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt           time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	UpdatedBy           string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	ID                          int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	IcoID                       int       `boil:"ico_id" json:"ico_id" toml:"ico_id" yaml:"ico_id"`
+	IcoPhaseName                string    `boil:"ico_phase_name" json:"ico_phase_name" toml:"ico_phase_name" yaml:"ico_phase_name"`
+	IcoPhaseStatus              string    `boil:"ico_phase_status" json:"ico_phase_status" toml:"ico_phase_status" yaml:"ico_phase_status"`
+	DistPK                      string    `boil:"dist_pk" json:"dist_pk" toml:"dist_pk" yaml:"dist_pk"`
+	DistPresignerPK             string    `boil:"dist_presigner_pk" json:"dist_presigner_pk" toml:"dist_presigner_pk" yaml:"dist_presigner_pk"`
+	DistPresignerSeed           string    `boil:"dist_presigner_seed" json:"dist_presigner_seed" toml:"dist_presigner_seed" yaml:"dist_presigner_seed"`
+	DistPostsignerPK            string    `boil:"dist_postsigner_pk" json:"dist_postsigner_pk" toml:"dist_postsigner_pk" yaml:"dist_postsigner_pk"`
+	DistPostsignerSeed          string    `boil:"dist_postsigner_seed" json:"dist_postsigner_seed" toml:"dist_postsigner_seed" yaml:"dist_postsigner_seed"`
+	StartTime                   time.Time `boil:"start_time" json:"start_time" toml:"start_time" yaml:"start_time"`
+	EndTime                     time.Time `boil:"end_time" json:"end_time" toml:"end_time" yaml:"end_time"`
+	TokensToDistribute          int64     `boil:"tokens_to_distribute" json:"tokens_to_distribute" toml:"tokens_to_distribute" yaml:"tokens_to_distribute"`
+	TokensReleased              int64     `boil:"tokens_released" json:"tokens_released" toml:"tokens_released" yaml:"tokens_released"`
+	StellarStartingBalanceDenom string    `boil:"stellar_starting_balance_denom" json:"stellar_starting_balance_denom" toml:"stellar_starting_balance_denom" yaml:"stellar_starting_balance_denom"`
+	TokensBlocked               int64     `boil:"tokens_blocked" json:"tokens_blocked" toml:"tokens_blocked" yaml:"tokens_blocked"`
+	TokensLeft                  int64     `boil:"tokens_left" json:"tokens_left" toml:"tokens_left" yaml:"tokens_left"`
+	TokenMaxOrderAmount         int64     `boil:"token_max_order_amount" json:"token_max_order_amount" toml:"token_max_order_amount" yaml:"token_max_order_amount"`
+	TokenMinOrderAmount         int64     `boil:"token_min_order_amount" json:"token_min_order_amount" toml:"token_min_order_amount" yaml:"token_min_order_amount"`
+	MaxUserOrders               int       `boil:"max_user_orders" json:"max_user_orders" toml:"max_user_orders" yaml:"max_user_orders"`
+	CreatedAt                   time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt                   time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UpdatedBy                   string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 
 	R *icoPhaseR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L icoPhaseL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var IcoPhaseColumns = struct {
-	ID                  string
-	IcoID               string
-	IcoPhaseName        string
-	IcoPhaseStatus      string
-	DistPK              string
-	DistPresignerPK     string
-	DistPresignerSeed   string
-	DistPostsignerPK    string
-	DistPostsignerSeed  string
-	StartTime           string
-	EndTime             string
-	TokensToDistribute  string
-	TokensReleased      string
-	TokensBlocked       string
-	TokensLeft          string
-	TokenMaxOrderAmount string
-	TokenMinOrderAmount string
-	MaxUserOrders       string
-	CreatedAt           string
-	UpdatedAt           string
-	UpdatedBy           string
+	ID                          string
+	IcoID                       string
+	IcoPhaseName                string
+	IcoPhaseStatus              string
+	DistPK                      string
+	DistPresignerPK             string
+	DistPresignerSeed           string
+	DistPostsignerPK            string
+	DistPostsignerSeed          string
+	StartTime                   string
+	EndTime                     string
+	TokensToDistribute          string
+	TokensReleased              string
+	StellarStartingBalanceDenom string
+	TokensBlocked               string
+	TokensLeft                  string
+	TokenMaxOrderAmount         string
+	TokenMinOrderAmount         string
+	MaxUserOrders               string
+	CreatedAt                   string
+	UpdatedAt                   string
+	UpdatedBy                   string
 }{
-	ID:                  "id",
-	IcoID:               "ico_id",
-	IcoPhaseName:        "ico_phase_name",
-	IcoPhaseStatus:      "ico_phase_status",
-	DistPK:              "dist_pk",
-	DistPresignerPK:     "dist_presigner_pk",
-	DistPresignerSeed:   "dist_presigner_seed",
-	DistPostsignerPK:    "dist_postsigner_pk",
-	DistPostsignerSeed:  "dist_postsigner_seed",
-	StartTime:           "start_time",
-	EndTime:             "end_time",
-	TokensToDistribute:  "tokens_to_distribute",
-	TokensReleased:      "tokens_released",
-	TokensBlocked:       "tokens_blocked",
-	TokensLeft:          "tokens_left",
-	TokenMaxOrderAmount: "token_max_order_amount",
-	TokenMinOrderAmount: "token_min_order_amount",
-	MaxUserOrders:       "max_user_orders",
-	CreatedAt:           "created_at",
-	UpdatedAt:           "updated_at",
-	UpdatedBy:           "updated_by",
+	ID:                          "id",
+	IcoID:                       "ico_id",
+	IcoPhaseName:                "ico_phase_name",
+	IcoPhaseStatus:              "ico_phase_status",
+	DistPK:                      "dist_pk",
+	DistPresignerPK:             "dist_presigner_pk",
+	DistPresignerSeed:           "dist_presigner_seed",
+	DistPostsignerPK:            "dist_postsigner_pk",
+	DistPostsignerSeed:          "dist_postsigner_seed",
+	StartTime:                   "start_time",
+	EndTime:                     "end_time",
+	TokensToDistribute:          "tokens_to_distribute",
+	TokensReleased:              "tokens_released",
+	StellarStartingBalanceDenom: "stellar_starting_balance_denom",
+	TokensBlocked:               "tokens_blocked",
+	TokensLeft:                  "tokens_left",
+	TokenMaxOrderAmount:         "token_max_order_amount",
+	TokenMinOrderAmount:         "token_min_order_amount",
+	MaxUserOrders:               "max_user_orders",
+	CreatedAt:                   "created_at",
+	UpdatedAt:                   "updated_at",
+	UpdatedBy:                   "updated_by",
 }
 
 // IcoPhaseRels is where relationship names are stored.
@@ -120,8 +123,8 @@ func (*icoPhaseR) NewStruct() *icoPhaseR {
 type icoPhaseL struct{}
 
 var (
-	icoPhaseColumns               = []string{"id", "ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "token_max_order_amount", "token_min_order_amount", "max_user_orders", "created_at", "updated_at", "updated_by"}
-	icoPhaseColumnsWithoutDefault = []string{"ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "tokens_blocked", "tokens_left", "max_user_orders", "updated_by"}
+	icoPhaseColumns               = []string{"id", "ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "stellar_starting_balance_denom", "tokens_blocked", "tokens_left", "token_max_order_amount", "token_min_order_amount", "max_user_orders", "created_at", "updated_at", "updated_by"}
+	icoPhaseColumnsWithoutDefault = []string{"ico_id", "ico_phase_name", "ico_phase_status", "dist_pk", "dist_presigner_pk", "dist_presigner_seed", "dist_postsigner_pk", "dist_postsigner_seed", "start_time", "end_time", "tokens_to_distribute", "tokens_released", "stellar_starting_balance_denom", "tokens_blocked", "tokens_left", "max_user_orders", "updated_by"}
 	icoPhaseColumnsWithDefault    = []string{"id", "token_max_order_amount", "token_min_order_amount", "created_at", "updated_at"}
 	icoPhasePrimaryKeyColumns     = []string{"id"}
 )
