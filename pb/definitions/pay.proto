@@ -113,26 +113,6 @@ message UserOrdersResponse{
     repeated UserOrder UserOrders=1;
 }
 
-message IcoPhaseResponse{
-    string phase_name = 1;
-    int64 start_time = 2;
-    int64 end_time = 3;    
-    int64 coin_amount = 4;
-    bool is_active = 5;
-}
-
-message PayGetTrustStatusRequest{
-    BaseRequest base = 1;
-    int64 user_id = 2;        
-    int64 order_id = 3;  
-}
-
-message PayGetTrustStatusResponse{    
-    bool has_strust = 1;
-    string stellar_issuer_account = 4;
-    string stellar_asset_code = 5;
-}
-
 message PayGetTransactionRequest{
     BaseRequest base = 1;
     int64 user_id = 2;        
@@ -166,10 +146,9 @@ service PayService {
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
   rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
   rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}
-
-  rpc FakePaymentTransaction (TestTransaction) returns (BoolResponse) {}    
-    
-  rpc PayGetTrustStatus (PayGetTrustStatusRequest) returns (PayGetTrustStatusResponse) {}
+  
   rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}
   rpc PayExecuteTransaction (PayExecuteTransactionRequest) returns (Empty) {}
+
+  rpc FakePaymentTransaction (TestTransaction) returns (BoolResponse) {}        
 }

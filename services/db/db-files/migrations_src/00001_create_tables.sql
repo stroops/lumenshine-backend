@@ -230,6 +230,7 @@ CREATE TABLE notification
     updated_at timestamp with time zone NOT NULL default current_timestamp,
     updated_by character varying not null
 );
+create index idx_notification_user_profile on notification(user_id);
 
 CREATE TABLE notification_archive
 (
@@ -249,6 +250,7 @@ CREATE TABLE notification_archive
     updated_at timestamp with time zone NOT NULL default current_timestamp,
     updated_by character varying not null
 );
+create index idx_notification_archive_user_profile on notification_archive(user_id);
 
 /*device_type*/
 CREATE TYPE device_type AS ENUM ('apple','google');
@@ -264,6 +266,7 @@ CREATE TABLE user_pushtoken
     updated_by character varying not null
 );
 CREATE UNIQUE index idx_user_pushtoken on user_pushtoken(push_token);
+create index idx_user_pushtoken_user_profile on user_pushtoken(user_id);
 
 /*kyc document_type*/
 CREATE TYPE kyc_document_type AS ENUM ('passport','drivers_license','id_card','proof_of_residence');

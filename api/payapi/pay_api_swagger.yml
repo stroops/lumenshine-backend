@@ -26,7 +26,6 @@ definitions:
     - ico_phase_id
     - ordered_token_amount
     - exchange_currency_id
-    - stellar_user_public_key
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   CreateOrderResponse:
@@ -287,34 +286,11 @@ definitions:
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   OrderGetTransactionResponse:
-    description: OrderGetTransactionResponse response onbect
+    description: OrderGetTransactionResponse response object
     properties:
       transaction:
         type: string
         x-go-name: Transaction
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  OrderGetTrustStatusRequest:
-    description: OrderGetTrustStatusRequest request data
-    properties:
-      order_id:
-        format: int64
-        type: integer
-        x-go-name: OrderID
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  OrderGetTrustStatusResponse:
-    description: OrderGetTrustStatusResponse response onbect
-    properties:
-      has_trustline:
-        type: boolean
-        x-go-name: HasTrustline
-      stellar_asset_code:
-        type: string
-        x-go-name: StellarAssetCode
-      stellar_issuer_account:
-        type: string
-        x-go-name: StellarIssuerAccount
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   PriceForCoinRequest:
@@ -462,7 +438,6 @@ paths:
       - description: Stellar Public Key of the user for the payment/coins
         in: query
         name: stellar_user_public_key
-        required: true
         type: string
         x-go-name: StellarUserPublicKey
       produces:
@@ -583,7 +558,7 @@ paths:
     get:
       consumes:
       - multipart/form-data
-      description: returns the details for the specified order
+      description: returns the unsigned payment transaction
       operationId: OrderDetails
       parameters:
       - description: ID of the Order
@@ -597,9 +572,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: UserOrderResponse
+          description: OrderGetTransactionResponse
           schema:
-            $ref: '#/definitions/UserOrderResponse'
+            $ref: '#/definitions/OrderGetTransactionResponse'
   /order_list:
     get:
       consumes:
