@@ -109,6 +109,7 @@ func main() {
 		auth.GET("/user_auth_data", mw.UseIcopContext(UserSecurityData))
 		auth.POST("/update_security_data", mw.UseIcopContext(UpdateSecurityData))
 		auth.GET("/get_user_registration_status", mw.UseIcopContext(GetUserRegistrationDetails))
+		auth.GET("/need_2fa_reset_pwd", mw.UseIcopContext(Need2FAResetPassword))
 	}
 
 	//this group is used, with the full authenticator, which means, userID and claim is present

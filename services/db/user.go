@@ -79,6 +79,7 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		Password:               u.Password,
 		Email:                  u.Email,
 		MessageCount:           int64(u.MessageCount),
+		Reset2FaByAdmin:        u.Reset2faByAdmin,
 	}
 
 	return ret, nil

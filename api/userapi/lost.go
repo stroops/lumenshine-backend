@@ -102,6 +102,35 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, "{}")
 }
 
+//Need2FAResetPasswordResponse returned from the API
+type Need2FAResetPasswordResponse struct {
+	Need2FAResetPassword bool `json:"need2fa_reset_pwd"`
+}
+
+//Need2FAResetPassword - returns the flag
+func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
+	userID := mw.GetAuthUser(c).UserID
+
+	req := &pb.GetUserByIDOrEmailRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID,
+	}
+	user, err := dbClient.GetUserDetails(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+		return
+	}
+
+	if user.UserNotFound {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email could not be found in db", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, &Need2FAResetPasswordResponse{
+		Need2FAResetPassword: !user.Reset2FaByAdmin,
+	})
+}
+
 //LostPasswordTfaRequest is the data needed for the first step of the login
 //The user clicked the confirm link and thus called the /ico/confirm_token function, which sets the simple-auth-token
 type LostPasswordTfaRequest struct {
