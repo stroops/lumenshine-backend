@@ -63,7 +63,7 @@ type exchangeDataExchange struct {
 	} `json:"source_currency"`
 	DestinationCurrency string             `json:"destination_currency"`
 	CurrentRate         float64            `json:"current_rate"`
-	LastUpdated         time.Time          `json:"last_updated"`
+	LastUpdated         string             `json:"last_updated"`
 	Rates               []rateDataExchange `json:"rates"`
 }
 
@@ -160,7 +160,7 @@ func ChartExchangeData(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	data.CurrentRate = lastTransaction.ExchangeRate
-	data.LastUpdated = lastTransaction.ExchangeRateTime
+	data.LastUpdated = lastTransaction.ExchangeRateTime.Format(config.TimeFormat)
 
 	data.Rates, err = getRates(sourceCurrency, destinationCurrency, requestData.RangeHours)
 	if err != nil {

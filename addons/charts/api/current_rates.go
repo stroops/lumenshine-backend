@@ -2,10 +2,10 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 	"github.com/Soneso/lumenshine-backend/addons/charts/utils"
-	"net/http"
-	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 
@@ -48,8 +48,8 @@ type rateDataCurrent struct {
 		AssetCode       string `json:"asset_code"`
 		IssuerPublicKey string `json:"issuer_public_key"`
 	} `json:"source_currency"`
-	Rate        float64   `json:"rate"`
-	LastUpdated time.Time `json:"last_updated"`
+	Rate        float64 `json:"rate"`
+	LastUpdated string  `json:"last_updated"`
 }
 
 type exchangeDataCurrent struct {
@@ -138,7 +138,7 @@ func ChartCurrentRates(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 		sourceData.Rate = lastTransaction.ExchangeRate
-		sourceData.LastUpdated = lastTransaction.ExchangeRateTime
+		sourceData.LastUpdated = lastTransaction.ExchangeRateTime.Format(config.TimeFormat)
 
 		data.Rates = append(data.Rates, sourceData)
 
