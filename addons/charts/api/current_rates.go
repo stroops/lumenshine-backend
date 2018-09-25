@@ -138,7 +138,7 @@ func ChartCurrentRates(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 		sourceData.Rate = lastTransaction.ExchangeRate
-		sourceData.LastUpdated = lastTransaction.ExchangeRateTime.Format(config.DateFormat)
+		sourceData.LastUpdated = lastTransaction.ExchangeRateTime.Format(config.TimeFormat)
 
 		data.Rates = append(data.Rates, sourceData)
 

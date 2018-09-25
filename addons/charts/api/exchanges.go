@@ -160,7 +160,7 @@ func ChartExchangeData(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	data.CurrentRate = lastTransaction.ExchangeRate
-	data.LastUpdated = lastTransaction.ExchangeRateTime.Format(config.DateFormat)
+	data.LastUpdated = lastTransaction.ExchangeRateTime.Format(config.TimeFormat)
 
 	data.Rates, err = getRates(sourceCurrency, destinationCurrency, requestData.RangeHours)
 	if err != nil {
