@@ -28,37 +28,37 @@ CREATE TABLE user_order (
   token_amount bigint not null,
   /* the users public key for the payment */
   /* coins will be transfered here on success */
-  stellar_user_public_key varchar(56) NOT NULL, 
+  stellar_user_public_key varchar(56) NOT NULL,
 
   exchange_currency_id int not null REFERENCES exchange_currency(id),
   exchange_currency_denomination_amount varchar(64) not null, /* denomination for selected currency */
-      
+
   payment_network payment_network not null, /* this is just used as information when filtering the orders */
 
   /* ========== */
-  /* chain data */  
+  /* chain data */
   address_index bigint NOT NULL, /* used in eth and btc for generating the address */
   /* bitcoin 34 characters */
-  /* ethereum 42 characters */  
-  /* stellar 56 characters */  
+  /* ethereum 42 characters */
+  /* stellar 56 characters */
   payment_address varchar(56) NOT NULL, /* public key in the target network, based on payment_network */
-  payment_seed varchar(56) NOT NULL, /* used only for stellar accounts */  
+  payment_seed varchar(56) NOT NULL, /* used only for stellar accounts */
 
   stellar_transaction_id text not null, /* this is the coin payment tx in the stellar network */
   processed_transaction_id int null, /* FK to the processed transactions */
-  
+
   payment_qr_image bytea null, /* qr-image for the payment transaction */
 
   payment_usage varchar(255) not null, /* used only for fiat and stellar payment payments. For stellar, the data will be read from the momo */
 
   /* this field is used to save any error message that happened during the client payment */
   payment_error_message text not null,
-  
+
   /* ============== */
   /* default fields */
   created_at timestamp with time zone NOT NULL default current_timestamp,
   updated_at timestamp with time zone NOT NULL default current_timestamp,
-  updated_by character varying not null,  
+  updated_by character varying not null,
 
   CONSTRAINT valid_address_index CHECK (address_index >= 0)
 );
@@ -80,7 +80,7 @@ CREATE TABLE processed_transaction (
   transaction_id varchar(66) NOT NULL,
   /* bitcoin 34 characters */
   /* ethereum 42 characters */
-   /* stellar 56 characters */  
+   /* stellar 56 characters */
   refund_tx_id text not null, /* refund payment hash/id from the PaymentNetwork */
 
   receiving_address varchar(56) NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE processed_transaction (
   order_id integer not null REFERENCES user_order(id),
 
   created_at timestamp with time zone NOT NULL default current_timestamp,
-  updated_at timestamp with time zone NOT NULL default current_timestamp  
+  updated_at timestamp with time zone NOT NULL default current_timestamp
 );
 create unique index idx_processed_transaction_ix1 on processed_transaction(order_id);
 create unique index idx_processed_transaction_ix2 on processed_transaction(payment_network, transaction_id);
@@ -104,7 +104,7 @@ CREATE TABLE multiple_transaction (
   payment_network_amount_denom varchar(64) not null,
   order_id integer not null REFERENCES user_order(id),
   created_at timestamp with time zone NOT NULL default current_timestamp,
-  updated_at timestamp with time zone NOT NULL default current_timestamp  
+  updated_at timestamp with time zone NOT NULL default current_timestamp
 );
 create unique index idx_multiple_transaction_ix1 on multiple_transaction(order_id, transaction_id);
 create index idx_multiple_transaction_ix2 on multiple_transaction(payment_network, transaction_id);
@@ -113,9 +113,9 @@ create index idx_multiple_transaction_ix3 on multiple_transaction(payment_networ
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 drop table IF EXISTS key_value_store;
-ALTER TABLE user_order DROP CONSTRAINT "user_order_processed_transaction_id_fkey";
-ALTER TABLE processed_transaction DROP CONSTRAINT "processed_transaction_order_id_fkey";
-ALTER TABLE multiple_transaction DROP CONSTRAINT "multiple_transaction_order_id_fkey";
+ALTER TABLE user_order DROP CONSTRAINT IF EXISTS "user_order_processed_transaction_id_fkey";
+ALTER TABLE processed_transaction DROP CONSTRAINT IF EXISTS "processed_transaction_order_id_fkey";
+ALTER TABLE multiple_transaction DROP CONSTRAINT IF EXISTS "multiple_transaction_order_id_fkey";
 drop table IF EXISTS user_order;
 drop table if exists processed_transaction;
 drop table if exists multiple_transaction;
