@@ -645,6 +645,12 @@ type FakeTransactionRequest struct {
 	PaymentUsage string `form:"payment_usage" json:"payment_usage"`
 }
 
+// FakeTransactionResponse response object
+// swagger:model
+type FakeTransactionResponse struct {
+	IsDuplicate bool `json:"is_duplicate"`
+}
+
 // FakeTransaction create a fake transaction from a payment network
 // swagger:route POST /fake_transaction FakeTransaction
 //     create a fake transaction from a payment network
@@ -655,7 +661,7 @@ type FakeTransactionRequest struct {
 //     - application/json
 //
 //     Responses:
-//       200: 'boolean'
+//       200: FakeTransactionResponse
 func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
 	var l FakeTransactionRequest
 	if err := c.Bind(&l); err != nil {
@@ -685,5 +691,5 @@ func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, b.Value)
+	c.JSON(http.StatusOK, &FakeTransactionResponse{IsDuplicate: b.Value})
 }

@@ -220,11 +220,14 @@ func (db *DB) GetOrderForAddress(paymentChannel string, address string, paymentU
 }
 
 func isDuplicateError(err error) bool {
+	if err == nil {
+		return false
+	}
 	return strings.Contains(err.Error(), "duplicate key value violates unique constraint")
 }
 
 //AddNewTransaction adds a transaction to the database and returns true, if it was allready present
-func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash string, toAddress string, orderID int, denomAmount *big.Int) (bool, error) {
+func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash string, toAddress string, orderID int, denomAmount *big.Int) (isDuplicate bool, err error) {
 
 	d := new(m.ProcessedTransaction)
 	d.PaymentNetwork = paymentChannel
@@ -234,8 +237,9 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	d.Status = m.TransactionStatusNew
 	d.PaymentNetworkAmountDenomination = denomAmount.String()
 
-	err := d.Insert(db, boil.Infer())
-	if err != nil && isDuplicateError(err) {
+	err = d.Insert(db, boil.Infer())
+	isDuplicate = isDuplicateError(err)
+	if isDuplicate {
 		//add the transaction to the multiple table for manual handling
 		b := new(m.MultipleTransaction)
 		b.PaymentNetwork = paymentChannel
@@ -252,26 +256,26 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	}
 
 	if err != nil {
-		return true, err
+		return isDuplicate, err
 	}
 
 	//update the order to hold the transaction-ref
 	order, err := m.FindUserOrder(db, orderID, "id")
 	if err != nil {
-		return true, err
+		return isDuplicate, err
 	}
 	order.ProcessedTransactionID = null.IntFrom(d.ID)
 	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.ProcessedTransactionID, m.UserKycDocumentColumns.UpdatedAt))
 	if err != nil {
-		return true, err
+		return isDuplicate, err
 	}
 
-	return db.handleNewTransaction(log, d, denomAmount)
+	return isDuplicate, db.handleNewTransaction(log, d, denomAmount)
 }
 
 //handleNewTransaction checks the transaction data and updates the user_profile to reflect the payment
 //the order must be in status OrderStatusPaymentReceived and will be set to status OrderStatusWaitingUserTX
-func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (processed bool, err error) {
+func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (err error) {
 
 	order := new(m.UserOrder)
 
@@ -287,7 +291,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 	err = queries.Raw(sqlStr, m.OrderStatusWaitingForPayment, tx.OrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
 	if err != nil {
 		log.WithError(err).WithFields(logrus.Fields{"order_id": tx.OrderID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
-		return true, err
+		return err
 	}
 
 	//check order amount
@@ -305,7 +309,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 
 		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 		if err != nil {
-			return false, err
+			return err
 		}
 	} else {
 		//amount payed is exactly the amount bought. we can check/update, if there are coins left
@@ -326,11 +330,11 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			if err != sql.ErrNoRows {
 				// log error
 				log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
-				return true, err
+				return err
 			}
 			ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(db)
 			if err != nil {
-				return true, err
+				return err
 			}
 			if ph.TokensLeft < order.TokenAmount {
 				order.OrderStatus = m.OrderStatusNoCoinsLeft
@@ -339,7 +343,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			}
 			_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 			if err != nil {
-				return true, err
+				return err
 			}
 		}
 
@@ -347,14 +351,14 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 		order.OrderStatus = m.OrderStatusWaitingUserTransaction
 		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 		if err != nil {
-			return true, err
+			return err
 		}
 	}
 
 	//check all user orders and if one is payed, set flag, if not, remove flag
 	user, err := m.UserProfiles(qm.Where("id=?", order.UserID)).One(db)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	cnt, err := m.UserOrders(qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTransaction)).Count(db)
@@ -365,8 +369,8 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 	}
 	_, err = user.Update(db, boil.Whitelist(m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt))
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return false, nil
+	return nil
 }

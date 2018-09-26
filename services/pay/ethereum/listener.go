@@ -206,12 +206,12 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
+	isDuplicate, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
 	if err != nil {
 		return err
 	}
 
-	if processed {
+	if isDuplicate {
 		localLog.Debug("Transaction already processed, skipping")
 		return nil
 	}

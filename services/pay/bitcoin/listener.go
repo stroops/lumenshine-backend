@@ -239,12 +239,12 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkBitcoin, hash, toAddress, order.ID, valueSat)
+	isDuplicate, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkBitcoin, hash, toAddress, order.ID, valueSat)
 	if err != nil {
 		return err
 	}
 
-	if processed {
+	if isDuplicate {
 		localLog.Debug("Transaction already processed, skipping")
 		return nil
 	}

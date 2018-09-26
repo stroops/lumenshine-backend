@@ -347,6 +347,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 }
 
 func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionRequest) (*pb.PayGetTransactionResponse, error) {
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	db := s.Env.DBC
 	var err error
 	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(db)
@@ -361,14 +362,14 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 	}
 
 	pk := ""
-	var pk_exists bool
+	var pkExists bool
 
 	if order.StellarUserPublicKey != "" {
-		_, pk_exists, err = ac.GetAccount(order.StellarUserPublicKey)
+		_, pkExists, err = ac.GetAccount(order.StellarUserPublicKey)
 		if err != nil {
 			return nil, err
 		}
-		if !pk_exists {
+		if !pkExists {
 			return &pb.PayGetTransactionResponse{
 				ErrorCode:        cerr.UserNotExists,
 				StellarPublicKey: order.StellarUserPublicKey,
@@ -383,11 +384,11 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 			return nil, err
 		}
 		for _, w := range wallets {
-			_, pk_exists, err = ac.GetAccount(w.PublicKey0)
+			_, pkExists, err = ac.GetAccount(w.PublicKey0)
 			if err != nil {
 				return nil, err
 			}
-			if pk_exists {
+			if pkExists {
 				//we use this pk for the order
 				pk = w.PublicKey0
 				continue
@@ -412,10 +413,22 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 		}
 	}
 
-	if !pk_exists {
+	if !pkExists {
 		//create the account and update the user profile, to reflect the stellar account creation
 		err := ac.CreateAccount(pk, order)
 		if err != nil {
+			return nil, err
+		}
+	}
+
+	//need to update the order to reflect the selected pk
+	if order.StellarUserPublicKey == "" {
+		order.StellarUserPublicKey = pk
+		_, err := order.Update(db, boil.Whitelist(m.UserOrderColumns.StellarUserPublicKey))
+		if err != nil {
+			log.WithError(err).WithFields(logrus.Fields{
+				"order-id": order.ID,
+			}).Error("Could not update stellar public key")
 			return nil, err
 		}
 	}

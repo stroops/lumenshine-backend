@@ -104,14 +104,6 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 	}
 
 	if !hasTrustline {
-		//add the trustline
-		muts = append(muts,
-			build.Trust(
-				ico.AssetCode,
-				ico.IssuerPK,
-				build.SourceAccount{AddressOrSeed: o.StellarUserPublicKey}),
-		)
-
 		//add base-fee-amount
 		muts = append(muts,
 			build.Payment(
@@ -119,6 +111,14 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 				build.Destination{AddressOrSeed: o.StellarUserPublicKey},
 				build.NativeAmount{Amount: c.cnf.StellarBaseFeeTrustline},
 			),
+		)
+
+		//add the trustline
+		muts = append(muts,
+			build.Trust(
+				ico.AssetCode,
+				ico.IssuerPK,
+				build.SourceAccount{AddressOrSeed: o.StellarUserPublicKey}),
 		)
 	} else {
 		muts = append(muts,
@@ -177,7 +177,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) error {
 
 	//TODO check signer with tx
 
-	s := build.Sign{Seed: aec.R.IcoPhase.DistPresignerSeed}
+	s := build.Sign{Seed: aec.R.IcoPhase.DistPostsignerSeed}
 	err = s.MutateTransactionEnvelope(txe)
 	if err != nil {
 		c.log.WithError(err).WithField("order_id", o.ID).Error("Error postsigning transaction")
