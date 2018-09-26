@@ -102,6 +102,35 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, "{}")
 }
 
+//Need2FAResetPasswordResponse returned from the API
+type Need2FAResetPasswordResponse struct {
+	Need2FAResetPassword bool `json:"need2fa_reset_pwd"`
+}
+
+//Need2FAResetPassword - returns the flag
+func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
+	userID := mw.GetAuthUser(c).UserID
+
+	req := &pb.GetUserByIDOrEmailRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID,
+	}
+	user, err := dbClient.GetUserDetails(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+		return
+	}
+
+	if user.UserNotFound {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email could not be found in db", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, &Need2FAResetPasswordResponse{
+		Need2FAResetPassword: !user.Reset2FaByAdmin,
+	})
+}
+
 //LostPasswordTfaRequest is the data needed for the first step of the login
 //The user clicked the confirm link and thus called the /ico/confirm_token function, which sets the simple-auth-token
 type LostPasswordTfaRequest struct {
@@ -383,7 +412,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 
 //NewTfaRequest for proving the password
 type NewTfaRequest struct {
-	PublicKey188 string `form:"public_key_188" json:"public_key_188" validate:"required"`
+	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 }
 
 //NewTfaResponse response for update
@@ -400,18 +429,29 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
 	user := mw.GetAuthUser(c)
 
-	//check that public key 188 is correct
-	match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-	if !match {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Password does not match", ""))
-		return
+	if l.PublicKey188 == "" {
+		req := &pb.GetUserByIDOrEmailRequest{
+			Base: NewBaseRequest(uc),
+			Id:   user.UserID,
+		}
+		user, err := dbClient.GetUserDetails(c, req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+			return
+		}
+		if !user.Reset2FaByAdmin {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.MissingMandatoryField, "Missing mandatory field", ""))
+			return
+		}
+	} else {
+		//check that public key 188 is correct
+		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
+		if !match {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Password does not match", ""))
+			return
+		}
 	}
 
 	//get 2fa data for email

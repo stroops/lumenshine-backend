@@ -83,6 +83,7 @@ message UserDetailsResponse {
   int64 message_count = 10;
   bool user_not_found = 11;
   string tfa_temp_secret = 12;
+  bool reset2fa_by_admin =  13;
 }
 
 message ExistsEmailRequest {

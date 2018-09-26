@@ -79,6 +79,7 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		Password:               u.Password,
 		Email:                  u.Email,
 		MessageCount:           int64(u.MessageCount),
+		Reset2FaByAdmin:        u.Reset2faByAdmin,
 	}
 
 	return ret, nil
@@ -478,11 +479,13 @@ func (s *server) SetTempTfaSecret(ctx context.Context, r *pb.SetTempTfaSecretReq
 	}
 
 	u.TfaTempSecret = r.TfaSecret
+	u.Reset2faByAdmin = false
 	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
 
 	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.TfaTempSecret,
+		models.UserProfileColumns.Reset2faByAdmin,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
 	))
