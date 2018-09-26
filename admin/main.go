@@ -264,4 +264,5 @@ func (s *server) GetKnownInflationDestinations(c context.Context, r *pb.Empty) (
 //please add all boxes in here
 func initBoxes() {
 	rice.MustFindBox("db-files/migrations_src")
+	rice.MustFindBox("templates/mail")
 }
