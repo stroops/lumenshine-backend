@@ -608,11 +608,6 @@ func Reset2fa(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
 	u, err := m.UserProfiles(
 		qm.Where("id=?", rr.ID),
 		qm.Select(
@@ -651,13 +646,14 @@ func Reset2fa(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	msgSubject := fmt.Sprintf("%s :: Lost 2FA Secret", config.Cnf.Site.SiteName)
-	msgBody := tt.RenderTemplateToString(uc, c, "lost_tfa_mail", gin.H{
+	langCode := "en"
+	msgSubject := fmt.Sprintf("%s :: Your new 2FA Secret", config.Cnf.Site.SiteName)
+	msgBody := tt.RenderTemplateToString(uc, c, "reset_tfa_mail", langCode, gin.H{
 		"Forename": u.Forename,
 		"Lastname": u.Lastname,
 		"TokeUrl":  config.Cnf.WebLinks.LostTFA + u.MailConfirmationKey,
 		"TokenValidTo": helpers.TimeToString(
-			u.MailConfirmationExpiryDate, uc.Language,
+			u.MailConfirmationExpiryDate, langCode,
 		),
 	})
 

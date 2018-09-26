@@ -60,8 +60,8 @@ func LoadTemplates(log *logrus.Entry) {
 }
 
 //RenderTemplateToString renders the given template to a string
-func RenderTemplateToString(uc *mw.AdminContext, c *gin.Context, templateName string, data interface{}) string {
-	langCode := uc.Language
+func RenderTemplateToString(uc *mw.AdminContext, c *gin.Context, templateName string, langCode string, data interface{}) string {
+
 	if langCode == "" {
 		langCode = "en"
 	}
