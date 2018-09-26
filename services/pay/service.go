@@ -184,7 +184,7 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 			paymentAddress = aec.StellarPaymentAccountPK
 			paymentSeed = aec.StellarPaymentAccountSeed
 		} else {
-			// ofr other cryptos, we will generate a dedicated address for every order
+			// for other cryptos, we will generate a dedicated address for every order
 			paymentAddress, paymentSeed, addressIndex, err = s.GeneratePaymentAddress(ec.PaymentNetwork, aec.ExchangeMasterKey)
 			if err != nil {
 				return nil, err
@@ -215,6 +215,17 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		return nil, err
 	}
 
+	if ec.PaymentNetwork == m.PaymentNetworkStellar {
+		o.PaymentUsage = fmt.Sprintf("%d", o.ID)
+		_, err := o.Update(s.Env.DBC, boil.Whitelist(m.UserOrderColumns.PaymentUsage))
+		if err != nil {
+			log.WithError(err).WithFields(logrus.Fields{
+				"order-id": o.ID,
+			}).Error("Could not update stellar payment usage")
+			return nil, err
+		}
+	}
+
 	ret := &pb.CreateOrderResponse{
 		OrderId:                     int64(o.ID),
 		OrderStatus:                 o.OrderStatus,
@@ -224,8 +235,8 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 	}
 	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeFiat {
 		//set the usage in the order
-		o.FiatPaymentUsage = modext.UserOrderFiatPaymentUsage(aec.R.IcoPhaseBankAccount.PaymendUsageString, o)
-		_, err := o.Update(s.Env.DBC, boil.Whitelist(m.UserOrderColumns.FiatPaymentUsage))
+		o.PaymentUsage = modext.UserOrderFiatPaymentUsage(aec.R.IcoPhaseBankAccount.PaymendUsageString, o)
+		_, err := o.Update(s.Env.DBC, boil.Whitelist(m.UserOrderColumns.PaymentUsage))
 		if err != nil {
 			log.WithError(err).WithFields(logrus.Fields{
 				"order-id": o.ID,
@@ -236,13 +247,15 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		ret.FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
 		ret.FiatIban = aec.R.IcoPhaseBankAccount.Iban
 		ret.FiatRecepientName = aec.R.IcoPhaseBankAccount.RecepientName
-		ret.FiatPaymentUsage = o.FiatPaymentUsage
 		ret.FiatBankName = aec.R.IcoPhaseBankAccount.BankName
 	}
+
+	ret.PaymentUsage = o.PaymentUsage
 
 	if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
 		//TODO
 		//ret.PaymentQrImage = o.PaymentQRImage
+		ret.PaymentAddress = paymentAddress
 	}
 
 	return ret, nil
@@ -298,6 +311,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 			ExchangeAssetCode:                  ec.AssetCode,
 			ExchangeDenomAssetCode:             ec.DenomAssetCode,
 			ExchangeCurrencyType:               ec.ExchangeCurrencyType,
+			PaymentUsage:                       o.PaymentUsage,
 		}
 
 		if o.R.ProcessedTransaction != nil {
@@ -314,7 +328,6 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 			ret.UserOrders[i].FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
 			ret.UserOrders[i].FiatIban = aec.R.IcoPhaseBankAccount.Iban
 			ret.UserOrders[i].FiatRecepientName = aec.R.IcoPhaseBankAccount.RecepientName
-			ret.UserOrders[i].FiatPaymentUsage = o.FiatPaymentUsage
 			ret.UserOrders[i].FiatBankName = aec.R.IcoPhaseBankAccount.BankName
 		}
 
@@ -334,35 +347,101 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 }
 
 func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionRequest) (*pb.PayGetTransactionResponse, error) {
-	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
+	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+	db := s.Env.DBC
+	var err error
+	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(db)
 	if err != nil {
 		return nil, err
 	}
 
+	ac := s.Env.AccountConfigurator
+
 	if order.OrderStatus != m.OrderStatusWaitingUserTransaction {
-		return &pb.PayGetTransactionResponse{
-			ErrorCode:   cerr.OrderWrongStatus,
-			Transaction: "",
-		}, nil
+		return &pb.PayGetTransactionResponse{ErrorCode: cerr.OrderWrongStatus}, nil
 	}
 
-	tx, errCode, err := s.Env.AccountConfigurator.GetPaymentTransaction(order)
-	if err == nil && errCode == 0 {
-		//update the order to hold the tx
-		//TODO
-		order.UpdatedBy = r.Base.UpdateBy
-		_, err = order.Update(s.Env.DBC, boil.Whitelist(
-			m.UserOrderColumns.UpdatedAt,
-			m.UserOrderColumns.UpdatedBy,
-		))
+	pk := ""
+	var pkExists bool
+
+	if order.StellarUserPublicKey != "" {
+		_, pkExists, err = ac.GetAccount(order.StellarUserPublicKey)
+		if err != nil {
+			return nil, err
+		}
+		if !pkExists {
+			return &pb.PayGetTransactionResponse{
+				ErrorCode:        cerr.UserNotExists,
+				StellarPublicKey: order.StellarUserPublicKey,
+			}, nil
+		}
+		pk = order.StellarUserPublicKey
+	} else {
+		//no pk from order -> check wallets
+		//we take the first funded wallet
+		wallets, err := m.UserWallets(qm.Where(m.UserWalletColumns.UserID+"=?", r.UserId)).All(db)
+		if err != nil {
+			return nil, err
+		}
+		for _, w := range wallets {
+			_, pkExists, err = ac.GetAccount(w.PublicKey0)
+			if err != nil {
+				return nil, err
+			}
+			if pkExists {
+				//we use this pk for the order
+				pk = w.PublicKey0
+				continue
+			}
+		}
+		if pk == "" {
+			//there is no existing pk in stellar. therefore we take the first one from the wallets
+			pk = wallets[0].PublicKey0
+
+			//if no pk was found, we need to check, if we ever created one account for the user. if so, the user merged the account and we will return an error
+			//we create only one account per user and lifetime
+			u, err := m.UserProfiles(qm.Where("id=?", r.UserId)).One(db)
+			if err != nil {
+				return nil, err
+			}
+			if u.StellarAccountCreated {
+				return &pb.PayGetTransactionResponse{
+					ErrorCode:        cerr.UserNotExists,
+					StellarPublicKey: pk,
+				}, nil
+			}
+		}
+	}
+
+	if !pkExists {
+		//create the account and update the user profile, to reflect the stellar account creation
+		err := ac.CreateAccount(pk, order)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	//need to update the order to reflect the selected pk
+	if order.StellarUserPublicKey == "" {
+		order.StellarUserPublicKey = pk
+		_, err := order.Update(db, boil.Whitelist(m.UserOrderColumns.StellarUserPublicKey))
+		if err != nil {
+			log.WithError(err).WithFields(logrus.Fields{
+				"order-id": order.ID,
+			}).Error("Could not update stellar public key")
+			return nil, err
+		}
+	}
+
+	tx, errCode, err := s.Env.AccountConfigurator.GetPaymentTransaction(order)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.PayGetTransactionResponse{
-		ErrorCode:   errCode,
-		Transaction: tx,
+		ErrorCode:        errCode,
+		Transaction:      tx,
+		StellarPublicKey: order.StellarUserPublicKey,
 	}, err
 }
 
@@ -378,7 +457,7 @@ func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransacti
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	if s.Env.Config.AllowFakeTransactions {
 		// Need to read the order first, because this is the normal "procedure". This will also update the order-status
-		o, err := s.Env.DBC.GetOrderForAddress(r.PaymentChannel, r.RecipientAddress)
+		o, err := s.Env.DBC.GetOrderForAddress(r.PaymentChannel, r.RecipientAddress, r.PaymentUsage)
 		if err != nil {
 			return &pb.BoolResponse{Value: false}, nil
 		}

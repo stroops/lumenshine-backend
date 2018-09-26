@@ -228,7 +228,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress)
+	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -239,12 +239,12 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkBitcoin, hash, toAddress, order.ID, valueSat)
+	isDuplicate, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkBitcoin, hash, toAddress, order.ID, valueSat)
 	if err != nil {
 		return err
 	}
 
-	if processed {
+	if isDuplicate {
 		localLog.Debug("Transaction already processed, skipping")
 		return nil
 	}

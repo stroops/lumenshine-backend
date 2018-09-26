@@ -37,7 +37,7 @@ type UserOrder struct {
 	StellarTransactionID               string     `boil:"stellar_transaction_id" json:"stellar_transaction_id" toml:"stellar_transaction_id" yaml:"stellar_transaction_id"`
 	ProcessedTransactionID             null.Int   `boil:"processed_transaction_id" json:"processed_transaction_id,omitempty" toml:"processed_transaction_id" yaml:"processed_transaction_id,omitempty"`
 	PaymentQRImage                     null.Bytes `boil:"payment_qr_image" json:"payment_qr_image,omitempty" toml:"payment_qr_image" yaml:"payment_qr_image,omitempty"`
-	FiatPaymentUsage                   string     `boil:"fiat_payment_usage" json:"fiat_payment_usage" toml:"fiat_payment_usage" yaml:"fiat_payment_usage"`
+	PaymentUsage                       string     `boil:"payment_usage" json:"payment_usage" toml:"payment_usage" yaml:"payment_usage"`
 	PaymentErrorMessage                string     `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
 	CreatedAt                          time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                          time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -63,7 +63,7 @@ var UserOrderColumns = struct {
 	StellarTransactionID               string
 	ProcessedTransactionID             string
 	PaymentQRImage                     string
-	FiatPaymentUsage                   string
+	PaymentUsage                       string
 	PaymentErrorMessage                string
 	CreatedAt                          string
 	UpdatedAt                          string
@@ -84,7 +84,7 @@ var UserOrderColumns = struct {
 	StellarTransactionID:               "stellar_transaction_id",
 	ProcessedTransactionID:             "processed_transaction_id",
 	PaymentQRImage:                     "payment_qr_image",
-	FiatPaymentUsage:                   "fiat_payment_usage",
+	PaymentUsage:                       "payment_usage",
 	PaymentErrorMessage:                "payment_error_message",
 	CreatedAt:                          "created_at",
 	UpdatedAt:                          "updated_at",
@@ -127,8 +127,8 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "fiat_payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by"}
-	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "fiat_payment_usage", "payment_error_message", "updated_by"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by"}
+	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
 	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )

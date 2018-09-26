@@ -163,18 +163,41 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 //It will set the order in status OrderStatusPaymentReceived
 //If no open order was found(OrderStatusWaitingForPayment), the function will return either nil or filter for any other order with the given address
 //The function will be called for EVERY payment transaction in the external PaymentNetworks
-func (db *DB) GetOrderForAddress(paymentChannel string, address string) (*m.UserOrder, error) {
+//paymentUsage is either an empty string or, for stellar the MEMO with the orderID
+func (db *DB) GetOrderForAddress(paymentChannel string, address string, paymentUsage string) (*m.UserOrder, error) {
 	userOrder := new(m.UserOrder)
-	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
-			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 limit 1 for update) returning
+
+	var sqlStr string
+	if paymentUsage == m.PaymentNetworkStellar {
+		//payment must be the order ID
+		paymentUsage = strings.Trim(paymentUsage, " \n\t")
+		if _, err := strconv.ParseInt(paymentUsage, 10, 64); err != nil {
+			return nil, fmt.Errorf("Could not convert paymentUsage '%s' to id", paymentUsage)
+		}
+
+		sqlStr = querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
+			(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 and id=@id limit 1 for update) returning
 			*`,
-		map[string]string{
-			"@user_order":      m.TableNames.UserOrder,
-			"@order_status":    m.UserOrderColumns.OrderStatus,
-			"@updated_at":      m.UserOrderColumns.UpdatedAt,
-			"@payment_network": m.UserOrderColumns.PaymentNetwork,
-			"@payment_address": m.UserOrderColumns.PaymentAddress,
-		})
+			map[string]string{
+				"@user_order":      m.TableNames.UserOrder,
+				"@order_status":    m.UserOrderColumns.OrderStatus,
+				"@updated_at":      m.UserOrderColumns.UpdatedAt,
+				"@payment_network": m.UserOrderColumns.PaymentNetwork,
+				"@payment_address": m.UserOrderColumns.PaymentAddress,
+				"@id":              paymentUsage,
+			})
+	} else {
+		sqlStr = querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
+		(select id from @user_order where @payment_network=$2 and @payment_address=$3 and @order_status=$4 limit 1 for update) returning
+		*`,
+			map[string]string{
+				"@user_order":      m.TableNames.UserOrder,
+				"@order_status":    m.UserOrderColumns.OrderStatus,
+				"@updated_at":      m.UserOrderColumns.UpdatedAt,
+				"@payment_network": m.UserOrderColumns.PaymentNetwork,
+				"@payment_address": m.UserOrderColumns.PaymentAddress,
+			})
+	}
 
 	//set order to payment recived
 	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, paymentChannel, address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
@@ -197,11 +220,14 @@ func (db *DB) GetOrderForAddress(paymentChannel string, address string) (*m.User
 }
 
 func isDuplicateError(err error) bool {
+	if err == nil {
+		return false
+	}
 	return strings.Contains(err.Error(), "duplicate key value violates unique constraint")
 }
 
 //AddNewTransaction adds a transaction to the database and returns true, if it was allready present
-func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash string, toAddress string, orderID int, denomAmount *big.Int) (bool, error) {
+func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash string, toAddress string, orderID int, denomAmount *big.Int) (isDuplicate bool, err error) {
 
 	d := new(m.ProcessedTransaction)
 	d.PaymentNetwork = paymentChannel
@@ -211,8 +237,9 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	d.Status = m.TransactionStatusNew
 	d.PaymentNetworkAmountDenomination = denomAmount.String()
 
-	err := d.Insert(db, boil.Infer())
-	if err != nil && isDuplicateError(err) {
+	err = d.Insert(db, boil.Infer())
+	isDuplicate = isDuplicateError(err)
+	if isDuplicate {
 		//add the transaction to the multiple table for manual handling
 		b := new(m.MultipleTransaction)
 		b.PaymentNetwork = paymentChannel
@@ -229,26 +256,26 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	}
 
 	if err != nil {
-		return true, err
+		return isDuplicate, err
 	}
 
 	//update the order to hold the transaction-ref
 	order, err := m.FindUserOrder(db, orderID, "id")
 	if err != nil {
-		return true, err
+		return isDuplicate, err
 	}
 	order.ProcessedTransactionID = null.IntFrom(d.ID)
 	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.ProcessedTransactionID, m.UserKycDocumentColumns.UpdatedAt))
 	if err != nil {
-		return true, err
+		return isDuplicate, err
 	}
 
-	return db.handleNewTransaction(log, d, denomAmount)
+	return isDuplicate, db.handleNewTransaction(log, d, denomAmount)
 }
 
 //handleNewTransaction checks the transaction data and updates the user_profile to reflect the payment
 //the order must be in status OrderStatusPaymentReceived and will be set to status OrderStatusWaitingUserTX
-func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (processed bool, err error) {
+func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (err error) {
 
 	order := new(m.UserOrder)
 
@@ -264,7 +291,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 	err = queries.Raw(sqlStr, m.OrderStatusWaitingForPayment, tx.OrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
 	if err != nil {
 		log.WithError(err).WithFields(logrus.Fields{"order_id": tx.OrderID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
-		return true, err
+		return err
 	}
 
 	//check order amount
@@ -282,7 +309,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 
 		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 		if err != nil {
-			return false, err
+			return err
 		}
 	} else {
 		//amount payed is exactly the amount bought. we can check/update, if there are coins left
@@ -303,11 +330,11 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			if err != sql.ErrNoRows {
 				// log error
 				log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
-				return true, err
+				return err
 			}
 			ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(db)
 			if err != nil {
-				return true, err
+				return err
 			}
 			if ph.TokensLeft < order.TokenAmount {
 				order.OrderStatus = m.OrderStatusNoCoinsLeft
@@ -316,7 +343,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 			}
 			_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 			if err != nil {
-				return true, err
+				return err
 			}
 		}
 
@@ -324,14 +351,14 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 		order.OrderStatus = m.OrderStatusWaitingUserTransaction
 		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
 		if err != nil {
-			return true, err
+			return err
 		}
 	}
 
 	//check all user orders and if one is payed, set flag, if not, remove flag
 	user, err := m.UserProfiles(qm.Where("id=?", order.UserID)).One(db)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	cnt, err := m.UserOrders(qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTransaction)).Count(db)
@@ -342,8 +369,8 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 	}
 	_, err = user.Update(db, boil.Whitelist(m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt))
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return false, nil
+	return nil
 }

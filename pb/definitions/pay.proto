@@ -62,10 +62,10 @@ message CreateOrderResponse {
     string exchange_value_denom_asset_code = 5;
     string payment_address = 6;
     bytes payment_qr_image = 7;    
-    string fiat_bic = 8;
-    string fiat_iban = 9;
-    string fiat_recepient_name = 10;
-    string fiat_payment_usage = 11;
+    string payment_usage = 8;
+    string fiat_bic = 9;
+    string fiat_iban = 10;
+    string fiat_recepient_name = 11;    
     string fiat_bank_name = 12;
     string user_public_key = 13;
 }
@@ -102,9 +102,9 @@ message UserOrder{
     string exchange_denom_asset_code = 15; 
     string fiat_bic = 16;
     string fiat_iban = 17;
-    string fiat_recepient_name = 18;
-    string fiat_payment_usage = 19;
-    string fiat_bank_name = 20;
+    string fiat_recepient_name = 18;    
+    string fiat_bank_name = 19;
+    string payment_usage = 20;
     string exchange_currency_type = 21;
     string amount_received = 22;
 }
@@ -122,6 +122,7 @@ message PayGetTransactionRequest{
 message PayGetTransactionResponse{
     string transaction = 1;
     int64 error_code = 2;
+    string stellar_public_key = 3;
 }
 
 message PayExecuteTransactionRequest{
@@ -136,7 +137,8 @@ message TestTransaction {
     string payment_channel = 2;
     string tx_hash = 3;
     string recipient_address = 4;    
-    int64 denom_amount = 5;    
+    int64 denom_amount = 5;
+    string payment_usage = 6;
 }
 
 service PayService {    

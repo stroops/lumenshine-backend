@@ -11,7 +11,7 @@ import (
 //buildTransaction creates a stellar transaction
 //we use AutoSequence on the source, which is the user account mostly
 //signer is the seed of the source
-func (c *Configurator) buildTransaction(source string, signer string, sequence uint64, mutators ...build.TransactionMutator) (string, error) {
+func (c *Configurator) buildTransaction(source string, signers []string, sequence uint64, mutators ...build.TransactionMutator) (string, error) {
 	muts := []build.TransactionMutator{
 		build.SourceAccount{AddressOrSeed: source},
 		build.Network{Passphrase: c.cnf.Stellar.NetworkPassphrase},
@@ -28,10 +28,22 @@ func (c *Configurator) buildTransaction(source string, signer string, sequence u
 	if err != nil {
 		return "", err
 	}
-	txe, err := tx.Sign(signer)
+
+	var txe build.TransactionEnvelopeBuilder
+	txe.Init()
+	err = tx.MutateTransactionEnvelope(&txe)
 	if err != nil {
 		return "", err
 	}
+
+	for _, s := range signers {
+		s := build.Sign{Seed: s}
+		err = s.MutateTransactionEnvelope(&txe)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	return txe.Base64()
 }
 

@@ -49,7 +49,7 @@ CREATE TABLE user_order (
   
   payment_qr_image bytea null, /* qr-image for the payment transaction */
 
-  fiat_payment_usage varchar(255) not null, /* used only for fiat payments */
+  payment_usage varchar(255) not null, /* used only for fiat and stellar payment payments. For stellar, the data will be read from the momo */
 
   /* this field is used to save any error message that happened during the client payment */
   payment_error_message text not null,

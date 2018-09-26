@@ -195,7 +195,7 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkEthereum, toAddress)
+	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkEthereum, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -206,12 +206,12 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	// Add transaction as processing.
-	processed, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
+	isDuplicate, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
 	if err != nil {
 		return err
 	}
 
-	if processed {
+	if isDuplicate {
 		localLog.Debug("Transaction already processed, skipping")
 		return nil
 	}
