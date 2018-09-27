@@ -134,6 +134,7 @@ var UserProfileRels = struct {
 	UserUserSecurity         string
 	UserNotifications        string
 	UserNotificationArchives string
+	UserUserContacts         string
 	UserUserKycDocuments     string
 	UserUserMessages         string
 	UserUserMessageArchives  string
@@ -144,6 +145,7 @@ var UserProfileRels = struct {
 	UserUserSecurity:         "UserUserSecurity",
 	UserNotifications:        "UserNotifications",
 	UserNotificationArchives: "UserNotificationArchives",
+	UserUserContacts:         "UserUserContacts",
 	UserUserKycDocuments:     "UserUserKycDocuments",
 	UserUserMessages:         "UserUserMessages",
 	UserUserMessageArchives:  "UserUserMessageArchives",
@@ -157,6 +159,7 @@ type userProfileR struct {
 	UserUserSecurity         *UserSecurity
 	UserNotifications        NotificationSlice
 	UserNotificationArchives NotificationArchiveSlice
+	UserUserContacts         UserContactSlice
 	UserUserKycDocuments     UserKycDocumentSlice
 	UserUserMessages         UserMessageSlice
 	UserUserMessageArchives  UserMessageArchiveSlice
@@ -486,6 +489,27 @@ func (o *UserProfile) UserNotificationArchives(mods ...qm.QueryMod) notification
 
 	if len(queries.GetSelect(query.Query)) == 0 {
 		queries.SetSelect(query.Query, []string{"\"notification_archive\".*"})
+	}
+
+	return query
+}
+
+// UserUserContacts retrieves all the user_contact's UserContacts with an executor via user_id column.
+func (o *UserProfile) UserUserContacts(mods ...qm.QueryMod) userContactQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"user_contact\".\"user_id\"=?", o.ID),
+	)
+
+	query := UserContacts(queryMods...)
+	queries.SetFrom(query.Query, "\"user_contact\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"user_contact\".*"})
 	}
 
 	return query
@@ -883,6 +907,97 @@ func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool,
 				local.R.UserNotificationArchives = append(local.R.UserNotificationArchives, foreign)
 				if foreign.R == nil {
 					foreign.R = &notificationArchiveR{}
+				}
+				foreign.R.User = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadUserUserContacts allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserUserContacts(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
+	var slice []*UserProfile
+	var object *UserProfile
+
+	if singular {
+		object = maybeUserProfile.(*UserProfile)
+	} else {
+		slice = *maybeUserProfile.(*[]*UserProfile)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userProfileR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userProfileR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`user_contact`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load user_contact")
+	}
+
+	var resultSlice []*UserContact
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice user_contact")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on user_contact")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user_contact")
+	}
+
+	if len(userContactAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.UserUserContacts = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &userContactR{}
+			}
+			foreign.R.User = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.UserID {
+				local.R.UserUserContacts = append(local.R.UserUserContacts, foreign)
+				if foreign.R == nil {
+					foreign.R = &userContactR{}
 				}
 				foreign.R.User = local
 				break
@@ -1613,6 +1728,68 @@ func (o *UserProfile) AddUserNotificationArchives(exec boil.Executor, insert boo
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &notificationArchiveR{
+				User: o,
+			}
+		} else {
+			rel.R.User = o
+		}
+	}
+	return nil
+}
+
+// AddUserUserContactsG adds the given related objects to the existing relationships
+// of the user_profile, optionally inserting them as new records.
+// Appends related to o.R.UserUserContacts.
+// Sets related.R.User appropriately.
+// Uses the global database handle.
+func (o *UserProfile) AddUserUserContactsG(insert bool, related ...*UserContact) error {
+	return o.AddUserUserContacts(boil.GetDB(), insert, related...)
+}
+
+// AddUserUserContacts adds the given related objects to the existing relationships
+// of the user_profile, optionally inserting them as new records.
+// Appends related to o.R.UserUserContacts.
+// Sets related.R.User appropriately.
+func (o *UserProfile) AddUserUserContacts(exec boil.Executor, insert bool, related ...*UserContact) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.UserID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"user_contact\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
+				strmangle.WhereClause("\"", "\"", 2, userContactPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.UserID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userProfileR{
+			UserUserContacts: related,
+		}
+	} else {
+		o.R.UserUserContacts = append(o.R.UserUserContacts, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &userContactR{
 				User: o,
 			}
 		} else {

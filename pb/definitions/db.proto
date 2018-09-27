@@ -361,6 +361,14 @@ message AddPushTokenRequest {
   string push_token = 4;
 }
 
+message AddUserContactRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  string contact_name = 3;
+  string stellar_address = 4;
+  string public_key = 5;
+}
+
 message AddKycDocumentRequest{
   BaseRequest base = 1;
   int64 user_id = 2;
@@ -398,6 +406,25 @@ message UpdatePushTokenRequest {
   DeviceType device_type = 3;
   string old_push_token = 4;
   string new_push_token = 5;  
+}
+
+message UpdateUserContactRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+  string contact_name = 3;
+  string stellar_address = 4;
+  string public_key = 5;
+}
+
+message GetUserContactsResponse {
+  repeated UserContact userContacts = 1;
+}
+
+message UserContact {
+  int64 id = 1;
+  string contact_name = 2;
+  string stellar_address = 3;
+  string public_key = 4;
 }
 
 service DBService {
@@ -445,4 +472,9 @@ service DBService {
   rpc QueueMailNotification(QueueMailNotificationRequest) returns (Empty) {}
   rpc DequeueNotifications(DequeueRequest) returns (NotificationListResponse) {}
   rpc UpdateNotificationsStatus(UpdateNotificationsStatusRequest) returns (Empty) {}
+
+  rpc AddUserContact(AddUserContactRequest) returns (IDResponse) {}
+  rpc UpdateUserContact(UpdateUserContactRequest) returns (Empty) {}
+  rpc DeleteUserContact(IDRequest) returns (Empty) {}
+  rpc GetUserContacts(IDRequest) returns (GetUserContactsResponse) {}
 }

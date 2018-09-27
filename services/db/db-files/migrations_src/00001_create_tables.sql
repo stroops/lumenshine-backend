@@ -293,6 +293,20 @@ CREATE TABLE user_kyc_document
 );
 create index idx_user_kyc_document_user_profile on user_kyc_document(user_id);
 
+
+CREATE TABLE user_contact
+(
+    id SERIAL PRIMARY KEY not null,
+    user_id integer not null REFERENCES user_profile(id),
+    contact_name character varying not null,
+    stellar_address character varying(256) not null,
+    public_key character varying(56) not null,
+    created_at timestamp with time zone NOT NULL default current_timestamp,
+    updated_at timestamp with time zone NOT NULL default current_timestamp,
+    updated_by character varying not null
+);
+create index idx_user_contact_user_profile on user_contact(user_id);
+
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 drop table IF EXISTS user_kyc_document;
@@ -308,6 +322,7 @@ drop table IF EXISTS user_wallet;
 drop TABLE IF EXISTS notification;
 drop TABLE IF EXISTS notification_archive;
 drop TABLE IF EXISTS user_pushtoken;
+drop TABLE IF EXISTS user_contact;
 DROP TABLE IF EXISTS user_profile;
 
 drop type IF EXISTS payment_state;
