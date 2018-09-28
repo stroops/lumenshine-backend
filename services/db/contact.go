@@ -78,7 +78,9 @@ func (s *server) DeleteUserContact(ctx context.Context, r *pb.IDRequest) (*pb.Em
 }
 
 func (s *server) GetUserContacts(ctx context.Context, r *pb.IDRequest) (*pb.GetUserContactsResponse, error) {
-	dbContacts, err := models.UserContacts(qm.Where(models.UserContactColumns.UserID+"=?", r.Id)).All(db)
+	dbContacts, err := models.UserContacts(qm.Where(models.UserContactColumns.UserID+"=?", r.Id),
+		qm.OrderBy(models.UserContactColumns.ContactName)).All(db)
+
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}

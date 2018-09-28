@@ -151,7 +151,7 @@ func main() {
 
 		authDash.POST("/upload_kyc_document", mw.UseIcopContext(UploadKycDocument))
 
-		authDash.POST("/contact_list", mw.UseIcopContext(ContactList))
+		authDash.GET("/contact_list", mw.UseIcopContext(ContactList))
 		authDash.POST("/add_contact", mw.UseIcopContext(AddContact))
 		authDash.POST("/edit_contact", mw.UseIcopContext(EditContact))
 		authDash.POST("/remove_contact", mw.UseIcopContext(RemoveContact))
