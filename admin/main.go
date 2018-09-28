@@ -172,7 +172,6 @@ func (s *server) GetKnownCurrency(c context.Context, r *pb.GetKnownCurrencyReque
 		LongDescription:  currency.LongDescription,
 		OrderIndex:       int64(currency.OrderIndex),
 	}, nil
-
 }
 
 //GetKnownCurrencies returns all currencies
@@ -195,6 +194,7 @@ func (s *server) GetKnownCurrencies(c context.Context, r *pb.Empty) (*pb.GetKnow
 			Id:               int64(cr.ID),
 			Name:             cr.Name,
 			IssuerPublicKey:  cr.IssuerPublicKey,
+			AssetCode:        cr.AssetCode,
 			ShortDescription: cr.ShortDescription,
 			LongDescription:  cr.LongDescription,
 			OrderIndex:       int64(cr.OrderIndex),
@@ -202,7 +202,6 @@ func (s *server) GetKnownCurrencies(c context.Context, r *pb.Empty) (*pb.GetKnow
 	}
 
 	return res, nil
-
 }
 
 //GetKnownInflationDestination returns the destination for the id
