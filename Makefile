@@ -10,7 +10,7 @@ define clear
 endef
 
 define copy_services
-    cp services/db/db $(TARGET_DIR)
+    	cp services/db/db $(TARGET_DIR)
 
 	cp services/2fa/2fa $(TARGET_DIR)
 
@@ -21,6 +21,8 @@ define copy_services
 	cp api/userapi/userapi $(TARGET_DIR)
 
 	cp api/payapi/payapi $(TARGET_DIR)
+
+	cp services/pay/pay $(TARGET_DIR)
 
 	cp admin/admin $(TARGET_DIR)
 
