@@ -8,6 +8,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/admin/route"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,46 +36,69 @@ func AddICORoutes(rg *gin.RouterGroup) {
 
 //ICOListResponse response
 type ICOListResponse struct {
-	ID                 int     `json:"ico_id"`
-	Name               string  `json:"name"`
-	Status             string  `json:"status"`
-	KYC                bool    `json:"kyc"`
-	SaleModel          string  `json:"sale_model"`
-	TokensReleased     float64 `json:"tokens_released"`
-	IssuingAccountName string  `json:"issuing_account_name"`
-	IssuingAccountPK   string  `json:"issuing_account_pk"`
-	AssetCode          string  `json:"asset_code"`
+	ID                 int    `json:"ico_id"`
+	Name               string `json:"name"`
+	Status             string `json:"status"`
+	KYC                bool   `json:"kyc"`
+	SaleModel          string `json:"sale_model"`
+	TokensReleased     int64  `json:"tokens_released"`
+	IssuingAccountName string `json:"issuing_account_name"`
+	IssuingAccountPK   string `json:"issuing_account_pk"`
+	AssetCode          string `json:"asset_code"`
 }
 
 //ICOList returns the list of ICOs
 func ICOList(uc *mw.AdminContext, c *gin.Context) {
-
-	icos, err := m.Icos().All(db.DBC)
+	icos, err := m.Icos(
+		qm.Select(m.IcoColumns.ID,
+			m.IcoColumns.IcoName,
+			m.IcoColumns.IcoStatus,
+			m.IcoColumns.Kyc,
+			m.IcoColumns.SalesModel,
+			m.IcoColumns.IssuerPK,
+			m.IcoColumns.AssetCode,
+		),
+		qm.Load(m.IcoRels.IcoPhases)).All(db.DBC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading icos", cerr.GeneralError))
 		return
 	}
 
-	var response []ICOListResponse
+	dbAccounts, err := db.IssuerStellarAccounts()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading issuer accounts", cerr.GeneralError))
+		return
+	}
 
-	for _, ico := range icos {
+	response := make([]ICOListResponse, len(icos))
+	var tokencount int64
+	var issuerName string
+	for i, ico := range icos {
+		tokencount = 0
+		issuerName = ""
+		for _, phase := range ico.R.IcoPhases {
+			tokencount += phase.TokensReleased
+		}
+		for _, issuer := range dbAccounts {
+			if issuer.PublicKey == ico.IssuerPK {
+				issuerName = issuer.Name
+				break
+			}
+		}
 
-		response = append(response, ICOListResponse{
+		response[i] = ICOListResponse{
 			ID:                 ico.ID,
 			Name:               ico.IcoName,
 			Status:             ico.IcoStatus,
 			KYC:                ico.Kyc,
 			SaleModel:          ico.SalesModel,
-			TokensReleased:     0,  //TODO
-			IssuingAccountName: "", //TODO
+			TokensReleased:     tokencount,
+			IssuingAccountName: issuerName,
 			IssuingAccountPK:   ico.IssuerPK,
 			AssetCode:          ico.AssetCode,
-		})
-
+		}
 	}
-
 	c.JSON(http.StatusOK, response)
-
 }
 
 //ExchangeCurrencyListResponse response

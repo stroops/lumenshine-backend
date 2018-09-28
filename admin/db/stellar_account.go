@@ -71,6 +71,16 @@ func AllStellarAccounts() (models.AdminStellarAccountSlice, error) {
 	return accounts, nil
 }
 
+//IssuerStellarAccounts - returns the issuer stellar accounts
+func IssuerStellarAccounts() (models.AdminStellarAccountSlice, error) {
+	accounts, err := models.AdminStellarAccounts(qm.Where(models.AdminStellarAccountColumns.Type+"=?", models.StellarAccountTypeIssuing)).AllG()
+	if err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+}
+
 //IssuerAssetCodes - returns the asset codes
 func IssuerAssetCodes(issuerPublicKey string) (models.AdminStellarAssetSlice, error) {
 	assetcodes, err := models.AdminStellarAssets(qm.Where(models.AdminStellarAssetColumns.IssuerPublicKeyID+"=?", issuerPublicKey)).AllG()
