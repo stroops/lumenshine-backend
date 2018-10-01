@@ -71,7 +71,7 @@ type exchangeDataExchange struct {
 type requestDataExchange struct {
 	SourceCurrency struct {
 		AssetCode       string `form:"asset_code" json:"asset_code" binding:"required"`
-		IssuerPublicKey string `form:"issuer_public_key" json:"issuer_public_key" binding:"required"`
+		IssuerPublicKey string `form:"issuer_public_key" json:"issuer_public_key"`
 	} `form:"source_currency" json:"source_currency" binding:"required"`
 	DestinationCurrency string `form:"destination_currency" json:"destination_currency" binding:"required"`
 	RangeHours          int    `form:"range_hours" json:"range_hours" binding:"required"`
