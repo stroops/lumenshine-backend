@@ -83,6 +83,15 @@ func ChartExchangeData(uc *mw.IcopContext, c *gin.Context) {
 	var requestData requestDataExchange
 	err := c.BindJSON(&requestData)
 
+	//bad request
+	if err != nil {
+		errData := errorData{}
+		errData.ErrorCode = 400
+		errData.ErrorMessage = err.Error()
+		c.JSON(http.StatusBadRequest, errData)
+		return
+	}
+
 	// check if params exist
 	if requestData.SourceCurrency.AssetCode == "" {
 		errData := errorData{}
