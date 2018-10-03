@@ -109,6 +109,7 @@ type ExchangeCurrencyListRequest struct {
 
 //ExchangeCurrencyListResponse response
 type ExchangeCurrencyListResponse struct {
+	Name      string `json:"name"`
 	Type      string `json:"type"`
 	AssetCode string `json:"asset_code"`
 	Issuer    string `json:"issuer"`
@@ -145,6 +146,7 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 	response := make([]ExchangeCurrencyListResponse, len(excs))
 	for i, exc := range excs {
 		response[i] = ExchangeCurrencyListResponse{
+			Name:      exc.Name,
 			Type:      exc.ExchangeCurrencyType,
 			AssetCode: exc.AssetCode,
 			Issuer:    exc.EcAssetIssuerPK,
