@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/Soneso/lumenshine-backend/admin/db"
@@ -101,17 +102,27 @@ func ICOList(uc *mw.AdminContext, c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+//ExchangeCurrencyListRequest request
+type ExchangeCurrencyListRequest struct {
+	IcoID int `form:"ico_id" json:"ico_id"`
+}
+
 //ExchangeCurrencyListResponse response
 type ExchangeCurrencyListResponse struct {
-	ID        int    `json:"id"`
 	Type      string `json:"type"`
 	AssetCode string `json:"asset_code"`
 	Issuer    string `json:"issuer"`
-	Enabled   bool   `json:"enabled"`
+	Enabled   string `json:"enabled"`
 }
 
 //ExchangeCurrencyList returns the list of ICOs
 func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
+
+	var rr ExchangeCurrencyListRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
 
 	excs, err := m.ExchangeCurrencies().All(db.DBC)
 	if err != nil {
@@ -119,20 +130,35 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	var response []ExchangeCurrencyListResponse
+	var enabledCurrencies m.IcoSupportedExchangeCurrencySlice
+	if rr.IcoID != 0 {
+		enabledCurrencies, err = m.IcoSupportedExchangeCurrencies(
+			qm.Select(m.IcoSupportedExchangeCurrencyColumns.ExchangeCurrencyID),
+			qm.Where(m.IcoSupportedExchangeCurrencyColumns.IcoID+"=?", rr.IcoID)).All(db.DBC)
 
-	for _, exc := range excs {
+		if err != nil && err != sql.ErrNoRows {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading supported exchange currencies", cerr.GeneralError))
+			return
+		}
+	}
 
-		response = append(response, ExchangeCurrencyListResponse{
-			ID:        exc.ID,
+	response := make([]ExchangeCurrencyListResponse, len(excs))
+	for i, exc := range excs {
+		response[i] = ExchangeCurrencyListResponse{
 			Type:      exc.ExchangeCurrencyType,
 			AssetCode: exc.AssetCode,
 			Issuer:    exc.EcAssetIssuerPK,
-			Enabled:   false, // TODO
-		})
-
+		}
+		if rr.IcoID != 0 {
+			enabled := "false"
+			for _, currency := range enabledCurrencies {
+				if currency.ExchangeCurrencyID == exc.ID {
+					enabled = "true"
+					break
+				}
+			}
+			response[i].Enabled = enabled
+		}
 	}
-
 	c.JSON(http.StatusOK, response)
-
 }
