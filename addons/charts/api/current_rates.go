@@ -72,6 +72,15 @@ func ChartCurrentRates(uc *mw.IcopContext, c *gin.Context) {
 	var requestData requestDataCurrent
 	err := c.BindJSON(&requestData)
 
+	//bad request
+	if err != nil {
+		errData := errorData{}
+		errData.ErrorCode = 400
+		errData.ErrorMessage = err.Error()
+		c.JSON(http.StatusBadRequest, errData)
+		return
+	}
+
 	// check if params exist
 	if requestData.SourceCurrencies == nil {
 		errData := errorData{}
