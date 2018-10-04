@@ -187,17 +187,17 @@ type CustomerDetailsResponse struct {
 	Lastname         string    `json:"lastname"`
 	Email            string    `json:"email"`
 	RegistrationDate time.Time `json:"registration_date"`
-	LastLogin        time.Time `json:"last_login"`
-	MobileNR         string    `json:"mobile_nr"`
-	StreetAddress    string    `json:"street_address"`
-	StreetNumber     string    `json:"street_number"`
-	ZipCode          string    `json:"zip_code"`
-	City             string    `json:"city"`
-	State            string    `json:"state"`
-	CountryCode      string    `json:"country_code"`
-	Nationality      string    `json:"nationality"`
-	BirthDay         time.Time `json:"birth_day"`
-	BirthPlace       string    `json:"birth_place"`
+	//LastLogin        time.Time `json:"last_login"`
+	MobileNR      string     `json:"mobile_nr"`
+	StreetAddress string     `json:"street_address"`
+	StreetNumber  string     `json:"street_number"`
+	ZipCode       string     `json:"zip_code"`
+	City          string     `json:"city"`
+	State         string     `json:"state"`
+	CountryCode   string     `json:"country_code"`
+	Nationality   string     `json:"nationality"`
+	BirthDay      *time.Time `json:"birth_day"`
+	BirthPlace    string     `json:"birth_place"`
 }
 
 //CustomerDetails returns details of stefiied customer
@@ -237,8 +237,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("id", cerr.UserNotExists, "User does not exist in db", ""))
 		return
 	}
-
-	c.JSON(http.StatusOK, &CustomerDetailsResponse{
+	response := CustomerDetailsResponse{
 		ID:               u.ID,
 		Forename:         u.Forename,
 		Lastname:         u.Lastname,
@@ -252,9 +251,12 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		State:            u.State,
 		CountryCode:      u.CountryCode,
 		Nationality:      u.Nationality,
-		BirthDay:         u.BirthDay,
 		BirthPlace:       u.BirthPlace,
-	})
+	}
+	if !u.BirthDay.IsZero() {
+		response.BirthDay = &u.BirthDay
+	}
+	c.JSON(http.StatusOK, &response)
 }
 
 // CustomerEditRequest - request data
@@ -351,7 +353,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &CustomerDetailsResponse{
+	response := CustomerDetailsResponse{
 		ID:               u.ID,
 		Forename:         u.Forename,
 		Lastname:         u.Lastname,
@@ -365,9 +367,12 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		State:            u.State,
 		CountryCode:      u.CountryCode,
 		Nationality:      u.Nationality,
-		BirthDay:         u.BirthDay,
 		BirthPlace:       u.BirthPlace,
-	})
+	}
+	if !u.BirthDay.IsZero() {
+		response.BirthDay = &u.BirthDay
+	}
+	c.JSON(http.StatusOK, &response)
 }
 
 //CustomerOrdersRequest to get the orders

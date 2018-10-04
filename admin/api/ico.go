@@ -2,13 +2,17 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
+	"github.com/Soneso/lumenshine-backend/admin/models"
 	"github.com/Soneso/lumenshine-backend/admin/route"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +27,7 @@ const (
 func init() {
 	route.AddRoute("GET", "/list", ICOList, []string{}, "ico_list", ICORoutePrefix)
 	route.AddRoute("GET", "/exchange_currencies", ExchangeCurrencyList, []string{}, "exchange_currencies", ICORoutePrefix)
-	//route.AddRoute("GET", "/get/:id", GetKnownCurrency, []string{}, "known_currencies_get", KnownCurrenciesRoutePrefix)
+	route.AddRoute("POST", "/add", AddIco, []string{}, "add_ico", ICORoutePrefix)
 
 }
 
@@ -109,6 +113,7 @@ type ExchangeCurrencyListRequest struct {
 
 //ExchangeCurrencyListResponse response
 type ExchangeCurrencyListResponse struct {
+	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	Type      string `json:"type"`
 	AssetCode string `json:"asset_code"`
@@ -118,13 +123,11 @@ type ExchangeCurrencyListResponse struct {
 
 //ExchangeCurrencyList returns the list of ICOs
 func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
-
 	var rr ExchangeCurrencyListRequest
 	if err := c.Bind(&rr); err != nil {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
 		return
 	}
-
 	excs, err := m.ExchangeCurrencies().All(db.DBC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading exchange currencies", cerr.GeneralError))
@@ -146,6 +149,7 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 	response := make([]ExchangeCurrencyListResponse, len(excs))
 	for i, exc := range excs {
 		response[i] = ExchangeCurrencyListResponse{
+			ID:        exc.ID,
 			Name:      exc.Name,
 			Type:      exc.ExchangeCurrencyType,
 			AssetCode: exc.AssetCode,
@@ -163,4 +167,108 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusOK, response)
+}
+
+//AddIcoRequest - request
+type AddIcoRequest struct {
+	Name                string `form:"name" json:"name" validate:"required,max=255"`
+	Kyc                 bool   `form:"kyc" json:"kyc"`
+	SalesModel          string `form:"sales_model" json:"sales_model" validate:"required"`
+	IssuerPublicKey     string `form:"issuing_account_pk" json:"issuing_account_pk" validate:"required,base64,len=56"`
+	AssetCode           string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+	SupportedCurrencies []int  `form:"supported_currencies" json:"supported_currencies" validate:"required"`
+}
+
+//AddIco - adds new ico
+func AddIco(uc *mw.AdminContext, c *gin.Context) {
+	var rr AddIcoRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	if rr.SalesModel != m.IcoSalesModelFixed {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "sales_model", cerr.InvalidArgument, "Sales model is not 'fixed'", ""))
+		return
+	}
+	issuer, err := db.GetStellarAccount(rr.IssuerPublicKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing issuing account", cerr.GeneralError))
+		return
+	}
+	if issuer == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "issuing_account_pk", cerr.InvalidArgument, "Issuing account does not exist", ""))
+		return
+	}
+	if issuer.Type != models.StellarAccountTypeIssuing {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "issuing_account_pk", cerr.InvalidArgument, "Issuing public key does not belong to an issuing account", ""))
+		return
+	}
+	existsAssetCode := false
+	for _, assetCode := range issuer.R.IssuerPublicKeyAdminStellarAssets {
+		if strings.EqualFold(assetCode.AssetCode, rr.AssetCode) {
+			existsAssetCode = true
+			break
+		}
+	}
+	if !existsAssetCode {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "asset_code", cerr.InvalidArgument, "Asset code does not exist for this issuing account", ""))
+		return
+	}
+	if len(rr.SupportedCurrencies) == 0 {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "supported_currencies", cerr.InvalidArgument, "Supported currencies is empty.", ""))
+		return
+	}
+
+	supportedCurrencies := make([]m.IcoSupportedExchangeCurrency, len(rr.SupportedCurrencies))
+	for i, currencyID := range rr.SupportedCurrencies {
+		exists, err := db.ExistsCurrency(currencyID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing currency", cerr.GeneralError))
+			return
+		}
+		if !exists {
+			c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "supported_currencies", cerr.InvalidArgument, fmt.Sprintf("A currency does not exist for the id: %d", currencyID), ""))
+			return
+		}
+		supportedCurrencies[i] = m.IcoSupportedExchangeCurrency{ExchangeCurrencyID: currencyID, UpdatedBy: getUpdatedBy(c)}
+	}
+
+	tx, err := db.DBC.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error begining internal transaction", cerr.GeneralError))
+		return
+	}
+	ico := m.Ico{
+		IcoName:    rr.Name,
+		AssetCode:  rr.AssetCode,
+		IssuerPK:   rr.IssuerPublicKey,
+		Kyc:        rr.Kyc,
+		SalesModel: rr.SalesModel,
+		IcoStatus:  m.IcoStatusPlanning,
+		UpdatedBy:  getUpdatedBy(c),
+	}
+	err = ico.Insert(tx, boil.Infer())
+	if err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error inserting ico", cerr.GeneralError))
+		return
+	}
+	for _, dbCurrency := range supportedCurrencies {
+		dbCurrency.IcoID = ico.ID
+		err = dbCurrency.Insert(tx, boil.Whitelist(m.IcoSupportedExchangeCurrencyColumns.IcoID,
+			m.IcoSupportedExchangeCurrencyColumns.ExchangeCurrencyID,
+			m.IcoSupportedExchangeCurrencyColumns.UpdatedBy))
+		if err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error inserting ico supported currency", cerr.GeneralError))
+			return
+		}
+	}
+
+	tx.Commit()
+	c.JSON(http.StatusOK, "{}")
 }
