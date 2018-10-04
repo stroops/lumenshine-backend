@@ -28,7 +28,7 @@ func init() {
 	route.AddRoute("GET", "/list", ICOList, []string{}, "ico_list", ICORoutePrefix)
 	route.AddRoute("GET", "/exchange_currencies", ExchangeCurrencyList, []string{}, "exchange_currencies", ICORoutePrefix)
 	route.AddRoute("POST", "/add", AddIco, []string{}, "add_ico", ICORoutePrefix)
-
+	route.AddRoute("POST", "/update_name", UpdateIcoName, []string{}, "update_ico_name", ICORoutePrefix)
 }
 
 //AddICORoutes adds all the routes for the ico management
@@ -171,7 +171,7 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 
 //AddIcoRequest - request
 type AddIcoRequest struct {
-	Name                string `form:"name" json:"name" validate:"required,max=255"`
+	Name                string `form:"name" json:"name" validate:"required,max=256"`
 	Kyc                 bool   `form:"kyc" json:"kyc"`
 	SalesModel          string `form:"sales_model" json:"sales_model" validate:"required"`
 	IssuerPublicKey     string `form:"issuing_account_pk" json:"issuing_account_pk" validate:"required,base64,len=56"`
@@ -188,6 +188,15 @@ func AddIco(uc *mw.AdminContext, c *gin.Context) {
 	}
 	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
 		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	existsName, err := db.ExistsIcoName(rr.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if existsName {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "name", cerr.InvalidArgument, "Ico name already exists", ""))
 		return
 	}
 	if rr.SalesModel != m.IcoSalesModelFixed {
@@ -270,5 +279,49 @@ func AddIco(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	tx.Commit()
+	c.JSON(http.StatusOK, "{}")
+}
+
+//UpdateIcoNameRequest - request
+type UpdateIcoNameRequest struct {
+	ID   int    `form:"id" json:"id"`
+	Name string `form:"name" json:"name" validate:"required,max=256"`
+}
+
+//UpdateIcoName - update the name
+func UpdateIcoName(uc *mw.AdminContext, c *gin.Context) {
+	var rr UpdateIcoNameRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	existsName, err := db.ExistsIcoName(rr.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if existsName {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "name", cerr.InvalidArgument, "Ico name already exists", ""))
+		return
+	}
+	ico, err := db.GetIco(rr.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if ico == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
+		return
+	}
+	ico.IcoName = rr.Name
+	_, err = ico.Update(db.DBC, boil.Whitelist(m.IcoColumns.IcoName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating ico name", cerr.GeneralError))
+		return
+	}
 	c.JSON(http.StatusOK, "{}")
 }
