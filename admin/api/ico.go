@@ -29,6 +29,9 @@ func init() {
 	route.AddRoute("GET", "/exchange_currencies", ExchangeCurrencyList, []string{}, "exchange_currencies", ICORoutePrefix)
 	route.AddRoute("POST", "/add", AddIco, []string{}, "add_ico", ICORoutePrefix)
 	route.AddRoute("POST", "/update_name", UpdateIcoName, []string{}, "update_ico_name", ICORoutePrefix)
+	route.AddRoute("POST", "/update_kyc", UpdateIcoKyc, []string{}, "update_ico_kyc", ICORoutePrefix)
+	route.AddRoute("POST", "/update_issuer_data", UpdateIcoIssuer, []string{}, "update_ico_issuer_data", ICORoutePrefix)
+	route.AddRoute("POST", "/update_supported_currencies", UpdateIcoCurrencies, []string{}, "update_ico_currencies", ICORoutePrefix)
 }
 
 //AddICORoutes adds all the routes for the ico management
@@ -190,7 +193,7 @@ func AddIco(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validErrors)
 		return
 	}
-	existsName, err := db.ExistsIcoName(rr.Name)
+	existsName, err := db.ExistsIcoName(rr.Name, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
 		return
@@ -299,13 +302,44 @@ func UpdateIcoName(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validErrors)
 		return
 	}
-	existsName, err := db.ExistsIcoName(rr.Name)
+	ico, err := db.GetIco(rr.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if ico == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
+		return
+	}
+	existsName, err := db.ExistsIcoName(rr.Name, &ico.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
 		return
 	}
 	if existsName {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "name", cerr.InvalidArgument, "Ico name already exists", ""))
+		return
+	}
+	ico.IcoName = rr.Name
+	_, err = ico.Update(db.DBC, boil.Whitelist(m.IcoColumns.IcoName))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating ico name", cerr.GeneralError))
+		return
+	}
+	c.JSON(http.StatusOK, "{}")
+}
+
+//UpdateIcoKycRequest - request
+type UpdateIcoKycRequest struct {
+	ID  int  `form:"id" json:"id"`
+	Kyc bool `form:"kyc" json:"kyc"`
+}
+
+//UpdateIcoKyc - update the kyc flag
+func UpdateIcoKyc(uc *mw.AdminContext, c *gin.Context) {
+	var rr UpdateIcoKycRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
 		return
 	}
 	ico, err := db.GetIco(rr.ID)
@@ -317,11 +351,120 @@ func UpdateIcoName(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
 		return
 	}
-	ico.IcoName = rr.Name
-	_, err = ico.Update(db.DBC, boil.Whitelist(m.IcoColumns.IcoName))
+	ico.Kyc = rr.Kyc
+	_, err = ico.Update(db.DBC, boil.Whitelist(m.IcoColumns.Kyc))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating ico name", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating ico kyc flag", cerr.GeneralError))
 		return
 	}
+	c.JSON(http.StatusOK, "{}")
+}
+
+//UpdateIcoIssuerRequest - request
+type UpdateIcoIssuerRequest struct {
+	ID              int    `form:"id" json:"id"`
+	IssuerPublicKey string `form:"issuing_account_pk" json:"issuing_account_pk" validate:"required,base64,len=56"`
+	AssetCode       string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+}
+
+//UpdateIcoIssuer - updates the issuer data
+func UpdateIcoIssuer(uc *mw.AdminContext, c *gin.Context) {
+	var rr UpdateIcoIssuerRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	issuer, err := db.GetStellarAccount(rr.IssuerPublicKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing issuing account", cerr.GeneralError))
+		return
+	}
+	if issuer == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "issuing_account_pk", cerr.InvalidArgument, "Issuing account does not exist", ""))
+		return
+	}
+	if issuer.Type != models.StellarAccountTypeIssuing {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "issuing_account_pk", cerr.InvalidArgument, "Issuing public key does not belong to an issuing account", ""))
+		return
+	}
+	existsAssetCode := false
+	for _, assetCode := range issuer.R.IssuerPublicKeyAdminStellarAssets {
+		if strings.EqualFold(assetCode.AssetCode, rr.AssetCode) {
+			existsAssetCode = true
+			break
+		}
+	}
+	if !existsAssetCode {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "asset_code", cerr.InvalidArgument, "Asset code does not exist for this issuing account", ""))
+		return
+	}
+	ico, err := db.GetIco(rr.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if ico == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
+		return
+	}
+	ico.IssuerPK = rr.IssuerPublicKey
+	ico.AssetCode = rr.AssetCode
+	_, err = ico.Update(db.DBC, boil.Whitelist(m.IcoColumns.IssuerPK, m.IcoColumns.AssetCode))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating ico issuer data", cerr.GeneralError))
+		return
+	}
+	c.JSON(http.StatusOK, "{}")
+}
+
+//UpdateIcoCurrenciesRequest - request
+type UpdateIcoCurrenciesRequest struct {
+	ID                  int   `form:"id" json:"id"`
+	SupportedCurrencies []int `form:"supported_currencies" json:"supported_currencies" validate:"required"`
+}
+
+//UpdateIcoCurrencies - updates the supported currencies
+func UpdateIcoCurrencies(uc *mw.AdminContext, c *gin.Context) {
+	var rr UpdateIcoCurrenciesRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	ico, err := db.GetIco(rr.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if ico == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
+		return
+	}
+	if len(rr.SupportedCurrencies) == 0 {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "supported_currencies", cerr.InvalidArgument, "Supported currencies is empty.", ""))
+		return
+	}
+	supportedCurrencies := make([]*m.IcoSupportedExchangeCurrency, len(rr.SupportedCurrencies))
+	for i, currencyID := range rr.SupportedCurrencies {
+		exists, err := db.ExistsCurrency(currencyID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing currency", cerr.GeneralError))
+			return
+		}
+		if !exists {
+			c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "supported_currencies", cerr.InvalidArgument, fmt.Sprintf("A currency does not exist for the id: %d", currencyID), ""))
+			return
+		}
+		supportedCurrencies[i] = &m.IcoSupportedExchangeCurrency{IcoID: ico.ID, ExchangeCurrencyID: currencyID, UpdatedBy: getUpdatedBy(c)}
+	}
+	err = db.UpdateSupportedCurrencies(ico.ID, supportedCurrencies)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating supported currencies", cerr.GeneralError))
+		return
+	}
+
 	c.JSON(http.StatusOK, "{}")
 }
