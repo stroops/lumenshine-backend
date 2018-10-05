@@ -42,6 +42,7 @@ type UserOrder struct {
 	CreatedAt                          time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                          time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                          string     `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	FeePayed                           bool       `boil:"fee_payed" json:"fee_payed" toml:"fee_payed" yaml:"fee_payed"`
 
 	R *userOrderR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userOrderL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -68,6 +69,7 @@ var UserOrderColumns = struct {
 	CreatedAt                          string
 	UpdatedAt                          string
 	UpdatedBy                          string
+	FeePayed                           string
 }{
 	ID:                                 "id",
 	UserID:                             "user_id",
@@ -89,6 +91,7 @@ var UserOrderColumns = struct {
 	CreatedAt:                          "created_at",
 	UpdatedAt:                          "updated_at",
 	UpdatedBy:                          "updated_by",
+	FeePayed:                           "fee_payed",
 }
 
 // UserOrderRels is where relationship names are stored.
@@ -99,6 +102,7 @@ var UserOrderRels = struct {
 	ProcessedTransaction      string
 	OrderProcessedTransaction string
 	OrderMultipleTransactions string
+	OrderOrderTransactionLogs string
 }{
 	User:                      "User",
 	IcoPhase:                  "IcoPhase",
@@ -106,6 +110,7 @@ var UserOrderRels = struct {
 	ProcessedTransaction:      "ProcessedTransaction",
 	OrderProcessedTransaction: "OrderProcessedTransaction",
 	OrderMultipleTransactions: "OrderMultipleTransactions",
+	OrderOrderTransactionLogs: "OrderOrderTransactionLogs",
 }
 
 // userOrderR is where relationships are stored.
@@ -116,6 +121,7 @@ type userOrderR struct {
 	ProcessedTransaction      *ProcessedTransaction
 	OrderProcessedTransaction *ProcessedTransaction
 	OrderMultipleTransactions MultipleTransactionSlice
+	OrderOrderTransactionLogs OrderTransactionLogSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -127,9 +133,9 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by", "fee_payed"}
 	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
-	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
+	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at", "fee_payed"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )
 
@@ -474,6 +480,27 @@ func (o *UserOrder) OrderMultipleTransactions(mods ...qm.QueryMod) multipleTrans
 
 	if len(queries.GetSelect(query.Query)) == 0 {
 		queries.SetSelect(query.Query, []string{"\"multiple_transaction\".*"})
+	}
+
+	return query
+}
+
+// OrderOrderTransactionLogs retrieves all the order_transaction_log's OrderTransactionLogs with an executor via order_id column.
+func (o *UserOrder) OrderOrderTransactionLogs(mods ...qm.QueryMod) orderTransactionLogQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"order_transaction_log\".\"order_id\"=?", o.ID),
+	)
+
+	query := OrderTransactionLogs(queryMods...)
+	queries.SetFrom(query.Query, "\"order_transaction_log\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"order_transaction_log\".*"})
 	}
 
 	return query
@@ -1044,6 +1071,97 @@ func (userOrderL) LoadOrderMultipleTransactions(e boil.Executor, singular bool, 
 	return nil
 }
 
+// LoadOrderOrderTransactionLogs allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userOrderL) LoadOrderOrderTransactionLogs(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
+	var slice []*UserOrder
+	var object *UserOrder
+
+	if singular {
+		object = maybeUserOrder.(*UserOrder)
+	} else {
+		slice = *maybeUserOrder.(*[]*UserOrder)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userOrderR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userOrderR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`order_transaction_log`), qm.WhereIn(`order_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load order_transaction_log")
+	}
+
+	var resultSlice []*OrderTransactionLog
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice order_transaction_log")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on order_transaction_log")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for order_transaction_log")
+	}
+
+	if len(orderTransactionLogAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.OrderOrderTransactionLogs = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &orderTransactionLogR{}
+			}
+			foreign.R.Order = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.OrderID {
+				local.R.OrderOrderTransactionLogs = append(local.R.OrderOrderTransactionLogs, foreign)
+				if foreign.R == nil {
+					foreign.R = &orderTransactionLogR{}
+				}
+				foreign.R.Order = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetUserG of the userOrder to the related item.
 // Sets o.R.User to related.
 // Adds o to related.R.UserUserOrders.
@@ -1415,6 +1533,68 @@ func (o *UserOrder) AddOrderMultipleTransactions(exec boil.Executor, insert bool
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &multipleTransactionR{
+				Order: o,
+			}
+		} else {
+			rel.R.Order = o
+		}
+	}
+	return nil
+}
+
+// AddOrderOrderTransactionLogsG adds the given related objects to the existing relationships
+// of the user_order, optionally inserting them as new records.
+// Appends related to o.R.OrderOrderTransactionLogs.
+// Sets related.R.Order appropriately.
+// Uses the global database handle.
+func (o *UserOrder) AddOrderOrderTransactionLogsG(insert bool, related ...*OrderTransactionLog) error {
+	return o.AddOrderOrderTransactionLogs(boil.GetDB(), insert, related...)
+}
+
+// AddOrderOrderTransactionLogs adds the given related objects to the existing relationships
+// of the user_order, optionally inserting them as new records.
+// Appends related to o.R.OrderOrderTransactionLogs.
+// Sets related.R.Order appropriately.
+func (o *UserOrder) AddOrderOrderTransactionLogs(exec boil.Executor, insert bool, related ...*OrderTransactionLog) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.OrderID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"order_transaction_log\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"order_id"}),
+				strmangle.WhereClause("\"", "\"", 2, orderTransactionLogPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.OrderID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userOrderR{
+			OrderOrderTransactionLogs: related,
+		}
+	} else {
+		o.R.OrderOrderTransactionLogs = append(o.R.OrderOrderTransactionLogs, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &orderTransactionLogR{
 				Order: o,
 			}
 		} else {

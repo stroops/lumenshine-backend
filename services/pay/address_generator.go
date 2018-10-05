@@ -17,7 +17,7 @@ var (
 
 //GeneratePaymentAddress generates a new address in the payment network
 //checks if the generator allredy exists and if not, creates one
-func (s *server) GeneratePaymentAddress(paymentNetwork string, masterKey string) (address string, seed string, index uint32, err error) {
+func (s *server) GeneratePaymentAddress(paymentNetwork string, masterKey string) (address string, privatekey string, index uint32, err error) {
 	key := paymentNetwork + "-" + masterKey
 	if generators == nil {
 		generators = make(map[string]interface{})
@@ -39,7 +39,7 @@ func (s *server) GeneratePaymentAddress(paymentNetwork string, masterKey string)
 
 			generators[key] = g
 		}
-		address, err = g.(*ethereum.AddressGenerator).Generate(index)
+		address, privatekey, err = g.(*ethereum.AddressGenerator).Generate(index)
 	case m.PaymentNetworkBitcoin:
 		if !exist {
 			var bitcoinChainParams *chaincfg.Params
@@ -54,7 +54,7 @@ func (s *server) GeneratePaymentAddress(paymentNetwork string, masterKey string)
 
 			generators[key] = g
 		}
-		address, err = g.(*bitcoin.AddressGenerator).Generate(index)
+		address, privatekey, err = g.(*bitcoin.AddressGenerator).Generate(index)
 	default:
 		err = errors.New("Not a valid payment network")
 	}

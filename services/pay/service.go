@@ -391,7 +391,7 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 			if pkExists {
 				//we use this pk for the order
 				pk = w.PublicKey0
-				continue
+				break
 			}
 		}
 		if pk == "" {
@@ -406,7 +406,7 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 			}
 			if u.StellarAccountCreated {
 				return &pb.PayGetTransactionResponse{
-					ErrorCode:        cerr.UserNotExists,
+					ErrorCode:        cerr.UserShouldExist,
 					StellarPublicKey: pk,
 				}, nil
 			}
@@ -445,12 +445,18 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 	}, err
 }
 
-func (s *server) PayExecuteTransaction(ctx context.Context, r *pb.PayExecuteTransactionRequest) (*pb.Empty, error) {
+func (s *server) PayExecuteTransaction(ctx context.Context, r *pb.PayExecuteTransactionRequest) (*pb.PayExecuteTransactionResponse, error) {
 	order, err := m.UserOrders(qm.Where(m.UserOrderColumns.UserID+"=? and id=?", r.UserId, r.OrderId)).One(s.Env.DBC)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.Empty{}, s.Env.AccountConfigurator.ExecuteTransaction(order, r.Transaction)
+
+	if order.OrderStatus != m.OrderStatusWaitingUserTransaction {
+		return &pb.PayExecuteTransactionResponse{ErrorCode: cerr.OrderWrongStatus}, nil
+	}
+
+	hash, err := s.Env.AccountConfigurator.ExecuteTransaction(order, r.Transaction)
+	return &pb.PayExecuteTransactionResponse{TxHash: hash}, err
 }
 
 func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransaction) (*pb.BoolResponse, error) {

@@ -15,6 +15,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/bitcoin"
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
 
+	"github.com/Soneso/lumenshine-backend/services/pay/channel"
 	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
 )
@@ -54,6 +55,25 @@ func main() {
 	env.Config = cnf
 	env.DBC = dbc
 
+	/*var bitcoinChainParams *chaincfg.Params
+	bitcoinChainParams = &chaincfg.TestNet3Params
+	b, _ := bitcoin.NewAddressGenerator("xpub6DxSCdWu6jKqr4isjo7bsPeDD6s3J4YVQV1JSHZg12Eagdqnf7XX4fxqyW2sLhUoFWutL7tAELU2LiGZrEXtjVbvYptvTX5Eoa4Mamdjm9u", bitcoinChainParams)
+
+	k, s, err := b.Generate(1)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(k, " ", s)*/
+
+	/*ec := db.NewNativeCalculator(constants.StellarDecimalPlaces)
+
+	d, _ := ec.DenomFromString("10000000")
+	//d, _ := ec.DenomFromNativ("0.0000001")
+
+	fmt.Println(ec.ToNativ(d))
+	fmt.Println(d)
+	return*/
+
 	createServices()
 
 	//The gRPC service will block the thread
@@ -64,7 +84,11 @@ func main() {
 func createServices() {
 	cfg := env.Config
 
-	env.AccountConfigurator = account.NewAccountConfigurator(env.DBC, env.Config)
+	env.AccountConfigurator = account.NewAccountConfigurator(
+		env.DBC,
+		env.Config,
+		channel.NewChanneler(env.DBC, env.Config),
+	)
 
 	//start the listener
 	if cfg.Bitcoin.Enabled {

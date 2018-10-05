@@ -32,6 +32,7 @@ const (
 	ToMuchOrdersPerPhase       = 1024 //returned if the user exceeded the max numbers of orders per phase
 	OrderMinTokens             = 1025 //returned if to less tokens ordered
 	OrderMaxTokens             = 1026 //returned if to much tokens ordered
+	UserShouldExist            = 1027 //returned if user was allready created by the system once
 
 	ValidBadInputData = "Bad input data"
 )

@@ -13,7 +13,7 @@ message ExchangeCurrency{
     string payment_network = 6;
     string ec_asset_issuer_pk = 7;
     string denom_price_per_token = 8;
-    string price_per_token = 9;    
+    string price_per_token = 9;
 }
 
 message PhaseDataResponse{
@@ -21,7 +21,7 @@ message PhaseDataResponse{
     int64 ico_id = 2;
     string ico_phase_name = 3;
     string ico_phase_status = 4;
-    string ico_token_asset = 5;    
+    string ico_token_asset = 5;
     int64 start_time = 6;
     int64 end_time = 7;
     int64 tokens_left = 8;
@@ -33,7 +33,7 @@ message PhaseDataResponse{
 }
 
 message CoinPriceRequest{
-    BaseRequest base = 1;    
+    BaseRequest base = 1;
     int64 coin_amount = 2;
     int64 exchange_currency_id = 3;
     int64 ico_phase_id = 4;
@@ -47,11 +47,11 @@ message CoinPriceResponse{
 
 message CreateOrderRequest{
     BaseRequest base = 1;
-    int64 user_id = 2;    
+    int64 user_id = 2;
     int64 ico_phase_id = 3;
     int64 token_amount = 4;
-    int64 exchange_currency_id = 5;    
-    string user_public_key = 6;       
+    int64 exchange_currency_id = 5;
+    string user_public_key = 6;
 }
 
 message CreateOrderResponse {
@@ -61,24 +61,24 @@ message CreateOrderResponse {
     string exchange_value_denominator = 4;
     string exchange_value_denom_asset_code = 5;
     string payment_address = 6;
-    bytes payment_qr_image = 7;    
+    bytes payment_qr_image = 7;
     string payment_usage = 8;
     string fiat_bic = 9;
     string fiat_iban = 10;
-    string fiat_recepient_name = 11;    
+    string fiat_recepient_name = 11;
     string fiat_bank_name = 12;
     string user_public_key = 13;
 }
 
 message UserOrdersCountRequest{
-    BaseRequest base = 1;    
+    BaseRequest base = 1;
     int64 user_id = 2;
     int64 phase_id = 3;
 }
 
 message UserOrdersRequest{
     BaseRequest base = 1;
-    int64 user_id = 2;    
+    int64 user_id = 2;
     string order_status = 3;
     int64 order_id = 4;
     int64 ico_phase_id = 5;
@@ -87,7 +87,7 @@ message UserOrdersRequest{
 message UserOrder{
     int64 id = 1;
     string order_status = 2;
-    int64 ico_phase_id = 3;    
+    int64 ico_phase_id = 3;
     int64 token_amount = 4;
     string stellar_user_public_key = 5;
     int64 exchange_currency_id = 6;
@@ -99,10 +99,10 @@ message UserOrder{
     bytes payment_qr_image = 12;
     string exchange_amount = 13;
     string exchange_asset_code = 14;
-    string exchange_denom_asset_code = 15; 
+    string exchange_denom_asset_code = 15;
     string fiat_bic = 16;
     string fiat_iban = 17;
-    string fiat_recepient_name = 18;    
+    string fiat_recepient_name = 18;
     string fiat_bank_name = 19;
     string payment_usage = 20;
     string exchange_currency_type = 21;
@@ -115,8 +115,8 @@ message UserOrdersResponse{
 
 message PayGetTransactionRequest{
     BaseRequest base = 1;
-    int64 user_id = 2;        
-    int64 order_id = 3;      
+    int64 user_id = 2;
+    int64 order_id = 3;
 }
 
 message PayGetTransactionResponse{
@@ -127,30 +127,35 @@ message PayGetTransactionResponse{
 
 message PayExecuteTransactionRequest{
     BaseRequest base = 1;
-    int64 user_id = 2;        
-    int64 order_id = 3;  
+    int64 user_id = 2;
+    int64 order_id = 3;
     string transaction = 4;
+}
+
+message PayExecuteTransactionResponse{
+    string tx_hash = 1;
+    int64 error_code = 2;
 }
 
 message TestTransaction {
     BaseRequest base = 1;
     string payment_channel = 2;
     string tx_hash = 3;
-    string recipient_address = 4;    
+    string recipient_address = 4;
     int64 denom_amount = 5;
     string payment_usage = 6;
 }
 
-service PayService {    
-  rpc GetPhaseData (IDRequest) returns (PhaseDataResponse) {}  
+service PayService {
+  rpc GetPhaseData (IDRequest) returns (PhaseDataResponse) {}
   rpc GetExchangeCurrencyData (IDRequest) returns (ExchangeCurrency) {}
-  rpc GetUserOrderCount (UserOrdersCountRequest) returns (IntResponse) {}  
+  rpc GetUserOrderCount (UserOrdersCountRequest) returns (IntResponse) {}
   rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse) {}
   rpc GetCoinPrice (CoinPriceRequest) returns (CoinPriceResponse) {}
   rpc GetUserOrders (UserOrdersRequest) returns (UserOrdersResponse) {}
-  
-  rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}
-  rpc PayExecuteTransaction (PayExecuteTransactionRequest) returns (Empty) {}
 
-  rpc FakePaymentTransaction (TestTransaction) returns (BoolResponse) {}        
+  rpc PayGetTransaction (PayGetTransactionRequest) returns (PayGetTransactionResponse) {}
+  rpc PayExecuteTransaction (PayExecuteTransactionRequest) returns (PayExecuteTransactionResponse) {}
+
+  rpc FakePaymentTransaction (TestTransaction) returns (BoolResponse) {}
 }

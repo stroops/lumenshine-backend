@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	paycrypto "github.com/Soneso/lumenshine-backend/services/pay/crypto"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/stellar/go/support/errors"
@@ -22,20 +23,26 @@ func NewAddressGenerator(masterPublicKeyString string, chainParams *chaincfg.Par
 }
 
 //Generate generates a new bitcoin address
-func (g *AddressGenerator) Generate(index uint32) (string, error) {
+func (g *AddressGenerator) Generate(index uint32) (address string, privateKey string, err error) {
 	if g.masterPublicKey == nil {
-		return "", errors.New("No master public key set")
+		return "", "", errors.New("No master public key set")
 	}
-
 	accountKey, err := g.masterPublicKey.NewChildKey(index)
 	if err != nil {
-		return "", errors.Wrap(err, "Error creating new child key")
+		return "", "", err
 	}
 
-	address, err := btcutil.NewAddressPubKey(accountKey.Key, g.chainParams)
+	privateKey, err = paycrypto.PrivateECDSAKey(accountKey)
 	if err != nil {
-		return "", errors.Wrap(err, "Error creating address for new child key")
+		return "", "", err
 	}
 
-	return address.AddressPubKeyHash().EncodeAddress(), nil
+	addr, err := btcutil.NewAddressPubKey(accountKey.Key, g.chainParams)
+	if err != nil {
+		return "", "", err
+	}
+
+	address = addr.AddressPubKeyHash().EncodeAddress()
+	//return address, string(addr.PubKey().SerializeUncompressed()), privateKey, nil
+	return address, privateKey, nil
 }

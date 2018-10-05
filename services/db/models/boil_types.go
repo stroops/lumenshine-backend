@@ -51,6 +51,14 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	return str
 }
 
+// Enum values for channel_status
+const (
+	ChannelStatusFree          = "free"
+	ChannelStatusInUse         = "in_use"
+	ChannelStatusMergeReserved = "merge_reserved"
+	ChannelStatusMerged        = "merged"
+)
+
 // Enum values for exchange_currency_type
 const (
 	ExchangeCurrencyTypeCrypto = "crypto"

@@ -66,15 +66,16 @@ type Config struct {
 	IsDevSystem           bool
 	AllowFakeTransactions bool
 
-	DBService               Service
-	CustomerDB              DBConfig
-	Bitcoin                 Bitcoin
-	Ethereum                Ethereum
-	Stellar                 Stellar
-	Fiat                    Fiat
-	StellarHorizenDB        DBConfig
-	StellarBaseFee          string
-	StellarBaseFeeTrustline string
+	DBService                     Service
+	CustomerDB                    DBConfig
+	Bitcoin                       Bitcoin
+	Ethereum                      Ethereum
+	Stellar                       Stellar
+	Fiat                          Fiat
+	StellarHorizenDB              DBConfig
+	StellarOperationFeeDenom      string
+	StellarBaseReserveDenom       string
+	StellarChannelStartBalanceXLM string
 }
 
 //ReadConfig reads the configuration from the file

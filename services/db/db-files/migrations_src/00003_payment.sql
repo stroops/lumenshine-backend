@@ -42,7 +42,7 @@ CREATE TABLE user_order (
   /* ethereum 42 characters */
   /* stellar 56 characters */
   payment_address varchar(56) NOT NULL, /* public key in the target network, based on payment_network */
-  payment_seed varchar(56) NOT NULL, /* used only for stellar accounts */
+  payment_seed varchar(56) NOT NULL, /* this is either the seed on stellar, or the privatekey on other crypto */
 
   stellar_transaction_id text not null, /* this is the coin payment tx in the stellar network */
   processed_transaction_id int null, /* FK to the processed transactions */
