@@ -21,6 +21,7 @@ var TableNames = struct {
 	OrderTransactionLog               string
 	ProcessedTransaction              string
 	Salutations                       string
+	UserContact                       string
 	UserKycDocument                   string
 	UserMessage                       string
 	UserMessageArchive                string
@@ -47,6 +48,7 @@ var TableNames = struct {
 	OrderTransactionLog:               "order_transaction_log",
 	ProcessedTransaction:              "processed_transaction",
 	Salutations:                       "salutations",
+	UserContact:                       "user_contact",
 	UserKycDocument:                   "user_kyc_document",
 	UserMessage:                       "user_message",
 	UserMessageArchive:                "user_message_archive",

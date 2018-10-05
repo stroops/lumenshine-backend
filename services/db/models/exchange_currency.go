@@ -31,6 +31,7 @@ type ExchangeCurrency struct {
 	CreatedAt            time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt            time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy            string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	Name                 string    `boil:"name" json:"name" toml:"name" yaml:"name"`
 
 	R *exchangeCurrencyR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L exchangeCurrencyL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -47,6 +48,7 @@ var ExchangeCurrencyColumns = struct {
 	CreatedAt            string
 	UpdatedAt            string
 	UpdatedBy            string
+	Name                 string
 }{
 	ID:                   "id",
 	ExchangeCurrencyType: "exchange_currency_type",
@@ -58,6 +60,7 @@ var ExchangeCurrencyColumns = struct {
 	CreatedAt:            "created_at",
 	UpdatedAt:            "updated_at",
 	UpdatedBy:            "updated_by",
+	Name:                 "name",
 }
 
 // ExchangeCurrencyRels is where relationship names are stored.
@@ -87,9 +90,9 @@ func (*exchangeCurrencyR) NewStruct() *exchangeCurrencyR {
 type exchangeCurrencyL struct{}
 
 var (
-	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "created_at", "updated_at", "updated_by"}
+	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "created_at", "updated_at", "updated_by", "name"}
 	exchangeCurrencyColumnsWithoutDefault = []string{"exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "updated_by"}
-	exchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
+	exchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at", "name"}
 	exchangeCurrencyPrimaryKeyColumns     = []string{"id"}
 )
 
