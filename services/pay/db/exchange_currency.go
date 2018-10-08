@@ -29,6 +29,7 @@ type ExchangeCurrencySlice []*ExchangeCurrency
 type NativeCalculator struct {
 	//decimal places for the given currency
 	decimals int
+
 	//calculator for the nativ value
 	nativCalc *big.Rat
 }
@@ -87,7 +88,11 @@ func (nc *NativeCalculator) ToNativ(denom *big.Int) string {
 	f.SetInt(i)
 
 	r = r.Quo(r, f)
-	return r.String()
+	s := strings.TrimRight(r.Text(byte('f'), nc.decimals), "0")
+	if s[1:] == "." {
+		s = s[:1]
+	}
+	return s
 }
 
 //readAllECs reads all ExchangeCurrencies into memory

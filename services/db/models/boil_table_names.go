@@ -4,6 +4,7 @@
 package models
 
 var TableNames = struct {
+	Channels                          string
 	Countries                         string
 	ExchangeCurrency                  string
 	Ico                               string
@@ -17,6 +18,7 @@ var TableNames = struct {
 	MultipleTransaction               string
 	Notification                      string
 	NotificationArchive               string
+	OrderTransactionLog               string
 	ProcessedTransaction              string
 	Salutations                       string
 	UserContact                       string
@@ -29,28 +31,30 @@ var TableNames = struct {
 	UserSecurity                      string
 	UserWallet                        string
 }{
-	Countries:        "countries",
-	ExchangeCurrency: "exchange_currency",
-	Ico:              "ico",
-	IcoPhase:         "ico_phase",
+	Channels:                          "channels",
+	Countries:                         "countries",
+	ExchangeCurrency:                  "exchange_currency",
+	Ico:                               "ico",
+	IcoPhase:                          "ico_phase",
 	IcoPhaseActivatedExchangeCurrency: "ico_phase_activated_exchange_currency",
 	IcoPhaseBankAccount:               "ico_phase_bank_account",
 	IcoSupportedExchangeCurrency:      "ico_supported_exchange_currency",
-	JWTKey:               "jwt_key",
-	KeyValueStore:        "key_value_store",
-	Mail:                 "mail",
-	MultipleTransaction:  "multiple_transaction",
-	Notification:         "notification",
-	NotificationArchive:  "notification_archive",
-	ProcessedTransaction: "processed_transaction",
-	Salutations:          "salutations",
-	UserContact:          "user_contact",
-	UserKycDocument:      "user_kyc_document",
-	UserMessage:          "user_message",
-	UserMessageArchive:   "user_message_archive",
-	UserOrder:            "user_order",
-	UserProfile:          "user_profile",
-	UserPushtoken:        "user_pushtoken",
-	UserSecurity:         "user_security",
-	UserWallet:           "user_wallet",
+	JWTKey:                            "jwt_key",
+	KeyValueStore:                     "key_value_store",
+	Mail:                              "mail",
+	MultipleTransaction:               "multiple_transaction",
+	Notification:                      "notification",
+	NotificationArchive:               "notification_archive",
+	OrderTransactionLog:               "order_transaction_log",
+	ProcessedTransaction:              "processed_transaction",
+	Salutations:                       "salutations",
+	UserContact:                       "user_contact",
+	UserKycDocument:                   "user_kyc_document",
+	UserMessage:                       "user_message",
+	UserMessageArchive:                "user_message_archive",
+	UserOrder:                         "user_order",
+	UserProfile:                       "user_profile",
+	UserPushtoken:                     "user_pushtoken",
+	UserSecurity:                      "user_security",
+	UserWallet:                        "user_wallet",
 }

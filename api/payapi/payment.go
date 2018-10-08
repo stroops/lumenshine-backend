@@ -588,13 +588,31 @@ func OrderGetTransaction(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
-//ExecuteTransactionRequest -
+// ExecuteTransactionRequest request data
+// swagger:parameters ExecuteTransactionRequest ExecuteTransaction
 type ExecuteTransactionRequest struct {
 	OrderID     int64  `form:"order_id" json:"order_id" validate:"required"`
 	Transaction string `form:"transaction" json:"transaction" validate:"required"`
 }
 
-//ExecuteTransaction signs and runs a transaction
+// ExecuteTransactionResponse response object
+// swagger:model
+type ExecuteTransactionResponse struct {
+	TransactionHash string `json:"transaction_hash"`
+}
+
+// ExecuteTransaction signs the tx with the postsigner and runs the transaction
+// The transaction must be signed with the customers seed on the client
+// swagger:route GET /execute_transaction ExecuteTransaction
+//     signs the tx with the postsigner and runs the transaction. must be signed with the customers seed on the client
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: ExecuteTransactionResponse
 func ExecuteTransaction(uc *mw.IcopContext, c *gin.Context) {
 	var l ExecuteTransactionRequest
 	if err := c.Bind(&l); err != nil {
@@ -609,7 +627,7 @@ func ExecuteTransaction(uc *mw.IcopContext, c *gin.Context) {
 
 	userID := mw.GetAuthUser(c).UserID
 
-	_, err := payClient.PayExecuteTransaction(c, &pb.PayExecuteTransactionRequest{
+	res, err := payClient.PayExecuteTransaction(c, &pb.PayExecuteTransactionRequest{
 		Base:        NewBaseRequest(uc),
 		Transaction: l.Transaction,
 		OrderId:     l.OrderID,
@@ -620,7 +638,14 @@ func ExecuteTransaction(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, "{}")
+	if res.ErrorCode != 0 {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("order_id", int(res.ErrorCode), "Error executing transaction", ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, &ExecuteTransactionResponse{
+		TransactionHash: res.TxHash,
+	})
 }
 
 // FakeTransactionRequest request-data

@@ -188,7 +188,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	//also create a initial wallet for the user
 	var w models.UserWallet
 	w.UserID = u.ID
-	w.WalletName = "Primary Wallet"
+	w.WalletName = "Primary"
 	w.PublicKey0 = r.PublicKey_0
 	w.ShowOnHomescreen = true
 	err = w.Insert(tx, boil.Infer())
