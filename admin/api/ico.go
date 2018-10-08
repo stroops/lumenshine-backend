@@ -32,6 +32,7 @@ func init() {
 	route.AddRoute("POST", "/update_kyc", UpdateIcoKyc, []string{}, "update_ico_kyc", ICORoutePrefix)
 	route.AddRoute("POST", "/update_issuer_data", UpdateIcoIssuer, []string{}, "update_ico_issuer_data", ICORoutePrefix)
 	route.AddRoute("POST", "/update_supported_currencies", UpdateIcoCurrencies, []string{}, "update_ico_currencies", ICORoutePrefix)
+	route.AddRoute("POST", "/remove", RemoveIco, []string{}, "remove_ico", ICORoutePrefix)
 }
 
 //AddICORoutes adds all the routes for the ico management
@@ -463,6 +464,53 @@ func UpdateIcoCurrencies(uc *mw.AdminContext, c *gin.Context) {
 	err = db.UpdateSupportedCurrencies(ico.ID, supportedCurrencies)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating supported currencies", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
+}
+
+//RemoveIcoRequest - request
+type RemoveIcoRequest struct {
+	ID int `form:"id" json:"id"`
+}
+
+//RemoveIco - deletes ico from db
+func RemoveIco(uc *mw.AdminContext, c *gin.Context) {
+	var rr RemoveIcoRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	ico, err := db.GetIco(rr.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if ico == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
+		return
+	}
+	if ico.IcoStatus != m.IcoStatusPlanning {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "The ico is not in 'planning' state", ""))
+		return
+	}
+
+	// icotest, err := m.Icos(qm.Where("id=?", ico.ID),
+	// 	qm.Load(m.IcoRels.IcoPhases),
+	// 	qm.Load(m.IcoRels.IcoSupportedExchangeCurrencies),
+	// 	qm.Load(m.IcoRels.IcoPhases+"."+m.IcoPhaseRels.IcoPhaseActivatedExchangeCurrencies),
+	// ).One(db.DBC)
+
+	// uc.Log.Print(fmt.Sprintf("Count phases:%d ", len(icotest.R.IcoPhases)))
+	// uc.Log.Print(fmt.Sprintf("Count currencies:%d ", len(icotest.R.IcoSupportedExchangeCurrencies)))
+	// for _, phase := range icotest.R.IcoPhases {
+	// 	uc.Log.Print(fmt.Sprintf("Count phase currencies:%d ", len(phase.R.IcoPhaseActivatedExchangeCurrencies)))
+	// }
+
+	err = db.DeleteIco(ico)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting ico", cerr.GeneralError))
 		return
 	}
 

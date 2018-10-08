@@ -42,21 +42,15 @@ func GetIco(id int) (*models.Ico, error) {
 
 //UpdateSupportedCurrencies - updates the supported currencies of an ico
 func UpdateSupportedCurrencies(icoID int, supportedCurrencies models.IcoSupportedExchangeCurrencySlice) error {
-	excs, err := models.IcoSupportedExchangeCurrencies(
-		qm.Where(models.IcoSupportedExchangeCurrencyColumns.IcoID+"=?", icoID)).All(DBC)
-	if err != nil {
-		return err
-	}
 	tx, err := DBC.Begin()
 	if err != nil {
 		return err
 	}
-	for _, exc := range excs {
-		_, err = exc.Delete(tx)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
+	_, err = models.IcoSupportedExchangeCurrencies(
+		qm.Where(models.IcoSupportedExchangeCurrencyColumns.IcoID+"=?", icoID)).DeleteAll(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
 	}
 	for _, newCurrency := range supportedCurrencies {
 		newCurrency.IcoID = icoID
@@ -67,6 +61,62 @@ func UpdateSupportedCurrencies(icoID int, supportedCurrencies models.IcoSupporte
 			tx.Rollback()
 			return err
 		}
+	}
+
+	tx.Commit()
+	return nil
+}
+
+//DeleteIco - deletes the ico
+func DeleteIco(ico *models.Ico) error {
+	phases, err := models.IcoPhases(qm.Where(models.IcoPhaseColumns.IcoID+"=?", ico.ID),
+		qm.Load(models.IcoPhaseRels.IcoPhaseActivatedExchangeCurrencies),
+		qm.Load(models.IcoPhaseRels.IcoPhaseActivatedExchangeCurrencies+"."+models.IcoPhaseActivatedExchangeCurrencyRels.IcoPhaseBankAccount)).All(DBC)
+
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	tx, err := DBC.Begin()
+	if err != nil {
+		return err
+	}
+
+	if phases != nil && len(phases) > 0 {
+		for _, phase := range phases {
+			if phase.R != nil && phase.R.IcoPhaseActivatedExchangeCurrencies != nil {
+				_, err = phase.R.IcoPhaseActivatedExchangeCurrencies.DeleteAll(tx)
+				if err != nil {
+					tx.Rollback()
+					return err
+				}
+				for _, currency := range phase.R.IcoPhaseActivatedExchangeCurrencies {
+					if currency.R != nil && currency.R.IcoPhaseBankAccount != nil {
+						_, err = currency.R.IcoPhaseBankAccount.Delete(tx)
+						if err != nil {
+							tx.Rollback()
+							return err
+						}
+					}
+				}
+			}
+		}
+		_, err = phases.DeleteAll(tx)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	_, err = models.IcoSupportedExchangeCurrencies(
+		qm.Where(models.IcoSupportedExchangeCurrencyColumns.IcoID+"=?", ico.ID)).DeleteAll(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	_, err = ico.Delete(tx)
+	if err != nil {
+		tx.Rollback()
+		return err
 	}
 
 	tx.Commit()
