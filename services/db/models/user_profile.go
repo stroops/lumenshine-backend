@@ -54,6 +54,17 @@ type UserProfile struct {
 	CreatedAt                  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                  time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                  string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	AdditionalName             string    `boil:"additional_name" json:"additional_name" toml:"additional_name" yaml:"additional_name"`
+	BirthCountryCode           string    `boil:"birth_country_code" json:"birth_country_code" toml:"birth_country_code" yaml:"birth_country_code"`
+	BankAccountNumber          string    `boil:"bank_account_number" json:"bank_account_number" toml:"bank_account_number" yaml:"bank_account_number"`
+	BankNumber                 string    `boil:"bank_number" json:"bank_number" toml:"bank_number" yaml:"bank_number"`
+	BankPhoneNumber            string    `boil:"bank_phone_number" json:"bank_phone_number" toml:"bank_phone_number" yaml:"bank_phone_number"`
+	TaxID                      string    `boil:"tax_id" json:"tax_id" toml:"tax_id" yaml:"tax_id"`
+	TaxIDName                  string    `boil:"tax_id_name" json:"tax_id_name" toml:"tax_id_name" yaml:"tax_id_name"`
+	Occupation                 string    `boil:"occupation" json:"occupation" toml:"occupation" yaml:"occupation"`
+	EmployerName               string    `boil:"employer_name" json:"employer_name" toml:"employer_name" yaml:"employer_name"`
+	EmployerAddress            string    `boil:"employer_address" json:"employer_address" toml:"employer_address" yaml:"employer_address"`
+	LanguageCode               string    `boil:"language_code" json:"language_code" toml:"language_code" yaml:"language_code"`
 
 	R *userProfileR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userProfileL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -93,6 +104,17 @@ var UserProfileColumns = struct {
 	CreatedAt                  string
 	UpdatedAt                  string
 	UpdatedBy                  string
+	AdditionalName             string
+	BirthCountryCode           string
+	BankAccountNumber          string
+	BankNumber                 string
+	BankPhoneNumber            string
+	TaxID                      string
+	TaxIDName                  string
+	Occupation                 string
+	EmployerName               string
+	EmployerAddress            string
+	LanguageCode               string
 }{
 	ID:                         "id",
 	Email:                      "email",
@@ -127,6 +149,17 @@ var UserProfileColumns = struct {
 	CreatedAt:                  "created_at",
 	UpdatedAt:                  "updated_at",
 	UpdatedBy:                  "updated_by",
+	AdditionalName:             "additional_name",
+	BirthCountryCode:           "birth_country_code",
+	BankAccountNumber:          "bank_account_number",
+	BankNumber:                 "bank_number",
+	BankPhoneNumber:            "bank_phone_number",
+	TaxID:                      "tax_id",
+	TaxIDName:                  "tax_id_name",
+	Occupation:                 "occupation",
+	EmployerName:               "employer_name",
+	EmployerAddress:            "employer_address",
+	LanguageCode:               "language_code",
 }
 
 // UserProfileRels is where relationship names are stored.
@@ -177,9 +210,9 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation", "employer_name", "employer_address", "language_code"}
 	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "street_address", "street_number", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
-	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at"}
+	userProfileColumnsWithDefault    = []string{"id", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation", "employer_name", "employer_address", "language_code"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )
 

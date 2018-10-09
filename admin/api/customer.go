@@ -188,16 +188,27 @@ type CustomerDetailsResponse struct {
 	Email            string    `json:"email"`
 	RegistrationDate time.Time `json:"registration_date"`
 	//LastLogin        time.Time `json:"last_login"`
-	MobileNR      string     `json:"mobile_nr"`
-	StreetAddress string     `json:"street_address"`
-	StreetNumber  string     `json:"street_number"`
-	ZipCode       string     `json:"zip_code"`
-	City          string     `json:"city"`
-	State         string     `json:"state"`
-	CountryCode   string     `json:"country_code"`
-	Nationality   string     `json:"nationality"`
-	BirthDay      *time.Time `json:"birth_day"`
-	BirthPlace    string     `json:"birth_place"`
+	MobileNR          string     `json:"mobile_nr"`
+	StreetAddress     string     `json:"street_address"`
+	StreetNumber      string     `json:"street_number"`
+	ZipCode           string     `json:"zip_code"`
+	City              string     `json:"city"`
+	State             string     `json:"state"`
+	CountryCode       string     `json:"country_code"`
+	Nationality       string     `json:"nationality"`
+	BirthDay          *time.Time `json:"birth_day"`
+	BirthPlace        string     `json:"birth_place"`
+	AdditionalName    string     `json:"additional_name"`
+	BirthCountryCode  string     `json:"birth_country_code"`
+	BankAccountNumber string     `json:"bank_account_number"`
+	BankNumber        string     `json:"bank_number"`
+	BankPhoneNumber   string     `json:"bank_phone_number"`
+	TaxID             string     `json:"tax_id"`
+	TaxIDName         string     `json:"tax_id_name"`
+	Occupation        string     `json:"occupation"`
+	EmployerName      string     `json:"employer_name"`
+	EmployerAddress   string     `json:"employer_address"`
+	LanguageCode      string     `json:"language_code"`
 }
 
 //CustomerDetails returns details of stefiied customer
@@ -210,23 +221,6 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 
 	u, err := m.UserProfiles(
 		qm.Where("id=?", id),
-		qm.Select(
-			m.UserProfileColumns.ID,
-			m.UserProfileColumns.Forename,
-			m.UserProfileColumns.Lastname,
-			m.UserProfileColumns.Email,
-			m.UserProfileColumns.CreatedAt,
-			m.UserProfileColumns.MobileNR,
-			m.UserProfileColumns.StreetAddress,
-			m.UserProfileColumns.StreetNumber,
-			m.UserProfileColumns.ZipCode,
-			m.UserProfileColumns.City,
-			m.UserProfileColumns.State,
-			m.UserProfileColumns.CountryCode,
-			m.UserProfileColumns.Nationality,
-			m.UserProfileColumns.BirthDay,
-			m.UserProfileColumns.BirthPlace,
-		),
 	).One(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
@@ -238,20 +232,31 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 	response := CustomerDetailsResponse{
-		ID:               u.ID,
-		Forename:         u.Forename,
-		Lastname:         u.Lastname,
-		Email:            u.Email,
-		RegistrationDate: u.CreatedAt,
-		MobileNR:         u.MobileNR,
-		StreetAddress:    u.StreetAddress,
-		StreetNumber:     u.StreetNumber,
-		ZipCode:          u.ZipCode,
-		City:             u.City,
-		State:            u.State,
-		CountryCode:      u.CountryCode,
-		Nationality:      u.Nationality,
-		BirthPlace:       u.BirthPlace,
+		ID:                u.ID,
+		Forename:          u.Forename,
+		Lastname:          u.Lastname,
+		Email:             u.Email,
+		RegistrationDate:  u.CreatedAt,
+		MobileNR:          u.MobileNR,
+		StreetAddress:     u.StreetAddress,
+		StreetNumber:      u.StreetNumber,
+		ZipCode:           u.ZipCode,
+		City:              u.City,
+		State:             u.State,
+		CountryCode:       u.CountryCode,
+		Nationality:       u.Nationality,
+		BirthPlace:        u.BirthPlace,
+		AdditionalName:    u.AdditionalName,
+		BirthCountryCode:  u.BirthCountryCode,
+		BankAccountNumber: u.BankAccountNumber,
+		BankNumber:        u.BankNumber,
+		BankPhoneNumber:   u.BankPhoneNumber,
+		TaxID:             u.TaxID,
+		TaxIDName:         u.TaxIDName,
+		Occupation:        u.Occupation,
+		EmployerName:      u.EmployerName,
+		EmployerAddress:   u.EmployerAddress,
+		LanguageCode:      u.LanguageCode,
 	}
 	if !u.BirthDay.IsZero() {
 		response.BirthDay = &u.BirthDay
@@ -261,18 +266,29 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 
 // CustomerEditRequest - request data
 type CustomerEditRequest struct {
-	ID            int    `form:"id" json:"id"`
-	Forename      string `form:"forename" json:"forename" validate:"required,max=64"`
-	Lastname      string `form:"lastname" json:"lastname" validate:"required,max=64"`
-	MobileNR      string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
-	StreetAddress string `form:"street_address" json:"street_address" validate:"required,max=128"`
-	StreetNumber  string `form:"street_number" json:"street_number" validate:"required,max=128"`
-	ZipCode       string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
-	City          string `form:"city" json:"city" validate:"required,max=128"`
-	State         string `form:"state" json:"state" validate:"required,max=128"`
-	CountryCode   string `form:"country_code" json:"country_code" validate:"required,max=128"`
-	Nationality   string `form:"nationality" json:"nationality" validate:"required,max=2"`
-	BirthPlace    string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
+	ID                int    `form:"id" json:"id"`
+	Forename          string `form:"forename" json:"forename" validate:"required,max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"required,max=64"`
+	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
+	StreetAddress     string `form:"street_address" json:"street_address" validate:"required,max=128"`
+	StreetNumber      string `form:"street_number" json:"street_number" validate:"required,max=128"`
+	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
+	City              string `form:"city" json:"city" validate:"required,max=128"`
+	State             string `form:"state" json:"state" validate:"required,max=128"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=128"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=2"`
+	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
+	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=255"`
+	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=3"`
+	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=255"`
+	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=255"`
+	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=255"`
+	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=255"`
+	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=255"`
+	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=5"`
+	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=500"`
+	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=500"`
+	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=10"`
 }
 
 //CustomerEdit updates customer details and returns customer
@@ -291,23 +307,6 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 
 	u, err := m.UserProfiles(
 		qm.Where("id=?", rr.ID),
-		qm.Select(
-			m.UserProfileColumns.ID,
-			m.UserProfileColumns.Forename,
-			m.UserProfileColumns.Lastname,
-			m.UserProfileColumns.Email,
-			m.UserProfileColumns.CreatedAt,
-			m.UserProfileColumns.MobileNR,
-			m.UserProfileColumns.StreetAddress,
-			m.UserProfileColumns.StreetNumber,
-			m.UserProfileColumns.ZipCode,
-			m.UserProfileColumns.City,
-			m.UserProfileColumns.State,
-			m.UserProfileColumns.CountryCode,
-			m.UserProfileColumns.Nationality,
-			m.UserProfileColumns.BirthDay,
-			m.UserProfileColumns.BirthPlace,
-		),
 	).One(db.DBC)
 	if err != nil && err != sql.ErrNoRows {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user from db", cerr.GeneralError))
@@ -330,23 +329,23 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	u.CountryCode = rr.CountryCode
 	u.Nationality = rr.Nationality
 	u.BirthPlace = rr.BirthPlace
+
+	u.AdditionalName = rr.AdditionalName
+	u.BirthCountryCode = rr.BirthCountryCode
+	u.BankAccountNumber = rr.BankAccountNumber
+	u.BankNumber = rr.BankNumber
+	u.BankPhoneNumber = rr.BankPhoneNumber
+	u.TaxID = rr.TaxID
+	u.TaxIDName = rr.TaxIDName
+	u.Occupation = rr.Occupation
+	u.EmployerName = rr.EmployerName
+	u.EmployerAddress = rr.EmployerAddress
+	u.LanguageCode = rr.LanguageCode
+
 	u.UpdatedBy = getUpdatedBy(c)
 	u.UpdatedAt = time.Now().In(boil.GetLocation())
 
-	_, err = u.Update(db.DBC, boil.Whitelist(m.UserProfileColumns.ID,
-		m.UserProfileColumns.Forename,
-		m.UserProfileColumns.Lastname,
-		m.UserProfileColumns.MobileNR,
-		m.UserProfileColumns.StreetAddress,
-		m.UserProfileColumns.StreetNumber,
-		m.UserProfileColumns.ZipCode,
-		m.UserProfileColumns.City,
-		m.UserProfileColumns.State,
-		m.UserProfileColumns.CountryCode,
-		m.UserProfileColumns.Nationality,
-		m.UserProfileColumns.BirthPlace,
-		m.UserProfileColumns.UpdatedBy,
-		m.UserProfileColumns.UpdatedAt))
+	_, err = u.Update(db.DBC, boil.Infer())
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
@@ -354,20 +353,31 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	response := CustomerDetailsResponse{
-		ID:               u.ID,
-		Forename:         u.Forename,
-		Lastname:         u.Lastname,
-		Email:            u.Email,
-		RegistrationDate: u.CreatedAt,
-		MobileNR:         u.MobileNR,
-		StreetAddress:    u.StreetAddress,
-		StreetNumber:     u.StreetNumber,
-		ZipCode:          u.ZipCode,
-		City:             u.City,
-		State:            u.State,
-		CountryCode:      u.CountryCode,
-		Nationality:      u.Nationality,
-		BirthPlace:       u.BirthPlace,
+		ID:                u.ID,
+		Forename:          u.Forename,
+		Lastname:          u.Lastname,
+		Email:             u.Email,
+		RegistrationDate:  u.CreatedAt,
+		MobileNR:          u.MobileNR,
+		StreetAddress:     u.StreetAddress,
+		StreetNumber:      u.StreetNumber,
+		ZipCode:           u.ZipCode,
+		City:              u.City,
+		State:             u.State,
+		CountryCode:       u.CountryCode,
+		Nationality:       u.Nationality,
+		BirthPlace:        u.BirthPlace,
+		AdditionalName:    u.AdditionalName,
+		BirthCountryCode:  u.BirthCountryCode,
+		BankAccountNumber: u.BankAccountNumber,
+		BankNumber:        u.BankNumber,
+		BankPhoneNumber:   u.BankPhoneNumber,
+		TaxID:             u.TaxID,
+		TaxIDName:         u.TaxIDName,
+		Occupation:        u.Occupation,
+		EmployerName:      u.EmployerName,
+		EmployerAddress:   u.EmployerAddress,
+		LanguageCode:      u.LanguageCode,
 	}
 	if !u.BirthDay.IsZero() {
 		response.BirthDay = &u.BirthDay

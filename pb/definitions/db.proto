@@ -46,6 +46,18 @@ message CreateUserRequest {
   string mail_confirmation_key = 30;
   int64 mail_confirmation_expiry = 31;
   string tfa_temp_secret = 32;
+
+  string additional_name = 33;
+	string birth_country_code = 34;
+	string bank_account_number = 35;
+	string bank_number = 36;
+	string bank_phone_number = 37;
+	string tax_id = 38;
+	string tax_id_name = 39;
+	string occupation = 40;
+	string employer_name = 41;
+	string employer_address = 42;
+	string language_code = 43;
 }
 
 message UserProfileResponse {
@@ -67,7 +79,18 @@ message UserProfileResponse {
   int64 birth_day = 16;
   string birth_place = 17;
   string password = 18;
-  bool user_not_found = 19;
+  string additional_name = 19;
+	string birth_country_code = 20;
+	string bank_account_number = 21;
+	string bank_number = 22;
+	string bank_phone_number = 23;
+	string tax_id = 24;
+	string tax_id_name = 25;
+	string occupation = 26;
+	string employer_name = 27;
+	string employer_address = 28;
+	string language_code = 29;
+  bool user_not_found = 30;  
 }
 
 message UserDetailsResponse {

@@ -98,24 +98,35 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 	}
 
 	return &pb.UserProfileResponse{
-		Id:            int64(u.ID),
-		Email:         u.Email,
-		Salutation:    u.Salutation,
-		Title:         u.Title,
-		Forename:      u.Forename,
-		Lastname:      u.Company,
-		Company:       u.Company,
-		StreetAddress: u.StreetAddress,
-		StreetNumber:  u.StreetNumber,
-		ZipCode:       u.ZipCode,
-		City:          u.City,
-		State:         u.State,
-		CountryCode:   u.CountryCode,
-		Nationality:   u.Nationality,
-		MobileNr:      u.MobileNR,
-		BirthDay:      int64(u.BirthDay.Unix()),
-		BirthPlace:    u.BirthPlace,
-		Password:      u.Password,
+		Id:                int64(u.ID),
+		Email:             u.Email,
+		Salutation:        u.Salutation,
+		Title:             u.Title,
+		Forename:          u.Forename,
+		Lastname:          u.Company,
+		Company:           u.Company,
+		StreetAddress:     u.StreetAddress,
+		StreetNumber:      u.StreetNumber,
+		ZipCode:           u.ZipCode,
+		City:              u.City,
+		State:             u.State,
+		CountryCode:       u.CountryCode,
+		Nationality:       u.Nationality,
+		MobileNr:          u.MobileNR,
+		BirthDay:          int64(u.BirthDay.Unix()),
+		BirthPlace:        u.BirthPlace,
+		Password:          u.Password,
+		AdditionalName:    u.AdditionalName,
+		BirthCountryCode:  u.BirthCountryCode,
+		BankAccountNumber: u.BankAccountNumber,
+		BankNumber:        u.BankNumber,
+		BankPhoneNumber:   u.BankPhoneNumber,
+		TaxId:             u.TaxID,
+		TaxIdName:         u.TaxIDName,
+		Occupation:        u.Occupation,
+		EmployerName:      u.EmployerName,
+		EmployerAddress:   u.EmployerAddress,
+		LanguageCode:      u.LanguageCode,
 	}, nil
 }
 
@@ -152,6 +163,19 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.MobileNR = r.MobileNr
 	u.BirthDay = time.Unix(r.BirthDay, 0)
 	u.BirthPlace = r.BirthPlace
+
+	u.AdditionalName = r.AdditionalName
+	u.BirthCountryCode = r.BirthCountryCode
+	u.BankAccountNumber = r.BankAccountNumber
+	u.BankNumber = r.BankNumber
+	u.BankPhoneNumber = r.BankPhoneNumber
+	u.TaxID = r.TaxId
+	u.TaxIDName = r.TaxIdName
+	u.Occupation = r.Occupation
+	u.EmployerName = r.EmployerName
+	u.EmployerAddress = r.EmployerAddress
+	u.LanguageCode = r.LanguageCode
+
 	u.Password = r.Password
 	u.UpdatedBy = r.Base.UpdateBy
 
