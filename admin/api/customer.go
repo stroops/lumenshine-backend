@@ -182,13 +182,14 @@ func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 
 // CustomerDetailsResponse - customer details response
 type CustomerDetailsResponse struct {
-	ID               int       `json:"id"`
-	Forename         string    `json:"forename"`
-	Lastname         string    `json:"lastname"`
-	Email            string    `json:"email"`
-	RegistrationDate time.Time `json:"registration_date"`
+	ID         int    `json:"id"`
+	Email      string `json:"email"`
+	Forename   string `json:"forename"`
+	Lastname   string `json:"lastname"`
+	Company    string `json:"company"`
+	Salutation string `json:"salutation"`
+	Title      string `json:"title"`
 	//LastLogin        time.Time `json:"last_login"`
-	MobileNR          string     `json:"mobile_nr"`
 	StreetAddress     string     `json:"street_address"`
 	StreetNumber      string     `json:"street_number"`
 	ZipCode           string     `json:"zip_code"`
@@ -196,6 +197,7 @@ type CustomerDetailsResponse struct {
 	State             string     `json:"state"`
 	CountryCode       string     `json:"country_code"`
 	Nationality       string     `json:"nationality"`
+	MobileNR          string     `json:"mobile_nr"`
 	BirthDay          *time.Time `json:"birth_day"`
 	BirthPlace        string     `json:"birth_place"`
 	AdditionalName    string     `json:"additional_name"`
@@ -209,6 +211,7 @@ type CustomerDetailsResponse struct {
 	EmployerName      string     `json:"employer_name"`
 	EmployerAddress   string     `json:"employer_address"`
 	LanguageCode      string     `json:"language_code"`
+	RegistrationDate  time.Time  `json:"registration_date"`
 }
 
 //CustomerDetails returns details of stefiied customer
@@ -233,11 +236,12 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 	}
 	response := CustomerDetailsResponse{
 		ID:                u.ID,
+		Email:             u.Email,
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
-		Email:             u.Email,
-		RegistrationDate:  u.CreatedAt,
-		MobileNR:          u.MobileNR,
+		Company:           u.Company,
+		Salutation:        u.Salutation,
+		Title:             u.Title,
 		StreetAddress:     u.StreetAddress,
 		StreetNumber:      u.StreetNumber,
 		ZipCode:           u.ZipCode,
@@ -245,6 +249,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		State:             u.State,
 		CountryCode:       u.CountryCode,
 		Nationality:       u.Nationality,
+		MobileNR:          u.MobileNR,
 		BirthPlace:        u.BirthPlace,
 		AdditionalName:    u.AdditionalName,
 		BirthCountryCode:  u.BirthCountryCode,
@@ -257,6 +262,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
+		RegistrationDate:  u.CreatedAt,
 	}
 	if !u.BirthDay.IsZero() {
 		response.BirthDay = &u.BirthDay
@@ -269,7 +275,9 @@ type CustomerEditRequest struct {
 	ID                int    `form:"id" json:"id"`
 	Forename          string `form:"forename" json:"forename" validate:"required,max=64"`
 	Lastname          string `form:"lastname" json:"lastname" validate:"required,max=64"`
-	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
+	Company           string `form:"company" json:"company" validate:"max=128"`
+	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
+	Title             string `form:"title" json:"title" validate:"max=64"`
 	StreetAddress     string `form:"street_address" json:"street_address" validate:"required,max=128"`
 	StreetNumber      string `form:"street_number" json:"street_number" validate:"required,max=128"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
@@ -277,6 +285,8 @@ type CustomerEditRequest struct {
 	State             string `form:"state" json:"state" validate:"required,max=128"`
 	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=128"`
 	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=2"`
+	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
+	BirthDay          string `form:"birth_day" json:"birth_day"`
 	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
 	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=255"`
 	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=3"`
@@ -305,6 +315,13 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
+	//get the birthday
+	birthDay, err := time.Parse("2006-01-02", rr.BirthDay)
+	if rr.BirthDay != "" && err != nil {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("birth_day", cerr.InvalidArgument, "Birthday wrong format", ""))
+		return
+	}
+
 	u, err := m.UserProfiles(
 		qm.Where("id=?", rr.ID),
 	).One(db.DBC)
@@ -320,7 +337,9 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 
 	u.Forename = rr.Forename
 	u.Lastname = rr.Lastname
-	u.MobileNR = rr.MobileNR
+	u.Company = rr.Company
+	u.Salutation = rr.Salutation
+	u.Title = rr.Title
 	u.StreetAddress = rr.StreetAddress
 	u.StreetNumber = rr.StreetNumber
 	u.ZipCode = rr.ZipCode
@@ -328,6 +347,8 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	u.State = rr.State
 	u.CountryCode = rr.CountryCode
 	u.Nationality = rr.Nationality
+	u.MobileNR = rr.MobileNR
+	u.BirthDay = birthDay
 	u.BirthPlace = rr.BirthPlace
 
 	u.AdditionalName = rr.AdditionalName
@@ -357,8 +378,9 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
 		Email:             u.Email,
-		RegistrationDate:  u.CreatedAt,
-		MobileNR:          u.MobileNR,
+		Company:           u.Company,
+		Salutation:        u.Salutation,
+		Title:             u.Title,
 		StreetAddress:     u.StreetAddress,
 		StreetNumber:      u.StreetNumber,
 		ZipCode:           u.ZipCode,
@@ -366,6 +388,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		State:             u.State,
 		CountryCode:       u.CountryCode,
 		Nationality:       u.Nationality,
+		MobileNR:          u.MobileNR,
 		BirthPlace:        u.BirthPlace,
 		AdditionalName:    u.AdditionalName,
 		BirthCountryCode:  u.BirthCountryCode,
@@ -378,6 +401,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
+		RegistrationDate:  u.CreatedAt,
 	}
 	if !u.BirthDay.IsZero() {
 		response.BirthDay = &u.BirthDay

@@ -120,7 +120,7 @@ func main() {
 	authDash.Use(mw.MessageCount()) //Messagecount only for fully logged in users
 	{
 		authDash.GET("/get_user_data", mw.UseIcopContext(GetUserData))
-		//authDash.POST("/update_user_data", mw.UseIcopContext(UpdateUserData))
+		authDash.POST("/update_user_data", mw.UseIcopContext(UpdateUserData))
 
 		authDash.POST("/refresh", authMiddlewareFull.RefreshHandler)
 		authDash.POST("/confirm_tfa_registration", mw.UseIcopContext(Confirm2FA))

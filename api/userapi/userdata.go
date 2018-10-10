@@ -16,8 +16,9 @@ type GetUserDataResponse struct {
 	Email             string     `form:"email" json:"email"`
 	Forename          string     `form:"forename" json:"forename"`
 	Lastname          string     `form:"lastname" json:"lastname"`
-	RegistrationDate  time.Time  `form:"registration_date" json:"registration_date"`
-	MobileNR          string     `form:"mobile_nr" json:"mobile_nr"`
+	Company           string     `form:"company" json:"company"`
+	Salutation        string     `form:"salutation" json:"salutation"`
+	Title             string     `form:"title" json:"title"`
 	StreetAddress     string     `form:"street_address" json:"street_address"`
 	StreetNumber      string     `form:"street_number" json:"street_number"`
 	ZipCode           string     `form:"zip_code" json:"zip_code"`
@@ -25,6 +26,7 @@ type GetUserDataResponse struct {
 	State             string     `form:"state" json:"state"`
 	CountryCode       string     `form:"country_code" json:"country_code"`
 	Nationality       string     `form:"nationality" json:"nationality"`
+	MobileNR          string     `form:"mobile_nr" json:"mobile_nr"`
 	BirthDay          *time.Time `form:"birth_day" json:"birth_day"`
 	BirthPlace        string     `form:"birth_place" json:"birth_place"`
 	AdditionalName    string     `form:"additional_name" json:"additional_name"`
@@ -38,6 +40,7 @@ type GetUserDataResponse struct {
 	EmployerName      string     `form:"employer_name" json:"employer_name"`
 	EmployerAddress   string     `form:"employer_address" json:"employer_address"`
 	LanguageCode      string     `form:"language_code" json:"language_code"`
+	RegistrationDate  time.Time  `form:"registration_date" json:"registration_date"`
 }
 
 //GetUserData - returns the authenticated user's data
@@ -55,8 +58,9 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		Email:             u.Email,
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
-		RegistrationDate:  time.Unix(u.CreatedAt, 0),
-		MobileNR:          u.MobileNr,
+		Company:           u.Company,
+		Salutation:        u.Salutation,
+		Title:             u.Title,
 		StreetAddress:     u.StreetAddress,
 		StreetNumber:      u.StreetNumber,
 		ZipCode:           u.ZipCode,
@@ -64,6 +68,7 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		State:             u.State,
 		CountryCode:       u.CountryCode,
 		Nationality:       u.Nationality,
+		MobileNR:          u.MobileNr,
 		BirthPlace:        u.BirthPlace,
 		AdditionalName:    u.AdditionalName,
 		BirthCountryCode:  u.BirthCountryCode,
@@ -76,10 +81,100 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
+		RegistrationDate:  time.Unix(u.CreatedAt, 0),
 	}
 	birthDay := time.Unix(u.BirthDay, 0)
 	if !birthDay.IsZero() {
 		response.BirthDay = &birthDay
 	}
 	c.JSON(http.StatusOK, &response)
+}
+
+//UpdateUserDataRequest - edit user request
+type UpdateUserDataRequest struct {
+	Forename          string `form:"forename" json:"forename" validate:"required,max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"required,max=64"`
+	Company           string `form:"company" json:"company" validate:"max=128"`
+	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
+	Title             string `form:"title" json:"title" validate:"max=64"`
+	StreetAddress     string `form:"street_address" json:"street_address" validate:"required,max=128"`
+	StreetNumber      string `form:"street_number" json:"street_number" validate:"required,max=128"`
+	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
+	City              string `form:"city" json:"city" validate:"required,max=128"`
+	State             string `form:"state" json:"state" validate:"required,max=128"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=128"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=2"`
+	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
+	BirthDay          string `form:"birth_day" json:"birth_day"`
+	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
+	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=255"`
+	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=3"`
+	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=255"`
+	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=255"`
+	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=255"`
+	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=255"`
+	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=255"`
+	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=5"`
+	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=500"`
+	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=500"`
+	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=10"`
+}
+
+//UpdateUserData - updates the authenticated user's data
+func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
+	rr := new(UpdateUserDataRequest)
+	if err := c.Bind(rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	user := mw.GetAuthUser(c)
+
+	//get the birthday
+	birthDay, err := time.Parse("2006-01-02", rr.BirthDay)
+	if rr.BirthDay != "" && err != nil {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("birth_day", cerr.InvalidArgument, "Birthday wrong format", ""))
+		return
+	}
+
+	reqC := &pb.UpdateUserProfileRequest{
+		Base:              NewBaseRequest(uc),
+		Id:                user.UserID,
+		Forename:          rr.Forename,
+		Lastname:          rr.Lastname,
+		Company:           rr.Company,
+		Salutation:        rr.Salutation,
+		Title:             rr.Title,
+		StreetAddress:     rr.StreetAddress,
+		StreetNumber:      rr.StreetNumber,
+		ZipCode:           rr.ZipCode,
+		City:              rr.City,
+		State:             rr.State,
+		CountryCode:       rr.CountryCode,
+		Nationality:       rr.Nationality,
+		MobileNr:          rr.MobileNR,
+		BirthDay:          birthDay.Unix(),
+		BirthPlace:        rr.BirthPlace,
+		AdditionalName:    rr.AdditionalName,
+		BirthCountryCode:  rr.BirthCountryCode,
+		BankAccountNumber: rr.BankAccountNumber,
+		BankNumber:        rr.BankNumber,
+		BankPhoneNumber:   rr.BankPhoneNumber,
+		TaxId:             rr.TaxID,
+		TaxIdName:         rr.TaxIDName,
+		Occupation:        rr.Occupation,
+		EmployerName:      rr.EmployerName,
+		EmployerAddress:   rr.EmployerAddress,
+		LanguageCode:      rr.LanguageCode,
+	}
+	_, err = dbClient.UpdateUserProfile(c, reqC)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
 }

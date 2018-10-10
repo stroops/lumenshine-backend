@@ -790,3 +790,50 @@ func (s *server) AddKycDocument(ctx context.Context, r *pb.AddKycDocumentRequest
 
 	return &pb.AddKycDocumentResponse{DocumentId: int64(document.ID)}, nil
 }
+
+func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileRequest) (*pb.Empty, error) {
+	u, err := models.UserProfiles(qm.Where(
+		models.UserProfileColumns.ID+"=?", r.Id,
+	)).One(db)
+
+	if err != nil {
+		return nil, err
+	}
+
+	u.Forename = r.Forename
+	u.Lastname = r.Lastname
+	u.Company = r.Company
+	u.Salutation = r.Salutation
+	u.Title = r.Title
+	u.StreetAddress = r.StreetAddress
+	u.StreetNumber = r.StreetNumber
+	u.ZipCode = r.ZipCode
+	u.City = r.City
+	u.State = r.State
+	u.CountryCode = r.CountryCode
+	u.Nationality = r.Nationality
+	u.MobileNR = r.MobileNr
+	u.BirthDay = time.Unix(r.BirthDay, 0)
+	u.BirthPlace = r.BirthPlace
+
+	u.AdditionalName = r.AdditionalName
+	u.BirthCountryCode = r.BirthCountryCode
+	u.BankAccountNumber = r.BankAccountNumber
+	u.BankNumber = r.BankNumber
+	u.BankPhoneNumber = r.BankPhoneNumber
+	u.TaxID = r.TaxId
+	u.TaxIDName = r.TaxIdName
+	u.Occupation = r.Occupation
+	u.EmployerName = r.EmployerName
+	u.EmployerAddress = r.EmployerAddress
+	u.LanguageCode = r.LanguageCode
+
+	u.UpdatedBy = r.Base.UpdateBy
+
+	_, err = u.Update(db, boil.Infer())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Empty{}, nil
+}
