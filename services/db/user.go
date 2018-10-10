@@ -127,6 +127,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
+		CreatedAt:         int64(u.CreatedAt.Unix()),
 	}, nil
 }
 

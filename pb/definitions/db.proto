@@ -89,8 +89,9 @@ message UserProfileResponse {
 	string occupation = 26;
 	string employer_name = 27;
 	string employer_address = 28;
-	string language_code = 29;
-  bool user_not_found = 30;  
+  string language_code = 29;
+  int64 created_at = 30;
+  bool user_not_found = 31;  
 }
 
 message UserDetailsResponse {
