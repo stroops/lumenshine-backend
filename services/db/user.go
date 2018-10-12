@@ -43,6 +43,14 @@ func (s *server) GetUserByMailtoken(ctx context.Context, r *pb.UserMailTokenRequ
 	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.MailConfirmationKey+"=?", r.Token)).One(db)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			//check if token was confirmed earlier
+			h, err := models.TokenHistories(qm.Where(models.TokenHistoryColumns.MailConfirmationKey+"=?", r.Token)).One(db)
+			if err == nil {
+				return &pb.UserMailTokenResponse{
+					TokenAlreadyConfirmed: true,
+					ConfirmedDate:         int64(h.CreatedAt.Unix()),
+				}, nil
+			}
 			return &pb.UserMailTokenResponse{
 				TokenNotFound: true,
 			}, nil
@@ -54,6 +62,7 @@ func (s *server) GetUserByMailtoken(ctx context.Context, r *pb.UserMailTokenRequ
 		UserId:                 int64(u.ID),
 		MailConfirmationExpiry: u.MailConfirmationExpiryDate.Unix(),
 		MailConfirmed:          u.MailConfirmed,
+		Email:                  u.Email,
 	}, nil
 }
 
@@ -358,6 +367,8 @@ func (s *server) SetUserMailToken(ctx context.Context, r *pb.SetMailTokenRequest
 		return nil, err
 	}
 
+	oldToken := u.MailConfirmationKey
+
 	u.MailConfirmationKey = r.MailConfirmationKey
 	u.MailConfirmationExpiryDate = time.Unix(r.MailConfirmationExpiry, 0)
 	u.UpdatedBy = r.Base.UpdateBy
@@ -368,6 +379,13 @@ func (s *server) SetUserMailToken(ctx context.Context, r *pb.SetMailTokenRequest
 		models.UserProfileColumns.UpdatedBy,
 	))
 
+	if oldToken != "" && r.MailConfirmationKey == "" {
+		//we just reset the key --> save history
+		var h models.TokenHistory
+		h.MailConfirmationKey = oldToken
+		h.UserID = int(r.UserId)
+		h.Insert(db, boil.Infer())
+	}
 	return &pb.Empty{}, err
 }
 

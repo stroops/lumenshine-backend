@@ -18,6 +18,11 @@ import (
 	"github.com/stellar/go/support/errors"
 )
 
+type EthereumChannel struct{}
+
+//Ensure, that we implement all methods
+//var _ paymentchannel.Channel = (*EthereumChannel)(nil)
+
 // Listener is a listener for the Ethereum blocckchain
 type Listener struct {
 	DB     *db.DB
