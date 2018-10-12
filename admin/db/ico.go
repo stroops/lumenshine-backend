@@ -40,6 +40,18 @@ func GetIco(id int) (*models.Ico, error) {
 	return ico, nil
 }
 
+//GetIcoEager - gets ico and eager loads its children
+func GetIcoEager(id int) (*models.Ico, error) {
+	ico, err := models.Icos(qm.Where(models.IcoColumns.ID+"=?", id),
+		qm.Load(models.IcoRels.IcoSupportedExchangeCurrencies),
+		qm.Load(models.IcoRels.IcoPhases),
+	).One(DBC)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	return ico, nil
+}
+
 //UpdateSupportedCurrencies - updates the supported currencies of an ico
 func UpdateSupportedCurrencies(icoID int, supportedCurrencies models.IcoSupportedExchangeCurrencySlice) error {
 	tx, err := DBC.Begin()
@@ -117,6 +129,32 @@ func DeleteIco(ico *models.Ico) error {
 	if err != nil {
 		tx.Rollback()
 		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
+//AddIcoPhase - adds a new ico phase
+func AddIcoPhase(icoPhase *models.IcoPhase, currencies models.IcoPhaseActivatedExchangeCurrencySlice) error {
+	tx, err := DBC.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = icoPhase.Insert(tx, boil.Infer())
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for _, currency := range currencies {
+		currency.IcoPhaseID = icoPhase.ID
+		err = currency.Insert(tx, boil.Infer())
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	tx.Commit()

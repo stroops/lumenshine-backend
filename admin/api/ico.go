@@ -4,7 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/stellar/go/clients/horizon"
 
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
@@ -12,10 +16,12 @@ import (
 	"github.com/Soneso/lumenshine-backend/admin/route"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stellar/go/keypair"
 )
 
 const (
@@ -28,6 +34,7 @@ func init() {
 	route.AddRoute("GET", "/list", ICOList, []string{}, "ico_list", ICORoutePrefix)
 	route.AddRoute("GET", "/exchange_currencies", ExchangeCurrencyList, []string{}, "exchange_currencies", ICORoutePrefix)
 	route.AddRoute("POST", "/add", AddIco, []string{}, "add_ico", ICORoutePrefix)
+	route.AddRoute("POST", "/add_phase", AddIcoPhase, []string{}, "add_ico_phase", ICORoutePrefix)
 	route.AddRoute("POST", "/update_name", UpdateIcoName, []string{}, "update_ico_name", ICORoutePrefix)
 	route.AddRoute("POST", "/update_kyc", UpdateIcoKyc, []string{}, "update_ico_kyc", ICORoutePrefix)
 	route.AddRoute("POST", "/update_issuer_data", UpdateIcoIssuer, []string{}, "update_ico_issuer_data", ICORoutePrefix)
@@ -495,19 +502,6 @@ func RemoveIco(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "The ico is not in 'planning' state", ""))
 		return
 	}
-
-	// icotest, err := m.Icos(qm.Where("id=?", ico.ID),
-	// 	qm.Load(m.IcoRels.IcoPhases),
-	// 	qm.Load(m.IcoRels.IcoSupportedExchangeCurrencies),
-	// 	qm.Load(m.IcoRels.IcoPhases+"."+m.IcoPhaseRels.IcoPhaseActivatedExchangeCurrencies),
-	// ).One(db.DBC)
-
-	// uc.Log.Print(fmt.Sprintf("Count phases:%d ", len(icotest.R.IcoPhases)))
-	// uc.Log.Print(fmt.Sprintf("Count currencies:%d ", len(icotest.R.IcoSupportedExchangeCurrencies)))
-	// for _, phase := range icotest.R.IcoPhases {
-	// 	uc.Log.Print(fmt.Sprintf("Count phase currencies:%d ", len(phase.R.IcoPhaseActivatedExchangeCurrencies)))
-	// }
-
 	err = db.DeleteIco(ico)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting ico", cerr.GeneralError))
@@ -515,4 +509,243 @@ func RemoveIco(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "{}")
+}
+
+//AddIcoPhaseRequest - request
+type AddIcoPhaseRequest struct {
+	IcoID                 int             `form:"ico_id" json:"ico_id"`
+	Name                  string          `form:"phase_name" json:"phase_name" validate:"required,max=256"`
+	DistributionPublicKey string          `form:"distribution_account_pk" json:"distribution_account_pk" validate:"required,base64,len=56"`
+	PreSignerPublicKey    string          `form:"pre_signer_pk" json:"pre_signer_pk" validate:"required,base64,len=56"`
+	PreSignerSeed         string          `form:"pre_signer_seed" json:"pre_signer_seed" validate:"required,base64,len=56"`
+	PostSignerPublicKey   string          `form:"post_signer_pk" json:"post_signer_pk" validate:"required,base64,len=56"`
+	PostSignerSeed        string          `form:"post_signer_seed" json:"post_signer_seed" validate:"required,base64,len=56"`
+	StartDate             string          `form:"start" json:"start" validate:"required"`
+	EndDate               string          `form:"end" json:"end" validate:"required"`
+	TokensToDistribute    int64           `form:"tokens_to_distribute" json:"tokens_to_distribute"`
+	MinPerOrder           int64           `form:"min_tokens_per_order" json:"min_tokens_per_order"`
+	MaxPerOrder           int64           `form:"max_tokens_per_order" json:"max_tokens_per_order"`
+	ActivatedCurrencies   []PhaseCurrency `form:"activated_currencies" json:"activated_currencies" validate:"required"`
+}
+
+//PhaseCurrency - request
+type PhaseCurrency struct {
+	CurrencyID    int   `form:"currency_id" json:"currency_id"`
+	Price         int64 `form:"price" json:"price"`
+	BankAccountID *int  `form:"bank_account_id" json:"bank_account_id"`
+}
+
+//AddIcoPhase - adds new ico phase
+func AddIcoPhase(uc *mw.AdminContext, c *gin.Context) {
+	var rr AddIcoPhaseRequest
+	if err := c.Bind(&rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	ico, err := db.GetIcoEager(rr.IcoID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading ico from db", cerr.GeneralError))
+		return
+	}
+	if ico == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "ico_id", cerr.InvalidArgument, "Ico not found for the specified id", ""))
+		return
+	}
+	startDate, err := time.Parse("2006-01-02", rr.StartDate)
+	if rr.StartDate != "" && err != nil {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("start", cerr.InvalidArgument, "Start date wrong format", ""))
+		return
+	}
+	endDate, err := time.Parse("2006-01-02", rr.EndDate)
+	if rr.EndDate != "" && err != nil {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("end", cerr.InvalidArgument, "End date wrong format", ""))
+		return
+	}
+	if startDate.After(endDate) {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("end", cerr.InvalidArgument, "End date smaller than start date", ""))
+		return
+	}
+	if ico.R.IcoPhases != nil {
+		for _, phase := range ico.R.IcoPhases {
+			if inTimeSpan(phase.StartTime, phase.EndTime, startDate) {
+				c.JSON(http.StatusBadRequest, cerr.NewIcopError("start", cerr.InvalidArgument, "Start date overlaping with existing ico phase", ""))
+				return
+			}
+			if inTimeSpan(phase.StartTime, phase.EndTime, endDate) {
+				c.JSON(http.StatusBadRequest, cerr.NewIcopError("end", cerr.InvalidArgument, "End date overlaping with existing ico phase", ""))
+				return
+			}
+		}
+	}
+
+	account, err := db.GetStellarAccount(rr.DistributionPublicKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading stellar account from db", cerr.GeneralError))
+		return
+	}
+	if account == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "distribution_account_pk", cerr.InvalidArgument, "Distribution account not found in db", ""))
+		return
+	}
+	foundPreSigner := false
+	foundPostSigner := false
+	for _, signer := range account.R.StellarAccountPublicKeyAdminStellarSigners {
+		if signer.SignerPublicKey == rr.PreSignerPublicKey {
+			foundPreSigner = true
+		}
+		if signer.SignerPublicKey == rr.PostSignerPublicKey {
+			foundPostSigner = true
+		}
+	}
+	if !foundPreSigner {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "pre_signer_pk", cerr.InvalidArgument, "Presigner not found in db", ""))
+		return
+	}
+	if !foundPostSigner {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "post_signer_pk", cerr.InvalidArgument, "Postsigner not found in db", ""))
+		return
+	}
+	parsed, err := keypair.Parse(rr.PreSignerSeed)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "pre_signer_seed", cerr.InvalidArgument, "Error parsing presigner seed", ""))
+		return
+	}
+	if parsed.Address() != rr.PreSignerPublicKey {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "pre_signer_seed", cerr.InvalidArgument, "Presigner seed does not match public key", ""))
+		return
+	}
+	parsed, err = keypair.Parse(rr.PostSignerSeed)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "post_signer_seed", cerr.InvalidArgument, "Error parsing postsigner seed", ""))
+		return
+	}
+	if parsed.Address() != rr.PostSignerPublicKey {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "post_signer_seed", cerr.InvalidArgument, "Postsigner seed does not match public key", ""))
+		return
+	}
+	currencies := make([]*m.IcoPhaseActivatedExchangeCurrency, 0)
+	for _, currency := range rr.ActivatedCurrencies {
+		if !inSupportedCurrencies(ico, currency.CurrencyID) {
+			c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "activated_currencies", cerr.InvalidArgument, fmt.Sprintf("Currency id: %d is not supported by the ico", currency.CurrencyID), ""))
+			return
+		}
+		dbCurrency := m.IcoPhaseActivatedExchangeCurrency{
+			ExchangeCurrencyID: currency.CurrencyID,
+			DenomPricePerToken: currency.Price,
+			UpdatedBy:          getUpdatedBy(c),
+		}
+		if currency.BankAccountID != nil {
+			dbCurrency.IcoPhaseBankAccountID = null.IntFrom(*currency.BankAccountID)
+		}
+		currencies = append(currencies, &dbCurrency)
+	}
+	hAccount, exists, err := GetHorizonAccount(rr.DistributionPublicKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error calling horizon", cerr.GeneralError))
+		return
+	}
+	if !exists {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "distribution_account_pk", cerr.InvalidArgument, "Distribution account not found in horizon", ""))
+		return
+	}
+	balance := getAssetBalance(hAccount, ico)
+	if balance == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "distribution_account_pk", cerr.InvalidArgument, "Distribution account does not trust ico's asset code", ""))
+		return
+	}
+	totalBalance, err := strconv.ParseInt(balance.Balance, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Could not parse total balance", cerr.GeneralError))
+		return
+	}
+	if rr.TokensToDistribute > totalBalance {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "tokens_to_distribute", cerr.InvalidArgument, "Total balance not sufficient for tokens to distribute", ""))
+		return
+	}
+	preSigner := getSigner(hAccount, rr.PreSignerPublicKey)
+	if preSigner == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "pre_signer_pk", cerr.InvalidArgument, "Presigner is not found for the specified distribution account", ""))
+		return
+	}
+	postSigner := getSigner(hAccount, rr.PostSignerPublicKey)
+	if postSigner == nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "post_signer_pk", cerr.InvalidArgument, "Postsigner is not found for the specified distribution account", ""))
+		return
+	}
+	medThreshold := int32(hAccount.Thresholds.MedThreshold)
+	if preSigner.Weight >= medThreshold {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "pre_signer_pk", cerr.InvalidArgument, "Presigner's weight is larger than medium threshold", ""))
+		return
+	}
+	if preSigner.Weight+postSigner.Weight < medThreshold {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "pre_signer_pk", cerr.InvalidArgument, "Weight sum of pre and post signers is smaller than medium threshold", ""))
+		return
+	}
+	phase := m.IcoPhase{
+		IcoID:               ico.ID,
+		IcoPhaseName:        rr.Name,
+		IcoPhaseStatus:      m.IcoPhaseStatusPlanning,
+		DistPK:              rr.DistributionPublicKey,
+		DistPresignerPK:     rr.PreSignerPublicKey,
+		DistPresignerSeed:   rr.PreSignerSeed,
+		DistPostsignerPK:    rr.PostSignerPublicKey,
+		DistPostsignerSeed:  rr.PostSignerSeed,
+		StartTime:           startDate,
+		EndTime:             endDate,
+		TokensToDistribute:  rr.TokensToDistribute,
+		TokenMinOrderAmount: rr.MinPerOrder,
+		TokenMaxOrderAmount: rr.MaxPerOrder,
+		UpdatedBy:           getUpdatedBy(c),
+	}
+
+	err = db.AddIcoPhase(&phase, currencies)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error adding ico phase to db", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
+}
+
+func inTimeSpan(start, end, check time.Time) bool {
+	return check.After(start) && check.Before(end)
+}
+
+func inSupportedCurrencies(ico *m.Ico, currencyID int) bool {
+	found := false
+	if ico.R.IcoSupportedExchangeCurrencies != nil {
+		for _, currency := range ico.R.IcoSupportedExchangeCurrencies {
+			if currency.ExchangeCurrencyID == currencyID {
+				found = true
+				break
+			}
+		}
+	}
+	return found
+}
+
+func getAssetBalance(hAccount horizon.Account, ico *m.Ico) *horizon.Balance {
+	if hAccount.Balances != nil {
+		for _, balance := range hAccount.Balances {
+			if balance.Asset.Code == ico.AssetCode && balance.Asset.Issuer == ico.IssuerPK {
+				return &balance
+			}
+		}
+	}
+	return nil
+}
+
+func getSigner(hAccount horizon.Account, publicKey string) *horizon.Signer {
+	if hAccount.Signers != nil {
+		for _, signer := range hAccount.Signers {
+			if signer.PublicKey == publicKey {
+				return &signer
+			}
+		}
+	}
+	return nil
 }
