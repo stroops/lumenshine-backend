@@ -39,26 +39,26 @@ type RegisterUserRequest struct {
 	Forename          string `form:"forename" json:"forename"`
 	Lastname          string `form:"lastname" json:"lastname"`
 	Company           string `form:"company" json:"company"`
-	Address           string `form:"address" json:"address"`
-	ZipCode           string `form:"zip_code" json:"zip_code"`
-	City              string `form:"city" json:"city"`
-	State             string `form:"state" json:"state"`
-	CountryCode       string `form:"country_code" json:"country_code"`
-	Nationality       string `form:"nationality" json:"nationality"`
+	Address           string `form:"address" json:"address" validate:"required,max=512"`
+	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
+	City              string `form:"city" json:"city" validate:"required,max=128"`
+	State             string `form:"state" json:"state" validate:"required,max=128"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=2"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=128"`
 	MobileNr          string `form:"mobile_nr" json:"mobile_nr" validate:"omitempty,icop_phone"`
 	BirthDay          string `form:"birth_day" json:"birth_day"`
-	BirthPlace        string `form:"birth_place" json:"birth_place"`
-	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=255"`
-	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=3"`
-	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=255"`
-	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=255"`
-	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=255"`
-	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=255"`
-	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=255"`
-	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=5"`
-	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=500"`
-	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=500"`
-	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=10"`
+	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
+	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=256"`
+	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=2"`
+	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=256"`
+	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=256"`
+	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=256"`
+	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=256"`
+	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=256"`
+	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=8"`
+	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=512"`
+	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=512"`
+	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=16"`
 }
 
 //RegisterUserResponse response for registration
@@ -135,7 +135,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		Forename:               ur.Forename,
 		Lastname:               ur.Lastname,
 		Company:                ur.Company,
-		Address:          ur.Address,
+		Address:                ur.Address,
 		ZipCode:                ur.ZipCode,
 		City:                   ur.City,
 		State:                  ur.State,

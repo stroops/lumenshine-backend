@@ -18,6 +18,9 @@ ALTER TABLE user_profile DROP COLUMN street_number;
 ALTER TABLE user_profile ALTER COLUMN street_address TYPE varchar(512);
 ALTER TABLE user_profile RENAME street_address TO address;
 
+ALTER TABLE user_profile ALTER COLUMN country_code TYPE varchar(2);
+ALTER TABLE user_profile ALTER COLUMN nationality TYPE varchar(128);
+
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
@@ -38,3 +41,5 @@ DROP COLUMN language_code;
 ALTER TABLE user_profile ADD COLUMN street_number character varying(128) NOT NULL DEFAULT '';
 ALTER TABLE user_profile RENAME address TO street_address;
 ALTER TABLE user_profile ALTER COLUMN street_address TYPE VARCHAR(128);
+ALTER TABLE user_profile ALTER COLUMN country_code TYPE varchar(128);
+ALTER TABLE user_profile ALTER COLUMN nationality TYPE varchar(2);

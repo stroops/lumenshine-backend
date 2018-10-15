@@ -190,8 +190,7 @@ type CustomerDetailsResponse struct {
 	Salutation string `json:"salutation"`
 	Title      string `json:"title"`
 	//LastLogin        time.Time `json:"last_login"`
-	StreetAddress     string     `json:"street_address"`
-	StreetNumber      string     `json:"street_number"`
+	Address           string     `json:"address"`
 	ZipCode           string     `json:"zip_code"`
 	City              string     `json:"city"`
 	State             string     `json:"state"`
@@ -242,8 +241,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		Company:           u.Company,
 		Salutation:        u.Salutation,
 		Title:             u.Title,
-		StreetAddress:     u.StreetAddress,
-		StreetNumber:      u.StreetNumber,
+		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
 		State:             u.State,
@@ -278,13 +276,12 @@ type CustomerEditRequest struct {
 	Company           string `form:"company" json:"company" validate:"max=128"`
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Title             string `form:"title" json:"title" validate:"max=64"`
-	StreetAddress     string `form:"street_address" json:"street_address" validate:"required,max=128"`
-	StreetNumber      string `form:"street_number" json:"street_number" validate:"required,max=128"`
+	Address           string `form:"address" json:"address" validate:"required,max=512"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
 	City              string `form:"city" json:"city" validate:"required,max=128"`
 	State             string `form:"state" json:"state" validate:"required,max=128"`
-	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=128"`
-	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=2"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=2"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=128"`
 	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
 	BirthDay          string `form:"birth_day" json:"birth_day"`
 	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
@@ -340,8 +337,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	u.Company = rr.Company
 	u.Salutation = rr.Salutation
 	u.Title = rr.Title
-	u.StreetAddress = rr.StreetAddress
-	u.StreetNumber = rr.StreetNumber
+	u.Address = rr.Address
 	u.ZipCode = rr.ZipCode
 	u.City = rr.City
 	u.State = rr.State
@@ -381,8 +377,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		Company:           u.Company,
 		Salutation:        u.Salutation,
 		Title:             u.Title,
-		StreetAddress:     u.StreetAddress,
-		StreetNumber:      u.StreetNumber,
+		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
 		State:             u.State,

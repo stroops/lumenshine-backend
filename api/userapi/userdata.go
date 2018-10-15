@@ -95,12 +95,12 @@ type UpdateUserDataRequest struct {
 	Company           string `form:"company" json:"company" validate:"max=128"`
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Title             string `form:"title" json:"title" validate:"max=64"`
-	Address           string `form:"address" json:"address" validate:"required,max=128"`
+	Address           string `form:"address" json:"address" validate:"required,max=512"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
 	City              string `form:"city" json:"city" validate:"required,max=128"`
 	State             string `form:"state" json:"state" validate:"required,max=128"`
-	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=128"`
-	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=2"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=2"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=128"`
 	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
 	BirthDay          string `form:"birth_day" json:"birth_day"`
 	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
