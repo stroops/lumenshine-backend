@@ -3,83 +3,16 @@ package ethereum
 import (
 	"context"
 	"math/big"
-	"os"
 	"time"
-
-	"github.com/Soneso/lumenshine-backend/helpers"
-	"github.com/Soneso/lumenshine-backend/services/pay/config"
-	"github.com/Soneso/lumenshine-backend/services/pay/db"
 
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/support/errors"
 )
 
-type EthereumChannel struct{}
-
-//Ensure, that we implement all methods
-//var _ paymentchannel.Channel = (*EthereumChannel)(nil)
-
-// Listener is a listener for the Ethereum blocckchain
-type Listener struct {
-	DB     *db.DB
-	log    *logrus.Entry
-	Client *ethclient.Client
-	cnf    *config.Config
-}
-
-//NewListener createa a new listener and connects the eth-client
-func NewListener(DB *db.DB, cnf *config.Config) *Listener {
-	var err error
-
-	l := new(Listener)
-	l.DB = DB
-	l.cnf = cnf
-	l.log = helpers.GetDefaultLog("Ethereum-Listener", "")
-
-	ethereumClient, err := ethclient.Dial("http://" + l.cnf.Ethereum.RPCServer)
-	if err != nil {
-		l.log.WithField("err", err).Error("Error connecting to geth")
-		os.Exit(-1)
-	}
-	l.Client = ethereumClient
-
-	l.log.Info("Ethereum-Listener created")
-	return l
-}
-
-func (l *Listener) Start() error {
-	l.log.Info("EthereumListener starting")
-
-	blockNumber, err := l.DB.GetEthereumBlockToProcess()
-	if err != nil {
-		err = errors.Wrap(err, "Error getting ethereum block to process from DB")
-		l.log.Error(err)
-		return err
-	}
-
-	// Check if connected to correct network
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
-	defer cancel()
-	id, err := l.Client.NetworkID(ctx)
-	if err != nil {
-		err = errors.Wrap(err, "Error getting ethereum network ID")
-		l.log.Error(err)
-		return err
-	}
-
-	if id.String() != l.cnf.Ethereum.NetworkID {
-		return errors.Errorf("Invalid network ID (have=%s, want=%s)", id.String(), l.cnf.Ethereum.NetworkID)
-	}
-
-	go l.processBlocks(blockNumber)
-	return nil
-}
-
-func (l *Listener) processBlocks(blockNumber uint64) {
+func (l *Channel) processBlocks(blockNumber uint64) {
 	if blockNumber == 0 {
 		l.log.Info("Starting from the latest block")
 	} else {
@@ -127,7 +60,7 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 		}
 
 		// Persist block number
-		err = l.DB.SaveLastProcessedEthereumBlock(blockNumber)
+		err = l.db.SaveLastProcessedEthereumBlock(blockNumber)
 		if err != nil {
 			l.log.WithField("err", err).Error("Error saving last processed block")
 			time.Sleep(1 * time.Second)
@@ -139,7 +72,7 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 }
 
 // getBlock returns (nil, nil) if block has not been found (not exists yet)
-func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
+func (l *Channel) getBlock(blockNumber uint64) (*types.Block, error) {
 	var blockNumberInt *big.Int
 	if blockNumber > 0 {
 		blockNumberInt = big.NewInt(int64(blockNumber))
@@ -149,7 +82,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
 	ctx, cancel := context.WithDeadline(context.Background(), d)
 	defer cancel()
 
-	block, err := l.Client.BlockByNumber(ctx, blockNumberInt)
+	block, err := l.client.BlockByNumber(ctx, blockNumberInt)
 	if err != nil {
 		if err.Error() == "not found" {
 			return nil, nil
@@ -162,7 +95,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*types.Block, error) {
 	return block, nil
 }
 
-func (l *Listener) processBlock(block *types.Block) error {
+func (l *Channel) processBlock(block *types.Block) error {
 	transactions := block.Transactions()
 	blockTime := time.Unix(block.Time().Int64(), 0)
 
@@ -184,6 +117,7 @@ func (l *Listener) processBlock(block *types.Block) error {
 			transaction.Hash().Hex(),
 			transaction.Value(),
 			to.Hex(),
+			"",
 		)
 		if err != nil {
 			return errors.Wrap(err, "Error processing transaction")
@@ -195,12 +129,12 @@ func (l *Listener) processBlock(block *types.Block) error {
 	return nil
 }
 
-func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress string) error {
+func (l *Channel) processTransaction(hash string, valueWei *big.Int, toAddress string, fromAddress string) error {
 	localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "rail": "ethereum"})
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkEthereum, toAddress, "")
+	order, err := l.db.GetOrderForAddress(m.PaymentNetworkEthereum, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -211,7 +145,7 @@ func (l *Listener) processTransaction(hash string, valueWei *big.Int, toAddress 
 	}
 
 	// Add transaction as processing.
-	isDuplicate, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkEthereum, hash, toAddress, order.ID, valueWei)
+	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order.ID, valueWei, 0)
 	if err != nil {
 		return err
 	}

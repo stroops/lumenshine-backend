@@ -185,7 +185,7 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 			paymentSeed = aec.StellarPaymentAccountSeed
 		} else {
 			// for other cryptos, we will generate a dedicated address for every order
-			paymentAddress, paymentSeed, addressIndex, err = s.GeneratePaymentAddress(ec.PaymentNetwork, aec.ExchangeMasterKey)
+			paymentAddress, paymentSeed, err = s.GeneratePaymentAddress(ec.PaymentNetwork, aec.ExchangeMasterKey)
 			if err != nil {
 				return nil, err
 			}
@@ -205,7 +205,6 @@ func (s *server) CreateOrder(ctx context.Context, r *pb.CreateOrderRequest) (*pb
 		PaymentNetwork:                     ec.PaymentNetwork,
 		PaymentAddress:                     paymentAddress,
 		PaymentSeed:                        paymentSeed,
-		AddressIndex:                       int64(addressIndex),
 	}
 	err = o.Insert(s.Env.DBC, boil.Infer())
 	if err != nil {
@@ -478,7 +477,11 @@ func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransacti
 		}
 		v := big.NewInt(r.DenomAmount)
 		fmt.Println(v.String())
-		ok, err := s.Env.DBC.AddNewTransaction(log, r.PaymentChannel, tx, r.RecipientAddress, o.ID, v)
+		ch, ok := s.Env.Clients[r.PaymentChannel]
+		if !ok {
+			return nil, fmt.Errorf("PaymentChannel %s does not exist", r.PaymentChannel)
+		}
+		ok, err = s.Env.DBC.AddNewTransaction(log, ch, tx, r.RecipientAddress, r.SenderAddress, o.ID, v, 0)
 		return &pb.BoolResponse{Value: ok}, err
 	}
 
