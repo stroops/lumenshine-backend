@@ -25,10 +25,10 @@ var (
 type UploadKycDocumentRequest struct {
 	DocumentType     string    `form:"document_type" json:"document_type" validate:"required"`
 	DocumentSide     string    `form:"document_side" json:"document_side" validate:"required"`
-	IDCountryCode    string    `form:"id_country_code" json:"id_country_code" validate:"omitempty,max=20"`
+	IDCountryCode    string    `form:"id_country_code" json:"id_country_code" validate:"max=20"`
 	IDIssueDate      time.Time `form:"id_issue_date" json:"id_issue_date" time_format:"2006-01-02"`
 	IDExpirationDate time.Time `form:"id_expiration_date" json:"id_expiration_date" time_format:"2006-01-02"`
-	IDNumber         string    `form:"id_number" json:"id_number" validate:"omitempty,max=100"`
+	IDNumber         string    `form:"id_number" json:"id_number" validate:"max=100"`
 }
 
 //UploadKycDocumentResponse - response

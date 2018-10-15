@@ -93,31 +93,31 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 
 //UpdateUserDataRequest - edit user request
 type UpdateUserDataRequest struct {
-	Forename          string  `form:"forename" json:"forename" validate:"omitempty,max=64"`
-	Lastname          string  `form:"lastname" json:"lastname" validate:"omitempty,max=64"`
+	Forename          string  `form:"forename" json:"forename" validate:"max=64"`
+	Lastname          string  `form:"lastname" json:"lastname" validate:"max=64"`
 	Company           string  `form:"company" json:"company" validate:"max=128"`
 	Salutation        string  `form:"salutation" json:"salutation" validate:"max=64"`
 	Title             string  `form:"title" json:"title" validate:"max=64"`
-	Address           string  `form:"address" json:"address" validate:"omitempty,max=512"`
-	ZipCode           string  `form:"zip_code" json:"zip_code" validate:"omitempty,max=32"`
-	City              string  `form:"city" json:"city" validate:"omitempty,max=128"`
-	State             string  `form:"state" json:"state" validate:"omitempty,max=128"`
-	CountryCode       string  `form:"country_code" json:"country_code" validate:"omitempty,max=2"`
-	Nationality       string  `form:"nationality" json:"nationality" validate:"omitempty,max=128"`
-	MobileNR          string  `form:"mobile_nr" json:"mobile_nr" validate:"omitempty,max=64"`
+	Address           string  `form:"address" json:"address" validate:"max=512"`
+	ZipCode           string  `form:"zip_code" json:"zip_code" validate:"max=32"`
+	City              string  `form:"city" json:"city" validate:"max=128"`
+	State             string  `form:"state" json:"state" validate:"max=128"`
+	CountryCode       string  `form:"country_code" json:"country_code" validate:"max=2"`
+	Nationality       string  `form:"nationality" json:"nationality" validate:"max=128"`
+	MobileNR          string  `form:"mobile_nr" json:"mobile_nr" validate:"max=64"`
 	BirthDay          string  `form:"birth_day" json:"birth_day"`
-	BirthPlace        string  `form:"birth_place" json:"birth_place" validate:"omitempty,max=128"`
-	AdditionalName    string  `form:"additional_name" json:"additional_name" validate:"omitempty,max=256"`
-	BirthCountryCode  string  `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=2"`
-	BankAccountNumber *string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=256"`
-	BankNumber        *string `form:"bank_number" json:"bank_number" validate:"omitempty,max=256"`
-	BankPhoneNumber   *string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=256"`
-	TaxID             string  `form:"tax_id" json:"tax_id" validate:"omitempty,max=256"`
-	TaxIDName         string  `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=256"`
-	Occupation        string  `form:"occupation" json:"occupation" validate:"omitempty,max=8"`
-	EmployerName      string  `form:"employer_name" json:"employer_name" validate:"omitempty,max=512"`
-	EmployerAddress   string  `form:"employer_address" json:"employer_address" validate:"omitempty,max=512"`
-	LanguageCode      string  `form:"language_code" json:"language_code" validate:"omitempty,max=16"`
+	BirthPlace        string  `form:"birth_place" json:"birth_place" validate:"max=128"`
+	AdditionalName    string  `form:"additional_name" json:"additional_name" validate:"max=256"`
+	BirthCountryCode  string  `form:"birth_country_code" json:"birth_country_code" validate:"max=2"`
+	BankAccountNumber *string `form:"bank_account_number" json:"bank_account_number" validate:"max=256"`
+	BankNumber        *string `form:"bank_number" json:"bank_number" validate:"max=256"`
+	BankPhoneNumber   *string `form:"bank_phone_number" json:"bank_phone_number" validate:"max=256"`
+	TaxID             string  `form:"tax_id" json:"tax_id" validate:"max=256"`
+	TaxIDName         string  `form:"tax_id_name" json:"tax_id_name" validate:"max=256"`
+	Occupation        string  `form:"occupation" json:"occupation" validate:"max=8"`
+	EmployerName      string  `form:"employer_name" json:"employer_name" validate:"max=512"`
+	EmployerAddress   string  `form:"employer_address" json:"employer_address" validate:"max=512"`
+	LanguageCode      string  `form:"language_code" json:"language_code" validate:"max=16"`
 }
 
 //UpdateUserData - updates the authenticated user's data
