@@ -54,67 +54,70 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	response := GetUserDataResponse{
-		Email:             u.Email,
-		Forename:          u.Forename,
-		Lastname:          u.Lastname,
-		Company:           u.Company,
-		Salutation:        u.Salutation,
-		Title:             u.Title,
-		Address:           u.Address,
-		ZipCode:           u.ZipCode,
-		City:              u.City,
-		State:             u.State,
-		CountryCode:       u.CountryCode,
-		Nationality:       u.Nationality,
-		MobileNR:          u.MobileNr,
-		BirthPlace:        u.BirthPlace,
-		AdditionalName:    u.AdditionalName,
-		BirthCountryCode:  u.BirthCountryCode,
-		BankAccountNumber: u.BankAccountNumber,
-		BankNumber:        u.BankNumber,
-		BankPhoneNumber:   u.BankPhoneNumber,
-		TaxID:             u.TaxId,
-		TaxIDName:         u.TaxIdName,
-		Occupation:        u.Occupation,
-		EmployerName:      u.EmployerName,
-		EmployerAddress:   u.EmployerAddress,
-		LanguageCode:      u.LanguageCode,
-		RegistrationDate:  time.Unix(u.CreatedAt, 0),
+		Email:            u.Email,
+		Forename:         u.Forename,
+		Lastname:         u.Lastname,
+		Company:          u.Company,
+		Salutation:       u.Salutation,
+		Title:            u.Title,
+		Address:          u.Address,
+		ZipCode:          u.ZipCode,
+		City:             u.City,
+		State:            u.State,
+		CountryCode:      u.CountryCode,
+		Nationality:      u.Nationality,
+		MobileNR:         u.MobileNr,
+		BirthPlace:       u.BirthPlace,
+		AdditionalName:   u.AdditionalName,
+		BirthCountryCode: u.BirthCountryCode,
+		BankNumber:       u.BankNumber,
+		BankPhoneNumber:  u.BankPhoneNumber,
+		TaxID:            u.TaxId,
+		TaxIDName:        u.TaxIdName,
+		Occupation:       u.Occupation,
+		EmployerName:     u.EmployerName,
+		EmployerAddress:  u.EmployerAddress,
+		LanguageCode:     u.LanguageCode,
+		RegistrationDate: time.Unix(u.CreatedAt, 0),
 	}
 	birthDay := time.Unix(u.BirthDay, 0)
 	if !birthDay.IsZero() {
 		response.BirthDay = &birthDay
+	}
+	banlength := len(u.BankAccountNumber)
+	if banlength > 4 {
+		response.BankAccountNumber = u.BankAccountNumber[banlength-4:]
 	}
 	c.JSON(http.StatusOK, &response)
 }
 
 //UpdateUserDataRequest - edit user request
 type UpdateUserDataRequest struct {
-	Forename          string `form:"forename" json:"forename" validate:"required,max=64"`
-	Lastname          string `form:"lastname" json:"lastname" validate:"required,max=64"`
-	Company           string `form:"company" json:"company" validate:"max=128"`
-	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
-	Title             string `form:"title" json:"title" validate:"max=64"`
-	Address           string `form:"address" json:"address" validate:"required,max=512"`
-	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
-	City              string `form:"city" json:"city" validate:"required,max=128"`
-	State             string `form:"state" json:"state" validate:"required,max=128"`
-	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=2"`
-	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=128"`
-	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
-	BirthDay          string `form:"birth_day" json:"birth_day"`
-	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
-	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=256"`
-	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=2"`
-	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=256"`
-	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=256"`
-	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=256"`
-	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=256"`
-	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=256"`
-	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=8"`
-	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=512"`
-	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=512"`
-	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=16"`
+	Forename          string  `form:"forename" json:"forename" validate:"omitempty,max=64"`
+	Lastname          string  `form:"lastname" json:"lastname" validate:"omitempty,max=64"`
+	Company           string  `form:"company" json:"company" validate:"max=128"`
+	Salutation        string  `form:"salutation" json:"salutation" validate:"max=64"`
+	Title             string  `form:"title" json:"title" validate:"max=64"`
+	Address           string  `form:"address" json:"address" validate:"omitempty,max=512"`
+	ZipCode           string  `form:"zip_code" json:"zip_code" validate:"omitempty,max=32"`
+	City              string  `form:"city" json:"city" validate:"omitempty,max=128"`
+	State             string  `form:"state" json:"state" validate:"omitempty,max=128"`
+	CountryCode       string  `form:"country_code" json:"country_code" validate:"omitempty,max=2"`
+	Nationality       string  `form:"nationality" json:"nationality" validate:"omitempty,max=128"`
+	MobileNR          string  `form:"mobile_nr" json:"mobile_nr" validate:"omitempty,max=64"`
+	BirthDay          string  `form:"birth_day" json:"birth_day"`
+	BirthPlace        string  `form:"birth_place" json:"birth_place" validate:"omitempty,max=128"`
+	AdditionalName    string  `form:"additional_name" json:"additional_name" validate:"omitempty,max=256"`
+	BirthCountryCode  string  `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=2"`
+	BankAccountNumber *string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=256"`
+	BankNumber        *string `form:"bank_number" json:"bank_number" validate:"omitempty,max=256"`
+	BankPhoneNumber   *string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=256"`
+	TaxID             string  `form:"tax_id" json:"tax_id" validate:"omitempty,max=256"`
+	TaxIDName         string  `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=256"`
+	Occupation        string  `form:"occupation" json:"occupation" validate:"omitempty,max=8"`
+	EmployerName      string  `form:"employer_name" json:"employer_name" validate:"omitempty,max=512"`
+	EmployerAddress   string  `form:"employer_address" json:"employer_address" validate:"omitempty,max=512"`
+	LanguageCode      string  `form:"language_code" json:"language_code" validate:"omitempty,max=16"`
 }
 
 //UpdateUserData - updates the authenticated user's data
@@ -134,6 +137,14 @@ func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 	birthDay, err := time.Parse("2006-01-02", rr.BirthDay)
 	if rr.BirthDay != "" && err != nil {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("birth_day", cerr.InvalidArgument, "Birthday wrong format", ""))
+		return
+	}
+	u, err := dbClient.GetUserProfile(c, &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   user.UserID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting userProfile", cerr.GeneralError))
 		return
 	}
 
@@ -156,15 +167,24 @@ func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 		BirthPlace:        rr.BirthPlace,
 		AdditionalName:    rr.AdditionalName,
 		BirthCountryCode:  rr.BirthCountryCode,
-		BankAccountNumber: rr.BankAccountNumber,
-		BankNumber:        rr.BankNumber,
-		BankPhoneNumber:   rr.BankPhoneNumber,
+		BankAccountNumber: u.BankAccountNumber,
+		BankNumber:        u.BankNumber,
+		BankPhoneNumber:   u.BankPhoneNumber,
 		TaxId:             rr.TaxID,
 		TaxIdName:         rr.TaxIDName,
 		Occupation:        rr.Occupation,
 		EmployerName:      rr.EmployerName,
 		EmployerAddress:   rr.EmployerAddress,
 		LanguageCode:      rr.LanguageCode,
+	}
+	if rr.BankAccountNumber != nil {
+		reqC.BankAccountNumber = *rr.BankAccountNumber
+	}
+	if rr.BankNumber != nil {
+		reqC.BankNumber = *rr.BankNumber
+	}
+	if rr.BankPhoneNumber != nil {
+		reqC.BankPhoneNumber = *rr.BankPhoneNumber
 	}
 	_, err = dbClient.UpdateUserProfile(c, reqC)
 	if err != nil {

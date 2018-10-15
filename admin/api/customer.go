@@ -271,20 +271,20 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 // CustomerEditRequest - request data
 type CustomerEditRequest struct {
 	ID                int    `form:"id" json:"id"`
-	Forename          string `form:"forename" json:"forename" validate:"required,max=64"`
-	Lastname          string `form:"lastname" json:"lastname" validate:"required,max=64"`
+	Forename          string `form:"forename" json:"forename" validate:"omitempty,max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"omitempty,max=64"`
 	Company           string `form:"company" json:"company" validate:"max=128"`
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Title             string `form:"title" json:"title" validate:"max=64"`
-	Address           string `form:"address" json:"address" validate:"required,max=512"`
-	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
-	City              string `form:"city" json:"city" validate:"required,max=128"`
-	State             string `form:"state" json:"state" validate:"required,max=128"`
-	CountryCode       string `form:"country_code" json:"country_code" validate:"required,max=2"`
-	Nationality       string `form:"nationality" json:"nationality" validate:"required,max=128"`
-	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
+	Address           string `form:"address" json:"address" validate:"omitempty,max=512"`
+	ZipCode           string `form:"zip_code" json:"zip_code" validate:"omitempty,max=32"`
+	City              string `form:"city" json:"city" validate:"omitempty,max=128"`
+	State             string `form:"state" json:"state" validate:"omitempty,max=128"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"omitempty,max=2"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"omitempty,max=128"`
+	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"omitempty,max=64"`
 	BirthDay          string `form:"birth_day" json:"birth_day"`
-	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
+	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"omitempty,max=128"`
 	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=255"`
 	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=3"`
 	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=255"`
