@@ -174,12 +174,18 @@ definitions:
         description: This is the payment-address that we genrated for the order
         type: string
         x-go-name: RecipientAddress
+      sender_address:
+        description: This is the payment-address that send the payment from the external
+          network
+        type: string
+        x-go-name: SenderAddress
       tx_hash:
         type: string
         x-go-name: TxHash
     required:
     - payment_channel
     - recipient_address
+    - sender_address
     - order_id
     - denomination_amount
     type: object
@@ -518,6 +524,13 @@ paths:
         required: true
         type: string
         x-go-name: RecipientAddress
+      - description: This is the payment-address that send the payment from the external
+          network
+        in: query
+        name: sender_address
+        required: true
+        type: string
+        x-go-name: SenderAddress
       - format: int64
         in: query
         name: order_id
