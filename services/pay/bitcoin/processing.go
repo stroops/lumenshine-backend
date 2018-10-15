@@ -2,102 +2,17 @@ package bitcoin
 
 import (
 	"math/big"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/Soneso/lumenshine-backend/helpers"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
-	"github.com/Soneso/lumenshine-backend/services/pay/config"
-	"github.com/Soneso/lumenshine-backend/services/pay/db"
-
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/support/errors"
-	"github.com/stellar/go/support/log"
 )
 
-//Listener represents the bitcoin listener
-type Listener struct {
-	DB          *db.DB
-	log         *logrus.Entry
-	Client      *rpcclient.Client
-	cnf         *config.Config
-	chainParams *chaincfg.Params
-}
-
-//NewListener createa a new listener and connects the btc-client
-func NewListener(DB *db.DB, cnf *config.Config) *Listener {
-	var err error
-
-	l := new(Listener)
-	l.DB = DB
-	l.cnf = cnf
-	l.log = helpers.GetDefaultLog("Bitcoin-Listener", "")
-
-	connConfig := &rpcclient.ConnConfig{
-		Host:         cnf.Bitcoin.RPCServer,
-		User:         cnf.Bitcoin.RPCUser,
-		Pass:         cnf.Bitcoin.RPCPass,
-		HTTPPostMode: true,
-		DisableTLS:   true,
-	}
-	bitcoinClient, err := rpcclient.New(connConfig, nil)
-	if err != nil {
-		log.WithField("err", err).Error("Error connecting to bitcoin-core")
-		os.Exit(-1)
-	}
-	l.Client = bitcoinClient
-
-	l.log.Info("Bitcoin-Listener created")
-	return l
-}
-
-//Start starts the bitcoin listener
-func (l *Listener) Start() error {
-	l.log = helpers.GetDefaultLog("0", "BitcoinListener")
-	l.log.Info("BitcoinListener starting")
-
-	genesisBlockHash, err := l.Client.GetBlockHash(0)
-	if err != nil {
-		return errors.Wrap(err, "Error getting genesis block")
-	}
-
-	if l.cnf.Bitcoin.Testnet {
-		l.chainParams = &chaincfg.TestNet3Params
-	} else {
-		l.chainParams = &chaincfg.MainNetParams
-	}
-
-	if !genesisBlockHash.IsEqual(l.chainParams.GenesisHash) {
-		return errors.New("Invalid genesis hash")
-	}
-
-	blockNumber, err := l.DB.GetBitcoinBlockToProcess()
-	if err != nil {
-		err = errors.Wrap(err, "Error getting bitcoin block to process from DB")
-		l.log.Error(err)
-		return err
-	}
-
-	if blockNumber == 0 {
-		blockNumberTmp, err := l.Client.GetBlockCount()
-		if err != nil {
-			err = errors.Wrap(err, "Error getting the block count from bitcoin-core")
-			l.log.Error(err)
-			return err
-		}
-		blockNumber = uint64(blockNumberTmp)
-	}
-
-	go l.processBlocks(blockNumber)
-	return nil
-}
-
-func (l *Listener) processBlocks(blockNumber uint64) {
+func (l *Channel) processBlocks(blockNumber uint64) {
 	l.log.Infof("Starting from block %d", blockNumber)
 
 	// Time when last new block has been seen
@@ -135,7 +50,7 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 		}
 
 		// Persist block number
-		err = l.DB.SaveLastProcessedBitcoinBlock(blockNumber)
+		err = l.db.SaveLastProcessedBitcoinBlock(blockNumber)
 		if err != nil {
 			l.log.WithField("err", err).Error("Error saving last processed block")
 			time.Sleep(time.Second)
@@ -149,9 +64,9 @@ func (l *Listener) processBlocks(blockNumber uint64) {
 }
 
 // getBlock returns (nil, nil) if block has not been found (not exists yet)
-func (l *Listener) getBlock(blockNumber uint64) (*wire.MsgBlock, error) {
+func (l *Channel) getBlock(blockNumber uint64) (*wire.MsgBlock, error) {
 	blockHeight := int64(blockNumber)
-	blockHash, err := l.Client.GetBlockHash(blockHeight)
+	blockHash, err := l.client.GetBlockHash(blockHeight)
 	if err != nil {
 		if strings.Contains(err.Error(), "Block height out of range") {
 			// Block does not exist yet
@@ -162,7 +77,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*wire.MsgBlock, error) {
 		return nil, err
 	}
 
-	block, err := l.Client.GetBlock(blockHash)
+	block, err := l.client.GetBlock(blockHash)
 	if err != nil {
 		err = errors.Wrap(err, "Error getting block from bitcoin-core")
 		l.log.WithField("blockHash", blockHash.String()).Error(err)
@@ -172,7 +87,7 @@ func (l *Listener) getBlock(blockNumber uint64) (*wire.MsgBlock, error) {
 	return block, nil
 }
 
-func (l *Listener) processBlock(block *wire.MsgBlock) error {
+func (l *Channel) processBlock(block *wire.MsgBlock) error {
 	transactions := block.Transactions
 
 	localLog := l.log.WithFields(logrus.Fields{
@@ -184,7 +99,7 @@ func (l *Listener) processBlock(block *wire.MsgBlock) error {
 
 	for _, transaction := range transactions {
 		transactionLog := localLog.WithField("transactionHash", transaction.TxHash().String())
-
+		//transaction.TxIn[0].SignatureScript
 		for index, output := range transaction.TxOut {
 			class, addresses, _, err := txscript.ExtractPkScriptAddrs(output.PkScript, l.chainParams)
 			if err != nil {
@@ -211,6 +126,7 @@ func (l *Listener) processBlock(block *wire.MsgBlock) error {
 				index,
 				big.NewInt(output.Value),
 				addresses[0].EncodeAddress(),
+				"",
 			)
 			if err != nil {
 				return errors.Wrap(err, "Error processing transaction")
@@ -223,12 +139,12 @@ func (l *Listener) processBlock(block *wire.MsgBlock) error {
 	return nil
 }
 
-func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big.Int, toAddress string) error {
+func (l *Channel) processTransaction(hash string, txOutIndex int, valueSat *big.Int, toAddress string, fromAddress string) error {
 	localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "index": txOutIndex, "rail": "bitcoin"})
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.DB.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress, "")
+	order, err := l.db.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -239,7 +155,7 @@ func (l *Listener) processTransaction(hash string, txOutIndex int, valueSat *big
 	}
 
 	// Add transaction as processing.
-	isDuplicate, err := l.DB.AddNewTransaction(l.log, m.PaymentNetworkBitcoin, hash, toAddress, order.ID, valueSat)
+	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order.ID, valueSat, txOutIndex)
 	if err != nil {
 		return err
 	}

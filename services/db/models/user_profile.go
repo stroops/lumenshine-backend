@@ -167,6 +167,7 @@ var UserProfileRels = struct {
 	UserUserSecurity         string
 	UserNotifications        string
 	UserNotificationArchives string
+	UserTokenHistories       string
 	UserUserContacts         string
 	UserUserKycDocuments     string
 	UserUserMessages         string
@@ -178,6 +179,7 @@ var UserProfileRels = struct {
 	UserUserSecurity:         "UserUserSecurity",
 	UserNotifications:        "UserNotifications",
 	UserNotificationArchives: "UserNotificationArchives",
+	UserTokenHistories:       "UserTokenHistories",
 	UserUserContacts:         "UserUserContacts",
 	UserUserKycDocuments:     "UserUserKycDocuments",
 	UserUserMessages:         "UserUserMessages",
@@ -192,6 +194,7 @@ type userProfileR struct {
 	UserUserSecurity         *UserSecurity
 	UserNotifications        NotificationSlice
 	UserNotificationArchives NotificationArchiveSlice
+	UserTokenHistories       TokenHistorySlice
 	UserUserContacts         UserContactSlice
 	UserUserKycDocuments     UserKycDocumentSlice
 	UserUserMessages         UserMessageSlice
@@ -522,6 +525,27 @@ func (o *UserProfile) UserNotificationArchives(mods ...qm.QueryMod) notification
 
 	if len(queries.GetSelect(query.Query)) == 0 {
 		queries.SetSelect(query.Query, []string{"\"notification_archive\".*"})
+	}
+
+	return query
+}
+
+// UserTokenHistories retrieves all the token_history's TokenHistories with an executor via user_id column.
+func (o *UserProfile) UserTokenHistories(mods ...qm.QueryMod) tokenHistoryQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"token_history\".\"user_id\"=?", o.ID),
+	)
+
+	query := TokenHistories(queryMods...)
+	queries.SetFrom(query.Query, "\"token_history\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"token_history\".*"})
 	}
 
 	return query
@@ -940,6 +964,97 @@ func (userProfileL) LoadUserNotificationArchives(e boil.Executor, singular bool,
 				local.R.UserNotificationArchives = append(local.R.UserNotificationArchives, foreign)
 				if foreign.R == nil {
 					foreign.R = &notificationArchiveR{}
+				}
+				foreign.R.User = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadUserTokenHistories allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userProfileL) LoadUserTokenHistories(e boil.Executor, singular bool, maybeUserProfile interface{}, mods queries.Applicator) error {
+	var slice []*UserProfile
+	var object *UserProfile
+
+	if singular {
+		object = maybeUserProfile.(*UserProfile)
+	} else {
+		slice = *maybeUserProfile.(*[]*UserProfile)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userProfileR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userProfileR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`token_history`), qm.WhereIn(`user_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load token_history")
+	}
+
+	var resultSlice []*TokenHistory
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice token_history")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on token_history")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for token_history")
+	}
+
+	if len(tokenHistoryAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.UserTokenHistories = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &tokenHistoryR{}
+			}
+			foreign.R.User = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.UserID {
+				local.R.UserTokenHistories = append(local.R.UserTokenHistories, foreign)
+				if foreign.R == nil {
+					foreign.R = &tokenHistoryR{}
 				}
 				foreign.R.User = local
 				break
@@ -1761,6 +1876,68 @@ func (o *UserProfile) AddUserNotificationArchives(exec boil.Executor, insert boo
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &notificationArchiveR{
+				User: o,
+			}
+		} else {
+			rel.R.User = o
+		}
+	}
+	return nil
+}
+
+// AddUserTokenHistoriesG adds the given related objects to the existing relationships
+// of the user_profile, optionally inserting them as new records.
+// Appends related to o.R.UserTokenHistories.
+// Sets related.R.User appropriately.
+// Uses the global database handle.
+func (o *UserProfile) AddUserTokenHistoriesG(insert bool, related ...*TokenHistory) error {
+	return o.AddUserTokenHistories(boil.GetDB(), insert, related...)
+}
+
+// AddUserTokenHistories adds the given related objects to the existing relationships
+// of the user_profile, optionally inserting them as new records.
+// Appends related to o.R.UserTokenHistories.
+// Sets related.R.User appropriately.
+func (o *UserProfile) AddUserTokenHistories(exec boil.Executor, insert bool, related ...*TokenHistory) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.UserID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"token_history\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"user_id"}),
+				strmangle.WhereClause("\"", "\"", 2, tokenHistoryPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.UserID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userProfileR{
+			UserTokenHistories: related,
+		}
+	} else {
+		o.R.UserTokenHistories = append(o.R.UserTokenHistories, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &tokenHistoryR{
 				User: o,
 			}
 		} else {

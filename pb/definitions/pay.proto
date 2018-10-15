@@ -144,6 +144,7 @@ message TestTransaction {
     string recipient_address = 4;
     int64 denom_amount = 5;
     string payment_usage = 6;
+    string sender_address = 7;
 }
 
 service PayService {

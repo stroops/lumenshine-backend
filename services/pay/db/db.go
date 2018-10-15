@@ -19,6 +19,7 @@ import (
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
+	"github.com/Soneso/lumenshine-backend/services/pay/paymentchannel"
 	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/queries"
 )
@@ -73,7 +74,7 @@ func (db *DB) GetNextChainAddressIndex(chain string) (uint32, error) {
 	if key != "" {
 		//get and update
 		var v m.KeyValueStore
-		sql := querying.GetSQLKeyString(`update @key_value_store set @int_value = @int_value+1 where @key = 
+		sql := querying.GetSQLKeyString(`update @key_value_store set @int_value = @int_value+1 where @key =
 			(select @key from @key_value_store where @key=$1 limit 1 for update) returning @int_value`,
 			map[string]string{
 				"@key_value_store": m.TableNames.KeyValueStore,
@@ -227,10 +228,16 @@ func isDuplicateError(err error) bool {
 }
 
 //AddNewTransaction adds a transaction to the database and returns true, if it was allready present
-func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash string, toAddress string, orderID int, denomAmount *big.Int) (isDuplicate bool, err error) {
+func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.Channel, txHash string,
+	toAddress string, fromAddress string, orderID int, denomAmount *big.Int, BTCOutIndex int) (isDuplicate bool, err error) {
+
+	order, err := m.FindUserOrder(db, orderID, "id")
+	if err != nil {
+		return isDuplicate, err
+	}
 
 	d := new(m.ProcessedTransaction)
-	d.PaymentNetwork = paymentChannel
+	d.PaymentNetwork = paymentChannel.Name()
 	d.ReceivingAddress = toAddress
 	d.TransactionID = txHash
 	d.OrderID = orderID
@@ -242,7 +249,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	if isDuplicate {
 		//add the transaction to the multiple table for manual handling
 		b := new(m.MultipleTransaction)
-		b.PaymentNetwork = paymentChannel
+		b.PaymentNetwork = paymentChannel.Name()
 		b.ReceivingAddress = toAddress
 		b.TransactionID = txHash
 		b.OrderID = orderID
@@ -252,6 +259,11 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 			//we don't handle this error, just log it
 			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": txHash}).Error("Error saving multiple transaction")
 		}
+		err = paymentChannel.TransferAmount(order, txHash, denomAmount, fromAddress, paymentchannel.TransferRefund, BTCOutIndex)
+		if err != nil {
+			//we don't handle this error, just log it TransferAmount will set the error text in the order
+			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": txHash}).Error("Error refunding")
+		}
 		return true, nil
 	}
 
@@ -260,11 +272,8 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel string, txHash 
 	}
 
 	//update the order to hold the transaction-ref
-	order, err := m.FindUserOrder(db, orderID, "id")
-	if err != nil {
-		return isDuplicate, err
-	}
 	order.ProcessedTransactionID = null.IntFrom(d.ID)
+	order.BTCSRCOutIndex = BTCOutIndex
 	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.ProcessedTransactionID, m.UserKycDocumentColumns.UpdatedAt))
 	if err != nil {
 		return isDuplicate, err
@@ -315,7 +324,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 		//amount payed is exactly the amount bought. we can check/update, if there are coins left
 		ph := new(m.IcoPhase)
 
-		sqlStr = querying.GetSQLKeyString(`update @ico_phase set @tokens_left=@tokens_left-$1, @updated_at=current_timestamp where id=$2 and @ico_phase_status=$3 and 
+		sqlStr = querying.GetSQLKeyString(`update @ico_phase set @tokens_left=@tokens_left-$1, @updated_at=current_timestamp where id=$2 and @ico_phase_status=$3 and
 		  start_time<=current_timestamp and end_time>=current_timestamp returning *`,
 			map[string]string{
 				"@ico_phase":   m.TableNames.IcoPhase,

@@ -110,6 +110,13 @@ type ConfirmTokeRequest struct {
 	Token string `form:"token" json:"token" validate:"required"`
 }
 
+//ConfirmTokeResponse response
+type ConfirmTokeResponse struct {
+	Email                 string    `json:"email"`
+	ConfirmationDate      time.Time `json:"confirmation_date"`
+	TokenAlreadyConfirmed bool      `json:"token_already_confirmed"`
+}
+
 //ConfirmToken confirms a mail token
 func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 	var cm ConfirmTokeRequest
@@ -130,6 +137,14 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 	u, err := dbClient.GetUserByMailtoken(c, userMailRequest)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user by token", cerr.GeneralError))
+		return
+	}
+
+	if u.TokenAlreadyConfirmed {
+		c.JSON(http.StatusOK, &ConfirmTokeResponse{
+			TokenAlreadyConfirmed: true,
+			ConfirmationDate:      time.Unix(u.ConfirmedDate, 0),
+		})
 		return
 	}
 
@@ -170,7 +185,9 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, u.UserId)
 
-	c.JSON(http.StatusOK, "{}")
+	c.JSON(http.StatusOK, &ConfirmTokeResponse{
+		Email: u.Email,
+	})
 }
 
 //UserSecurityDataResponse response for API

@@ -31,7 +31,6 @@ type UserOrder struct {
 	ExchangeCurrencyID                 int        `boil:"exchange_currency_id" json:"exchange_currency_id" toml:"exchange_currency_id" yaml:"exchange_currency_id"`
 	ExchangeCurrencyDenominationAmount string     `boil:"exchange_currency_denomination_amount" json:"exchange_currency_denomination_amount" toml:"exchange_currency_denomination_amount" yaml:"exchange_currency_denomination_amount"`
 	PaymentNetwork                     string     `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
-	AddressIndex                       int64      `boil:"address_index" json:"address_index" toml:"address_index" yaml:"address_index"`
 	PaymentAddress                     string     `boil:"payment_address" json:"payment_address" toml:"payment_address" yaml:"payment_address"`
 	PaymentSeed                        string     `boil:"payment_seed" json:"payment_seed" toml:"payment_seed" yaml:"payment_seed"`
 	StellarTransactionID               string     `boil:"stellar_transaction_id" json:"stellar_transaction_id" toml:"stellar_transaction_id" yaml:"stellar_transaction_id"`
@@ -43,6 +42,7 @@ type UserOrder struct {
 	UpdatedAt                          time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                          string     `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 	FeePayed                           bool       `boil:"fee_payed" json:"fee_payed" toml:"fee_payed" yaml:"fee_payed"`
+	BTCSRCOutIndex                     int        `boil:"btc_src_out_index" json:"btc_src_out_index" toml:"btc_src_out_index" yaml:"btc_src_out_index"`
 
 	R *userOrderR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userOrderL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -58,7 +58,6 @@ var UserOrderColumns = struct {
 	ExchangeCurrencyID                 string
 	ExchangeCurrencyDenominationAmount string
 	PaymentNetwork                     string
-	AddressIndex                       string
 	PaymentAddress                     string
 	PaymentSeed                        string
 	StellarTransactionID               string
@@ -70,6 +69,7 @@ var UserOrderColumns = struct {
 	UpdatedAt                          string
 	UpdatedBy                          string
 	FeePayed                           string
+	BTCSRCOutIndex                     string
 }{
 	ID:                                 "id",
 	UserID:                             "user_id",
@@ -80,7 +80,6 @@ var UserOrderColumns = struct {
 	ExchangeCurrencyID:                 "exchange_currency_id",
 	ExchangeCurrencyDenominationAmount: "exchange_currency_denomination_amount",
 	PaymentNetwork:                     "payment_network",
-	AddressIndex:                       "address_index",
 	PaymentAddress:                     "payment_address",
 	PaymentSeed:                        "payment_seed",
 	StellarTransactionID:               "stellar_transaction_id",
@@ -92,6 +91,7 @@ var UserOrderColumns = struct {
 	UpdatedAt:                          "updated_at",
 	UpdatedBy:                          "updated_by",
 	FeePayed:                           "fee_payed",
+	BTCSRCOutIndex:                     "btc_src_out_index",
 }
 
 // UserOrderRels is where relationship names are stored.
@@ -133,9 +133,9 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by", "fee_payed"}
-	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "address_index", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
-	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at", "fee_payed"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by", "fee_payed", "btc_src_out_index"}
+	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
+	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at", "fee_payed", "btc_src_out_index"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )
 

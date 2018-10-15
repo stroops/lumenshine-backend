@@ -8,7 +8,7 @@ package pb;
 message GetUserByIDOrEmailRequest {
   BaseRequest base = 1;
   int64 id = 2;
-  string email = 3;    
+  string email = 3;
 }
 
 message CreateUserRequest {
@@ -130,7 +130,7 @@ message UserDetailsResponse {
   bool mail_confirmed = 2;
   string mail_confirmation_key = 3;
   int64 mail_confirmation_expiry = 4;
-  string tfa_secret = 5;  
+  string tfa_secret = 5;
   bool tfa_confirmed = 6;
   bool mnemonic_confirmed = 7;
   string password = 8;
@@ -175,8 +175,11 @@ message UserMailTokenRequest {
 message UserMailTokenResponse {
   int64 user_id = 1;
   int64 mail_confirmation_expiry = 2;
-  bool token_not_found = 3;
-  bool mail_confirmed = 4;
+  string email = 3;
+  bool token_not_found = 4;
+  bool token_already_confirmed = 5;
+  bool mail_confirmed = 6;
+  int64 confirmed_date = 7;
 }
 
 message UserSecurityRequest {
@@ -281,7 +284,7 @@ message UserMessageListResponse {
   int64 archive_count = 3;
 }
 
-message AddWalletRequest {  
+message AddWalletRequest {
   BaseRequest base = 1;
   int64 user_id = 2;
   string public_key_0 = 3;
@@ -291,45 +294,45 @@ message AddWalletRequest {
   bool show_on_homescreen = 7;
 }
 
-message WalletChangeNameRequest {  
+message WalletChangeNameRequest {
   BaseRequest base = 1;
   int64 id = 2;
-  int64 user_id = 3;  
+  int64 user_id = 3;
   string name = 4;
 }
 
-message WalletSetHomescreenRequest {  
+message WalletSetHomescreenRequest {
   BaseRequest base = 1;
-  int64 user_id = 2;  
+  int64 user_id = 2;
   int64 id = 3;
   bool visible = 4;
 }
 
-message WalletChangeFederationAddressRequest {  
+message WalletChangeFederationAddressRequest {
   BaseRequest base = 1;
   int64 id = 2;
-  int64 user_id = 3;  
+  int64 user_id = 3;
   string friendly_id = 4;
   string domain = 5;
 }
 
-message CheckWalletRequest {  
+message CheckWalletRequest {
   BaseRequest base = 1;
-  int64 user_id = 2;  
+  int64 user_id = 2;
   string wallet_name = 3;
   string friendly_id = 4;
   string domain = 5;
   string public_key_0 = 6;
 }
 
-message CheckWalletResponse {  
-  bool name_ok = 1;    
+message CheckWalletResponse {
+  bool name_ok = 1;
   bool federation_address_ok = 2;
   bool public_key_0_ok = 3;
 }
 
-message Wallet {  
-  int64 id = 1;    
+message Wallet {
+  int64 id = 1;
   int64 user_id = 2;
   string public_key_0 = 3;
   string wallet_name = 4;
@@ -338,25 +341,25 @@ message Wallet {
   bool show_on_homescreen = 7;
 }
 
-message GetWalletsRequest {  
+message GetWalletsRequest {
   BaseRequest base = 1;
-  int64 user_id = 2;  
+  int64 user_id = 2;
 }
 
-message GetWalletsResponse {  
-  repeated Wallet wallets = 1;  
+message GetWalletsResponse {
+  repeated Wallet wallets = 1;
 }
 
-message RemoveWalletRequest {  
-  BaseRequest base = 1;
-  int64 id = 2;
-  int64 user_id = 3;  
-}
-
-message WalletIsLastRequest {  
+message RemoveWalletRequest {
   BaseRequest base = 1;
   int64 id = 2;
-  int64 user_id = 3;  
+  int64 user_id = 3;
+}
+
+message WalletIsLastRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;
 }
 
 message QueuePushNotificationRequest {
@@ -433,7 +436,7 @@ message AddKycDocumentRequest{
   string id_country_code = 6;
   int64 id_issue_date = 7;
   int64 id_expiration_date = 8;
-  string id_number = 9;  
+  string id_number = 9;
 }
 
 message AddKycDocumentResponse {
@@ -460,7 +463,7 @@ message UpdatePushTokenRequest {
   int64 user_id = 2;
   DeviceType device_type = 3;
   string old_push_token = 4;
-  string new_push_token = 5;  
+  string new_push_token = 5;
 }
 
 message UpdateUserContactRequest {
@@ -516,7 +519,7 @@ service DBService {
   rpc WalletChangeFederationAddress (WalletChangeFederationAddressRequest) returns (Empty) {}
   rpc GetUserWallets (GetWalletsRequest) returns (GetWalletsResponse) {}
   rpc WalletIsLast (WalletIsLastRequest) returns (BoolResponse) {}
-  rpc WalletSetHomescreen (WalletSetHomescreenRequest) returns (Empty) {}  
+  rpc WalletSetHomescreen (WalletSetHomescreenRequest) returns (Empty) {}
   rpc AddKycDocument(AddKycDocumentRequest) returns (AddKycDocumentResponse) {}
 
   rpc AddPushToken(AddPushTokenRequest) returns (Empty) {}

@@ -659,6 +659,10 @@ type FakeTransactionRequest struct {
 	// required: true
 	RecipientAddress string `form:"recipient_address" json:"recipient_address" validate:"required"`
 
+	//This is the payment-address that send the payment from the external network
+	// required: true
+	SenderAddress string `form:"sender_address" json:"sender_address" validate:"required"`
+
 	// required: true
 	OrderID int64 `form:"order_id" json:"order_id"`
 
@@ -710,6 +714,7 @@ func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
 		TxHash:           l.TxHash,
 		RecipientAddress: l.RecipientAddress,
 		DenomAmount:      l.DenominationAmount,
+		SenderAddress:    l.SenderAddress,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating fake-transaction", cerr.GeneralError))

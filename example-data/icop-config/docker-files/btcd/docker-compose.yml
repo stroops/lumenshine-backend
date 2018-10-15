@@ -1,0 +1,28 @@
+version: '3.6'
+
+services:  
+  btcd:
+    restart: "no"
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    ports:
+      - "18332:18332"
+      - "18333:18333"
+      - "18334:18334"
+      #- "127.0.0.1:18334:18334"
+    volumes:
+      - btcd-data:/btcd/data
+      - ./conf:/btcd/conf
+
+    #environment:
+
+    command: ["--testnet", "--notls", "--configfile=/btcd/conf/btcd.conf", "--datadir=/btcd/data", "--logdir=/btcd/log"]
+   
+
+# please create the data volumes external with this command
+# docker volume create --name btcd-data -d local
+volumes:
+  btcd-data:
+    external: true  

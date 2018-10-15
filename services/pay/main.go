@@ -5,15 +5,18 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
+	m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"github.com/Soneso/lumenshine-backend/services/pay/account"
 	"github.com/Soneso/lumenshine-backend/services/pay/cmd"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"github.com/Soneso/lumenshine-backend/services/pay/environment"
+	"github.com/Soneso/lumenshine-backend/services/pay/paymentchannel"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/bitcoin"
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
+	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/channel"
 	"github.com/labstack/gommon/log"
@@ -54,6 +57,7 @@ func main() {
 	env = new(environment.Environment)
 	env.Config = cnf
 	env.DBC = dbc
+	env.Clients = make(map[string]paymentchannel.Channel)
 
 	/*var bitcoinChainParams *chaincfg.Params
 	bitcoinChainParams = &chaincfg.TestNet3Params
@@ -90,10 +94,14 @@ func createServices() {
 		channel.NewChanneler(env.DBC, env.Config),
 	)
 
-	//start the listener
+	//Create all clients
+	env.Clients[m.PaymentNetworkEthereum] = ethereum.NewEthereumChannel(env.DBC, env.Config)
+	env.Clients[m.PaymentNetworkBitcoin] = bitcoin.NewBitcoinChannel(env.DBC, env.Config)
+	env.Clients[m.PaymentNetworkStellar] = stellar.NewStellarChannel(env.DBC, env.Config)
+
+	//start the listeners if enabled
 	if cfg.Bitcoin.Enabled {
-		env.BitcoinListener = bitcoin.NewListener(env.DBC, env.Config)
-		if err := env.BitcoinListener.Start(); err != nil {
+		if err := env.Clients[m.PaymentNetworkBitcoin].Start(); err != nil {
 			log.Error(err)
 			os.Exit(-1)
 		}
@@ -102,9 +110,7 @@ func createServices() {
 	}
 
 	if cfg.Ethereum.Enabled {
-
-		env.EthereumListener = ethereum.NewListener(env.DBC, env.Config)
-		if err := env.EthereumListener.Start(); err != nil {
+		if err := env.Clients[m.PaymentNetworkEthereum].Start(); err != nil {
 			log.Error(err)
 			os.Exit(-1)
 		}
@@ -113,7 +119,10 @@ func createServices() {
 	}
 
 	if cfg.Stellar.Enabled {
-		//start the listener?
+		if err := env.Clients[m.PaymentNetworkStellar].Start(); err != nil {
+			log.Error(err)
+			os.Exit(-1)
+		}
 	} else {
 		log.Info("Stellar not enabled")
 	}
