@@ -19,8 +19,7 @@ type GetUserDataResponse struct {
 	Company           string     `form:"company" json:"company"`
 	Salutation        string     `form:"salutation" json:"salutation"`
 	Title             string     `form:"title" json:"title"`
-	StreetAddress     string     `form:"street_address" json:"street_address"`
-	StreetNumber      string     `form:"street_number" json:"street_number"`
+	Address           string     `form:"address" json:"address"`
 	ZipCode           string     `form:"zip_code" json:"zip_code"`
 	City              string     `form:"city" json:"city"`
 	State             string     `form:"state" json:"state"`
@@ -61,8 +60,7 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		Company:           u.Company,
 		Salutation:        u.Salutation,
 		Title:             u.Title,
-		StreetAddress:     u.StreetAddress,
-		StreetNumber:      u.StreetNumber,
+		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
 		State:             u.State,
@@ -97,8 +95,7 @@ type UpdateUserDataRequest struct {
 	Company           string `form:"company" json:"company" validate:"max=128"`
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Title             string `form:"title" json:"title" validate:"max=64"`
-	StreetAddress     string `form:"street_address" json:"street_address" validate:"required,max=128"`
-	StreetNumber      string `form:"street_number" json:"street_number" validate:"required,max=128"`
+	Address           string `form:"address" json:"address" validate:"required,max=128"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"required,max=32"`
 	City              string `form:"city" json:"city" validate:"required,max=128"`
 	State             string `form:"state" json:"state" validate:"required,max=128"`
@@ -107,17 +104,17 @@ type UpdateUserDataRequest struct {
 	MobileNR          string `form:"mobile_nr" json:"mobile_nr" validate:"required,max=64"`
 	BirthDay          string `form:"birth_day" json:"birth_day"`
 	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"required,max=128"`
-	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=255"`
-	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=3"`
-	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=255"`
-	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=255"`
-	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=255"`
-	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=255"`
-	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=255"`
-	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=5"`
-	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=500"`
-	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=500"`
-	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=10"`
+	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"omitempty,max=256"`
+	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"omitempty,max=2"`
+	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=256"`
+	BankNumber        string `form:"bank_number" json:"bank_number" validate:"omitempty,max=256"`
+	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=256"`
+	TaxID             string `form:"tax_id" json:"tax_id" validate:"omitempty,max=256"`
+	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"omitempty,max=256"`
+	Occupation        string `form:"occupation" json:"occupation" validate:"omitempty,max=8"`
+	EmployerName      string `form:"employer_name" json:"employer_name" validate:"omitempty,max=512"`
+	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"omitempty,max=512"`
+	LanguageCode      string `form:"language_code" json:"language_code" validate:"omitempty,max=16"`
 }
 
 //UpdateUserData - updates the authenticated user's data
@@ -148,8 +145,7 @@ func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 		Company:           rr.Company,
 		Salutation:        rr.Salutation,
 		Title:             rr.Title,
-		StreetAddress:     rr.StreetAddress,
-		StreetNumber:      rr.StreetNumber,
+		Address:           rr.Address,
 		ZipCode:           rr.ZipCode,
 		City:              rr.City,
 		State:             rr.State,

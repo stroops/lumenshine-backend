@@ -39,8 +39,7 @@ type RegisterUserRequest struct {
 	Forename          string `form:"forename" json:"forename"`
 	Lastname          string `form:"lastname" json:"lastname"`
 	Company           string `form:"company" json:"company"`
-	StreetAddress     string `form:"street_address" json:"street_address"`
-	StreetNumber      string `form:"street_number" json:"street_number"`
+	Address           string `form:"address" json:"address"`
 	ZipCode           string `form:"zip_code" json:"zip_code"`
 	City              string `form:"city" json:"city"`
 	State             string `form:"state" json:"state"`
@@ -136,8 +135,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		Forename:               ur.Forename,
 		Lastname:               ur.Lastname,
 		Company:                ur.Company,
-		StreetAddress:          ur.StreetAddress,
-		StreetNumber:           ur.StreetNumber,
+		Address:          ur.Address,
 		ZipCode:                ur.ZipCode,
 		City:                   ur.City,
 		State:                  ur.State,

@@ -114,8 +114,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		Forename:          u.Forename,
 		Lastname:          u.Company,
 		Company:           u.Company,
-		StreetAddress:     u.StreetAddress,
-		StreetNumber:      u.StreetNumber,
+		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
 		State:             u.State,
@@ -163,8 +162,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.Forename = r.Forename
 	u.Lastname = r.Lastname
 	u.Company = r.Company
-	u.StreetAddress = r.StreetAddress
-	u.StreetNumber = r.StreetNumber
+	u.Address = r.Address
 	u.ZipCode = r.ZipCode
 	u.City = r.City
 	u.State = r.State
@@ -823,8 +821,7 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 	u.Company = r.Company
 	u.Salutation = r.Salutation
 	u.Title = r.Title
-	u.StreetAddress = r.StreetAddress
-	u.StreetNumber = r.StreetNumber
+	u.Address = r.Address
 	u.ZipCode = r.ZipCode
 	u.City = r.City
 	u.State = r.State
