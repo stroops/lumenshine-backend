@@ -48,7 +48,7 @@ func ContactList(uc *mw.IcopContext, c *gin.Context) {
 //AddContactRequest request
 type AddContactRequest struct {
 	PublicKey      string `form:"public_key" json:"public_key"  validate:"omitempty,base64,len=56"`
-	StellarAddress string `form:"stellar_address" json:"stellar_address" validate:"omitempty,max=256"`
+	StellarAddress string `form:"stellar_address" json:"stellar_address" validate:"max=256"`
 	ContactName    string `form:"contact_name" json:"contact_name" validate:"required,max=256"`
 }
 
@@ -117,7 +117,7 @@ func AddContact(uc *mw.IcopContext, c *gin.Context) {
 type EditContactRequest struct {
 	ID             int64  `form:"id" json:"id"`
 	PublicKey      string `form:"public_key" json:"public_key"  validate:"omitempty,base64,len=56"`
-	StellarAddress string `form:"stellar_address" json:"stellar_address" validate:"omitempty,max=256"`
+	StellarAddress string `form:"stellar_address" json:"stellar_address" validate:"max=256"`
 	ContactName    string `form:"contact_name" json:"contact_name" validate:"required,max=256"`
 }
 

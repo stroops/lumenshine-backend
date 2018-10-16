@@ -25,6 +25,11 @@ type ServicesConfig struct {
 	MailSrvHost string
 }
 
+//StellarNetworkConfig - stellar network config
+type StellarNetworkConfig struct {
+	HorizonURL string
+}
+
 //SiteConfig globals that define the site behaviour
 type SiteConfig struct {
 	SiteName    string
@@ -52,9 +57,10 @@ type Config struct {
 	CustomerDB    DBConfig
 	StellarCoreDB DBConfig
 
-	Services ServicesConfig
-	Site     SiteConfig
-	WebLinks WebLinksConfig
+	Services       ServicesConfig
+	StellarNetwork StellarNetworkConfig
+	Site           SiteConfig
+	WebLinks       WebLinksConfig
 
 	SQLMigrationDir string
 	ApplicationDir  string

@@ -34,21 +34,31 @@ type RegisterUserRequest struct {
 	PublicKey0   string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 	PublicKey188 string `form:"public_key_188" json:"public_key_188" validate:"required,base64,len=56"`
 
-	Salutation    string `form:"salutation" json:"salutation"`
-	Title         string `form:"title" json:"title"`
-	Forename      string `form:"forename" json:"forename"`
-	Lastname      string `form:"lastname" json:"lastname"`
-	Company       string `form:"company" json:"company"`
-	StreetAddress string `form:"street_address" json:"street_address"`
-	StreetNumber  string `form:"street_number" json:"street_number"`
-	ZipCode       string `form:"zip_code" json:"zip_code"`
-	City          string `form:"city" json:"city"`
-	State         string `form:"state" json:"state"`
-	CountryCode   string `form:"country_code" json:"country_code"`
-	Nationality   string `form:"nationality" json:"nationality"`
-	MobileNr      string `form:"mobile_nr" json:"mobile_nr" validate:"omitempty,icop_phone"`
-	BirthDay      string `form:"birth_day" json:"birth_day"`
-	BirthPlace    string `form:"birth_place" json:"birth_place"`
+	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
+	Title             string `form:"title" json:"title" validate:"max=64"`
+	Forename          string `form:"forename" json:"forename" validate:"max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"max=64"`
+	Company           string `form:"company" json:"company" validate:"max=128"`
+	Address           string `form:"address" json:"address" validate:"max=512"`
+	ZipCode           string `form:"zip_code" json:"zip_code" validate:"max=32"`
+	City              string `form:"city" json:"city" validate:"max=128"`
+	State             string `form:"state" json:"state" validate:"max=128"`
+	CountryCode       string `form:"country_code" json:"country_code" validate:"max=2"`
+	Nationality       string `form:"nationality" json:"nationality" validate:"max=128"`
+	MobileNr          string `form:"mobile_nr" json:"mobile_nr" validate:"icop_phone"`
+	BirthDay          string `form:"birth_day" json:"birth_day"`
+	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"max=128"`
+	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"max=256"`
+	BirthCountryCode  string `form:"birth_country_code" json:"birth_country_code" validate:"max=2"`
+	BankAccountNumber string `form:"bank_account_number" json:"bank_account_number" validate:"max=256"`
+	BankNumber        string `form:"bank_number" json:"bank_number" validate:"max=256"`
+	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"max=256"`
+	TaxID             string `form:"tax_id" json:"tax_id" validate:"max=256"`
+	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"max=256"`
+	Occupation        string `form:"occupation" json:"occupation" validate:"max=8"`
+	EmployerName      string `form:"employer_name" json:"employer_name" validate:"max=512"`
+	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"max=512"`
+	LanguageCode      string `form:"language_code" json:"language_code" validate:"max=16"`
 }
 
 //RegisterUserResponse response for registration
@@ -125,8 +135,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		Forename:               ur.Forename,
 		Lastname:               ur.Lastname,
 		Company:                ur.Company,
-		StreetAddress:          ur.StreetAddress,
-		StreetNumber:           ur.StreetNumber,
+		Address:                ur.Address,
 		ZipCode:                ur.ZipCode,
 		City:                   ur.City,
 		State:                  ur.State,
@@ -135,6 +144,17 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		MobileNr:               ur.MobileNr,
 		BirthDay:               birthDaty.Unix(),
 		BirthPlace:             ur.BirthPlace,
+		AdditionalName:         ur.AdditionalName,
+		BirthCountryCode:       ur.BirthCountryCode,
+		BankAccountNumber:      ur.BankAccountNumber,
+		BankNumber:             ur.BankNumber,
+		BankPhoneNumber:        ur.BankPhoneNumber,
+		TaxId:                  ur.TaxID,
+		TaxIdName:              ur.TaxIDName,
+		Occupation:             ur.Occupation,
+		EmployerName:           ur.EmployerName,
+		EmployerAddress:        ur.EmployerAddress,
+		LanguageCode:           ur.LanguageCode,
 		Password:               string(pwd),
 		KdfSalt:                ur.KDFSalt,
 		MnemonicMasterKey:      ur.MnemonicMasterKey,

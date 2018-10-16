@@ -264,7 +264,7 @@ func getAccountResponse(account models.AdminStellarAccount) StellarAccountRespon
 //StellarAccountEditRequest new user information
 type StellarAccountEditRequest struct {
 	PublicKey   string  `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
-	Name        *string `form:"name" json:"name" validate:"omitempty,max=256"`
+	Name        *string `form:"name" json:"name" validate:"max=256"`
 	Description *string `form:"description" json:"description"`
 }
 

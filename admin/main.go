@@ -68,8 +68,8 @@ func main() {
 	r := gin.New()
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
-		//AllowAllOrigins: true,
-		AllowOrigins: config.Cnf.CORSHosts,
+		AllowAllOrigins: true,
+		//AllowOrigins: config.Cnf.CORSHosts,
 		AllowMethods: []string{"POST", "GET", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type", "Content-Length",
 			"Accept-Encoding", "X-CSRF-Token", "Authorization", "Access-Control-Allow-Credentials",
@@ -146,7 +146,8 @@ func connectServices(log *logrus.Entry) {
 	if err != nil {
 		log.WithError(err).Fatalf("Dial failed: %v", err)
 	}
-	client.MailClient = pb.NewMailServiceClient(connMail)
+	client.SetMailClient(pb.NewMailServiceClient(connMail))
+	client.SetHorizonClient(config.Cnf.StellarNetwork)
 }
 
 //GetKnownCurrency returns the currency for the id
