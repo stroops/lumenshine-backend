@@ -217,6 +217,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.
 	d.PaymentNetwork = paymentChannel.Name()
 	d.ReceivingAddress = toAddress
 	d.TransactionID = txHash
+	d.BTCSRCOutIndex = BTCOutIndex
 	d.OrderID = orderID
 	d.Status = m.TransactionStatusNew
 	d.PaymentNetworkAmountDenomination = denomAmount.String()
@@ -229,6 +230,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.
 		b.PaymentNetwork = paymentChannel.Name()
 		b.ReceivingAddress = toAddress
 		b.TransactionID = txHash
+		b.BTCSRCOutIndex = BTCOutIndex
 		b.OrderID = orderID
 		b.PaymentNetworkAmountDenom = denomAmount.String()
 		errB := b.Insert(db, boil.Infer())
@@ -250,7 +252,6 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.
 
 	//update the order to hold the transaction-ref
 	order.ProcessedTransactionID = null.IntFrom(d.ID)
-	order.BTCSRCOutIndex = BTCOutIndex
 	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.ProcessedTransactionID, m.UserKycDocumentColumns.UpdatedAt))
 	if err != nil {
 		return isDuplicate, err

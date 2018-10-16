@@ -25,6 +25,7 @@ type ProcessedTransaction struct {
 	Status                           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
 	PaymentNetwork                   string    `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
 	TransactionID                    string    `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
+	BTCSRCOutIndex                   int       `boil:"btc_src_out_index" json:"btc_src_out_index" toml:"btc_src_out_index" yaml:"btc_src_out_index"`
 	RefundTXID                       string    `boil:"refund_tx_id" json:"refund_tx_id" toml:"refund_tx_id" yaml:"refund_tx_id"`
 	ReceivingAddress                 string    `boil:"receiving_address" json:"receiving_address" toml:"receiving_address" yaml:"receiving_address"`
 	PaymentNetworkAmountDenomination string    `boil:"payment_network_amount_denomination" json:"payment_network_amount_denomination" toml:"payment_network_amount_denomination" yaml:"payment_network_amount_denomination"`
@@ -41,6 +42,7 @@ var ProcessedTransactionColumns = struct {
 	Status                           string
 	PaymentNetwork                   string
 	TransactionID                    string
+	BTCSRCOutIndex                   string
 	RefundTXID                       string
 	ReceivingAddress                 string
 	PaymentNetworkAmountDenomination string
@@ -52,6 +54,7 @@ var ProcessedTransactionColumns = struct {
 	Status:                           "status",
 	PaymentNetwork:                   "payment_network",
 	TransactionID:                    "transaction_id",
+	BTCSRCOutIndex:                   "btc_src_out_index",
 	RefundTXID:                       "refund_tx_id",
 	ReceivingAddress:                 "receiving_address",
 	PaymentNetworkAmountDenomination: "payment_network_amount_denomination",
@@ -84,9 +87,9 @@ func (*processedTransactionR) NewStruct() *processedTransactionR {
 type processedTransactionL struct{}
 
 var (
-	processedTransactionColumns               = []string{"id", "status", "payment_network", "transaction_id", "refund_tx_id", "receiving_address", "payment_network_amount_denomination", "order_id", "created_at", "updated_at"}
+	processedTransactionColumns               = []string{"id", "status", "payment_network", "transaction_id", "btc_src_out_index", "refund_tx_id", "receiving_address", "payment_network_amount_denomination", "order_id", "created_at", "updated_at"}
 	processedTransactionColumnsWithoutDefault = []string{"status", "payment_network", "transaction_id", "refund_tx_id", "receiving_address", "payment_network_amount_denomination", "order_id"}
-	processedTransactionColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
+	processedTransactionColumnsWithDefault    = []string{"id", "btc_src_out_index", "created_at", "updated_at"}
 	processedTransactionPrimaryKeyColumns     = []string{"id"}
 )
 

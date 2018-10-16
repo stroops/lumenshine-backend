@@ -37,7 +37,6 @@ CREATE TABLE user_order (
   /* stellar 56 characters */
   payment_address varchar(56) NOT NULL, /* public key in the target network, based on payment_network */
   payment_seed varchar(500) NOT NULL, /* this is either the seed on stellar, or the privatekey on other crypto */
-  btc_src_out_index int NOT NULL DEFAULT 0, /* for bitcoin, we store the output index here */
 
   stellar_transaction_id text not null, /* this is the coin payment tx in the stellar network */
   processed_transaction_id int null, /* FK to the processed transactions */
@@ -74,6 +73,7 @@ CREATE TABLE processed_transaction (
 
   /* Ethereum: "0x"+hash (so 64+2) */
   transaction_id varchar(66) NOT NULL,
+  btc_src_out_index int NOT NULL DEFAULT 0, /* for bitcoin, we store the output index here */
   /* bitcoin 34 characters */
   /* ethereum 42 characters */
    /* stellar 56 characters */
@@ -95,6 +95,7 @@ CREATE TABLE multiple_transaction (
   id SERIAL PRIMARY KEY NOT null,
   payment_network payment_network NOT NULL,
   transaction_id varchar(66) NOT NULL,
+  btc_src_out_index int NOT NULL DEFAULT 0, /* for bitcoin, we store the output index here */
   refund_tx_id text not null,
   receiving_address varchar(56) NOT NULL,
   payment_network_amount_denom varchar(64) not null,
