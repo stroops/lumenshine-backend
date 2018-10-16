@@ -165,6 +165,15 @@ message SalutationListResponse {
   repeated string salutation = 1;
 }
 
+message LanguageListResponse {
+  repeated Language languages = 1;
+}
+
+message Language {
+  string code = 1;
+  string name = 2;
+}
+
 message UserMailTokenRequest {
   BaseRequest base = 1;
   string token = 2;
@@ -492,6 +501,7 @@ service DBService {
   rpc ExistsEmail (ExistsEmailRequest) returns (ExistsEmailResponse) {}
   rpc GetCountryList (LanguageCodeRequest) returns (CountryListResponse) {}
   rpc GetSalutationList (LanguageCodeRequest) returns (SalutationListResponse) {}
+  rpc GetLanguageList (Empty) returns (LanguageListResponse) {}
 
   rpc GetUserByMailtoken (UserMailTokenRequest) returns (UserMailTokenResponse) {}
   rpc SetUserMailToken (SetMailTokenRequest) returns (Empty) {}

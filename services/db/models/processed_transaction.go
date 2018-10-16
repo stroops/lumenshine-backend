@@ -58,9 +58,9 @@ var ProcessedTransactionColumns = struct {
 	RefundTXID:                       "refund_tx_id",
 	ReceivingAddress:                 "receiving_address",
 	PaymentNetworkAmountDenomination: "payment_network_amount_denomination",
-	OrderID:                          "order_id",
-	CreatedAt:                        "created_at",
-	UpdatedAt:                        "updated_at",
+	OrderID:   "order_id",
+	CreatedAt: "created_at",
+	UpdatedAt: "updated_at",
 }
 
 // ProcessedTransactionRels is where relationship names are stored.

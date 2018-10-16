@@ -35,6 +35,33 @@ func SalutationList(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
+//Language represents one language
+type Language struct {
+	Code string `json:"lang_code"`
+	Name string `json:"lang_name"`
+}
+
+//LanguagesResponse list for languages
+type LanguagesResponse struct {
+	Languages []Language `json:"languages"`
+}
+
+//LanguageList returns a list of all languages
+func LanguageList(uc *mw.IcopContext, c *gin.Context) {
+	languages, err := dbClient.GetLanguageList(c, &pb.Empty{Base: NewBaseRequest(uc)})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading languages", cerr.GeneralError))
+		return
+	}
+	var retLanguages []Language
+	for _, language := range languages.Languages {
+		retLanguages = append(retLanguages, Language{Code: language.Code, Name: language.Name})
+	}
+	c.JSON(http.StatusOK, &LanguagesResponse{
+		Languages: retLanguages,
+	})
+}
+
 //Country represents one country
 type Country struct {
 	Code string `json:"code"`

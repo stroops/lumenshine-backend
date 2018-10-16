@@ -87,6 +87,7 @@ func main() {
 	r.GET("/portal/test", Test)
 	r.POST("/portal/user/register_user", mw.UseIcopContext(RegisterUser))
 	r.GET("/portal/user/salutation_list", mw.UseIcopContext(SalutationList))
+	r.GET("/portal/user/language_list", mw.UseIcopContext(LanguageList))
 	r.GET("/portal/user/country_list", mw.UseIcopContext(CountryList))
 	r.POST("/portal/user/confirm_token", mw.UseIcopContext(ConfirmToken))
 	r.POST("/portal/user/resend_confirmation_mail", mw.UseIcopContext(ResendConfirmMail))

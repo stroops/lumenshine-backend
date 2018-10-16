@@ -285,6 +285,20 @@ func (s *server) GetSalutationList(ctx context.Context, r *pb.LanguageCodeReques
 	return ret, nil
 }
 
+func (s *server) GetLanguageList(ctx context.Context, r *pb.Empty) (*pb.LanguageListResponse, error) {
+	languages, err := models.Languages().All(db)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := new(pb.LanguageListResponse)
+	for _, lang := range languages {
+		ret.Languages = append(ret.Languages, &pb.Language{Code: lang.LangCode, Name: lang.LangName})
+	}
+
+	return ret, nil
+}
+
 func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfirmedRequest) (*pb.Empty, error) {
 	u, err := models.UserProfiles(qm.Where("id=?", r.UserId)).One(db)
 	if err != nil {
