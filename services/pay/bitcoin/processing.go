@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/sirupsen/logrus"
@@ -144,7 +143,7 @@ func (l *Channel) processTransaction(hash string, txOutIndex int, valueSat *big.
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.db.GetOrderForAddress(m.PaymentNetworkBitcoin, toAddress, "")
+	order, err := l.db.GetOrderForAddress(l, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
