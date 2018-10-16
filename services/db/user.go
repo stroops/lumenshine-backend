@@ -833,9 +833,6 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 
 	u.AdditionalName = r.AdditionalName
 	u.BirthCountryCode = r.BirthCountryCode
-	u.BankAccountNumber = r.BankAccountNumber
-	u.BankNumber = r.BankNumber
-	u.BankPhoneNumber = r.BankPhoneNumber
 	u.TaxID = r.TaxId
 	u.TaxIDName = r.TaxIdName
 	u.Occupation = r.Occupation
@@ -845,7 +842,43 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 
 	u.UpdatedBy = r.Base.UpdateBy
 
-	_, err = u.Update(db, boil.Infer())
+	whitelist := []string{models.UserProfileColumns.Forename,
+		models.UserProfileColumns.Lastname,
+		models.UserProfileColumns.Company,
+		models.UserProfileColumns.Salutation,
+		models.UserProfileColumns.Title,
+		models.UserProfileColumns.Address,
+		models.UserProfileColumns.ZipCode,
+		models.UserProfileColumns.City,
+		models.UserProfileColumns.State,
+		models.UserProfileColumns.CountryCode,
+		models.UserProfileColumns.Nationality,
+		models.UserProfileColumns.MobileNR,
+		models.UserProfileColumns.BirthDay,
+		models.UserProfileColumns.BirthPlace,
+		models.UserProfileColumns.AdditionalName,
+		models.UserProfileColumns.BirthCountryCode,
+		models.UserProfileColumns.TaxID,
+		models.UserProfileColumns.TaxIDName,
+		models.UserProfileColumns.Occupation,
+		models.UserProfileColumns.EmployerName,
+		models.UserProfileColumns.EmployerAddress,
+		models.UserProfileColumns.LanguageCode,
+		models.UserProfileColumns.UpdatedBy}
+	if r.BankAccountNumber != pb.StringNotSet {
+		u.BankAccountNumber = r.BankAccountNumber
+		whitelist = append(whitelist, models.UserProfileColumns.BankAccountNumber)
+	}
+	if r.BankNumber != pb.StringNotSet {
+		u.BankNumber = r.BankNumber
+		whitelist = append(whitelist, models.UserProfileColumns.BankNumber)
+	}
+	if r.BankPhoneNumber != pb.StringNotSet {
+		u.BankPhoneNumber = r.BankPhoneNumber
+		whitelist = append(whitelist, models.UserProfileColumns.BankPhoneNumber)
+	}
+
+	_, err = u.Update(db, boil.Whitelist(whitelist...))
 	if err != nil {
 		return nil, err
 	}

@@ -70,8 +70,6 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		BirthPlace:       u.BirthPlace,
 		AdditionalName:   u.AdditionalName,
 		BirthCountryCode: u.BirthCountryCode,
-		BankNumber:       u.BankNumber,
-		BankPhoneNumber:  u.BankPhoneNumber,
 		TaxID:            u.TaxId,
 		TaxIDName:        u.TaxIdName,
 		Occupation:       u.Occupation,
@@ -84,9 +82,23 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 	if !birthDay.IsZero() {
 		response.BirthDay = &birthDay
 	}
-	banlength := len(u.BankAccountNumber)
-	if banlength > 4 {
-		response.BankAccountNumber = u.BankAccountNumber[banlength-4:]
+	size := len(u.BankAccountNumber)
+	if size > 4 {
+		response.BankAccountNumber = u.BankAccountNumber[size-4:]
+	} else {
+		response.BankAccountNumber = u.BankAccountNumber
+	}
+	size = len(u.BankNumber)
+	if size > 4 {
+		response.BankNumber = u.BankNumber[size-4:]
+	} else {
+		response.BankNumber = u.BankNumber
+	}
+	size = len(u.BankPhoneNumber)
+	if size > 4 {
+		response.BankPhoneNumber = u.BankPhoneNumber[size-4:]
+	} else {
+		response.BankPhoneNumber = u.BankPhoneNumber
 	}
 	c.JSON(http.StatusOK, &response)
 }
@@ -109,9 +121,9 @@ type UpdateUserDataRequest struct {
 	BirthPlace        string  `form:"birth_place" json:"birth_place" validate:"max=128"`
 	AdditionalName    string  `form:"additional_name" json:"additional_name" validate:"max=256"`
 	BirthCountryCode  string  `form:"birth_country_code" json:"birth_country_code" validate:"max=2"`
-	BankAccountNumber *string `form:"bank_account_number" json:"bank_account_number" validate:"max=256"`
-	BankNumber        *string `form:"bank_number" json:"bank_number" validate:"max=256"`
-	BankPhoneNumber   *string `form:"bank_phone_number" json:"bank_phone_number" validate:"max=256"`
+	BankAccountNumber *string `form:"bank_account_number" json:"bank_account_number" validate:"omitempty,max=256"`
+	BankNumber        *string `form:"bank_number" json:"bank_number" validate:"omitempty,max=256"`
+	BankPhoneNumber   *string `form:"bank_phone_number" json:"bank_phone_number" validate:"omitempty,max=256"`
 	TaxID             string  `form:"tax_id" json:"tax_id" validate:"max=256"`
 	TaxIDName         string  `form:"tax_id_name" json:"tax_id_name" validate:"max=256"`
 	Occupation        string  `form:"occupation" json:"occupation" validate:"max=8"`
@@ -132,65 +144,58 @@ func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	user := mw.GetAuthUser(c)
-
 	//get the birthday
 	birthDay, err := time.Parse("2006-01-02", rr.BirthDay)
 	if rr.BirthDay != "" && err != nil {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("birth_day", cerr.InvalidArgument, "Birthday wrong format", ""))
 		return
 	}
-	u, err := dbClient.GetUserProfile(c, &pb.IDRequest{
-		Base: NewBaseRequest(uc),
-		Id:   user.UserID,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting userProfile", cerr.GeneralError))
-		return
-	}
 
 	reqC := &pb.UpdateUserProfileRequest{
-		Base:              NewBaseRequest(uc),
-		Id:                user.UserID,
-		Forename:          rr.Forename,
-		Lastname:          rr.Lastname,
-		Company:           rr.Company,
-		Salutation:        rr.Salutation,
-		Title:             rr.Title,
-		Address:           rr.Address,
-		ZipCode:           rr.ZipCode,
-		City:              rr.City,
-		State:             rr.State,
-		CountryCode:       rr.CountryCode,
-		Nationality:       rr.Nationality,
-		MobileNr:          rr.MobileNR,
-		BirthDay:          birthDay.Unix(),
-		BirthPlace:        rr.BirthPlace,
-		AdditionalName:    rr.AdditionalName,
-		BirthCountryCode:  rr.BirthCountryCode,
-		BankAccountNumber: u.BankAccountNumber,
-		BankNumber:        u.BankNumber,
-		BankPhoneNumber:   u.BankPhoneNumber,
-		TaxId:             rr.TaxID,
-		TaxIdName:         rr.TaxIDName,
-		Occupation:        rr.Occupation,
-		EmployerName:      rr.EmployerName,
-		EmployerAddress:   rr.EmployerAddress,
-		LanguageCode:      rr.LanguageCode,
+		Base:             NewBaseRequest(uc),
+		Id:               user.UserID,
+		Forename:         rr.Forename,
+		Lastname:         rr.Lastname,
+		Company:          rr.Company,
+		Salutation:       rr.Salutation,
+		Title:            rr.Title,
+		Address:          rr.Address,
+		ZipCode:          rr.ZipCode,
+		City:             rr.City,
+		State:            rr.State,
+		CountryCode:      rr.CountryCode,
+		Nationality:      rr.Nationality,
+		MobileNr:         rr.MobileNR,
+		BirthDay:         birthDay.Unix(),
+		BirthPlace:       rr.BirthPlace,
+		AdditionalName:   rr.AdditionalName,
+		BirthCountryCode: rr.BirthCountryCode,
+		TaxId:            rr.TaxID,
+		TaxIdName:        rr.TaxIDName,
+		Occupation:       rr.Occupation,
+		EmployerName:     rr.EmployerName,
+		EmployerAddress:  rr.EmployerAddress,
+		LanguageCode:     rr.LanguageCode,
 	}
 	if rr.BankAccountNumber != nil {
 		reqC.BankAccountNumber = *rr.BankAccountNumber
+	} else {
+		reqC.BankAccountNumber = pb.StringNotSet
 	}
 	if rr.BankNumber != nil {
 		reqC.BankNumber = *rr.BankNumber
+	} else {
+		reqC.BankNumber = pb.StringNotSet
 	}
 	if rr.BankPhoneNumber != nil {
 		reqC.BankPhoneNumber = *rr.BankPhoneNumber
+	} else {
+		reqC.BankPhoneNumber = pb.StringNotSet
 	}
 	_, err = dbClient.UpdateUserProfile(c, reqC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
 		return
 	}
-
 	c.JSON(http.StatusOK, "{}")
 }
