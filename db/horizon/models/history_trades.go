@@ -73,22 +73,16 @@ var HistoryTradeColumns = struct {
 // HistoryTradeRels is where relationship names are stored.
 var HistoryTradeRels = struct {
 	BaseAccount    string
-	BaseAsset      string
 	CounterAccount string
-	CounterAsset   string
 }{
 	BaseAccount:    "BaseAccount",
-	BaseAsset:      "BaseAsset",
 	CounterAccount: "CounterAccount",
-	CounterAsset:   "CounterAsset",
 }
 
 // historyTradeR is where relationships are stored.
 type historyTradeR struct {
 	BaseAccount    *HistoryAccount
-	BaseAsset      *HistoryAsset
 	CounterAccount *HistoryAccount
-	CounterAsset   *HistoryAsset
 }
 
 // NewStruct creates a new relationship struct
@@ -375,20 +369,6 @@ func (o *HistoryTrade) BaseAccount(mods ...qm.QueryMod) historyAccountQuery {
 	return query
 }
 
-// BaseAsset pointed to by the foreign key.
-func (o *HistoryTrade) BaseAsset(mods ...qm.QueryMod) historyAssetQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.BaseAssetID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := HistoryAssets(queryMods...)
-	queries.SetFrom(query.Query, "\"history_assets\"")
-
-	return query
-}
-
 // CounterAccount pointed to by the foreign key.
 func (o *HistoryTrade) CounterAccount(mods ...qm.QueryMod) historyAccountQuery {
 	queryMods := []qm.QueryMod{
@@ -399,20 +379,6 @@ func (o *HistoryTrade) CounterAccount(mods ...qm.QueryMod) historyAccountQuery {
 
 	query := HistoryAccounts(queryMods...)
 	queries.SetFrom(query.Query, "\"history_accounts\"")
-
-	return query
-}
-
-// CounterAsset pointed to by the foreign key.
-func (o *HistoryTrade) CounterAsset(mods ...qm.QueryMod) historyAssetQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.CounterAssetID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := HistoryAssets(queryMods...)
-	queries.SetFrom(query.Query, "\"history_assets\"")
 
 	return query
 }
@@ -504,101 +470,6 @@ func (historyTradeL) LoadBaseAccount(e boil.Executor, singular bool, maybeHistor
 					foreign.R = &historyAccountR{}
 				}
 				foreign.R.BaseAccountHistoryTrades = append(foreign.R.BaseAccountHistoryTrades, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadBaseAsset allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (historyTradeL) LoadBaseAsset(e boil.Executor, singular bool, maybeHistoryTrade interface{}, mods queries.Applicator) error {
-	var slice []*HistoryTrade
-	var object *HistoryTrade
-
-	if singular {
-		object = maybeHistoryTrade.(*HistoryTrade)
-	} else {
-		slice = *maybeHistoryTrade.(*[]*HistoryTrade)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &historyTradeR{}
-		}
-		args = append(args, object.BaseAssetID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &historyTradeR{}
-			}
-
-			for _, a := range args {
-				if a == obj.BaseAssetID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.BaseAssetID)
-		}
-	}
-
-	query := NewQuery(qm.From(`history_assets`), qm.WhereIn(`id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load HistoryAsset")
-	}
-
-	var resultSlice []*HistoryAsset
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice HistoryAsset")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for history_assets")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for history_assets")
-	}
-
-	if len(historyTradeAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.BaseAsset = foreign
-		if foreign.R == nil {
-			foreign.R = &historyAssetR{}
-		}
-		foreign.R.BaseAssetHistoryTrades = append(foreign.R.BaseAssetHistoryTrades, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.BaseAssetID == foreign.ID {
-				local.R.BaseAsset = foreign
-				if foreign.R == nil {
-					foreign.R = &historyAssetR{}
-				}
-				foreign.R.BaseAssetHistoryTrades = append(foreign.R.BaseAssetHistoryTrades, local)
 				break
 			}
 		}
@@ -702,101 +573,6 @@ func (historyTradeL) LoadCounterAccount(e boil.Executor, singular bool, maybeHis
 	return nil
 }
 
-// LoadCounterAsset allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (historyTradeL) LoadCounterAsset(e boil.Executor, singular bool, maybeHistoryTrade interface{}, mods queries.Applicator) error {
-	var slice []*HistoryTrade
-	var object *HistoryTrade
-
-	if singular {
-		object = maybeHistoryTrade.(*HistoryTrade)
-	} else {
-		slice = *maybeHistoryTrade.(*[]*HistoryTrade)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &historyTradeR{}
-		}
-		args = append(args, object.CounterAssetID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &historyTradeR{}
-			}
-
-			for _, a := range args {
-				if a == obj.CounterAssetID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.CounterAssetID)
-		}
-	}
-
-	query := NewQuery(qm.From(`history_assets`), qm.WhereIn(`id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load HistoryAsset")
-	}
-
-	var resultSlice []*HistoryAsset
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice HistoryAsset")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for history_assets")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for history_assets")
-	}
-
-	if len(historyTradeAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.CounterAsset = foreign
-		if foreign.R == nil {
-			foreign.R = &historyAssetR{}
-		}
-		foreign.R.CounterAssetHistoryTrades = append(foreign.R.CounterAssetHistoryTrades, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.CounterAssetID == foreign.ID {
-				local.R.CounterAsset = foreign
-				if foreign.R == nil {
-					foreign.R = &historyAssetR{}
-				}
-				foreign.R.CounterAssetHistoryTrades = append(foreign.R.CounterAssetHistoryTrades, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
 // SetBaseAccountG of the historyTrade to the related item.
 // Sets o.R.BaseAccount to related.
 // Adds o to related.R.BaseAccountHistoryTrades.
@@ -852,61 +628,6 @@ func (o *HistoryTrade) SetBaseAccount(exec boil.Executor, insert bool, related *
 	return nil
 }
 
-// SetBaseAssetG of the historyTrade to the related item.
-// Sets o.R.BaseAsset to related.
-// Adds o to related.R.BaseAssetHistoryTrades.
-// Uses the global database handle.
-func (o *HistoryTrade) SetBaseAssetG(insert bool, related *HistoryAsset) error {
-	return o.SetBaseAsset(boil.GetDB(), insert, related)
-}
-
-// SetBaseAsset of the historyTrade to the related item.
-// Sets o.R.BaseAsset to related.
-// Adds o to related.R.BaseAssetHistoryTrades.
-func (o *HistoryTrade) SetBaseAsset(exec boil.Executor, insert bool, related *HistoryAsset) error {
-	var err error
-	if insert {
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"history_trades\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"base_asset_id"}),
-		strmangle.WhereClause("\"", "\"", 2, historyTradePrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.HistoryOperationID, o.Order}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, updateQuery)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	if _, err = exec.Exec(updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.BaseAssetID = related.ID
-	if o.R == nil {
-		o.R = &historyTradeR{
-			BaseAsset: related,
-		}
-	} else {
-		o.R.BaseAsset = related
-	}
-
-	if related.R == nil {
-		related.R = &historyAssetR{
-			BaseAssetHistoryTrades: HistoryTradeSlice{o},
-		}
-	} else {
-		related.R.BaseAssetHistoryTrades = append(related.R.BaseAssetHistoryTrades, o)
-	}
-
-	return nil
-}
-
 // SetCounterAccountG of the historyTrade to the related item.
 // Sets o.R.CounterAccount to related.
 // Adds o to related.R.CounterAccountHistoryTrades.
@@ -957,61 +678,6 @@ func (o *HistoryTrade) SetCounterAccount(exec boil.Executor, insert bool, relate
 		}
 	} else {
 		related.R.CounterAccountHistoryTrades = append(related.R.CounterAccountHistoryTrades, o)
-	}
-
-	return nil
-}
-
-// SetCounterAssetG of the historyTrade to the related item.
-// Sets o.R.CounterAsset to related.
-// Adds o to related.R.CounterAssetHistoryTrades.
-// Uses the global database handle.
-func (o *HistoryTrade) SetCounterAssetG(insert bool, related *HistoryAsset) error {
-	return o.SetCounterAsset(boil.GetDB(), insert, related)
-}
-
-// SetCounterAsset of the historyTrade to the related item.
-// Sets o.R.CounterAsset to related.
-// Adds o to related.R.CounterAssetHistoryTrades.
-func (o *HistoryTrade) SetCounterAsset(exec boil.Executor, insert bool, related *HistoryAsset) error {
-	var err error
-	if insert {
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"history_trades\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"counter_asset_id"}),
-		strmangle.WhereClause("\"", "\"", 2, historyTradePrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.HistoryOperationID, o.Order}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, updateQuery)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	if _, err = exec.Exec(updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.CounterAssetID = related.ID
-	if o.R == nil {
-		o.R = &historyTradeR{
-			CounterAsset: related,
-		}
-	} else {
-		o.R.CounterAsset = related
-	}
-
-	if related.R == nil {
-		related.R = &historyAssetR{
-			CounterAssetHistoryTrades: HistoryTradeSlice{o},
-		}
-	} else {
-		related.R.CounterAssetHistoryTrades = append(related.R.CounterAssetHistoryTrades, o)
 	}
 
 	return nil

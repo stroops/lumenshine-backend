@@ -2,10 +2,11 @@ package icop_error
 
 import (
 	"encoding/json"
-	"github.com/Soneso/lumenshine-backend/pb"
 	"log"
 	"reflect"
 	"strings"
+
+	"github.com/Soneso/lumenshine-backend/pb"
 
 	"github.com/sirupsen/logrus"
 

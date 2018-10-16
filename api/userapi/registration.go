@@ -45,7 +45,7 @@ type RegisterUserRequest struct {
 	State             string `form:"state" json:"state" validate:"max=128"`
 	CountryCode       string `form:"country_code" json:"country_code" validate:"max=2"`
 	Nationality       string `form:"nationality" json:"nationality" validate:"max=128"`
-	MobileNr          string `form:"mobile_nr" json:"mobile_nr" validate:"icop_phone"`
+	MobileNr          string `form:"mobile_nr" json:"mobile_nr" validate:"omitempty,icop_phone"`
 	BirthDay          string `form:"birth_day" json:"birth_day"`
 	BirthPlace        string `form:"birth_place" json:"birth_place" validate:"max=128"`
 	AdditionalName    string `form:"additional_name" json:"additional_name" validate:"max=256"`

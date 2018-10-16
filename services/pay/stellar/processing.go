@@ -1,116 +1,141 @@
 package stellar
 
-func (l *Channel) processBlocks(ledgerID uint64) {
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+
+	//m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"database/sql"
+
+	mh "github.com/Soneso/lumenshine-backend/db/horizon/models"
+)
+
+func (l *Channel) processLedgers(ledgerID int) {
 	if ledgerID == 0 {
 		l.log.Info("Starting from the latest ledger")
 	} else {
 		l.log.Infof("Starting from ledgerID %d", ledgerID)
 	}
 
-	/*
-		// Time when last new block has been seen
-		lastBlockSeen := time.Now()
-		noBlockWarningLogged := false
+	// Time when last new ledger has been seen
+	lastLedgerSeen := time.Now()
+	noLedgerkWarningLogged := false
 
-		for {
-			block, err := l.getBlock(blockNumber)
-			if err != nil {
-				l.log.WithFields(logrus.Fields{"err": err, "blockNumber": blockNumber}).Error("Error getting block")
-				time.Sleep(1 * time.Second)
-				continue
-			}
-
-			// Block doesn't exist yet
-			if block == nil {
-				if time.Since(lastBlockSeen) > 3*time.Minute && !noBlockWarningLogged {
-					l.log.Warn("No new block in more than 3 minutes")
-					noBlockWarningLogged = true
-				}
-
-				time.Sleep(1 * time.Second)
-				continue
-			}
-
-			// Reset counter when new block appears
-			lastBlockSeen = time.Now()
-			noBlockWarningLogged = false
-
-			if block.NumberU64() == 0 {
-				l.log.Error("Etheruem node is not synced yet. Unable to process blocks. Sleeping 30 seconds")
-				time.Sleep(30 * time.Second)
-				continue
-			}
-
-			err = l.processBlock(block)
-			if err != nil {
-				l.log.WithFields(logrus.Fields{"err": err, "blockNumber": block.NumberU64()}).Error("Error processing block")
-				time.Sleep(1 * time.Second)
-				continue
-			}
-
-			// Persist block number
-			err = l.db.SaveLastProcessedEthereumBlock(blockNumber)
-			if err != nil {
-				l.log.WithField("err", err).Error("Error saving last processed block")
-				time.Sleep(1 * time.Second)
-				// We continue to the next block
-			}
-
-			blockNumber = block.NumberU64() + 1
-		}*/
-}
-
-/*
-// getBlock returns (nil, nil) if block has not been found (not exists yet)
-func (l *Channel) getBlock(blockNumber uint64) (*types.Block, error) {
-	var blockNumberInt *big.Int
-	if blockNumber > 0 {
-		blockNumberInt = big.NewInt(int64(blockNumber))
-	}
-
-	d := time.Now().Add(5 * time.Second)
-	ctx, cancel := context.WithDeadline(context.Background(), d)
-	defer cancel()
-
-	block, err := l.client.BlockByNumber(ctx, blockNumberInt)
-	if err != nil {
-		if err.Error() == "not found" {
-			return nil, nil
-		}
-		err = errors.Wrap(err, "Error getting block from geth")
-		l.log.WithField("block", blockNumberInt.String()).Error(err)
-		return nil, err
-	}
-
-	return block, nil
-}
-
-func (l *Channel) processBlock(block *types.Block) error {
-	transactions := block.Transactions()
-	blockTime := time.Unix(block.Time().Int64(), 0)
-
-	localLog := l.log.WithFields(logrus.Fields{
-		"blockNumber":  block.NumberU64(),
-		"blockTime":    blockTime,
-		"transactions": len(transactions),
-	})
-	localLog.Info("Processing block")
-
-	for _, transaction := range transactions {
-		to := transaction.To()
-		if to == nil {
-			// Contract creation
+	for {
+		ledger, err := l.getLedger(ledgerID)
+		if err != nil {
+			l.log.WithFields(logrus.Fields{"err": err, "ledgerSeq": ledgerID}).Error("Error getting ledger")
+			time.Sleep(1 * time.Second)
 			continue
 		}
 
-		err := l.processTransaction(
-			transaction.Hash().Hex(),
-			transaction.Value(),
-			to.Hex(),
-			"",
-		)
+		// Block doesn't exist yet
+		if ledger == nil {
+			if time.Since(lastLedgerSeen) > 3*time.Minute && !noLedgerkWarningLogged {
+				l.log.Warn("No new block in more than 3 minutes")
+				noLedgerkWarningLogged = true
+			}
+
+			time.Sleep(5 * time.Second) //ledger closes roughly every 5 seconds
+			continue
+		}
+
+		// Reset counter when new block appears
+		lastLedgerSeen = time.Now()
+		noLedgerkWarningLogged = false
+
+		if ledger.Sequence == 0 {
+			l.log.Error("Stellar node is not synced yet. Unable to process ledger. Sleeping 30 seconds")
+			time.Sleep(30 * time.Second)
+			continue
+		}
+
+		err = l.processLedger(ledger)
 		if err != nil {
-			return errors.Wrap(err, "Error processing transaction")
+			l.log.WithError(err).WithFields(logrus.Fields{"legerSeq": ledger.Sequence}).Error("Error processing ledger")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		// Persist block number
+		err = l.db.SaveLastProcessedStellarLedger(ledgerID)
+		if err != nil {
+			l.log.WithError(err).Error("Error saving last processed block")
+			time.Sleep(1 * time.Second)
+			// We continue to the next block
+		}
+
+		ledgerID++
+	}
+}
+
+// getLedger returns (nil, nil) if ledger has not been found (not exists yet)
+func (l *Channel) getLedger(LedgerNumber int) (*mh.HistoryLedger, error) {
+	ledger, err := mh.HistoryLedgers(qm.Where(mh.HistoryLedgerColumns.Sequence+"=?", LedgerNumber)).One(l.dbh)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		} else {
+			return nil, nil
+		}
+	}
+
+	return ledger, nil
+}
+
+//Operation one operation in the horizon db
+type Operation struct {
+	To          string `json:"to"`
+	From        string `json:"from"`
+	Amount      string `json:"amount"`
+	AssetCode   string `json:"asset_code"`
+	AssetType   string `json:"asset_type"`
+	AssetIssuer string `json:"asset_issuer"`
+}
+
+func (l *Channel) processLedger(ledger *mh.HistoryLedger) error {
+	transactions, err := mh.HistoryTransactions(qm.Where(mh.HistoryTransactionColumns.LedgerSequence+"=?", ledger.Sequence)).All(l.dbh)
+	if err != nil {
+		return err
+	}
+
+	localLog := l.log.WithFields(logrus.Fields{
+		"ledgerSeq":    ledger.Sequence,
+		"legderTime":   ledger.ClosedAt,
+		"transactions": len(transactions),
+	})
+	localLog.Info("Processing ledger")
+
+	for _, transaction := range transactions {
+		//get all operations for transaction
+		operations, err := mh.HistoryOperations(qm.Where(mh.HistoryOperationColumns.TransactionID+"=?", transaction.ID)).All(l.dbh)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				l.log.WithError(err).WithField("tx_id", transaction.ID).Error("Error fetching operations")
+			}
+			continue
+		}
+
+		for _, operation := range operations {
+			if operation.Type == 1 {
+				//we handle only payment operations
+				if !operation.Details.IsZero() {
+					var op Operation
+					if err := json.Unmarshal(operation.Details.JSON, &op); err != nil {
+						l.log.WithError(err).WithField("op_id", operation.ID).Error("Error unmarshaling operation")
+					}
+
+					//we handle only nativ asset
+					if op.AssetType == "native" {
+						if err := l.processTransaction(ledger, transaction, &op); err != nil {
+							l.log.WithError(err).WithField("op_id", operation.ID).Error("Error processing operation")
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -119,8 +144,9 @@ func (l *Channel) processBlock(block *types.Block) error {
 	return nil
 }
 
-func (l *Channel) processTransaction(hash string, valueWei *big.Int, toAddress string, fromAddress string) error {
-	localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "rail": "ethereum"})
+func (l *Channel) processTransaction(ledger *mh.HistoryLedger, transaction *mh.HistoryTransaction, operation *Operation) error {
+
+	/*localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "rail": "ethereum"})
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
@@ -144,7 +170,6 @@ func (l *Channel) processTransaction(hash string, valueWei *big.Int, toAddress s
 		localLog.Debug("Transaction already processed, skipping")
 		return nil
 	}
-
+	*/
 	return nil
 }
-*/

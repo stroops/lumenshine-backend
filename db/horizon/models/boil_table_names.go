@@ -4,9 +4,7 @@
 package horizon
 
 var TableNames = struct {
-	AssetStats                     string
 	HistoryAccounts                string
-	HistoryAssets                  string
 	HistoryEffects                 string
 	HistoryLedgers                 string
 	HistoryOperationParticipants   string
@@ -15,9 +13,7 @@ var TableNames = struct {
 	HistoryTransactionParticipants string
 	HistoryTransactions            string
 }{
-	AssetStats:                     "asset_stats",
 	HistoryAccounts:                "history_accounts",
-	HistoryAssets:                  "history_assets",
 	HistoryEffects:                 "history_effects",
 	HistoryLedgers:                 "history_ledgers",
 	HistoryOperationParticipants:   "history_operation_participants",

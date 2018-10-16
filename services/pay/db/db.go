@@ -80,13 +80,14 @@ func (db *DB) SaveLastProcessedBitcoinBlock(block uint64) error {
 }
 
 //GetStellarLedgerToProcess returns the new ledgerid to process
-func (db *DB) GetStellarLedgerToProcess() (uint64, error) {
-	return db.getBlockToProcess(stellarLastLedgerKey)
+func (db *DB) GetStellarLedgerToProcess() (int, error) {
+	id, err := db.getBlockToProcess(stellarLastLedgerKey)
+	return int(id), err
 }
 
 //SaveLastProcessedStellarLedger saves the last processed stellar ledger
-func (db *DB) SaveLastProcessedStellarLedger(block uint64) error {
-	return db.saveLastProcessedBlock(stellarLastLedgerKey, block)
+func (db *DB) SaveLastProcessedStellarLedger(ledgerID int) error {
+	return db.saveLastProcessedBlock(stellarLastLedgerKey, uint64(ledgerID))
 }
 
 func (db *DB) getBlockToProcess(key string) (uint64, error) {

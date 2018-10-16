@@ -13,6 +13,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
 	"github.com/Soneso/lumenshine-backend/services/pay/paymentchannel"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/stellar/go/clients/horizon"
@@ -97,28 +98,14 @@ func (l *Channel) TransferAmount(Order *m.UserOrder, TxHash string, Amount *big.
 func (l *Channel) Start() error {
 	l.log.Info("StellarListener starting")
 
-	/*blockNumber, err := l.db.GetEthereumBlockToProcess()
+	legderNumber, err := l.db.GetStellarLedgerToProcess()
 	if err != nil {
-		err = errors.Wrap(err, "Error getting ethereum block to process from DB")
+		err = errors.Wrap(err, "Error getting stellar legderID to process from DB")
 		l.log.Error(err)
 		return err
 	}
 
-	// Check if connected to correct network
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
-	defer cancel()
-	id, err := l.client.NetworkID(ctx)
-	if err != nil {
-		err = errors.Wrap(err, "Error getting ethereum network ID")
-		l.log.Error(err)
-		return err
-	}
-
-	if id.String() != l.cnf.Ethereum.NetworkID {
-		return errors.Errorf("Invalid network ID (have=%s, want=%s)", id.String(), l.cnf.Ethereum.NetworkID)
-	}
-
-	go l.processBlocks(blockNumber)*/
+	go l.processLedgers(legderNumber)
 	return nil
 }
 
