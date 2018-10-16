@@ -461,8 +461,14 @@ func (s *server) PayExecuteTransaction(ctx context.Context, r *pb.PayExecuteTran
 func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransaction) (*pb.BoolResponse, error) {
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	if s.Env.Config.AllowFakeTransactions {
+
+		ch, ok := s.Env.Clients[r.PaymentChannel]
+		if !ok {
+			return nil, fmt.Errorf("PaymentChannel %s does not exist", r.PaymentChannel)
+		}
+
 		// Need to read the order first, because this is the normal "procedure". This will also update the order-status
-		o, err := s.Env.DBC.GetOrderForAddress(r.PaymentChannel, r.RecipientAddress, r.PaymentUsage)
+		o, err := s.Env.DBC.GetOrderForAddress(ch, r.RecipientAddress, r.PaymentUsage)
 		if err != nil {
 			return &pb.BoolResponse{Value: false}, nil
 		}
@@ -477,10 +483,7 @@ func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransacti
 		}
 		v := big.NewInt(r.DenomAmount)
 		fmt.Println(v.String())
-		ch, ok := s.Env.Clients[r.PaymentChannel]
-		if !ok {
-			return nil, fmt.Errorf("PaymentChannel %s does not exist", r.PaymentChannel)
-		}
+
 		ok, err = s.Env.DBC.AddNewTransaction(log, ch, tx, r.RecipientAddress, r.SenderAddress, o.ID, v, 0)
 		return &pb.BoolResponse{Value: ok}, err
 	}

@@ -143,12 +143,12 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 //If no open order was found(OrderStatusWaitingForPayment), the function will return either nil or filter for any other order with the given address
 //The function will be called for EVERY payment transaction in the external PaymentNetworks
 //paymentUsage is either an empty string or, for stellar the MEMO with the orderID
-func (db *DB) GetOrderForAddress(paymentChannel string, address string, paymentUsage string) (*m.UserOrder, error) {
+func (db *DB) GetOrderForAddress(l paymentchannel.Channel, address string, paymentUsage string) (*m.UserOrder, error) {
 	userOrder := new(m.UserOrder)
 
 	var sqlStr string
-	if paymentUsage == m.PaymentNetworkStellar {
-		//payment must be the order ID
+	if l.Name() == m.PaymentNetworkStellar {
+		//usage must be the order ID
 		paymentUsage = strings.Trim(paymentUsage, " \n\t")
 		if _, err := strconv.ParseInt(paymentUsage, 10, 64); err != nil {
 			return nil, fmt.Errorf("Could not convert paymentUsage '%s' to id", paymentUsage)
@@ -179,11 +179,11 @@ func (db *DB) GetOrderForAddress(paymentChannel string, address string, paymentU
 	}
 
 	//set order to payment recived
-	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, paymentChannel, address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
+	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, l.Name(), address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			//if we did not find an open order, we need to search for all orders on the user, in order to get the multiple transaction triggered
-			userOrder, err = m.UserOrders(qm.Where(m.UserOrderColumns.PaymentNetwork+"=? and "+m.UserOrderColumns.PaymentAddress+"=?", paymentChannel, address)).One(db)
+			userOrder, err = m.UserOrders(qm.Where(m.UserOrderColumns.PaymentNetwork+"=? and "+m.UserOrderColumns.PaymentAddress+"=?", l.Name(), address)).One(db)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					return nil, nil
