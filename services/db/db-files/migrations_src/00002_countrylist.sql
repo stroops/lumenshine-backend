@@ -1,10 +1,7 @@
 -- +goose Up
 -- SQL in this section is executed when the migration is applied.
-
-DELETE FROM countries;
-
 with country_json (doc) as (
-   values 
+   values
     ('[
         {"country_name": "Afghanistan", "lang_code": "AF"},
         {"country_name": "Åland Islands", "lang_code": "AX"},
@@ -259,5 +256,4 @@ from country_json l
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
-
 DELETE FROM countries;

@@ -102,7 +102,7 @@ var IcoPhaseRels = struct {
 	IcoPhaseActivatedExchangeCurrencies string
 	UserOrders                          string
 }{
-	Ico: "Ico",
+	Ico:                                 "Ico",
 	IcoPhaseActivatedExchangeCurrencies: "IcoPhaseActivatedExchangeCurrencies",
 	UserOrders:                          "UserOrders",
 }

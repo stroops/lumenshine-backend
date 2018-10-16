@@ -14,13 +14,24 @@ CREATE TABLE user_profile
     salutation character varying(64) NOT NULL,
     title character varying(64) NOT NULL,
 
-    street_address character varying(128) NOT NULL,
-    street_number character varying(128) NOT NULL,
+    additional_name varchar(256) NOT NULL DEFAULT '',
+    birth_country_code varchar(2) NOT NULL DEFAULT '',
+    bank_account_number varchar(256) NOT NULL DEFAULT '',
+    bank_number varchar(256) NOT NULL DEFAULT '',
+    bank_phone_number  varchar(256) NOT NULL DEFAULT '',
+    tax_id varchar(256) NOT NULL DEFAULT '',
+    tax_id_name varchar(256) NOT NULL DEFAULT '',
+    occupation varchar(8) NOT NULL DEFAULT '',
+    employer_name varchar(512) NOT NULL DEFAULT '',
+    employer_address varchar(512) NOT NULL DEFAULT '',
+    language_code varchar(16) NOT NULL DEFAULT '',
+    address character varying(512) NOT NULL,
+
     zip_code character varying(32) NOT NULL,
     city character varying(128) NOT NULL,
     state character varying(128) NOT NULL,
-    country_code character varying(128) NOT NULL,
-    nationality character varying(2) NOT NULL,
+    country_code varchar(2) NOT NULL,
+    nationality varchar(128) NOT NULL,
 
     mobile_nr character varying(64) NOT NULL,
     birth_day date NOT NULL,
@@ -104,11 +115,6 @@ create table countries
 );
 CREATE index idx_country_lang_code on countries(lang_code);
 CREATE unique index idx_country on countries(lang_code, country_name);
-insert into countries(lang_code, country_name) values
-  ('de', 'Deutschland'),
-  ('en', 'Germany'),
-  ('de', 'Amerika'),
-  ('en', 'America');
 
 create table jwt_key
 (
