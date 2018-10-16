@@ -21,22 +21,19 @@ import (
 
 // KeyValueStore is an object representing the database table.
 type KeyValueStore struct {
-	Key      string `boil:"key" json:"key" toml:"key" yaml:"key"`
-	STRValue string `boil:"str_value" json:"str_value" toml:"str_value" yaml:"str_value"`
-	IntValue int64  `boil:"int_value" json:"int_value" toml:"int_value" yaml:"int_value"`
+	Key   string `boil:"key" json:"key" toml:"key" yaml:"key"`
+	Value string `boil:"value" json:"value" toml:"value" yaml:"value"`
 
 	R *keyValueStoreR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L keyValueStoreL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var KeyValueStoreColumns = struct {
-	Key      string
-	STRValue string
-	IntValue string
+	Key   string
+	Value string
 }{
-	Key:      "key",
-	STRValue: "str_value",
-	IntValue: "int_value",
+	Key:   "key",
+	Value: "value",
 }
 
 // KeyValueStoreRels is where relationship names are stored.
@@ -56,8 +53,8 @@ func (*keyValueStoreR) NewStruct() *keyValueStoreR {
 type keyValueStoreL struct{}
 
 var (
-	keyValueStoreColumns               = []string{"key", "str_value", "int_value"}
-	keyValueStoreColumnsWithoutDefault = []string{"key", "str_value", "int_value"}
+	keyValueStoreColumns               = []string{"key", "value"}
+	keyValueStoreColumnsWithoutDefault = []string{"key", "value"}
 	keyValueStoreColumnsWithDefault    = []string{}
 	keyValueStorePrimaryKeyColumns     = []string{"key"}
 )

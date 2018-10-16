@@ -1,6 +1,8 @@
 package stellar
 
 import (
+	"database/sql"
+	"fmt"
 	"math/big"
 	"net/http"
 	"os"
@@ -23,10 +25,17 @@ var _ paymentchannel.Channel = (*Channel)(nil)
 
 //Channel reprensents the connection to the eth blochain
 type Channel struct {
-	db     *db.DB
+	dbh *DBH
+	db  *db.DB
+
 	log    *logrus.Entry
 	cnf    *config.Config
 	client *horizon.Client
+}
+
+//DBH connection to horizon db
+type DBH struct {
+	*sql.DB
 }
 
 //NewStellarChannel connects the stellar-client
@@ -54,6 +63,25 @@ func NewStellarChannel(DB *db.DB, cnf *config.Config) *Channel {
 		os.Exit(-1)
 	}
 
+	//connect the horizon database
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cnf.StellarHorizenDB.DBHost, cnf.StellarHorizenDB.DBPort, cnf.StellarHorizenDB.DBUser, cnf.StellarHorizenDB.DBPassword, cnf.StellarHorizenDB.DBName)
+
+	dbh, err := sql.Open("postgres", psqlInfo)
+
+	if err != nil {
+		log.Errorf("Failed to connect to horizon-db: %v", err)
+		os.Exit(-1)
+	}
+
+	err = dbh.Ping()
+	if err != nil {
+		log.Errorf("Failed to ping horizon-database: %v", err)
+		os.Exit(-1)
+	}
+
+	stl.dbh = &DBH{dbh}
+
 	stl.log.Info("Stellar-Channel created")
 
 	return stl
@@ -69,6 +97,28 @@ func (l *Channel) TransferAmount(Order *m.UserOrder, TxHash string, Amount *big.
 func (l *Channel) Start() error {
 	l.log.Info("StellarListener starting")
 
+	/*blockNumber, err := l.db.GetEthereumBlockToProcess()
+	if err != nil {
+		err = errors.Wrap(err, "Error getting ethereum block to process from DB")
+		l.log.Error(err)
+		return err
+	}
+
+	// Check if connected to correct network
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+	defer cancel()
+	id, err := l.client.NetworkID(ctx)
+	if err != nil {
+		err = errors.Wrap(err, "Error getting ethereum network ID")
+		l.log.Error(err)
+		return err
+	}
+
+	if id.String() != l.cnf.Ethereum.NetworkID {
+		return errors.Errorf("Invalid network ID (have=%s, want=%s)", id.String(), l.cnf.Ethereum.NetworkID)
+	}
+
+	go l.processBlocks(blockNumber)*/
 	return nil
 }
 

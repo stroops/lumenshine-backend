@@ -3,7 +3,7 @@ version: '3.6'
 services:
   
   stellar:
-    # in order to run this container you must do a 'docker-compose -f docker-compose-stellar.yml run stellar' to run the image in interactive mode
+    # in order to run this container you must do a 'docker-compose run stellar' to run the image in interactive mode
     # this will create the database. You must specify a pwd for the db
     # when setting up this image, you have to empty the stellar-config directory, in order to force the db creation
     # after db creation, stop the image ctrl+c and restart it 'docker-compose -f docker-compose-stellar.yml up/start stellar'

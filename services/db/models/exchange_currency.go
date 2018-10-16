@@ -22,6 +22,7 @@ import (
 // ExchangeCurrency is an object representing the database table.
 type ExchangeCurrency struct {
 	ID                   int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Name                 string    `boil:"name" json:"name" toml:"name" yaml:"name"`
 	ExchangeCurrencyType string    `boil:"exchange_currency_type" json:"exchange_currency_type" toml:"exchange_currency_type" yaml:"exchange_currency_type"`
 	AssetCode            string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
 	DenomAssetCode       string    `boil:"denom_asset_code" json:"denom_asset_code" toml:"denom_asset_code" yaml:"denom_asset_code"`
@@ -31,7 +32,6 @@ type ExchangeCurrency struct {
 	CreatedAt            time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt            time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy            string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
-	Name                 string    `boil:"name" json:"name" toml:"name" yaml:"name"`
 
 	R *exchangeCurrencyR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L exchangeCurrencyL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -39,6 +39,7 @@ type ExchangeCurrency struct {
 
 var ExchangeCurrencyColumns = struct {
 	ID                   string
+	Name                 string
 	ExchangeCurrencyType string
 	AssetCode            string
 	DenomAssetCode       string
@@ -48,9 +49,9 @@ var ExchangeCurrencyColumns = struct {
 	CreatedAt            string
 	UpdatedAt            string
 	UpdatedBy            string
-	Name                 string
 }{
 	ID:                   "id",
+	Name:                 "name",
 	ExchangeCurrencyType: "exchange_currency_type",
 	AssetCode:            "asset_code",
 	DenomAssetCode:       "denom_asset_code",
@@ -60,7 +61,6 @@ var ExchangeCurrencyColumns = struct {
 	CreatedAt:            "created_at",
 	UpdatedAt:            "updated_at",
 	UpdatedBy:            "updated_by",
-	Name:                 "name",
 }
 
 // ExchangeCurrencyRels is where relationship names are stored.
@@ -90,9 +90,9 @@ func (*exchangeCurrencyR) NewStruct() *exchangeCurrencyR {
 type exchangeCurrencyL struct{}
 
 var (
-	exchangeCurrencyColumns               = []string{"id", "exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "created_at", "updated_at", "updated_by", "name"}
-	exchangeCurrencyColumnsWithoutDefault = []string{"exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "updated_by"}
-	exchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at", "name"}
+	exchangeCurrencyColumns               = []string{"id", "name", "exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "created_at", "updated_at", "updated_by"}
+	exchangeCurrencyColumnsWithoutDefault = []string{"name", "exchange_currency_type", "asset_code", "denom_asset_code", "payment_network", "ec_asset_issuer_pk", "decimals", "updated_by"}
+	exchangeCurrencyColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	exchangeCurrencyPrimaryKeyColumns     = []string{"id"}
 )
 

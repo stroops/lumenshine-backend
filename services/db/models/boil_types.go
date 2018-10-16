@@ -118,6 +118,15 @@ const (
 	NotificationStatusCodeError   = "error"
 )
 
+// Enum values for memo_type
+const (
+	MemoTypeNone   = "none"
+	MemoTypeText   = "text"
+	MemoTypeID     = "id"
+	MemoTypeHash   = "hash"
+	MemoTypeReturn = "return"
+)
+
 // Enum values for transaction_status
 const (
 	TransactionStatusNew       = "new"

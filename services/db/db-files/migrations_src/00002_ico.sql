@@ -16,7 +16,7 @@ CREATE TYPE ico_sales_model AS ENUM ('fixed');
 
 CREATE TABLE ico (
   id SERIAL PRIMARY KEY NOT null,
-  ico_name VARCHAR(255) NOT NULL,
+  ico_name VARCHAR(256) NOT NULL,
   ico_status ico_status NOT NULL,
   /* kyc == true for enabled, false for disabled */
   kyc BOOLEAN  NOT NULL,
@@ -32,6 +32,7 @@ CREATE TABLE ico (
 
 CREATE TABLE exchange_currency (
   id SERIAL PRIMARY KEY NOT null,
+  name varchar NOT NULL,
   exchange_currency_type exchange_currency_type NOT NULL,
 
   /* e.g. BTC, ETH, XLM, MOBI, USD, EUR */
@@ -57,11 +58,11 @@ CREATE TABLE exchange_currency (
 );
 
 /* list of exchange currencies that can be supported by an ICO */
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (1, 'crypto', 'BTC', 'Satoshi', 'bitcoin', '', 8,'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (2, 'crypto', 'ETH', 'Wei', 'ethereum', '', 18, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (3, 'crypto', 'XLM', 'Stroop', 'stellar', 'Gxxxxx', 7, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (4, 'fiat', 'USD', 'Cent', 'fiat', '', 2, 'chris');
-INSERT INTO exchange_currency (id, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (5, 'fiat', 'EUR', 'Cent', 'fiat', '', 2, 'chris');
+INSERT INTO exchange_currency (id, name, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (1, 'Bitcoin', 'crypto', 'BTC', 'Satoshi', 'bitcoin', '', 8,'chris');
+INSERT INTO exchange_currency (id, name, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (2, 'Ether', 'crypto', 'ETH', 'Wei', 'ethereum', '', 18, 'chris');
+INSERT INTO exchange_currency (id, name, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (3, 'Lumen', 'crypto', 'XLM', 'Stroop', 'stellar', 'Gxxxxx', 7, 'chris');
+INSERT INTO exchange_currency (id, name, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (4, 'US Dollar', 'fiat', 'USD', 'Cent', 'fiat', '', 2, 'chris');
+INSERT INTO exchange_currency (id, name, exchange_currency_type, asset_code, denom_asset_code, payment_network, ec_asset_issuer_pk, decimals, updated_by) VALUES (5, 'Euro', 'fiat', 'EUR', 'Cent', 'fiat', '', 2, 'chris');
 
 /* currencies that are currently supported by an ICO */
 CREATE TABLE ico_supported_exchange_currency (
@@ -81,7 +82,7 @@ CREATE TYPE ico_phase_status AS ENUM ('planning', 'ready', 'active', 'finished',
 CREATE TABLE ico_phase (
   id SERIAL PRIMARY KEY NOT null,
   ico_id INTEGER NOT NULL REFERENCES ico(id),
-  ico_phase_name VARCHAR(255) NOT NULL,
+  ico_phase_name VARCHAR(256) NOT NULL,
   ico_phase_status ico_phase_status NOT NULL,
   /* public key of the distribution account - must be internal from the portal */
   dist_pk VARCHAR(56) NOT NULL,
@@ -137,6 +138,8 @@ CREATE TABLE ico_phase_activated_exchange_currency (
   /* this pk will be used in the order as the payment account */
   stellar_payment_account_pk varchar(56) not null,
   stellar_payment_account_seed varchar(56) not null, /* this is the seed for the stellar payment account */
+
+  crypto_payout_address varchar(56) not null default '', /* this is the address where we move the crypto assets, after we got a valid payment */
 
   tokens_released BIGINT NOT NULL,
   tokens_blocked BIGINT NOT NULL,

@@ -25,11 +25,9 @@ import (
 )
 
 const (
-	ethereumAddressIndexKey = "eth_address_index"
-	ethereumLastBlockKey    = "eth_last_block"
-
-	bitcoinAddressIndexKey = "btc_address_index"
-	bitcoinLastBlockKey    = "btc_last_block"
+	ethereumLastBlockKey = "eth_last_block"
+	bitcoinLastBlockKey  = "btc_last_block"
+	stellarLastLedgerKey = "xlm_last_ledger_id"
 )
 
 //DB general DB struct
@@ -61,37 +59,6 @@ func CreateNewDB(cnf *config.Config) (*DB, error) {
 	return &DB{DBC}, nil
 }
 
-//GetNextChainAddressIndex returns the next chain index
-func (db *DB) GetNextChainAddressIndex(chain string) (uint32, error) {
-	key := ""
-	var index uint32
-	if chain == m.PaymentNetworkBitcoin {
-		key = "btc_address_index"
-	} else if chain == m.PaymentNetworkEthereum {
-		key = "eth_address_index"
-	}
-
-	if key != "" {
-		//get and update
-		var v m.KeyValueStore
-		sql := querying.GetSQLKeyString(`update @key_value_store set @int_value = @int_value+1 where @key =
-			(select @key from @key_value_store where @key=$1 limit 1 for update) returning @int_value`,
-			map[string]string{
-				"@key_value_store": m.TableNames.KeyValueStore,
-				"@int_value":       m.KeyValueStoreColumns.IntValue,
-				"@key":             m.KeyValueStoreColumns.Key,
-			})
-
-		err := queries.Raw(sql, key).Bind(nil, db, &v)
-		if err != nil {
-			return 0, err
-		}
-		index = uint32(v.IntValue)
-	}
-
-	return index, nil
-}
-
 //GetEthereumBlockToProcess gets the last processed eth block
 func (db *DB) GetEthereumBlockToProcess() (uint64, error) {
 	return db.getBlockToProcess(ethereumLastBlockKey)
@@ -112,13 +79,23 @@ func (db *DB) SaveLastProcessedBitcoinBlock(block uint64) error {
 	return db.saveLastProcessedBlock(bitcoinLastBlockKey, block)
 }
 
+//GetStellarLedgerToProcess returns the new ledgerid to process
+func (db *DB) GetStellarLedgerToProcess() (uint64, error) {
+	return db.getBlockToProcess(stellarLastLedgerKey)
+}
+
+//SaveLastProcessedStellarLedger saves the last processed stellar ledger
+func (db *DB) SaveLastProcessedStellarLedger(block uint64) error {
+	return db.saveLastProcessedBlock(stellarLastLedgerKey, block)
+}
+
 func (db *DB) getBlockToProcess(key string) (uint64, error) {
 	kv, err := m.KeyValueStores(qm.Where(m.KeyValueStoreColumns.Key+"=?", key)).One(db)
 	if err != nil {
 		return 0, errors.Wrap(err, "Error getting `"+key+"` from DB")
 	}
 
-	block, err := strconv.ParseUint(kv.STRValue, 10, 64)
+	block, err := strconv.ParseUint(kv.Value, 10, 64)
 	if err != nil {
 		return 0, err
 	}
@@ -142,14 +119,14 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 		return err
 	}
 
-	lastBlock, err := strconv.ParseUint(kv.STRValue, 10, 64)
+	lastBlock, err := strconv.ParseUint(kv.Value, 10, 64)
 	if err != nil {
 		return err
 	}
 
 	if block > lastBlock {
-		kv.STRValue = fmt.Sprintf("%d", block)
-		_, err := kv.Update(tx, boil.Whitelist(m.KeyValueStoreColumns.STRValue))
+		kv.Value = fmt.Sprintf("%d", block)
+		_, err := kv.Update(tx, boil.Whitelist(m.KeyValueStoreColumns.Value))
 		if err != nil {
 			return err
 		}

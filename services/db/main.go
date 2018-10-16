@@ -1,6 +1,7 @@
 package main
 
 //go:generate sqlboiler --wipe --no-tests --no-context --add-global-variants --config $HOME/.config/sqlboiler/sqlboiler_db.toml psql
+//go:generate sqlboiler --wipe --no-tests --no-context --add-global-variants --output=../../db/horizon/models --pkgname=horizon --config $HOME/.config/sqlboiler/sqlboiler_stellar_horizon.toml psql
 
 import (
 	"fmt"

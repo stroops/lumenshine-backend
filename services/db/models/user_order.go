@@ -33,16 +33,16 @@ type UserOrder struct {
 	PaymentNetwork                     string     `boil:"payment_network" json:"payment_network" toml:"payment_network" yaml:"payment_network"`
 	PaymentAddress                     string     `boil:"payment_address" json:"payment_address" toml:"payment_address" yaml:"payment_address"`
 	PaymentSeed                        string     `boil:"payment_seed" json:"payment_seed" toml:"payment_seed" yaml:"payment_seed"`
+	BTCSRCOutIndex                     int        `boil:"btc_src_out_index" json:"btc_src_out_index" toml:"btc_src_out_index" yaml:"btc_src_out_index"`
 	StellarTransactionID               string     `boil:"stellar_transaction_id" json:"stellar_transaction_id" toml:"stellar_transaction_id" yaml:"stellar_transaction_id"`
 	ProcessedTransactionID             null.Int   `boil:"processed_transaction_id" json:"processed_transaction_id,omitempty" toml:"processed_transaction_id" yaml:"processed_transaction_id,omitempty"`
 	PaymentQRImage                     null.Bytes `boil:"payment_qr_image" json:"payment_qr_image,omitempty" toml:"payment_qr_image" yaml:"payment_qr_image,omitempty"`
 	PaymentUsage                       string     `boil:"payment_usage" json:"payment_usage" toml:"payment_usage" yaml:"payment_usage"`
 	PaymentErrorMessage                string     `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
+	FeePayed                           bool       `boil:"fee_payed" json:"fee_payed" toml:"fee_payed" yaml:"fee_payed"`
 	CreatedAt                          time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt                          time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy                          string     `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
-	FeePayed                           bool       `boil:"fee_payed" json:"fee_payed" toml:"fee_payed" yaml:"fee_payed"`
-	BTCSRCOutIndex                     int        `boil:"btc_src_out_index" json:"btc_src_out_index" toml:"btc_src_out_index" yaml:"btc_src_out_index"`
 
 	R *userOrderR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userOrderL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -60,16 +60,16 @@ var UserOrderColumns = struct {
 	PaymentNetwork                     string
 	PaymentAddress                     string
 	PaymentSeed                        string
+	BTCSRCOutIndex                     string
 	StellarTransactionID               string
 	ProcessedTransactionID             string
 	PaymentQRImage                     string
 	PaymentUsage                       string
 	PaymentErrorMessage                string
+	FeePayed                           string
 	CreatedAt                          string
 	UpdatedAt                          string
 	UpdatedBy                          string
-	FeePayed                           string
-	BTCSRCOutIndex                     string
 }{
 	ID:                                 "id",
 	UserID:                             "user_id",
@@ -82,16 +82,16 @@ var UserOrderColumns = struct {
 	PaymentNetwork:                     "payment_network",
 	PaymentAddress:                     "payment_address",
 	PaymentSeed:                        "payment_seed",
+	BTCSRCOutIndex:                     "btc_src_out_index",
 	StellarTransactionID:               "stellar_transaction_id",
 	ProcessedTransactionID:             "processed_transaction_id",
 	PaymentQRImage:                     "payment_qr_image",
 	PaymentUsage:                       "payment_usage",
 	PaymentErrorMessage:                "payment_error_message",
+	FeePayed:                           "fee_payed",
 	CreatedAt:                          "created_at",
 	UpdatedAt:                          "updated_at",
 	UpdatedBy:                          "updated_by",
-	FeePayed:                           "fee_payed",
-	BTCSRCOutIndex:                     "btc_src_out_index",
 }
 
 // UserOrderRels is where relationship names are stored.
@@ -133,9 +133,9 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "created_at", "updated_at", "updated_by", "fee_payed", "btc_src_out_index"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "btc_src_out_index", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "fee_payed", "created_at", "updated_at", "updated_by"}
 	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
-	userOrderColumnsWithDefault    = []string{"id", "created_at", "updated_at", "fee_payed", "btc_src_out_index"}
+	userOrderColumnsWithDefault    = []string{"id", "btc_src_out_index", "fee_payed", "created_at", "updated_at"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )
 

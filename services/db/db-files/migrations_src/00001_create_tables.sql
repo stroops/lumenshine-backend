@@ -100,7 +100,7 @@ create table countries
 (
     id SERIAL PRIMARY KEY not null,
     lang_code character(2) not null,
-    country_name character varying(255) not null
+    country_name character varying(256) not null
 );
 CREATE index idx_country_lang_code on countries(lang_code);
 CREATE unique index idx_country on countries(lang_code, country_name);
@@ -116,7 +116,7 @@ create table jwt_key
     key_name character varying not null,
     key_value1 character varying not null,
     key_value2 character varying not null,
-    key_description character varying(255) not null,
+    key_description character varying(256) not null,
     valid1_to timestamp with time zone NOT NULL,
     valid2_to timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL default current_timestamp
@@ -196,8 +196,8 @@ CREATE TABLE user_wallet
     user_id integer not null REFERENCES user_profile(id),
     public_key_0 character(56) NOT NULL,
     wallet_name character varying(500) NOT NULL,
-    friendly_id character varying(255) NOT NULL  DEFAULT '',
-    domain character varying(255) NOT NULL DEFAULT '',
+    friendly_id character varying(256) NOT NULL  DEFAULT '',
+    domain character varying(256) NOT NULL DEFAULT '',
     show_on_homescreen boolean not null default true,
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp,
@@ -262,7 +262,7 @@ CREATE TABLE user_pushtoken
     id SERIAL PRIMARY KEY not null,
     user_id integer not null REFERENCES user_profile(id),
     device_type device_type NOT NULL,
-    push_token character varying NOT NULL,    
+    push_token character varying NOT NULL,
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp,
     updated_by character varying not null
@@ -307,6 +307,16 @@ CREATE TABLE user_contact
 );
 create index idx_user_contact_user_profile on user_contact(user_id);
 
+CREATE TABLE token_history
+(
+    id SERIAL PRIMARY KEY NOT null,
+    user_id integer not null REFERENCES user_profile (id),
+    mail_confirmation_key character varying NOT NULL,
+    created_at timestamp with time zone NOT NULL default current_timestamp
+);
+
+CREATE UNIQUE index idx_mail_confirmation_key2 on token_history(mail_confirmation_key) where mail_confirmation_key<>'';
+
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 drop table IF EXISTS user_kyc_document;
@@ -323,6 +333,7 @@ drop TABLE IF EXISTS notification;
 drop TABLE IF EXISTS notification_archive;
 drop TABLE IF EXISTS user_pushtoken;
 drop TABLE IF EXISTS user_contact;
+drop TABLE IF EXISTS token_history;
 DROP TABLE IF EXISTS user_profile;
 
 drop type IF EXISTS payment_state;

@@ -2,15 +2,13 @@ FROM stellar/base:latest
 
 MAINTAINER Bartek Nowotarski <bartek@stellar.org>
 
-ENV STELLAR_CORE_VERSION 10.0.0rc2-665-c5fc4b13
-ENV HORIZON_VERSION 0.14.0rc3
+ENV STELLAR_CORE_VERSION 10.0.0-685-1fc018b4
+ENV HORIZON_VERSION 0.14.2
 
 EXPOSE 5432
 EXPOSE 8000
 EXPOSE 11625
 EXPOSE 11626
-
-VOLUME /opt/stellar
 
 ADD dependencies /
 RUN ["chmod", "+x", "dependencies"]
@@ -25,7 +23,7 @@ RUN ["touch", "/opt/stellar/.docker-ephemeral"]
 
 RUN useradd --uid 10011001 --home-dir /home/stellar --no-log-init stellar \
     && mkdir -p /home/stellar \
-    && chown -R stellar:stellar /home/stellar    
+    && chown -R stellar:stellar /home/stellar
 
 RUN ["ln", "-s", "/opt/stellar", "/stellar"]
 RUN ["ln", "-s", "/opt/stellar/core/etc/stellar-core.cfg", "/stellar-core.cfg"]
@@ -35,8 +33,8 @@ ADD pubnet /opt/stellar-default/pubnet
 ADD testnet /opt/stellar-default/testnet
 ADD standalone /opt/stellar-default/standalone
 
+
 ADD start /
 RUN ["chmod", "+x", "start"]
 
-# CMD bash
 ENTRYPOINT ["/init", "--", "/start" ]

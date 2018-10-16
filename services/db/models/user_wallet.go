@@ -62,14 +62,17 @@ var UserWalletColumns = struct {
 
 // UserWalletRels is where relationship names are stored.
 var UserWalletRels = struct {
-	User string
+	User                   string
+	WalletPaymentTemplates string
 }{
-	User: "User",
+	User:                   "User",
+	WalletPaymentTemplates: "WalletPaymentTemplates",
 }
 
 // userWalletR is where relationships are stored.
 type userWalletR struct {
-	User *UserProfile
+	User                   *UserProfile
+	WalletPaymentTemplates PaymentTemplateSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -356,6 +359,27 @@ func (o *UserWallet) User(mods ...qm.QueryMod) userProfileQuery {
 	return query
 }
 
+// WalletPaymentTemplates retrieves all the payment_template's PaymentTemplates with an executor via wallet_id column.
+func (o *UserWallet) WalletPaymentTemplates(mods ...qm.QueryMod) paymentTemplateQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"payment_template\".\"wallet_id\"=?", o.ID),
+	)
+
+	query := PaymentTemplates(queryMods...)
+	queries.SetFrom(query.Query, "\"payment_template\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"payment_template\".*"})
+	}
+
+	return query
+}
+
 // LoadUser allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (userWalletL) LoadUser(e boil.Executor, singular bool, maybeUserWallet interface{}, mods queries.Applicator) error {
@@ -451,6 +475,97 @@ func (userWalletL) LoadUser(e boil.Executor, singular bool, maybeUserWallet inte
 	return nil
 }
 
+// LoadWalletPaymentTemplates allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userWalletL) LoadWalletPaymentTemplates(e boil.Executor, singular bool, maybeUserWallet interface{}, mods queries.Applicator) error {
+	var slice []*UserWallet
+	var object *UserWallet
+
+	if singular {
+		object = maybeUserWallet.(*UserWallet)
+	} else {
+		slice = *maybeUserWallet.(*[]*UserWallet)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userWalletR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userWalletR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`payment_template`), qm.WhereIn(`wallet_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load payment_template")
+	}
+
+	var resultSlice []*PaymentTemplate
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice payment_template")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on payment_template")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for payment_template")
+	}
+
+	if len(paymentTemplateAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.WalletPaymentTemplates = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &paymentTemplateR{}
+			}
+			foreign.R.Wallet = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.WalletID {
+				local.R.WalletPaymentTemplates = append(local.R.WalletPaymentTemplates, foreign)
+				if foreign.R == nil {
+					foreign.R = &paymentTemplateR{}
+				}
+				foreign.R.Wallet = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetUserG of the userWallet to the related item.
 // Sets o.R.User to related.
 // Adds o to related.R.UserUserWallets.
@@ -503,6 +618,68 @@ func (o *UserWallet) SetUser(exec boil.Executor, insert bool, related *UserProfi
 		related.R.UserUserWallets = append(related.R.UserUserWallets, o)
 	}
 
+	return nil
+}
+
+// AddWalletPaymentTemplatesG adds the given related objects to the existing relationships
+// of the user_wallet, optionally inserting them as new records.
+// Appends related to o.R.WalletPaymentTemplates.
+// Sets related.R.Wallet appropriately.
+// Uses the global database handle.
+func (o *UserWallet) AddWalletPaymentTemplatesG(insert bool, related ...*PaymentTemplate) error {
+	return o.AddWalletPaymentTemplates(boil.GetDB(), insert, related...)
+}
+
+// AddWalletPaymentTemplates adds the given related objects to the existing relationships
+// of the user_wallet, optionally inserting them as new records.
+// Appends related to o.R.WalletPaymentTemplates.
+// Sets related.R.Wallet appropriately.
+func (o *UserWallet) AddWalletPaymentTemplates(exec boil.Executor, insert bool, related ...*PaymentTemplate) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.WalletID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"payment_template\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"wallet_id"}),
+				strmangle.WhereClause("\"", "\"", 2, paymentTemplatePrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.WalletID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userWalletR{
+			WalletPaymentTemplates: related,
+		}
+	} else {
+		o.R.WalletPaymentTemplates = append(o.R.WalletPaymentTemplates, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &paymentTemplateR{
+				Wallet: o,
+			}
+		} else {
+			rel.R.Wallet = o
+		}
+	}
 	return nil
 }
 
