@@ -19,6 +19,7 @@ var TableNames = struct {
 	Mail                              string
 	Notification                      string
 	NotificationArchive               string
+	Occupations                       string
 	OrderTransactionLog               string
 	OutgoingTransaction               string
 	PaymentTemplate                   string
@@ -49,6 +50,7 @@ var TableNames = struct {
 	Mail:                              "mail",
 	Notification:                      "notification",
 	NotificationArchive:               "notification_archive",
+	Occupations:                       "occupations",
 	OrderTransactionLog:               "order_transaction_log",
 	OutgoingTransaction:               "outgoing_transaction",
 	PaymentTemplate:                   "payment_template",

@@ -9,8 +9,8 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/pb"
 
+	qq "github.com/Soneso/lumenshine-backend/db/querying"
 	"github.com/Soneso/lumenshine-backend/services/db/models"
-
 	_ "github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -294,6 +294,22 @@ func (s *server) GetLanguageList(ctx context.Context, r *pb.Empty) (*pb.Language
 	ret := new(pb.LanguageListResponse)
 	for _, lang := range languages {
 		ret.Languages = append(ret.Languages, &pb.Language{Code: lang.LangCode, Name: lang.LangName})
+	}
+
+	return ret, nil
+}
+
+func (s *server) GetOccupationList(ctx context.Context, r *pb.OccupationListRequest) (*pb.OccupationListResponse, error) {
+	occupations, err := models.Occupations(qm.Where(models.OccupationColumns.Name+" ilike ?", qq.Like(r.Name)),
+		qm.OrderBy(models.OccupationColumns.Name),
+		qm.Limit(int(r.LimitCount))).All(db)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := new(pb.OccupationListResponse)
+	for _, occupation := range occupations {
+		ret.Occupations = append(ret.Occupations, &pb.Occupation{Code08: int64(occupation.Isco08), Code88: int64(occupation.Isco88), Name: occupation.Name})
 	}
 
 	return ret, nil
