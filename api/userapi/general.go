@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
@@ -93,6 +94,54 @@ func CountryList(uc *mw.IcopContext, c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, &CountryResponse{
 		Countries: retCountries,
+	})
+}
+
+//GetOccupationsRequest - filtered by name
+type GetOccupationsRequest struct {
+	Name string `form:"name"`
+}
+
+//Occupation represents one occupation
+type Occupation struct {
+	Code08 string `json:"code08"`
+	Code88 string `json:"code88"`
+	Name   string `json:"name"`
+}
+
+//OccupationResponse list for occupations
+type OccupationResponse struct {
+	Occupations []Occupation `json:"occupations"`
+}
+
+//OccupationList returns a list of occupations filtered by name
+func OccupationList(uc *mw.IcopContext, c *gin.Context) {
+
+	rr := new(GetOccupationsRequest)
+	if err := c.Bind(rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	uc.Log.Print("request name: " + rr.Name)
+
+	req := &pb.OccupationListRequest{
+		Base:       NewBaseRequest(uc),
+		Name:       rr.Name,
+		LimitCount: 50,
+	}
+	occupations, err := dbClient.GetOccupationList(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading occupations", cerr.GeneralError))
+		return
+	}
+
+	var retOccupations []Occupation
+	for _, occupation := range occupations.Occupations {
+		retOccupations = append(retOccupations, Occupation{Code08: strconv.FormatInt(occupation.Code08, 10), Code88: strconv.FormatInt(occupation.Code88, 10), Name: occupation.Name})
+	}
+	c.JSON(http.StatusOK, &OccupationResponse{
+		Occupations: retOccupations,
 	})
 }
 

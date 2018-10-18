@@ -89,6 +89,7 @@ func main() {
 	r.GET("/portal/user/salutation_list", mw.UseIcopContext(SalutationList))
 	r.GET("/portal/user/language_list", mw.UseIcopContext(LanguageList))
 	r.GET("/portal/user/country_list", mw.UseIcopContext(CountryList))
+	r.GET("/portal/user/occupation_list", mw.UseIcopContext(OccupationList))
 	r.POST("/portal/user/confirm_token", mw.UseIcopContext(ConfirmToken))
 	r.POST("/portal/user/resend_confirmation_mail", mw.UseIcopContext(ResendConfirmMail))
 	r.GET("/portal/user/get_user_details", mw.UseIcopContext(GetUserRegistrationDetails)) //called without jwt, so email and 2fa is present
