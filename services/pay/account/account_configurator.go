@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
-	"os"
-	"time"
 
 	"strconv"
 
@@ -14,6 +12,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 	"github.com/Soneso/lumenshine-backend/services/pay/constants"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
+	h "github.com/Soneso/lumenshine-backend/services/pay/horizon"
 
 	"github.com/pkg/errors"
 
@@ -24,7 +23,6 @@ import (
 	"github.com/stellar/go/clients/horizon"
 	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/network"
-	"github.com/stellar/go/support/log"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
@@ -34,37 +32,16 @@ type Configurator struct {
 	DB         *db.DB
 	log        *logrus.Entry
 	cnf        *config.Config
-	Horizon    *horizon.Client
 	ChannelMgr *channel.Manager
 }
 
 //NewAccountConfigurator initialises the account configurator
 func NewAccountConfigurator(DB *db.DB, cnf *config.Config, cm *channel.Manager) *Configurator {
-	var err error
-
 	l := new(Configurator)
 	l.DB = DB
 	l.cnf = cnf
 	l.log = helpers.GetDefaultLog("Account-Configurator", "")
 	l.ChannelMgr = cm
-
-	l.Horizon = &horizon.Client{
-		URL: cnf.Stellar.Horizon,
-		HTTP: &http.Client{
-			Timeout: 60 * time.Second,
-		},
-	}
-
-	root, err := l.Horizon.Root()
-	if err != nil {
-		log.WithField("err", err).Error("Error loading Horizon root")
-		os.Exit(-1)
-	}
-
-	if root.NetworkPassphrase != cnf.Stellar.NetworkPassphrase {
-		log.Errorf("Invalid network passphrase (have=%s, want=%s)", root.NetworkPassphrase, cnf.Stellar.NetworkPassphrase)
-		os.Exit(-1)
-	}
 
 	l.log.Info("Accountconfigurator created")
 	return l
@@ -110,7 +87,7 @@ func (c *Configurator) GetPaymentTransaction(o *m.UserOrder) (string, int64, err
 	muts := []build.TransactionMutator{
 		build.SourceAccount{AddressOrSeed: o.StellarUserPublicKey},
 		build.Network{Passphrase: c.cnf.Stellar.NetworkPassphrase},
-		build.AutoSequence{SequenceProvider: c.Horizon},
+		build.AutoSequence{SequenceProvider: h.Horizon},
 	}
 
 	nc := db.NewNativeCalculator(constants.StellarDecimalPlaces) // stellar uses 8 decimals
@@ -197,7 +174,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) (string, er
 		return "", err
 	}
 
-	txe, err := c.decodeFromBase64(tx)
+	txe, err := h.DecodeFromBase64(tx)
 	if err != nil {
 		c.log.WithError(err).WithFields(logrus.Fields{"order_id": o.ID, "tx": tx}).Error("Could not decode transaction")
 		return "", err
@@ -276,7 +253,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) (string, er
 		txFee, err := build.Transaction(
 			build.SourceAccount{AddressOrSeed: ch.PK},
 			build.Network{Passphrase: c.cnf.Stellar.NetworkPassphrase},
-			build.AutoSequence{SequenceProvider: c.Horizon},
+			build.AutoSequence{SequenceProvider: h.Horizon},
 			build.Payment(
 				build.SourceAccount{AddressOrSeed: phase.DistPK},
 				build.Destination{AddressOrSeed: o.StellarUserPublicKey},
@@ -295,7 +272,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) (string, er
 			return "", errors.Wrap(err, "error signing fee transaction")
 		}
 
-		_, err = c.submitTransaction(o, txeFeeStr)
+		_, _, err = h.SubmitTransaction(o, txeFeeStr, c.log, true)
 		if err != nil {
 			c.ChannelMgr.ReleaseChannel(ch.PK)
 			return "", errors.Wrap(err, "error submitting fee transaction")
@@ -324,7 +301,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) (string, er
 		return "", err
 	}
 
-	hash, err := c.submitTransaction(o, txes)
+	hash, _, err := h.SubmitTransaction(o, txes, c.log, true)
 	if err != nil {
 		c.log.WithError(err).WithField("order_id", o.ID).Error("error decoding txe")
 		return "", err
@@ -363,7 +340,7 @@ func (c *Configurator) CreateAccount(account string, order *m.UserOrder) error {
 	nc := db.NewNativeCalculator(constants.StellarDecimalPlaces)
 	startBalance := nc.ToNativ(startingBallanceDenom)
 
-	tx, err := c.buildTransaction(
+	tx, err := h.BuildTransaction(
 		ch.PK,
 		[]string{ch.Seed, phase.DistPresignerSeed, phase.DistPostsignerSeed},
 		0,
@@ -379,7 +356,7 @@ func (c *Configurator) CreateAccount(account string, order *m.UserOrder) error {
 		return errors.Wrap(err, "Error building user create transaction")
 	}
 
-	_, err = c.submitTransaction(order, tx)
+	_, _, err = h.SubmitTransaction(order, tx, c.log, true)
 	if err != nil {
 		c.ChannelMgr.ReleaseChannel(ch.PK)
 		return errors.Wrap(err, "Error creating user stellar account")
@@ -411,7 +388,7 @@ func (c *Configurator) CreateAccount(account string, order *m.UserOrder) error {
 //GetAccount returns the horizon-account for the given address or false if it does not exist
 func (c *Configurator) GetAccount(account string) (horizon.Account, bool, error) {
 	var hAccount horizon.Account
-	hAccount, err := c.Horizon.LoadAccount(account)
+	hAccount, err := h.Horizon.LoadAccount(account)
 	if err != nil {
 		if err, ok := err.(*horizon.Error); ok && err.Response.StatusCode == http.StatusNotFound {
 			return hAccount, false, nil

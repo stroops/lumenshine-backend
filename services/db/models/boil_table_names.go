@@ -12,16 +12,16 @@ var TableNames = struct {
 	IcoPhaseActivatedExchangeCurrency string
 	IcoPhaseBankAccount               string
 	IcoSupportedExchangeCurrency      string
+	IncomingTransaction               string
 	JWTKey                            string
 	KeyValueStore                     string
 	Languages                         string
 	Mail                              string
-	MultipleTransaction               string
 	Notification                      string
 	NotificationArchive               string
 	OrderTransactionLog               string
+	OutgoingTransaction               string
 	PaymentTemplate                   string
-	ProcessedTransaction              string
 	Salutations                       string
 	TokenHistory                      string
 	UserContact                       string
@@ -34,33 +34,33 @@ var TableNames = struct {
 	UserSecurity                      string
 	UserWallet                        string
 }{
-	Channels:         "channels",
-	Countries:        "countries",
-	ExchangeCurrency: "exchange_currency",
-	Ico:              "ico",
-	IcoPhase:         "ico_phase",
+	Channels:                          "channels",
+	Countries:                         "countries",
+	ExchangeCurrency:                  "exchange_currency",
+	Ico:                               "ico",
+	IcoPhase:                          "ico_phase",
 	IcoPhaseActivatedExchangeCurrency: "ico_phase_activated_exchange_currency",
 	IcoPhaseBankAccount:               "ico_phase_bank_account",
 	IcoSupportedExchangeCurrency:      "ico_supported_exchange_currency",
-	JWTKey:               "jwt_key",
-	KeyValueStore:        "key_value_store",
-	Languages:            "languages",
-	Mail:                 "mail",
-	MultipleTransaction:  "multiple_transaction",
-	Notification:         "notification",
-	NotificationArchive:  "notification_archive",
-	OrderTransactionLog:  "order_transaction_log",
-	PaymentTemplate:      "payment_template",
-	ProcessedTransaction: "processed_transaction",
-	Salutations:          "salutations",
-	TokenHistory:         "token_history",
-	UserContact:          "user_contact",
-	UserKycDocument:      "user_kyc_document",
-	UserMessage:          "user_message",
-	UserMessageArchive:   "user_message_archive",
-	UserOrder:            "user_order",
-	UserProfile:          "user_profile",
-	UserPushtoken:        "user_pushtoken",
-	UserSecurity:         "user_security",
-	UserWallet:           "user_wallet",
+	IncomingTransaction:               "incoming_transaction",
+	JWTKey:                            "jwt_key",
+	KeyValueStore:                     "key_value_store",
+	Languages:                         "languages",
+	Mail:                              "mail",
+	Notification:                      "notification",
+	NotificationArchive:               "notification_archive",
+	OrderTransactionLog:               "order_transaction_log",
+	OutgoingTransaction:               "outgoing_transaction",
+	PaymentTemplate:                   "payment_template",
+	Salutations:                       "salutations",
+	TokenHistory:                      "token_history",
+	UserContact:                       "user_contact",
+	UserKycDocument:                   "user_kyc_document",
+	UserMessage:                       "user_message",
+	UserMessageArchive:                "user_message_archive",
+	UserOrder:                         "user_order",
+	UserProfile:                       "user_profile",
+	UserPushtoken:                     "user_pushtoken",
+	UserSecurity:                      "user_security",
+	UserWallet:                        "user_wallet",
 }

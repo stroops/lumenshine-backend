@@ -64,7 +64,7 @@ func NewBitcoinChannel(DB *db.DB, cnf *config.Config) *Channel {
 
 //TransferAmount transfers the given amount to the given address in the btc network
 //also adds the transaction logs
-func (l *Channel) TransferAmount(Order *m.UserOrder, TxHash string, Amount *big.Int, fromAddress string, PaymentType string, BTCOutIndex int) error {
+func (l *Channel) TransferAmount(Order *m.UserOrder, inTx *m.IncomingTransaction, Amount *big.Int, fromAddress string, PaymentType string, BTCOutIndex int) error {
 	return nil
 }
 

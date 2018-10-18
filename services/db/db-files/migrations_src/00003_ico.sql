@@ -180,11 +180,11 @@ insert into ico_phase_bank_account(id, account_name, recepient_name, bank_name, 
 --btc testnet and eth
 --menmonic:
 -- save skirt advance judge pilot group unable sight market elephant issue vital pass basket virus
-insert into ico_phase_activated_exchange_currency (id, ico_phase_id, exchange_currency_id, denom_price_per_token, tokens_released, tokens_blocked, ico_phase_bank_account_id, exchange_master_key, stellar_payment_account_pk, stellar_payment_account_seed, updated_by) values
-  (1, 1, 1, 1000000, 0, 0, null, 'tprv8ZgxMBicQKsPejoXJ69SAoJREXS8giej16U4WCDZ4189dTL6WB7JTLngwB1wEbnkWw2BJZvUokfbk8ANPR5RzPvMD1oywNj3iWAeUJxbzGW', '', '', 'setup'), /*  btc 0,10000000*/
-  (2, 1, 2, 2000000000000000, 0, 0, null, 'xprv9s21ZrQH143K3vZzdXHw19gRvQ1vTCcifYYwdmo6a2dfqrb1WomYwbRF1zrHEEQS9VVQJUJieQ5oHGcdGCjVBLekgNbgH1zzoQRE2d3pTEB', '', '','setup'), /*  eth 0,20000000*/
-  (3, 1, 3, 1500000, 0, 0, null, '', 'GCYIEL5FDHS7EGPA6BYZDJAZF5TMNB4V2YCAL3PJ34YMVIG2UUNOYIGZ', 'SAQU2LVNPJP3QFTQCIXG5MO5A6N3GASXJO2G4PCFRLBT6NRWZWKPZJE4', 'setup'), /*  xlm 0,30000000*/
- /* EUR 1,50*/ (4, 1, 5, 150, 0, 0, 1, '', '', '', 'setup');
+insert into ico_phase_activated_exchange_currency (id, ico_phase_id, exchange_currency_id, denom_price_per_token, tokens_released, tokens_blocked, ico_phase_bank_account_id, exchange_master_key, stellar_payment_account_pk, stellar_payment_account_seed, crypto_payout_address, updated_by) values
+  (1, 1, 1, 1000000, 0, 0, null, 'tprv8ZgxMBicQKsPejoXJ69SAoJREXS8giej16U4WCDZ4189dTL6WB7JTLngwB1wEbnkWw2BJZvUokfbk8ANPR5RzPvMD1oywNj3iWAeUJxbzGW', '', '', '', 'setup'), /*  btc 0,10000000*/
+  (2, 1, 2, 2000000000000000, 0, 0, null, 'xprv9s21ZrQH143K3vZzdXHw19gRvQ1vTCcifYYwdmo6a2dfqrb1WomYwbRF1zrHEEQS9VVQJUJieQ5oHGcdGCjVBLekgNbgH1zzoQRE2d3pTEB', '', '', '', 'setup'), /*  eth 0,20000000*/
+  (3, 1, 3, 1500000, 0, 0, null, '', 'GCYIEL5FDHS7EGPA6BYZDJAZF5TMNB4V2YCAL3PJ34YMVIG2UUNOYIGZ', 'SAQU2LVNPJP3QFTQCIXG5MO5A6N3GASXJO2G4PCFRLBT6NRWZWKPZJE4', 'GBK3OFDLVBY6VSF7MGB25PMHUISGYIUJJBMUGOIG6X2LIBNCBAAG43A4', 'setup'), /*  xlm 0,30000000, seed-payout: SDOR3COBLFFAIDZNZ5OUGN2JAGZX2F76257XRZQ5OCTN7O4ZNEOX67LG*/
+ /* EUR 1,50*/ (4, 1, 5, 150, 0, 0, 1, '', '', '', '', 'setup');
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.

@@ -34,7 +34,6 @@ type UserOrder struct {
 	PaymentAddress                     string     `boil:"payment_address" json:"payment_address" toml:"payment_address" yaml:"payment_address"`
 	PaymentSeed                        string     `boil:"payment_seed" json:"payment_seed" toml:"payment_seed" yaml:"payment_seed"`
 	StellarTransactionID               string     `boil:"stellar_transaction_id" json:"stellar_transaction_id" toml:"stellar_transaction_id" yaml:"stellar_transaction_id"`
-	ProcessedTransactionID             null.Int   `boil:"processed_transaction_id" json:"processed_transaction_id,omitempty" toml:"processed_transaction_id" yaml:"processed_transaction_id,omitempty"`
 	PaymentQRImage                     null.Bytes `boil:"payment_qr_image" json:"payment_qr_image,omitempty" toml:"payment_qr_image" yaml:"payment_qr_image,omitempty"`
 	PaymentUsage                       string     `boil:"payment_usage" json:"payment_usage" toml:"payment_usage" yaml:"payment_usage"`
 	PaymentErrorMessage                string     `boil:"payment_error_message" json:"payment_error_message" toml:"payment_error_message" yaml:"payment_error_message"`
@@ -60,7 +59,6 @@ var UserOrderColumns = struct {
 	PaymentAddress                     string
 	PaymentSeed                        string
 	StellarTransactionID               string
-	ProcessedTransactionID             string
 	PaymentQRImage                     string
 	PaymentUsage                       string
 	PaymentErrorMessage                string
@@ -81,7 +79,6 @@ var UserOrderColumns = struct {
 	PaymentAddress:                     "payment_address",
 	PaymentSeed:                        "payment_seed",
 	StellarTransactionID:               "stellar_transaction_id",
-	ProcessedTransactionID:             "processed_transaction_id",
 	PaymentQRImage:                     "payment_qr_image",
 	PaymentUsage:                       "payment_usage",
 	PaymentErrorMessage:                "payment_error_message",
@@ -96,18 +93,16 @@ var UserOrderRels = struct {
 	User                      string
 	IcoPhase                  string
 	ExchangeCurrency          string
-	ProcessedTransaction      string
-	OrderProcessedTransaction string
-	OrderMultipleTransactions string
+	OrderIncomingTransactions string
 	OrderOrderTransactionLogs string
+	OrderOutgoingTransactions string
 }{
 	User:                      "User",
 	IcoPhase:                  "IcoPhase",
 	ExchangeCurrency:          "ExchangeCurrency",
-	ProcessedTransaction:      "ProcessedTransaction",
-	OrderProcessedTransaction: "OrderProcessedTransaction",
-	OrderMultipleTransactions: "OrderMultipleTransactions",
+	OrderIncomingTransactions: "OrderIncomingTransactions",
 	OrderOrderTransactionLogs: "OrderOrderTransactionLogs",
+	OrderOutgoingTransactions: "OrderOutgoingTransactions",
 }
 
 // userOrderR is where relationships are stored.
@@ -115,10 +110,9 @@ type userOrderR struct {
 	User                      *UserProfile
 	IcoPhase                  *IcoPhase
 	ExchangeCurrency          *ExchangeCurrency
-	ProcessedTransaction      *ProcessedTransaction
-	OrderProcessedTransaction *ProcessedTransaction
-	OrderMultipleTransactions MultipleTransactionSlice
+	OrderIncomingTransactions IncomingTransactionSlice
 	OrderOrderTransactionLogs OrderTransactionLogSlice
+	OrderOutgoingTransactions OutgoingTransactionSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -130,8 +124,8 @@ func (*userOrderR) NewStruct() *userOrderR {
 type userOrderL struct{}
 
 var (
-	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "fee_payed", "created_at", "updated_at", "updated_by"}
-	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "processed_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
+	userOrderColumns               = []string{"id", "user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "fee_payed", "created_at", "updated_at", "updated_by"}
+	userOrderColumnsWithoutDefault = []string{"user_id", "ico_phase_id", "order_status", "token_amount", "stellar_user_public_key", "exchange_currency_id", "exchange_currency_denomination_amount", "payment_network", "payment_address", "payment_seed", "stellar_transaction_id", "payment_qr_image", "payment_usage", "payment_error_message", "updated_by"}
 	userOrderColumnsWithDefault    = []string{"id", "fee_payed", "created_at", "updated_at"}
 	userOrderPrimaryKeyColumns     = []string{"id"}
 )
@@ -433,50 +427,22 @@ func (o *UserOrder) ExchangeCurrency(mods ...qm.QueryMod) exchangeCurrencyQuery 
 	return query
 }
 
-// ProcessedTransaction pointed to by the foreign key.
-func (o *UserOrder) ProcessedTransaction(mods ...qm.QueryMod) processedTransactionQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.ProcessedTransactionID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := ProcessedTransactions(queryMods...)
-	queries.SetFrom(query.Query, "\"processed_transaction\"")
-
-	return query
-}
-
-// OrderProcessedTransaction pointed to by the foreign key.
-func (o *UserOrder) OrderProcessedTransaction(mods ...qm.QueryMod) processedTransactionQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("order_id=?", o.ID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := ProcessedTransactions(queryMods...)
-	queries.SetFrom(query.Query, "\"processed_transaction\"")
-
-	return query
-}
-
-// OrderMultipleTransactions retrieves all the multiple_transaction's MultipleTransactions with an executor via order_id column.
-func (o *UserOrder) OrderMultipleTransactions(mods ...qm.QueryMod) multipleTransactionQuery {
+// OrderIncomingTransactions retrieves all the incoming_transaction's IncomingTransactions with an executor via order_id column.
+func (o *UserOrder) OrderIncomingTransactions(mods ...qm.QueryMod) incomingTransactionQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"multiple_transaction\".\"order_id\"=?", o.ID),
+		qm.Where("\"incoming_transaction\".\"order_id\"=?", o.ID),
 	)
 
-	query := MultipleTransactions(queryMods...)
-	queries.SetFrom(query.Query, "\"multiple_transaction\"")
+	query := IncomingTransactions(queryMods...)
+	queries.SetFrom(query.Query, "\"incoming_transaction\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
-		queries.SetSelect(query.Query, []string{"\"multiple_transaction\".*"})
+		queries.SetSelect(query.Query, []string{"\"incoming_transaction\".*"})
 	}
 
 	return query
@@ -498,6 +464,27 @@ func (o *UserOrder) OrderOrderTransactionLogs(mods ...qm.QueryMod) orderTransact
 
 	if len(queries.GetSelect(query.Query)) == 0 {
 		queries.SetSelect(query.Query, []string{"\"order_transaction_log\".*"})
+	}
+
+	return query
+}
+
+// OrderOutgoingTransactions retrieves all the outgoing_transaction's OutgoingTransactions with an executor via order_id column.
+func (o *UserOrder) OrderOutgoingTransactions(mods ...qm.QueryMod) outgoingTransactionQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"outgoing_transaction\".\"order_id\"=?", o.ID),
+	)
+
+	query := OutgoingTransactions(queryMods...)
+	queries.SetFrom(query.Query, "\"outgoing_transaction\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"outgoing_transaction\".*"})
 	}
 
 	return query
@@ -788,198 +775,9 @@ func (userOrderL) LoadExchangeCurrency(e boil.Executor, singular bool, maybeUser
 	return nil
 }
 
-// LoadProcessedTransaction allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (userOrderL) LoadProcessedTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
-	var slice []*UserOrder
-	var object *UserOrder
-
-	if singular {
-		object = maybeUserOrder.(*UserOrder)
-	} else {
-		slice = *maybeUserOrder.(*[]*UserOrder)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &userOrderR{}
-		}
-		args = append(args, object.ProcessedTransactionID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userOrderR{}
-			}
-
-			for _, a := range args {
-				if queries.Equal(a, obj.ProcessedTransactionID) {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ProcessedTransactionID)
-		}
-	}
-
-	query := NewQuery(qm.From(`processed_transaction`), qm.WhereIn(`id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load ProcessedTransaction")
-	}
-
-	var resultSlice []*ProcessedTransaction
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice ProcessedTransaction")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for processed_transaction")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for processed_transaction")
-	}
-
-	if len(userOrderAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.ProcessedTransaction = foreign
-		if foreign.R == nil {
-			foreign.R = &processedTransactionR{}
-		}
-		foreign.R.UserOrders = append(foreign.R.UserOrders, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if queries.Equal(local.ProcessedTransactionID, foreign.ID) {
-				local.R.ProcessedTransaction = foreign
-				if foreign.R == nil {
-					foreign.R = &processedTransactionR{}
-				}
-				foreign.R.UserOrders = append(foreign.R.UserOrders, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadOrderProcessedTransaction allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for a 1-1 relationship.
-func (userOrderL) LoadOrderProcessedTransaction(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
-	var slice []*UserOrder
-	var object *UserOrder
-
-	if singular {
-		object = maybeUserOrder.(*UserOrder)
-	} else {
-		slice = *maybeUserOrder.(*[]*UserOrder)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &userOrderR{}
-		}
-		args = append(args, object.ID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &userOrderR{}
-			}
-
-			for _, a := range args {
-				if a == obj.ID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.ID)
-		}
-	}
-
-	query := NewQuery(qm.From(`processed_transaction`), qm.WhereIn(`order_id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load ProcessedTransaction")
-	}
-
-	var resultSlice []*ProcessedTransaction
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice ProcessedTransaction")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for processed_transaction")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for processed_transaction")
-	}
-
-	if len(userOrderAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.OrderProcessedTransaction = foreign
-		if foreign.R == nil {
-			foreign.R = &processedTransactionR{}
-		}
-		foreign.R.Order = object
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.ID == foreign.OrderID {
-				local.R.OrderProcessedTransaction = foreign
-				if foreign.R == nil {
-					foreign.R = &processedTransactionR{}
-				}
-				foreign.R.Order = local
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// LoadOrderMultipleTransactions allows an eager lookup of values, cached into the
+// LoadOrderIncomingTransactions allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (userOrderL) LoadOrderMultipleTransactions(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
+func (userOrderL) LoadOrderIncomingTransactions(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
 	var slice []*UserOrder
 	var object *UserOrder
 
@@ -1012,29 +810,29 @@ func (userOrderL) LoadOrderMultipleTransactions(e boil.Executor, singular bool, 
 		}
 	}
 
-	query := NewQuery(qm.From(`multiple_transaction`), qm.WhereIn(`order_id in ?`, args...))
+	query := NewQuery(qm.From(`incoming_transaction`), qm.WhereIn(`order_id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
 
 	results, err := query.Query(e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load multiple_transaction")
+		return errors.Wrap(err, "failed to eager load incoming_transaction")
 	}
 
-	var resultSlice []*MultipleTransaction
+	var resultSlice []*IncomingTransaction
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice multiple_transaction")
+		return errors.Wrap(err, "failed to bind eager loaded slice incoming_transaction")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on multiple_transaction")
+		return errors.Wrap(err, "failed to close results in eager load on incoming_transaction")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for multiple_transaction")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for incoming_transaction")
 	}
 
-	if len(multipleTransactionAfterSelectHooks) != 0 {
+	if len(incomingTransactionAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(e); err != nil {
 				return err
@@ -1042,10 +840,10 @@ func (userOrderL) LoadOrderMultipleTransactions(e boil.Executor, singular bool, 
 		}
 	}
 	if singular {
-		object.R.OrderMultipleTransactions = resultSlice
+		object.R.OrderIncomingTransactions = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
-				foreign.R = &multipleTransactionR{}
+				foreign.R = &incomingTransactionR{}
 			}
 			foreign.R.Order = object
 		}
@@ -1055,9 +853,9 @@ func (userOrderL) LoadOrderMultipleTransactions(e boil.Executor, singular bool, 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
 			if local.ID == foreign.OrderID {
-				local.R.OrderMultipleTransactions = append(local.R.OrderMultipleTransactions, foreign)
+				local.R.OrderIncomingTransactions = append(local.R.OrderIncomingTransactions, foreign)
 				if foreign.R == nil {
-					foreign.R = &multipleTransactionR{}
+					foreign.R = &incomingTransactionR{}
 				}
 				foreign.R.Order = local
 				break
@@ -1149,6 +947,97 @@ func (userOrderL) LoadOrderOrderTransactionLogs(e boil.Executor, singular bool, 
 				local.R.OrderOrderTransactionLogs = append(local.R.OrderOrderTransactionLogs, foreign)
 				if foreign.R == nil {
 					foreign.R = &orderTransactionLogR{}
+				}
+				foreign.R.Order = local
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadOrderOutgoingTransactions allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (userOrderL) LoadOrderOutgoingTransactions(e boil.Executor, singular bool, maybeUserOrder interface{}, mods queries.Applicator) error {
+	var slice []*UserOrder
+	var object *UserOrder
+
+	if singular {
+		object = maybeUserOrder.(*UserOrder)
+	} else {
+		slice = *maybeUserOrder.(*[]*UserOrder)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &userOrderR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &userOrderR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	query := NewQuery(qm.From(`outgoing_transaction`), qm.WhereIn(`order_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load outgoing_transaction")
+	}
+
+	var resultSlice []*OutgoingTransaction
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice outgoing_transaction")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on outgoing_transaction")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for outgoing_transaction")
+	}
+
+	if len(outgoingTransactionAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.OrderOutgoingTransactions = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &outgoingTransactionR{}
+			}
+			foreign.R.Order = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if local.ID == foreign.OrderID {
+				local.R.OrderOutgoingTransactions = append(local.R.OrderOutgoingTransactions, foreign)
+				if foreign.R == nil {
+					foreign.R = &outgoingTransactionR{}
 				}
 				foreign.R.Order = local
 				break
@@ -1324,173 +1213,20 @@ func (o *UserOrder) SetExchangeCurrency(exec boil.Executor, insert bool, related
 	return nil
 }
 
-// SetProcessedTransactionG of the userOrder to the related item.
-// Sets o.R.ProcessedTransaction to related.
-// Adds o to related.R.UserOrders.
-// Uses the global database handle.
-func (o *UserOrder) SetProcessedTransactionG(insert bool, related *ProcessedTransaction) error {
-	return o.SetProcessedTransaction(boil.GetDB(), insert, related)
-}
-
-// SetProcessedTransaction of the userOrder to the related item.
-// Sets o.R.ProcessedTransaction to related.
-// Adds o to related.R.UserOrders.
-func (o *UserOrder) SetProcessedTransaction(exec boil.Executor, insert bool, related *ProcessedTransaction) error {
-	var err error
-	if insert {
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"user_order\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"processed_transaction_id"}),
-		strmangle.WhereClause("\"", "\"", 2, userOrderPrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, updateQuery)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	if _, err = exec.Exec(updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	queries.Assign(&o.ProcessedTransactionID, related.ID)
-	if o.R == nil {
-		o.R = &userOrderR{
-			ProcessedTransaction: related,
-		}
-	} else {
-		o.R.ProcessedTransaction = related
-	}
-
-	if related.R == nil {
-		related.R = &processedTransactionR{
-			UserOrders: UserOrderSlice{o},
-		}
-	} else {
-		related.R.UserOrders = append(related.R.UserOrders, o)
-	}
-
-	return nil
-}
-
-// RemoveProcessedTransactionG relationship.
-// Sets o.R.ProcessedTransaction to nil.
-// Removes o from all passed in related items' relationships struct (Optional).
-// Uses the global database handle.
-func (o *UserOrder) RemoveProcessedTransactionG(related *ProcessedTransaction) error {
-	return o.RemoveProcessedTransaction(boil.GetDB(), related)
-}
-
-// RemoveProcessedTransaction relationship.
-// Sets o.R.ProcessedTransaction to nil.
-// Removes o from all passed in related items' relationships struct (Optional).
-func (o *UserOrder) RemoveProcessedTransaction(exec boil.Executor, related *ProcessedTransaction) error {
-	var err error
-
-	queries.SetScanner(&o.ProcessedTransactionID, nil)
-	if _, err = o.Update(exec, boil.Whitelist("processed_transaction_id")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.R.ProcessedTransaction = nil
-	if related == nil || related.R == nil {
-		return nil
-	}
-
-	for i, ri := range related.R.UserOrders {
-		if queries.Equal(o.ProcessedTransactionID, ri.ProcessedTransactionID) {
-			continue
-		}
-
-		ln := len(related.R.UserOrders)
-		if ln > 1 && i < ln-1 {
-			related.R.UserOrders[i] = related.R.UserOrders[ln-1]
-		}
-		related.R.UserOrders = related.R.UserOrders[:ln-1]
-		break
-	}
-	return nil
-}
-
-// SetOrderProcessedTransactionG of the userOrder to the related item.
-// Sets o.R.OrderProcessedTransaction to related.
-// Adds o to related.R.Order.
-// Uses the global database handle.
-func (o *UserOrder) SetOrderProcessedTransactionG(insert bool, related *ProcessedTransaction) error {
-	return o.SetOrderProcessedTransaction(boil.GetDB(), insert, related)
-}
-
-// SetOrderProcessedTransaction of the userOrder to the related item.
-// Sets o.R.OrderProcessedTransaction to related.
-// Adds o to related.R.Order.
-func (o *UserOrder) SetOrderProcessedTransaction(exec boil.Executor, insert bool, related *ProcessedTransaction) error {
-	var err error
-
-	if insert {
-		related.OrderID = o.ID
-
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	} else {
-		updateQuery := fmt.Sprintf(
-			"UPDATE \"processed_transaction\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 1, []string{"order_id"}),
-			strmangle.WhereClause("\"", "\"", 2, processedTransactionPrimaryKeyColumns),
-		)
-		values := []interface{}{o.ID, related.ID}
-
-		if boil.DebugMode {
-			fmt.Fprintln(boil.DebugWriter, updateQuery)
-			fmt.Fprintln(boil.DebugWriter, values)
-		}
-
-		if _, err = exec.Exec(updateQuery, values...); err != nil {
-			return errors.Wrap(err, "failed to update foreign table")
-		}
-
-		related.OrderID = o.ID
-
-	}
-
-	if o.R == nil {
-		o.R = &userOrderR{
-			OrderProcessedTransaction: related,
-		}
-	} else {
-		o.R.OrderProcessedTransaction = related
-	}
-
-	if related.R == nil {
-		related.R = &processedTransactionR{
-			Order: o,
-		}
-	} else {
-		related.R.Order = o
-	}
-	return nil
-}
-
-// AddOrderMultipleTransactionsG adds the given related objects to the existing relationships
+// AddOrderIncomingTransactionsG adds the given related objects to the existing relationships
 // of the user_order, optionally inserting them as new records.
-// Appends related to o.R.OrderMultipleTransactions.
+// Appends related to o.R.OrderIncomingTransactions.
 // Sets related.R.Order appropriately.
 // Uses the global database handle.
-func (o *UserOrder) AddOrderMultipleTransactionsG(insert bool, related ...*MultipleTransaction) error {
-	return o.AddOrderMultipleTransactions(boil.GetDB(), insert, related...)
+func (o *UserOrder) AddOrderIncomingTransactionsG(insert bool, related ...*IncomingTransaction) error {
+	return o.AddOrderIncomingTransactions(boil.GetDB(), insert, related...)
 }
 
-// AddOrderMultipleTransactions adds the given related objects to the existing relationships
+// AddOrderIncomingTransactions adds the given related objects to the existing relationships
 // of the user_order, optionally inserting them as new records.
-// Appends related to o.R.OrderMultipleTransactions.
+// Appends related to o.R.OrderIncomingTransactions.
 // Sets related.R.Order appropriately.
-func (o *UserOrder) AddOrderMultipleTransactions(exec boil.Executor, insert bool, related ...*MultipleTransaction) error {
+func (o *UserOrder) AddOrderIncomingTransactions(exec boil.Executor, insert bool, related ...*IncomingTransaction) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -1500,9 +1236,9 @@ func (o *UserOrder) AddOrderMultipleTransactions(exec boil.Executor, insert bool
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"multiple_transaction\" SET %s WHERE %s",
+				"UPDATE \"incoming_transaction\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 1, []string{"order_id"}),
-				strmangle.WhereClause("\"", "\"", 2, multipleTransactionPrimaryKeyColumns),
+				strmangle.WhereClause("\"", "\"", 2, incomingTransactionPrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
 
@@ -1521,15 +1257,15 @@ func (o *UserOrder) AddOrderMultipleTransactions(exec boil.Executor, insert bool
 
 	if o.R == nil {
 		o.R = &userOrderR{
-			OrderMultipleTransactions: related,
+			OrderIncomingTransactions: related,
 		}
 	} else {
-		o.R.OrderMultipleTransactions = append(o.R.OrderMultipleTransactions, related...)
+		o.R.OrderIncomingTransactions = append(o.R.OrderIncomingTransactions, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
-			rel.R = &multipleTransactionR{
+			rel.R = &incomingTransactionR{
 				Order: o,
 			}
 		} else {
@@ -1592,6 +1328,68 @@ func (o *UserOrder) AddOrderOrderTransactionLogs(exec boil.Executor, insert bool
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &orderTransactionLogR{
+				Order: o,
+			}
+		} else {
+			rel.R.Order = o
+		}
+	}
+	return nil
+}
+
+// AddOrderOutgoingTransactionsG adds the given related objects to the existing relationships
+// of the user_order, optionally inserting them as new records.
+// Appends related to o.R.OrderOutgoingTransactions.
+// Sets related.R.Order appropriately.
+// Uses the global database handle.
+func (o *UserOrder) AddOrderOutgoingTransactionsG(insert bool, related ...*OutgoingTransaction) error {
+	return o.AddOrderOutgoingTransactions(boil.GetDB(), insert, related...)
+}
+
+// AddOrderOutgoingTransactions adds the given related objects to the existing relationships
+// of the user_order, optionally inserting them as new records.
+// Appends related to o.R.OrderOutgoingTransactions.
+// Sets related.R.Order appropriately.
+func (o *UserOrder) AddOrderOutgoingTransactions(exec boil.Executor, insert bool, related ...*OutgoingTransaction) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			rel.OrderID = o.ID
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"outgoing_transaction\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"order_id"}),
+				strmangle.WhereClause("\"", "\"", 2, outgoingTransactionPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.OrderID = o.ID
+		}
+	}
+
+	if o.R == nil {
+		o.R = &userOrderR{
+			OrderOutgoingTransactions: related,
+		}
+	} else {
+		o.R.OrderOutgoingTransactions = append(o.R.OrderOutgoingTransactions, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &outgoingTransactionR{
 				Order: o,
 			}
 		} else {

@@ -264,7 +264,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	q := []qm.QueryMod{
 		qm.Where(m.UserOrderColumns.UserID+"=?", r.UserId),
-		qm.Load(m.UserOrderRels.ProcessedTransaction),
+		//TODO: qm.Load(m.UserOrderRels.ProcessedTransaction),
 	}
 
 	if r.OrderStatus != "" {
@@ -313,6 +313,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 			PaymentUsage:                       o.PaymentUsage,
 		}
 
+		/* TODO:
 		if o.R.ProcessedTransaction != nil {
 			if o.R.ProcessedTransaction.PaymentNetworkAmountDenomination != "" {
 				denomReceived, err := ec.DenomFromString(o.R.ProcessedTransaction.PaymentNetworkAmountDenomination)
@@ -322,6 +323,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 				ret.UserOrders[i].AmountReceived = ec.ToNativ(denomReceived)
 			}
 		}
+		*/
 
 		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeFiat {
 			ret.UserOrders[i].FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
@@ -333,9 +335,11 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
 			ret.UserOrders[i].PaymentAddress = o.PaymentAddress
 			ret.UserOrders[i].StellarTransactionId = o.StellarTransactionID
+			/* TODO:
 			if o.R.ProcessedTransaction != nil {
 				ret.UserOrders[i].PaymentRefundTxId = o.R.ProcessedTransaction.RefundTXID
 			}
+			*/
 
 			//TODO
 			//ret.UserOrders[i].PaymentQrImage = o.PaymentQRImage
@@ -484,7 +488,7 @@ func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransacti
 		v := big.NewInt(r.DenomAmount)
 		fmt.Println(v.String())
 
-		ok, err = s.Env.DBC.AddNewTransaction(log, ch, tx, r.RecipientAddress, r.SenderAddress, o.ID, v, 0)
+		ok, err = s.Env.DBC.AddNewTransaction(log, ch, tx, r.RecipientAddress, r.SenderAddress, o, v, 0)
 		return &pb.BoolResponse{Value: ok}, err
 	}
 

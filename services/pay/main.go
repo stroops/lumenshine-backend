@@ -16,6 +16,7 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/services/pay/bitcoin"
 	"github.com/Soneso/lumenshine-backend/services/pay/ethereum"
+	"github.com/Soneso/lumenshine-backend/services/pay/horizon"
 	"github.com/Soneso/lumenshine-backend/services/pay/stellar"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/channel"
@@ -29,7 +30,6 @@ const (
 )
 
 var (
-	env      *environment.Environment
 	dbClient pb.DBServiceClient
 )
 
@@ -54,10 +54,13 @@ func main() {
 		log.WithError(err).Fatal("Error connecting customer database")
 	}
 
-	env = new(environment.Environment)
-	env.Config = cnf
-	env.DBC = dbc
-	env.Clients = make(map[string]paymentchannel.Channel)
+	environment.Env.Config = cnf
+	environment.Env.DBC = dbc
+	environment.Env.Clients = make(map[string]paymentchannel.Channel)
+
+	if err := horizon.InitHorizon(dbc, cnf); err != nil {
+		log.WithError(err).Fatal("Could not initialize horizon")
+	}
 
 	/*var bitcoinChainParams *chaincfg.Params
 	bitcoinChainParams = &chaincfg.TestNet3Params
@@ -82,22 +85,25 @@ func main() {
 
 	//The gRPC service will block the thread
 	//this should be the last call in main
-	StartGrpcService(env, log)
+	StartGrpcService(environment.Env, log)
 }
 
 func createServices() {
-	cfg := env.Config
+	cfg := environment.Env.Config
+	env := environment.Env
+
+	channeler := channel.NewChanneler(env.DBC, env.Config)
 
 	env.AccountConfigurator = account.NewAccountConfigurator(
 		env.DBC,
 		env.Config,
-		channel.NewChanneler(env.DBC, env.Config),
+		channeler,
 	)
 
 	//Create all clients
 	env.Clients[m.PaymentNetworkEthereum] = ethereum.NewEthereumChannel(env.DBC, env.Config)
 	env.Clients[m.PaymentNetworkBitcoin] = bitcoin.NewBitcoinChannel(env.DBC, env.Config)
-	env.Clients[m.PaymentNetworkStellar] = stellar.NewStellarChannel(env.DBC, env.Config)
+	env.Clients[m.PaymentNetworkStellar] = stellar.NewStellarChannel(env.DBC, env.Config, channeler)
 
 	//start the listeners if enabled
 	if cfg.Bitcoin.Enabled {

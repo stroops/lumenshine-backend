@@ -39,7 +39,6 @@ CREATE TABLE user_order (
   payment_seed varchar(500) NOT NULL, /* this is either the seed on stellar, or the privatekey on other crypto */
 
   stellar_transaction_id text not null, /* this is the coin payment tx in the stellar network */
-  processed_transaction_id int null, /* FK to the processed transactions */
 
   payment_qr_image bytea null, /* qr-image for the payment transaction */
 
@@ -64,22 +63,19 @@ create index idx_user_order_ix3 on user_order(order_status);
 create index idx_user_order_ix4 on user_order(stellar_user_public_key);
 create index idx_user_order_ix5 on user_order(ico_phase_id);
 
-CREATE TYPE transaction_status AS ENUM ('new', 'processed');
-CREATE TABLE processed_transaction (
+CREATE TYPE transaction_status AS ENUM ('new', 'error', 'refund', 'cashout');
+-- this table holds all transactions that come from the payment networks
+CREATE TABLE incoming_transaction (
   id SERIAL PRIMARY KEY NOT null,
   status transaction_status not null,
 
   payment_network payment_network NOT NULL,
 
-  /* Ethereum: "0x"+hash (so 64+2) */
-  transaction_id varchar(66) NOT NULL,
+  transaction_hash varchar(256) NOT NULL,
   btc_src_out_index int NOT NULL DEFAULT 0, /* for bitcoin, we store the output index here */
-  /* bitcoin 34 characters */
-  /* ethereum 42 characters */
-   /* stellar 56 characters */
-  refund_tx_id text not null, /* refund payment hash/id from the PaymentNetwork */
 
-  receiving_address varchar(56) NOT NULL,
+  receiving_address varchar(256) NOT NULL,
+  sender_address varchar(256) NOT NULL,
   payment_network_amount_denomination varchar(64) not null, /* max one billion */
 
   order_id integer not null REFERENCES user_order(id),
@@ -87,35 +83,44 @@ CREATE TABLE processed_transaction (
   created_at timestamp with time zone NOT NULL default current_timestamp,
   updated_at timestamp with time zone NOT NULL default current_timestamp
 );
-create unique index idx_processed_transaction_ix1 on processed_transaction(order_id);
-create unique index idx_processed_transaction_ix2 on processed_transaction(payment_network, transaction_id);
-alter table user_order add FOREIGN KEY(processed_transaction_id) REFERENCES processed_transaction(id);
+create unique index idx_incoming_transaction_ix1 on incoming_transaction(payment_network, transaction_hash);
+create index idx_incoming_transaction_ix2 on incoming_transaction(order_id);
+create index idx_incoming_transaction_ix3 on incoming_transaction(status);
 
-CREATE TABLE multiple_transaction (
+-- this table holds all transactions, that we do into a payment network
+CREATE TABLE outgoing_transaction (
   id SERIAL PRIMARY KEY NOT null,
-  payment_network payment_network NOT NULL,
-  transaction_id varchar(66) NOT NULL,
-  btc_src_out_index int NOT NULL DEFAULT 0, /* for bitcoin, we store the output index here */
-  refund_tx_id text not null,
-  receiving_address varchar(56) NOT NULL,
-  payment_network_amount_denom varchar(64) not null,
+  incoming_transaction_id int null REFERENCES incoming_transaction(id),
   order_id integer not null REFERENCES user_order(id),
+
+  status transaction_status not null,
+  execute_status bool not null,
+  payment_network payment_network NOT NULL,
+
+  sender_address varchar(256) NOT NULL,
+  receiving_address varchar(256) NOT NULL,
+  transaction_string text not null default '',
+  transaction_hash varchar(256) NOT NULL default '',
+  transaction_error text not null default '',
+
+  payment_network_amount_denomination varchar(64) not null, /* max one billion */
+
   created_at timestamp with time zone NOT NULL default current_timestamp,
   updated_at timestamp with time zone NOT NULL default current_timestamp
 );
-create unique index idx_multiple_transaction_ix1 on multiple_transaction(order_id, transaction_id);
-create index idx_multiple_transaction_ix2 on multiple_transaction(payment_network, transaction_id);
-create index idx_multiple_transaction_ix3 on multiple_transaction(payment_network, receiving_address);
+create index idx_outgoing_transaction_ix1 on outgoing_transaction(incoming_transaction_id);
+create index idx_outgoing_transaction_ix2 on outgoing_transaction(order_id);
 
+-- this tables holds all transactions that are made in the stellar network and are related to the token transfer (e.g. fees, account-creations, tokentransfer etc.)
 CREATE TABLE order_transaction_log (
   id SERIAL PRIMARY KEY NOT null,
   order_id integer not null REFERENCES user_order(id),
   status bool not null,
-  tx text not null,
-  tx_hash text not null,
-  result_code text null,
-  result_xdr text null,
-  error_text text null,
+  tx text NOT NULL default '',
+  tx_hash  varchar(256) NOT NULL default '',
+  result_code text NOT NULL default '',
+  result_xdr text NOT NULL default '',
+  error_text text NOT NULL default '',
   created_at timestamp with time zone NOT NULL default current_timestamp
 );
 create index order_transaction_log_ix1 on order_transaction_log(order_id);
@@ -152,11 +157,8 @@ CREATE TABLE payment_template
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 drop table IF EXISTS key_value_store;
-ALTER TABLE user_order DROP CONSTRAINT IF EXISTS "user_order_processed_transaction_id_fkey";
-ALTER TABLE processed_transaction DROP CONSTRAINT IF EXISTS "processed_transaction_order_id_fkey";
-ALTER TABLE multiple_transaction DROP CONSTRAINT IF EXISTS "multiple_transaction_order_id_fkey";
-drop table if exists processed_transaction;
-drop table if exists multiple_transaction;
+drop table IF EXISTS outgoing_transaction;
+drop table if exists incoming_transaction;
 drop table IF EXISTS order_transaction_log;
 drop table IF EXISTS channels;
 drop table IF EXISTS user_order;

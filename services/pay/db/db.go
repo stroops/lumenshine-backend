@@ -20,7 +20,6 @@ import (
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
 	"github.com/Soneso/lumenshine-backend/services/pay/paymentchannel"
-	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/queries"
 )
 
@@ -138,14 +137,10 @@ func (db *DB) saveLastProcessedBlock(key string, block uint64) error {
 }
 
 //GetOrderForAddress reads the user orders for open payments for the specified address and chain
-//The method updates the order to refelect, that it has been processed, if the order was waiting_for_payment
-//It will set the order in status OrderStatusPaymentReceived
 //If no open order was found(OrderStatusWaitingForPayment), the function will return either nil or filter for any other order with the given address
 //The function will be called for EVERY payment transaction in the external PaymentNetworks
-//paymentUsage is either an empty string or, for stellar the MEMO with the orderID
+//paymentUsage is either an empty string or, for stellar, the MEMO with the orderID. If no memo/or wrong was given, the order will not be processed
 func (db *DB) GetOrderForAddress(l paymentchannel.Channel, address string, paymentUsage string) (*m.UserOrder, error) {
-	userOrder := new(m.UserOrder)
-
 	var sqlStr string
 	if l.Name() == m.PaymentNetworkStellar {
 		//usage must be the order ID
@@ -179,11 +174,16 @@ func (db *DB) GetOrderForAddress(l paymentchannel.Channel, address string, payme
 	}
 
 	//set order to payment recived
+	userOrder := new(m.UserOrder)
 	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, l.Name(), address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			//if we did not find an open order, we need to search for all orders on the user, in order to get the multiple transaction triggered
-			userOrder, err = m.UserOrders(qm.Where(m.UserOrderColumns.PaymentNetwork+"=? and "+m.UserOrderColumns.PaymentAddress+"=?", l.Name(), address)).One(db)
+			userOrder, err = m.UserOrders(
+				qm.Where(m.UserOrderColumns.PaymentNetwork+"=? and "+m.UserOrderColumns.PaymentAddress+"=?", l.Name(), address),
+				qm.OrderBy("id desc"),
+			).One(db)
+
 			if err != nil {
 				if err == sql.ErrNoRows {
 					return nil, nil
@@ -198,90 +198,48 @@ func (db *DB) GetOrderForAddress(l paymentchannel.Channel, address string, payme
 	return userOrder, nil
 }
 
-func isDuplicateError(err error) bool {
-	if err == nil {
-		return false
-	}
-	return strings.Contains(err.Error(), "duplicate key value violates unique constraint")
-}
-
 //AddNewTransaction adds a transaction to the database and returns true, if it was allready present
+//The function implies, that the order is in status OrderStatusPaymentReceived
 func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.Channel, txHash string,
-	toAddress string, fromAddress string, orderID int, denomAmount *big.Int, BTCOutIndex int) (isDuplicate bool, err error) {
+	toAddress string, fromAddress string, order *m.UserOrder, denomAmount *big.Int, BTCOutIndex int) (isDuplicate bool, err error) {
 
-	order, err := m.FindUserOrder(db, orderID, "id")
-	if err != nil {
-		return isDuplicate, err
-	}
+	iTx := new(m.IncomingTransaction)
+	iTx.PaymentNetwork = paymentChannel.Name()
+	iTx.ReceivingAddress = toAddress
+	iTx.SenderAddress = fromAddress
+	iTx.TransactionHash = txHash
+	iTx.BTCSRCOutIndex = BTCOutIndex
+	iTx.OrderID = order.ID
+	iTx.Status = m.TransactionStatusNew
+	iTx.PaymentNetworkAmountDenomination = denomAmount.String()
 
-	d := new(m.ProcessedTransaction)
-	d.PaymentNetwork = paymentChannel.Name()
-	d.ReceivingAddress = toAddress
-	d.TransactionID = txHash
-	d.BTCSRCOutIndex = BTCOutIndex
-	d.OrderID = orderID
-	d.Status = m.TransactionStatusNew
-	d.PaymentNetworkAmountDenomination = denomAmount.String()
-
-	err = d.Insert(db, boil.Infer())
-	isDuplicate = isDuplicateError(err)
-	if isDuplicate {
-		//add the transaction to the multiple table for manual handling
-		b := new(m.MultipleTransaction)
-		b.PaymentNetwork = paymentChannel.Name()
-		b.ReceivingAddress = toAddress
-		b.TransactionID = txHash
-		b.BTCSRCOutIndex = BTCOutIndex
-		b.OrderID = orderID
-		b.PaymentNetworkAmountDenom = denomAmount.String()
-		errB := b.Insert(db, boil.Infer())
-		if errB != nil {
-			//we don't handle this error, just log it
-			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": txHash}).Error("Error saving multiple transaction")
+	if order.OrderStatus != m.OrderStatusPaymentReceived {
+		//this means, that we updated the order in some other process or the user send multiple payments, thus it's a additional payment --> refund
+		iTx.Status = m.TransactionStatusRefund
+		err = iTx.Insert(db, boil.Infer())
+		if err != nil {
+			return true, err
 		}
-		err = paymentChannel.TransferAmount(order, txHash, denomAmount, fromAddress, paymentchannel.TransferRefund, BTCOutIndex)
+
+		err = paymentChannel.TransferAmount(order, iTx, denomAmount, fromAddress, m.TransactionStatusRefund, BTCOutIndex)
 		if err != nil {
 			//we don't handle this error, just log it TransferAmount will set the error text in the order
-			log.WithError(err).WithFields(logrus.Fields{"order_id": orderID, "transaction_id": txHash}).Error("Error refunding")
+			log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": txHash}).Error("Error refunding")
 		}
 		return true, nil
 	}
 
+	err = iTx.Insert(db, boil.Infer())
 	if err != nil {
-		return isDuplicate, err
+		return false, err
 	}
 
-	//update the order to hold the transaction-ref
-	order.ProcessedTransactionID = null.IntFrom(d.ID)
-	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.ProcessedTransactionID, m.UserKycDocumentColumns.UpdatedAt))
-	if err != nil {
-		return isDuplicate, err
-	}
-
-	return isDuplicate, db.handleNewTransaction(log, d, denomAmount)
+	return false, db.handleNewTransaction(log, paymentChannel, order, iTx, denomAmount)
 }
 
 //handleNewTransaction checks the transaction data and updates the user_profile to reflect the payment
-//the order must be in status OrderStatusPaymentReceived and will be set to status OrderStatusWaitingUserTX
-func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction, denomAmount *big.Int) (err error) {
-
-	order := new(m.UserOrder)
-
-	sqlStr := querying.GetSQLKeyString(`update @user_order set @order_status=$1, @updated_at=current_timestamp where id =
-			(select id from @user_order where id=$2 and @order_status=$3 limit 1 for update) returning
-			*`,
-		map[string]string{
-			"@user_order":   m.TableNames.UserOrder,
-			"@order_status": m.UserOrderColumns.OrderStatus,
-			"@updated_at":   m.UserOrderColumns.UpdatedAt,
-		})
-
-	err = queries.Raw(sqlStr, m.OrderStatusWaitingForPayment, tx.OrderID, m.OrderStatusPaymentReceived).Bind(nil, db, order)
-	if err != nil {
-		log.WithError(err).WithFields(logrus.Fields{"order_id": tx.OrderID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
-		return err
-	}
-
+//the order must be in status OrderStatusWaitingForPayment and will be set to status OrderStatusWaitingUserTX
+func (db DB) handleNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.Channel, order *m.UserOrder, iTx *m.IncomingTransaction, denomAmount *big.Int) (err error) {
 	//check order amount
 	oa := new(big.Int)
 	oa.SetString(order.ExchangeCurrencyDenominationAmount, 0)
@@ -299,54 +257,102 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 		if err != nil {
 			return err
 		}
-	} else {
-		//amount payed is exactly the amount bought. we can check/update, if there are coins left
-		ph := new(m.IcoPhase)
 
-		sqlStr = querying.GetSQLKeyString(`update @ico_phase set @tokens_left=@tokens_left-$1, @updated_at=current_timestamp where id=$2 and @ico_phase_status=$3 and
-		  start_time<=current_timestamp and end_time>=current_timestamp returning *`,
-			map[string]string{
-				"@ico_phase":   m.TableNames.IcoPhase,
-				"@tokens_left": m.IcoPhaseColumns.TokensLeft,
-				"@updated_at":  m.IcoPhaseColumns.UpdatedAt,
-			})
-
-		err = queries.Raw(sqlStr, order.TokenAmount, order.IcoPhaseID, m.IcoPhaseStatusActive).Bind(nil, db, ph)
+		err = paymentChannel.TransferAmount(order, iTx, denomAmount, iTx.SenderAddress, m.TransactionStatusRefund, iTx.BTCSRCOutIndex)
 		if err != nil {
-			//something is not ok
-			//either amount was to small, or phase is already gone... we will read the data againe and check
-			if err != sql.ErrNoRows {
-				// log error
-				log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_id": tx.TransactionID}).Error("Error selecting phasedata")
-				return err
-			}
-			ph, err = m.IcoPhases(qm.Where(m.IcoPhaseColumns.IcoPhaseStatus+"=?", m.IcoPhaseStatusActive)).One(db)
-			if err != nil {
-				return err
-			}
-			if ph.TokensLeft < order.TokenAmount {
-				order.OrderStatus = m.OrderStatusNoCoinsLeft
-			} else {
-				order.OrderStatus = m.OrderStatusPhaseExpired
-			}
-			_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
-			if err != nil {
-				return err
-			}
+			log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_hash": iTx.TransactionHash}).Error("Error refunding wrong amount")
 		}
+		return nil
+	}
 
-		//everything seems ok -> update the order
-		order.OrderStatus = m.OrderStatusWaitingUserTransaction
-		_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
-		if err != nil {
+	//amount payed is exactly the amount bought. we can check/update, if there are coins left
+	ph := new(m.IcoPhase)
+
+	sqlStr := querying.GetSQLKeyString(`update @ico_phase set @tokens_left=@tokens_left-$1, @updated_at=current_timestamp where id=$2 and @ico_phase_status=$3 and
+		  start_time<=current_timestamp and end_time>=current_timestamp and @tokens_left>=$4 returning *`,
+		map[string]string{
+			"@ico_phase":   m.TableNames.IcoPhase,
+			"@tokens_left": m.IcoPhaseColumns.TokensLeft,
+			"@updated_at":  m.IcoPhaseColumns.UpdatedAt,
+		})
+
+	err = queries.Raw(sqlStr, order.TokenAmount, order.IcoPhaseID, m.IcoPhaseStatusActive, order.TokenAmount).Bind(nil, db, ph)
+	if err != nil {
+		//something is not ok
+		//either left token-amount is to small, or phase is already gone... we will read the data againe and check
+		if err != sql.ErrNoRows {
+			// log error
+			log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_hash": iTx.TransactionHash}).Error("Error selecting phasedata")
+			iTx.Status = m.TransactionStatusError
+			if _, err := iTx.Update(db, boil.Whitelist(m.IncomingTransactionColumns.Status, m.IncomingTransactionColumns.UpdatedAt)); err != nil {
+				return err
+			}
 			return err
 		}
+
+		ph, err = m.IcoPhases(qm.Where("id=?", order.IcoPhaseID)).One(db)
+		if err != nil {
+			iTx.Status = m.TransactionStatusError
+			if _, err := iTx.Update(db, boil.Whitelist(m.IncomingTransactionColumns.Status, m.IncomingTransactionColumns.UpdatedAt)); err != nil {
+				return err
+			}
+			return err
+		}
+
+		if ph.TokensLeft < order.TokenAmount {
+			order.OrderStatus = m.OrderStatusNoCoinsLeft
+		}
+		if ph.IcoPhaseStatus != m.IcoPhaseStatusActive {
+			order.OrderStatus = m.OrderStatusPhaseExpired
+		}
+		if _, err := order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt)); err != nil {
+			return err
+		}
+
+		if err := paymentChannel.TransferAmount(order, iTx, denomAmount, iTx.SenderAddress, m.TransactionStatusRefund, iTx.BTCSRCOutIndex); err != nil {
+			log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_hash": iTx.TransactionHash}).Error("Error refunding wrong phase_status or tokenamount")
+			return err
+		}
+
+		return nil
 	}
+
+	//everything seems ok -> update the order but first re-check current status
+	err = order.Reload(db)
+	if err != nil {
+		iTx.Status = m.TransactionStatusError
+		if _, err := iTx.Update(db, boil.Whitelist(m.IncomingTransactionColumns.Status, m.IncomingTransactionColumns.UpdatedAt)); err != nil {
+			return err
+		}
+		return err
+	}
+
+	if order.OrderStatus != m.OrderStatusPaymentReceived {
+		//order changed meanwhile, eg from second process, we refund and exit
+		if err := paymentChannel.TransferAmount(order, iTx, denomAmount, iTx.SenderAddress, m.TransactionStatusRefund, iTx.BTCSRCOutIndex); err != nil {
+			log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_hash": iTx.TransactionHash}).Error("Error refunding wrong order status")
+			return err
+		}
+		return nil
+	}
+
+	order.OrderStatus = m.OrderStatusWaitingUserTransaction
+	_, err = order.Update(db, boil.Whitelist(m.UserOrderColumns.OrderStatus, m.UserOrderColumns.UpdatedAt))
+	if err != nil {
+		iTx.Status = m.TransactionStatusError
+		if _, err := iTx.Update(db, boil.Whitelist(m.IncomingTransactionColumns.Status, m.IncomingTransactionColumns.UpdatedAt)); err != nil {
+			return err
+		}
+		return err
+	}
+
+	//TODO: move amount to payout-account in payment network
 
 	//check all user orders and if one is payed, set flag, if not, remove flag
 	user, err := m.UserProfiles(qm.Where("id=?", order.UserID)).One(db)
 	if err != nil {
-		return err
+		log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_hash": iTx.TransactionHash}).Error("Error selecting user profile-payment-status")
+		return nil
 	}
 
 	cnt, err := m.UserOrders(qm.Where("user_id=? and order_status=?", order.UserID, m.OrderStatusWaitingUserTransaction)).Count(db)
@@ -357,7 +363,7 @@ func (db DB) handleNewTransaction(log *logrus.Entry, tx *m.ProcessedTransaction,
 	}
 	_, err = user.Update(db, boil.Whitelist(m.UserProfileColumns.PaymentState, m.UserProfileColumns.UpdatedAt))
 	if err != nil {
-		return err
+		log.WithError(err).WithFields(logrus.Fields{"order_id": order.ID, "transaction_hash": iTx.TransactionHash}).Error("Error updating user profile-payment-status")
 	}
 
 	return nil

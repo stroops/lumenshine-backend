@@ -139,7 +139,7 @@ func (l *Channel) processLedger(ledger *mh.HistoryLedger) error {
 		}
 	}
 
-	localLog.Info("Processed block")
+	localLog.Info("Processed ledger")
 
 	return nil
 }
@@ -178,7 +178,7 @@ func (l *Channel) processTransaction(ledger *mh.HistoryLedger, transaction *mh.H
 	}
 
 	// Add transaction as processing.
-	isDuplicate, err := l.db.AddNewTransaction(l.log, l, transaction.TransactionHash, operation.To, operation.From, order.ID, valueStoops, 0)
+	isDuplicate, err := l.db.AddNewTransaction(l.log, l, transaction.TransactionHash, operation.To, operation.From, order, valueStoops, 0)
 	if err != nil {
 		return err
 	}

@@ -25,3 +25,7 @@ type Environment struct {
 
 	httpServer *http.Server
 }
+
+//Env holds the global Environment
+//the struct is initialized on service startup and hold globalby
+var Env = new(Environment)

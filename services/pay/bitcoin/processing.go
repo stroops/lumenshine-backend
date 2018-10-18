@@ -154,7 +154,7 @@ func (l *Channel) processTransaction(hash string, txOutIndex int, valueSat *big.
 	}
 
 	// Add transaction as processing.
-	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order.ID, valueSat, txOutIndex)
+	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order, valueSat, txOutIndex)
 	if err != nil {
 		return err
 	}

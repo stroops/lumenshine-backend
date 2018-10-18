@@ -715,6 +715,7 @@ func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
 		RecipientAddress: l.RecipientAddress,
 		DenomAmount:      l.DenominationAmount,
 		SenderAddress:    l.SenderAddress,
+		PaymentUsage:     l.PaymentUsage,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating fake-transaction", cerr.GeneralError))
