@@ -1,18 +1,44 @@
 package main
 
 import (
+	"crypto/rand"
+	"fmt"
+	"io"
 	"net/http"
+
+	"github.com/stellar/go/keypair"
+	"github.com/stellar/go/network"
+	"github.com/stellar/go/xdr"
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
+
+	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stellar/go/build"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func init() {
+	assertAvailablePRNG()
+}
+
+func assertAvailablePRNG() {
+	// Assert that a cryptographically secure PRNG is available.
+	// Panic otherwise.
+	buf := make([]byte, 1)
+
+	_, err := io.ReadFull(rand.Reader, buf)
+	if err != nil {
+		panic(fmt.Sprintf("crypto/rand is unavailable: Read() failed with %#v", err))
+	}
+}
 
 //LoginStep1Request is the data needed for the first step of the login
 type LoginStep1Request struct {
@@ -213,4 +239,218 @@ func CheckPasswordHash(log *logrus.Entry, password, hash string) bool {
 		log.WithError(err).Error("Error checking password")
 	}
 	return err == nil
+}
+
+//LoginSEP10Request is the data needed for creating the challenge
+// swagger:parameters LoginSEP10Request LoginSEP10Get
+type LoginSEP10Request struct {
+	// Account is the stellar account wanted to log in
+	// required: true
+	Account string `form:"account" json:"account" validate:"required"`
+}
+
+//LoginSEP10Response to the api
+type LoginSEP10Response struct {
+	Transaction string `json:"transaction"`
+}
+
+// LoginSEP10Get returns the SEP10 challenge for the account
+// swagger:route GET /portal/auth/login LoginSEP10Get
+//     returns the SEP10 challenge for the account
+//     Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: LoginSEP10Response
+func LoginSEP10Get(uc *mw.IcopContext, c *gin.Context) {
+	var l LoginSEP10Request
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	now := time.Now()
+	validTo := now.Add(time.Second * 300)
+	var keyName = helpers.RandomString(50) + " auth"
+
+	value := make([]byte, 64)
+	_, err := rand.Read(value)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Could not create random string", cerr.GeneralError))
+		return
+	}
+	//value := base64.StdEncoding.EncodeToString(b)
+
+	//create challange
+	tx, err := build.Transaction(
+		build.SourceAccount{AddressOrSeed: cnf.AuthServerSigningAccountPK},
+		build.Network{Passphrase: cnf.StellarNetworkPassphrase},
+		build.Sequence{Sequence: 0},
+		build.Timebounds{
+			MinTime: uint64(now.Unix()), MaxTime: uint64(validTo.Unix()),
+		},
+		build.SetData(
+			keyName, value,
+			build.SourceAccount{AddressOrSeed: l.Account},
+		),
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating transaction", cerr.GeneralError))
+		return
+	}
+
+	txe, err := tx.Sign(cnf.AuthServerSigningAccountSeed)
+	txeStr, err := txe.Base64()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error base64 encoding tx", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, &LoginSEP10Response{Transaction: txeStr})
+}
+
+//LoginSEP10PostRequest is the data needed for doing the validation
+// swagger:parameters LoginSEP10PostRequest LoginSEP10Post
+type LoginSEP10PostRequest struct {
+	// Transaction is the (user)signed transaction from the client
+	// required: true
+	Transaction string `form:"transaction" json:"transaction" validate:"required"`
+}
+
+//LoginSEP10PostResponse valid jwt token
+type LoginSEP10PostResponse struct {
+	Token string `json:"token"`
+}
+
+// LoginSEP10Post validates a login transaction and returns a valid full authenticated JWT token on success
+// swagger:route GET /portal/auth/login LoginSEP10Get
+//     validates a login transaction and returns a valid full authenticated JWT token on success
+//     Consumes:
+//     - application/x-www-form-urlencoded
+//	   - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: LoginSEP10PostResponse
+func LoginSEP10Post(uc *mw.IcopContext, c *gin.Context) {
+	var l LoginSEP10PostRequest
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	txe, err := decodeFromBase64(l.Transaction)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error base64 decoding tx", cerr.GeneralError))
+		return
+	}
+	var tx xdr.Transaction
+	tx = txe.E.Tx
+	if tx.SourceAccount.Address() != cnf.AuthServerSigningAccountPK {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "tx source invalid", cerr.GeneralError))
+		return
+	}
+
+	now := xdr.Uint64(time.Now().Unix())
+	if now < tx.TimeBounds.MinTime || tx.TimeBounds.MinTime == 0 {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "tx not valid yet", cerr.GeneralError))
+		return
+	}
+	if now > tx.TimeBounds.MaxTime || tx.TimeBounds.MaxTime == 0 {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "tx not valid any more", cerr.GeneralError))
+		return
+	}
+
+	if len(tx.Operations) != 1 {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "invalid operation count", cerr.GeneralError))
+		return
+	}
+
+	op := tx.Operations[0]
+	if op.Body.Type != xdr.OperationTypeManageData {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "invalid operation type", cerr.GeneralError))
+		return
+	}
+
+	if op.SourceAccount == nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "invalid operation source", cerr.GeneralError))
+		return
+	}
+
+	userPK := op.SourceAccount.Address()
+
+	//check sgnatures
+	if txe.E.Signatures == nil || len(txe.E.Signatures) != 2 {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "wrong signature amount", cerr.GeneralError))
+		return
+	}
+
+	serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not parse server key", cerr.GeneralError))
+		return
+	}
+
+	userKeyPair, err := keypair.Parse(userPK)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not parse server key", cerr.GeneralError))
+		return
+	}
+
+	hash32, err := network.HashTransaction(&txe.E.Tx, cnf.StellarNetworkPassphrase)
+	txHash := hash32[:]
+
+	err = serverKeyPair.Verify(txHash, txe.E.Signatures[0].Signature)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not verify server signature", cerr.GeneralError))
+		return
+	}
+
+	err = userKeyPair.Verify(txHash, txe.E.Signatures[1].Signature)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not verify user signature", cerr.GeneralError))
+		return
+	}
+
+	//generate JWT and return it
+
+	c.JSON(http.StatusOK, &LoginSEP10PostResponse{Token: ""})
+}
+
+// DecodeFromBase64 decodes the transaction from a base64 string into a TransactionEnvelopeBuilder
+func decodeFromBase64(encodedXdr string) (*build.TransactionEnvelopeBuilder, error) {
+	// Unmarshall from base64 encoded XDR format
+	var decoded xdr.TransactionEnvelope
+	err := xdr.SafeUnmarshalBase64(encodedXdr, &decoded)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert to TransactionEnvelopeBuilder
+	txEnvelopeBuilder := build.TransactionEnvelopeBuilder{E: &decoded}
+	txEnvelopeBuilder.Init()
+
+	//the passphrase needs to be added
+	n := build.Network{Passphrase: cnf.StellarNetworkPassphrase}
+	err = txEnvelopeBuilder.MutateTX(n)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txEnvelopeBuilder, nil
 }

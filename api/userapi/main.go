@@ -98,6 +98,9 @@ func main() {
 	r.POST("/portal/user/lost_tfa", mw.UseIcopContext(LostTfa))
 	r.GET("/portal/info", Info)
 
+	r.GET("/portal/auth/login", mw.UseIcopContext(LoginSEP10Get))
+	r.POST("/portal/auth/login", mw.UseIcopContext(LoginSEP10Post))
+
 	//this group is used, with the simple authenticator, which means, only the userID is present
 	//the middleware will not check for full logged in
 	auth := r.Group("/portal/user/auth")
