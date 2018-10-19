@@ -109,6 +109,7 @@ func (l *Channel) processLedger(ledger *mh.HistoryLedger) error {
 	})
 	localLog.Info("Processing ledger")
 
+	// TODO: Process only transactions, which have the correct memo
 	for _, transaction := range transactions {
 		//get all operations for transaction
 		operations, err := mh.HistoryOperations(qm.Where(mh.HistoryOperationColumns.TransactionID+"=?", transaction.ID)).All(l.dbh)

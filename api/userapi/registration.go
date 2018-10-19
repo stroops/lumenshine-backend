@@ -124,6 +124,14 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if ur.LanguageCode == "" {
+		if uc.Language != "" {
+			ur.LanguageCode = uc.Language
+		} else {
+			ur.LanguageCode = c.Request.Header.Get("Accept-Language")
+		}
+	}
+
 	reqC := &pb.CreateUserRequest{
 		Base:                   NewBaseRequest(uc),
 		Email:                  ur.Email,

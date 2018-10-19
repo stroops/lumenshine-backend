@@ -178,6 +178,8 @@ func (db *DB) GetOrderForAddress(l paymentchannel.Channel, address string, payme
 	err := queries.Raw(sqlStr, m.OrderStatusPaymentReceived, l.Name(), address, m.OrderStatusWaitingForPayment).Bind(nil, db, userOrder)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			//TODO: do not trigger multiple transactions
+
 			//if we did not find an open order, we need to search for all orders on the user, in order to get the multiple transaction triggered
 			userOrder, err = m.UserOrders(
 				qm.Where(m.UserOrderColumns.PaymentNetwork+"=? and "+m.UserOrderColumns.PaymentAddress+"=?", l.Name(), address),
@@ -198,7 +200,7 @@ func (db *DB) GetOrderForAddress(l paymentchannel.Channel, address string, payme
 	return userOrder, nil
 }
 
-//AddNewTransaction adds a transaction to the database and returns true, if it was allready present
+//AddNewTransaction adds a transaction from the payment network to the database and returns true, if it was allready present
 //The function implies, that the order is in status OrderStatusPaymentReceived
 func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.Channel, txHash string,
 	toAddress string, fromAddress string, order *m.UserOrder, denomAmount *big.Int, BTCOutIndex int) (isDuplicate bool, err error) {
@@ -214,6 +216,7 @@ func (db DB) AddNewTransaction(log *logrus.Entry, paymentChannel paymentchannel.
 	iTx.PaymentNetworkAmountDenomination = denomAmount.String()
 
 	if order.OrderStatus != m.OrderStatusPaymentReceived {
+		//TODO check with multiple transactions removing
 		//this means, that we updated the order in some other process or the user send multiple payments, thus it's a additional payment --> refund
 		iTx.Status = m.TransactionStatusRefund
 		err = iTx.Insert(db, boil.Infer())
