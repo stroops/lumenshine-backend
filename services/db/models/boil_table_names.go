@@ -35,11 +35,11 @@ var TableNames = struct {
 	UserSecurity                      string
 	UserWallet                        string
 }{
-	Channels:                          "channels",
-	Countries:                         "countries",
-	ExchangeCurrency:                  "exchange_currency",
-	Ico:                               "ico",
-	IcoPhase:                          "ico_phase",
+	Channels:         "channels",
+	Countries:        "countries",
+	ExchangeCurrency: "exchange_currency",
+	Ico:              "ico",
+	IcoPhase:         "ico_phase",
 	IcoPhaseActivatedExchangeCurrency: "ico_phase_activated_exchange_currency",
 	IcoPhaseBankAccount:               "ico_phase_bank_account",
 	IcoSupportedExchangeCurrency:      "ico_supported_exchange_currency",

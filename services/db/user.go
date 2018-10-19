@@ -131,7 +131,9 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		BankPhoneNumber:   u.BankPhoneNumber,
 		TaxId:             u.TaxID,
 		TaxIdName:         u.TaxIDName,
-		Occupation:        u.Occupation,
+		OccupationName:    u.OccupationName,
+		OccupationCode08:  u.OccupationCode08,
+		OccupationCode88:  u.OccupationCode88,
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
@@ -179,7 +181,9 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.BankPhoneNumber = r.BankPhoneNumber
 	u.TaxID = r.TaxId
 	u.TaxIDName = r.TaxIdName
-	u.Occupation = r.Occupation
+	u.OccupationName = r.OccupationName
+	u.OccupationCode08 = r.OccupationCode08
+	u.OccupationCode88 = r.OccupationCode88
 	u.EmployerName = r.EmployerName
 	u.EmployerAddress = r.EmployerAddress
 	u.LanguageCode = r.LanguageCode
@@ -865,7 +869,9 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 	u.BirthCountryCode = r.BirthCountryCode
 	u.TaxID = r.TaxId
 	u.TaxIDName = r.TaxIdName
-	u.Occupation = r.Occupation
+	u.OccupationName = r.OccupationName
+	u.OccupationCode08 = r.OccupationCode08
+	u.OccupationCode88 = r.OccupationCode88
 	u.EmployerName = r.EmployerName
 	u.EmployerAddress = r.EmployerAddress
 	u.LanguageCode = r.LanguageCode
@@ -890,7 +896,9 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 		models.UserProfileColumns.BirthCountryCode,
 		models.UserProfileColumns.TaxID,
 		models.UserProfileColumns.TaxIDName,
-		models.UserProfileColumns.Occupation,
+		models.UserProfileColumns.OccupationName,
+		models.UserProfileColumns.OccupationCode08,
+		models.UserProfileColumns.OccupationCode88,
 		models.UserProfileColumns.EmployerName,
 		models.UserProfileColumns.EmployerAddress,
 		models.UserProfileColumns.LanguageCode,

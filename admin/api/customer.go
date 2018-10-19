@@ -206,7 +206,9 @@ type CustomerDetailsResponse struct {
 	BankPhoneNumber   string     `json:"bank_phone_number"`
 	TaxID             string     `json:"tax_id"`
 	TaxIDName         string     `json:"tax_id_name"`
-	Occupation        string     `json:"occupation"`
+	OccupationName    string     `json:"occupation_name"`
+	OccupationCode08  string     `json:"occupation_code08"`
+	OccupationCode88  string     `json:"occupation_code88"`
 	EmployerName      string     `json:"employer_name"`
 	EmployerAddress   string     `json:"employer_address"`
 	LanguageCode      string     `json:"language_code"`
@@ -256,7 +258,9 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		BankPhoneNumber:   u.BankPhoneNumber,
 		TaxID:             u.TaxID,
 		TaxIDName:         u.TaxIDName,
-		Occupation:        u.Occupation,
+		OccupationName:    u.OccupationName,
+		OccupationCode08:  u.OccupationCode08,
+		OccupationCode88:  u.OccupationCode88,
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
@@ -292,7 +296,9 @@ type CustomerEditRequest struct {
 	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"max=255"`
 	TaxID             string `form:"tax_id" json:"tax_id" validate:"max=255"`
 	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"max=255"`
-	Occupation        string `form:"occupation" json:"occupation" validate:"max=5"`
+	OccupationName    string `form:"occupation_name" json:"occupation_name" validate:"max=256"`
+	OccupationCode08  string `form:"occupation_code08" json:"occupation_code08" validate:"max=8"`
+	OccupationCode88  string `form:"occupation_code88" json:"occupation_code88" validate:"max=8"`
 	EmployerName      string `form:"employer_name" json:"employer_name" validate:"max=500"`
 	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"max=500"`
 	LanguageCode      string `form:"language_code" json:"language_code" validate:"max=10"`
@@ -354,7 +360,9 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	u.BankPhoneNumber = rr.BankPhoneNumber
 	u.TaxID = rr.TaxID
 	u.TaxIDName = rr.TaxIDName
-	u.Occupation = rr.Occupation
+	u.OccupationName = rr.OccupationName
+	u.OccupationCode08 = rr.OccupationCode08
+	u.OccupationCode88 = rr.OccupationCode88
 	u.EmployerName = rr.EmployerName
 	u.EmployerAddress = rr.EmployerAddress
 	u.LanguageCode = rr.LanguageCode
@@ -392,7 +400,9 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		BankPhoneNumber:   u.BankPhoneNumber,
 		TaxID:             u.TaxID,
 		TaxIDName:         u.TaxIDName,
-		Occupation:        u.Occupation,
+		OccupationName:    u.OccupationName,
+		OccupationCode08:  u.OccupationCode08,
+		OccupationCode88:  u.OccupationCode88,
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,

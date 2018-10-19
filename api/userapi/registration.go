@@ -55,7 +55,9 @@ type RegisterUserRequest struct {
 	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"max=256"`
 	TaxID             string `form:"tax_id" json:"tax_id" validate:"max=256"`
 	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"max=256"`
-	Occupation        string `form:"occupation" json:"occupation" validate:"max=8"`
+	OccupationName    string `form:"occupation_name" json:"occupation_name" validate:"max=256"`
+	OccupationCode08  string `form:"occupation_code08" json:"occupation_code08" validate:"max=8"`
+	OccupationCode88  string `form:"occupation_code88" json:"occupation_code88" validate:"max=8"`
 	EmployerName      string `form:"employer_name" json:"employer_name" validate:"max=512"`
 	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"max=512"`
 	LanguageCode      string `form:"language_code" json:"language_code" validate:"max=16"`
@@ -151,7 +153,9 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		BankPhoneNumber:        ur.BankPhoneNumber,
 		TaxId:                  ur.TaxID,
 		TaxIdName:              ur.TaxIDName,
-		Occupation:             ur.Occupation,
+		OccupationName:         ur.OccupationName,
+		OccupationCode08:       ur.OccupationCode08,
+		OccupationCode88:       ur.OccupationCode88,
 		EmployerName:           ur.EmployerName,
 		EmployerAddress:        ur.EmployerAddress,
 		LanguageCode:           ur.LanguageCode,

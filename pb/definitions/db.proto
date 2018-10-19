@@ -53,10 +53,12 @@ message CreateUserRequest {
 	string bank_phone_number = 36;
 	string tax_id = 37;
 	string tax_id_name = 38;
-	string occupation = 39;
-	string employer_name = 40;
-	string employer_address = 41;
-	string language_code = 42;
+  string occupation_name = 39;
+  string occupation_code08 = 40;
+  string occupation_code88 = 41;
+	string employer_name = 42;
+	string employer_address = 43;
+	string language_code = 44;
 }
 
 message UserProfileResponse {
@@ -84,12 +86,14 @@ message UserProfileResponse {
 	string bank_phone_number = 22;
 	string tax_id = 23;
 	string tax_id_name = 24;
-	string occupation = 25;
-	string employer_name = 26;
-	string employer_address = 27;
-  string language_code = 28;
-  int64 created_at = 29;
-  bool user_not_found = 30;  
+  string occupation_name = 25;
+  string occupation_code08 = 26;
+  string occupation_code88 = 27;
+	string employer_name = 28;
+	string employer_address = 29;
+  string language_code = 30;
+  int64 created_at = 31;
+  bool user_not_found = 32;  
 }
 
 message UpdateUserProfileRequest {
@@ -116,10 +120,12 @@ message UpdateUserProfileRequest {
 	string bank_phone_number = 21;
 	string tax_id = 22;
 	string tax_id_name = 23;
-	string occupation = 24;
-	string employer_name = 25;
-	string employer_address = 26;
-  string language_code = 27;
+  string occupation_name = 24;
+  string occupation_code08 = 25;
+  string occupation_code88 = 26;
+	string employer_name = 27;
+	string employer_address = 28;
+  string language_code = 29;
 }
 
 message UserDetailsResponse {
