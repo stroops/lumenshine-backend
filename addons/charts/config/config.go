@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -192,6 +193,7 @@ func ReadConfig(cmd *cobra.Command) error {
 		Cnf.SQLMigrationDir = filepath.Join(Cnf.ApplicationDir, "db", "migrations")
 	}
 	helpers.CreateDirIfNotExists(Cnf.SQLMigrationDir)
+	helpers.CreateDirIfNotExists(Cnf.LocalDownloadDir)
 
 	return nil
 }

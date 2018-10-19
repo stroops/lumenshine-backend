@@ -9,7 +9,7 @@ import (
 // RootCommand will setup and return the root command
 func RootCommand() *cobra.Command {
 	rootCmd := cobra.Command{
-		Use: "dbCommand",
+		Use: "charts",
 		Run: run,
 	}
 
