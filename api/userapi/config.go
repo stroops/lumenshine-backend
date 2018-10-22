@@ -64,6 +64,8 @@ type Config struct {
 	WebLinks ConfigWebLinks
 
 	Kyc ConfigKyc
+
+	SEP10FakeLoginEnabled bool
 }
 
 var cnf *Config

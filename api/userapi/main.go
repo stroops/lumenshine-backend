@@ -98,9 +98,6 @@ func main() {
 	r.POST("/portal/user/lost_tfa", mw.UseIcopContext(LostTfa))
 	r.GET("/portal/info", Info)
 
-	r.GET("/portal/auth/login", mw.UseIcopContext(LoginSEP10Get))
-	r.POST("/portal/auth/login", mw.UseIcopContext(LoginSEP10Post))
-
 	//this group is used, with the simple authenticator, which means, only the userID is present
 	//the middleware will not check for full logged in
 	auth := r.Group("/portal/user/auth")
@@ -115,6 +112,9 @@ func main() {
 		auth.POST("/update_security_data", mw.UseIcopContext(UpdateSecurityData))
 		auth.GET("/get_user_registration_status", mw.UseIcopContext(GetUserRegistrationDetails))
 		auth.GET("/need_2fa_reset_pwd", mw.UseIcopContext(Need2FAResetPassword))
+
+		auth.GET("/login", mw.UseIcopContext(LoginSEP10Get))
+		auth.POST("/login", mw.UseIcopContext(LoginSEP10Post))
 	}
 
 	//this group is used, with the full authenticator, which means, userID and claim is present
