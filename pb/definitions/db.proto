@@ -390,6 +390,47 @@ message WalletIsLastRequest {
   int64 user_id = 3;
 }
 
+message AddPaymentTemplateRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  int64 wallet_id = 3;
+  string recipient_stellar_address = 4;
+  string recipient_publickey = 5;
+  string asset_code = 6;
+  string issuer_publickey = 7;
+  int64 amount = 8;
+  MemoType memoType = 9;
+  string memo = 10;
+}
+
+message RemovePaymentTemplateRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;
+}
+
+message GetTemplatesRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  int64 wallet_id = 3;
+}
+
+message PaymentTemplate {
+  int64 id = 1;
+  int64 wallet_id = 2;
+  string recipient_stellar_address = 3;
+  string recipient_publickey = 4;
+  string asset_code = 5;
+  string issuer_publickey = 6;
+  int64 amount = 7;
+  MemoType memoType = 8;
+  string memo = 9;
+}
+
+message GetTemplatesResponse {
+  repeated PaymentTemplate templates = 1;
+}
+
 message QueuePushNotificationRequest {
   BaseRequest base = 1;
   int64 user_id = 2;
@@ -550,6 +591,9 @@ service DBService {
   rpc GetUserWallets (GetWalletsRequest) returns (GetWalletsResponse) {}
   rpc WalletIsLast (WalletIsLastRequest) returns (BoolResponse) {}
   rpc WalletSetHomescreen (WalletSetHomescreenRequest) returns (Empty) {}
+  rpc AddPaymentTemplate (AddPaymentTemplateRequest) returns (IDResponse) {}
+  rpc GetPaymentTemplates (GetTemplatesRequest) returns (GetTemplatesResponse) {}
+  rpc RemovePaymentTemplate (RemovePaymentTemplateRequest) returns (Empty) {}
   rpc AddKycDocument(AddKycDocumentRequest) returns (AddKycDocumentResponse) {}
 
   rpc AddPushToken(AddPushTokenRequest) returns (Empty) {}

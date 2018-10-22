@@ -507,7 +507,154 @@ func GetKnownInflationDestinations(uc *mw.IcopContext, c *gin.Context) {
 			OrderIndex:       cr.OrderIndex,
 		}
 	}
-
 	c.JSON(http.StatusOK, crs)
+}
 
+//GetPaymentTemplatesRequest request
+type GetPaymentTemplatesRequest struct {
+	WalletID int64 `form:"wallet_id" json:"wallet_id"`
+}
+
+//GetPaymentTemplateResponse result
+type GetPaymentTemplateResponse struct {
+	ID                      int    `json:"id"`
+	RecipientStellarAddress string `json:"recipient_stellar_address"`
+	RecipientPK             string `json:"recipien_pk"`
+	AssetCode               string `json:"asset_code"`
+	IssuerPK                string `json:"issuer_pk"`
+	Amount                  int64  `json:"amount"`
+	MemoType                string `json:"memo_type"`
+	Memo                    string `json:"memo"`
+}
+
+//GetPaymentTemplates returns all templates for a wallet
+func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
+	var r GetPaymentTemplatesRequest
+	if err := c.Bind(&r); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	userID := mw.GetAuthUser(c).UserID
+	req := &pb.GetTemplatesRequest{
+		Base:     NewBaseRequest(uc),
+		WalletId: r.WalletID,
+		UserId:   userID,
+	}
+	templates, err := dbClient.GetPaymentTemplates(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading templates", cerr.GeneralError))
+		return
+	}
+
+	ws := make([]GetPaymentTemplateResponse, len(templates.Templates))
+	for i, t := range templates.Templates {
+		ws[i] = GetPaymentTemplateResponse{
+			ID: int(t.Id),
+			RecipientStellarAddress: t.RecipientStellarAddress,
+			RecipientPK:             t.RecipientPublickey,
+			AssetCode:               t.AssetCode,
+			IssuerPK:                t.IssuerPublickey,
+			Amount:                  t.Amount,
+			MemoType:                t.MemoType.String(),
+			Memo:                    t.Memo,
+		}
+	}
+
+	c.JSON(http.StatusOK, ws)
+}
+
+//AddPaymentTemplateRequest request
+type AddPaymentTemplateRequest struct {
+	WalletID                int    `form:"wallet_id" json:"wallet_id"`
+	RecipientStellarAddress string `form:"recipient_stellar_address" json:"recipient_stellar_address" validate:"max=256"`
+	RecipientPK             string `form:"recipient_pk" json:"recipient_pk" validate:"omitempty,base64,len=56"`
+	AssetCode               string `form:"asset_code" json:"asset_code" validate:"icop_assetcode"`
+	IssuerPK                string `form:"issuer_pk" json:"issuer_pk" validate:"omitempty,base64,len=56"`
+	Amount                  int64  `form:"amount" json:"amount"`
+	MemoType                string `form:"memo_type" json:"memo_type" validate:"required,max=8"`
+	Memo                    string `form:"memo" json:"memo"`
+}
+
+//AddTemplateResponse response
+type AddTemplateResponse struct {
+	ID int64 `json:"id"`
+}
+
+//AddPaymentTemplate adds a new template to the wallet
+func AddPaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
+	var r AddPaymentTemplateRequest
+	if err := c.Bind(&r); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, r); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	if r.RecipientPK == "" && r.RecipientStellarAddress == "" {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("recipient_pk", cerr.InvalidArgument, "At least one recipient field must be specified.", ""))
+		return
+	}
+	if r.AssetCode != "XLM" && r.IssuerPK == "" {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("issuer_pk", cerr.InvalidArgument, "Issuer must be specified.", ""))
+		return
+	}
+	if r.AssetCode == "XLM" && r.IssuerPK != "" {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("issuer_pk", cerr.InvalidArgument, "Issuer must not be set for native XLM.", ""))
+		return
+	}
+	if _, ok := pb.MemoType_value[r.MemoType]; !ok {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("memo_type", cerr.InvalidArgument, "Invalid memo type.", ""))
+		return
+	}
+
+	userID := mw.GetAuthUser(c).UserID
+	id, err := dbClient.AddPaymentTemplate(c, &pb.AddPaymentTemplateRequest{
+		Base:                    NewBaseRequest(uc),
+		UserId:                  userID,
+		WalletId:                int64(r.WalletID),
+		RecipientStellarAddress: r.RecipientStellarAddress,
+		RecipientPublickey:      r.RecipientPK,
+		AssetCode:               r.AssetCode,
+		IssuerPublickey:         r.IssuerPK,
+		Amount:                  r.Amount,
+		MemoType:                pb.MemoType(pb.MemoType_value[r.MemoType]),
+		Memo:                    r.Memo,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error adding payment template", cerr.GeneralError))
+		return
+	}
+	c.JSON(http.StatusOK, &AddTemplateResponse{
+		ID: id.Id,
+	})
+}
+
+//RemovePaymentTemplateRequest request
+type RemovePaymentTemplateRequest struct {
+	ID int64 `form:"id" json:"id"`
+}
+
+//RemovePaymentTemplate removes a template from the wallet
+func RemovePaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
+	var r RemovePaymentTemplateRequest
+	if err := c.Bind(&r); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	userID := mw.GetAuthUser(c).UserID
+	req := &pb.RemovePaymentTemplateRequest{
+		Base:   NewBaseRequest(uc),
+		Id:     r.ID,
+		UserId: userID,
+	}
+	_, err := dbClient.RemovePaymentTemplate(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error removing template", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{}")
 }
