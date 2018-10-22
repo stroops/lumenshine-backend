@@ -65,7 +65,7 @@ var UserWalletRels = struct {
 	User                   string
 	WalletPaymentTemplates string
 }{
-	User:                   "User",
+	User: "User",
 	WalletPaymentTemplates: "WalletPaymentTemplates",
 }
 

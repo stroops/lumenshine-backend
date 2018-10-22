@@ -202,3 +202,92 @@ func (s *server) WalletSetHomescreen(ctx context.Context, r *pb.WalletSetHomescr
 
 	return &pb.Empty{}, err
 }
+
+func (s *server) AddPaymentTemplate(ctx context.Context, r *pb.AddPaymentTemplateRequest) (*pb.IDResponse, error) {
+	w, err := models.UserWallets(qm.Select(models.UserWalletColumns.UserID), qm.Where("id=?", r.WalletId)).One(db)
+	if err != nil {
+		return nil, err
+	}
+	if w == nil {
+		return nil, errors.New("Wallet does not exist")
+	}
+	if w.UserID != int(r.UserId) {
+		return nil, errors.New("Wallet does not bellong to the user")
+	}
+
+	//add the template for the wallet
+	t := &models.PaymentTemplate{
+		WalletID:                int(r.WalletId),
+		RecepientStellarAddress: r.RecipientStellarAddress,
+		RecepientPK:             r.RecipientPublickey,
+		AssetCode:               r.AssetCode,
+		IssuerPK:                r.IssuerPublickey,
+		Amount:                  r.Amount,
+		MemoType:                r.MemoType.String(),
+		Memo:                    r.Memo,
+		UpdatedBy:               r.Base.UpdateBy,
+	}
+
+	err = t.Insert(db, boil.Infer())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.IDResponse{Id: int64(t.ID)}, nil
+}
+
+func (s *server) GetPaymentTemplates(ctx context.Context, r *pb.GetTemplatesRequest) (*pb.GetTemplatesResponse, error) {
+	w, err := models.UserWallets(qm.Select(models.UserWalletColumns.UserID), qm.Where("id=?", r.WalletId)).One(db)
+	if err != nil {
+		return nil, err
+	}
+	if w == nil {
+		return nil, errors.New("Wallet does not exist")
+	}
+	if w.UserID != int(r.UserId) {
+		return nil, errors.New("Wallet does not bellong to the user")
+	}
+
+	templates, err := models.PaymentTemplates(qm.Where("wallet_id=?", r.WalletId)).All(db)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := new(pb.GetTemplatesResponse)
+	for _, t := range templates {
+		template := pb.PaymentTemplate{
+			Id:                      int64(t.ID),
+			WalletId:                int64(t.WalletID),
+			RecipientStellarAddress: t.RecepientStellarAddress,
+			RecipientPublickey:      t.RecepientPK,
+			AssetCode:               t.AssetCode,
+			Amount:                  t.Amount,
+			Memo:                    t.Memo,
+		}
+		if t.MemoType != "" {
+			template.MemoType = pb.MemoType(pb.MemoType_value[t.MemoType])
+		}
+		ret.Templates = append(ret.Templates, &template)
+	}
+
+	return ret, nil
+}
+
+func (s *server) RemovePaymentTemplate(ctx context.Context, r *pb.RemovePaymentTemplateRequest) (*pb.Empty, error) {
+	t, err := models.PaymentTemplates(qm.Where("id=?", r.Id), qm.Load(models.PaymentTemplateRels.Wallet)).One(db)
+	if err != nil {
+		return nil, err
+	}
+	if t == nil {
+		return nil, errors.New("Template does not exist")
+	}
+	if t.R.Wallet.UserID != int(r.UserId) {
+		return nil, errors.New("Wallet does not bellong to the user")
+	}
+	_, err = t.Delete(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Empty{}, nil
+}
