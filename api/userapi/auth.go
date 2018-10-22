@@ -138,9 +138,9 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, user.Id)
 
-	sep10ChallangeTX, err := getSEP10Challenge(l.Account)
+	sep10ChallangeTX, err := getSEP10Challenge(user.PublicKey_0)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
 		return
 	}
 
@@ -163,8 +163,8 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 type LoginStep2Request struct {
 	/*Key string `form:"key" json:"key" validate:"required"`
 	PublicKey0 string `form:"public_key_0" json:"public_key_0" validate:"required"`*/
-	Key             string `form:"key" json:"key"`
-	PublicKeyIndex0 string `form:"public_key_index0" json:"public_key_index0"`
+	Key              string `form:"key" json:"key"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //LoginStep2Response to the api
@@ -207,16 +207,29 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	match := CheckPasswordHash(uc.Log, l.Key, u.Password)
-	if !match {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("key", cerr.InvalidArgument, "Can not login user, public key is invalid", "loginStep2.key.invalid"))
-		return
+	if l.SEP10Transaction == "" {
+		match := CheckPasswordHash(uc.Log, l.Key, u.Password)
+		if !match {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("key", cerr.InvalidArgument, "Can not login user, public key is invalid", "loginStep2.key.invalid"))
+			return
+		}
+	} else {
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
+		}
 	}
 
 	ret := &LoginStep2Response{
 		MailConfirmed:     user.MailConfirmed,
 		TfaConfirmed:      user.TfaConfirmed,
 		MnemonicConfirmed: user.MnemonicConfirmed,
+		PaymentState:      u.PaymentState,
 	}
 
 	if user.TfaConfirmed {
@@ -250,50 +263,6 @@ func CheckPasswordHash(log *logrus.Entry, password, hash string) bool {
 		log.WithError(err).Error("Error checking password")
 	}
 	return err == nil
-}
-
-//LoginSEP10Request is the data needed for creating the challenge
-// swagger:parameters LoginSEP10Request LoginSEP10Get
-type LoginSEP10Request struct {
-	// Account is the stellar account wanted to log in
-	// required: true
-	Account string `form:"account" json:"account" validate:"required"`
-}
-
-//LoginSEP10Response to the api
-type LoginSEP10Response struct {
-	Transaction string `json:"transaction"`
-}
-
-// LoginSEP10Get returns the SEP10 challenge for the account
-// swagger:route GET /portal/auth/login LoginSEP10Get
-//     returns the SEP10 challenge for the account
-//     Consumes:
-//     - multipart/form-data
-//
-//     Produces:
-//     - application/json
-//
-//     Responses:
-//       200: LoginSEP10Response
-func LoginSEP10Get(uc *mw.IcopContext, c *gin.Context) {
-	var l LoginSEP10Request
-	if err := c.Bind(&l); err != nil {
-		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
-		return
-	}
-
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
-	txeStr, err := getSEP10Challenge(l.Account)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-		return
-	}
-	c.JSON(http.StatusOK, &LoginSEP10Response{Transaction: txeStr})
 }
 
 func getSEP10Challenge(account string) (string, error) {
@@ -331,60 +300,6 @@ func getSEP10Challenge(account string) (string, error) {
 	}
 
 	return txeStr, nil
-}
-
-//LoginSEP10PostRequest is the data needed for doing the validation
-// swagger:parameters LoginSEP10PostRequest LoginSEP10Post
-type LoginSEP10PostRequest struct {
-	// Transaction is the (user)signed transaction from the client
-	// required: true
-	Transaction string `form:"transaction" json:"transaction" validate:"required"`
-}
-
-//LoginSEP10PostResponse valid jwt token
-type LoginSEP10PostResponse struct {
-	Token string `json:"token"`
-}
-
-// LoginSEP10Post validates a login transaction and returns a valid full authenticated JWT token on success
-// swagger:route GET /portal/auth/login LoginSEP10Get
-//     validates a login transaction and returns a valid full authenticated JWT token on success
-//     Consumes:
-//     - application/x-www-form-urlencoded
-//	   - application/json
-//
-//     Produces:
-//     - application/json
-//
-//     Responses:
-//       200: EmptyResponse
-func LoginSEP10Post(uc *mw.IcopContext, c *gin.Context) {
-	var l LoginSEP10PostRequest
-	if err := c.Bind(&l); err != nil {
-		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
-		return
-	}
-
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
-	// check transaction
-	userID := mw.GetAuthUser(c).UserID
-	valid, _, err := verifySEP10Data(l.Transaction, userID, uc, c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-		return
-	}
-	if !valid {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate transaction", ""))
-		return
-	}
-
-	authMiddlewareFull.SetAuthHeader(c, userID)
-
-	c.JSON(http.StatusOK, &LoginSEP10PostResponse{Token: ""})
 }
 
 //verifySEP10Data verifies the SEP10 transaction and returns the user publickey and validity

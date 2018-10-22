@@ -63,6 +63,7 @@ func (s *server) GetUserByMailtoken(ctx context.Context, r *pb.UserMailTokenRequ
 		MailConfirmationExpiry: u.MailConfirmationExpiryDate.Unix(),
 		MailConfirmed:          u.MailConfirmed,
 		Email:                  u.Email,
+		PublicKey_0:            u.PublicKey0,
 	}, nil
 }
 
@@ -89,6 +90,8 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		Email:                  u.Email,
 		MessageCount:           int64(u.MessageCount),
 		Reset2FaByAdmin:        u.Reset2faByAdmin,
+		PublicKey_0:            u.PublicKey0,
+		PaymentState:           u.PaymentState,
 	}
 
 	return ret, nil
@@ -138,6 +141,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
 		CreatedAt:         int64(u.CreatedAt.Unix()),
+		PublicKey_0:       u.PublicKey0,
 	}, nil
 }
 
@@ -158,6 +162,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.MailConfirmationExpiryDate = time.Unix(r.MailConfirmationExpiry, 0)
 	u.TfaTempSecret = r.TfaTempSecret
 	u.TfaConfirmed = false
+	u.PublicKey0 = r.PublicKey_0
 
 	u.Salutation = r.Salutation
 	u.Title = r.Title

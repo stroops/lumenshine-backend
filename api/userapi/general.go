@@ -188,9 +188,10 @@ type ConfirmTokeRequest struct {
 
 //ConfirmTokeResponse response
 type ConfirmTokeResponse struct {
-	Email                 string    `json:"email"`
-	ConfirmationDate      time.Time `json:"confirmation_date"`
-	TokenAlreadyConfirmed bool      `json:"token_already_confirmed"`
+	Email                     string    `json:"email"`
+	ConfirmationDate          time.Time `json:"confirmation_date"`
+	TokenAlreadyConfirmed     bool      `json:"token_already_confirmed"`
+	SEP10TransactionChallenge string    `json:"sep10_transaction_challenge"`
 }
 
 //ConfirmToken confirms a mail token
@@ -261,8 +262,15 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, u.UserId)
 
+	sep10ChallangeTX, err := getSEP10Challenge(u.PublicKey_0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
+		return
+	}
+
 	c.JSON(http.StatusOK, &ConfirmTokeResponse{
-		Email: u.Email,
+		Email:                     u.Email,
+		SEP10TransactionChallenge: sep10ChallangeTX,
 	})
 }
 
@@ -315,7 +323,8 @@ func UserSecurityData(uc *mw.IcopContext, c *gin.Context) {
 
 //GetTfaSecretRequest for requesting the tfa secrete
 type GetTfaSecretRequest struct {
-	PublicKey188 string `form:"public_key_188" json:"public_key_188" validate:"required"`
+	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
 }
 
 //GetTfaSecretResponse response for the api call
@@ -352,9 +361,21 @@ func GetTfaSecret(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if !CheckPasswordHash(uc.Log, l.PublicKey188, user.Password) {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
-		return
+	if l.SEP10Transaction == "" {
+		if !CheckPasswordHash(uc.Log, l.PublicKey188, user.Password) {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
+			return
+		}
+	} else {
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, userID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, &GetTfaSecretResponse{

@@ -65,8 +65,9 @@ type RegisterUserRequest struct {
 
 //RegisterUserResponse response for registration
 type RegisterUserResponse struct {
-	TFASecret  string `json:"tfa_secret,omitempty"`
-	TFAQrImage string `json:"tfa_qr_image,omitempty"`
+	TFASecret                 string `json:"tfa_secret,omitempty"`
+	TFAQrImage                string `json:"tfa_qr_image,omitempty"`
+	SEP10TransactionChallenge string `json:"sep10_transaction_challenge"`
 }
 
 //RegisterUser registers and creates the user in the db
@@ -211,15 +212,23 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, user.Id)
 
+	sep10ChallangeTX, err := getSEP10Challenge(ur.PublicKey0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
+		return
+	}
+
 	c.JSON(http.StatusOK, &RegisterUserResponse{
-		TFAQrImage: base64.StdEncoding.EncodeToString(twoFaResp.Bitmap),
-		TFASecret:  twoFaResp.Secret,
+		TFAQrImage:                base64.StdEncoding.EncodeToString(twoFaResp.Bitmap),
+		TFASecret:                 twoFaResp.Secret,
+		SEP10TransactionChallenge: sep10ChallangeTX,
 	})
 }
 
 //Confirm2FARequest is the data needed for the 2fa registration
 type Confirm2FARequest struct {
-	TfaCode string `form:"tfa_code" json:"tfa_code" validate:"required"`
+	TfaCode          string `form:"tfa_code" json:"tfa_code" validate:"required"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //Confirm2FAResponse response for API
@@ -304,6 +313,17 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting user 2fa confirmed", cerr.GeneralError))
+		return
+	}
+
+	//TODO: check with Christian
+	valid, _, err := verifySEP10Data(cd.SEP10Transaction, user.Id, uc, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 		return
 	}
 

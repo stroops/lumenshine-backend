@@ -93,7 +93,8 @@ message UserProfileResponse {
 	string employer_address = 29;
   string language_code = 30;
   int64 created_at = 31;
-  bool user_not_found = 32;  
+  bool user_not_found = 32;
+  string public_key_0 = 33;
 }
 
 message UpdateUserProfileRequest {
@@ -142,6 +143,8 @@ message UserDetailsResponse {
   bool user_not_found = 11;
   string tfa_temp_secret = 12;
   bool reset2fa_by_admin =  13;
+  string public_key_0 = 14;
+  string payment_state = 15;
 }
 
 message ExistsEmailRequest {
@@ -208,6 +211,7 @@ message UserMailTokenResponse {
   bool token_already_confirmed = 5;
   bool mail_confirmed = 6;
   int64 confirmed_date = 7;
+  string public_key_0 = 8;
 }
 
 message UserSecurityRequest {
