@@ -276,9 +276,14 @@ func getSEP10Challenge(account string) (string, error) {
 		return "", fmt.Errorf("Could not create random string: %s", err.Error())
 	}
 
+	serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
+	if err != nil {
+		return "", fmt.Errorf("could not parse server key: %s", err.Error())
+	}
+
 	//create challange
 	tx, err := build.Transaction(
-		build.SourceAccount{AddressOrSeed: cnf.AuthServerSigningAccountPK},
+		build.SourceAccount{AddressOrSeed: serverKeyPair.Address()},
 		build.Network{Passphrase: cnf.StellarNetworkPassphrase},
 		build.Sequence{Sequence: 0},
 		build.Timebounds{
@@ -321,13 +326,18 @@ func verifySEP10Data(txStr string, userID int64, uc *mw.IcopContext, c *gin.Cont
 		}
 		userPK = userSec.PublicKey_0
 	} else {
+		serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
+		if err != nil {
+			return false, "", fmt.Errorf("could not parse server key: %s", err.Error())
+		}
+
 		txe, err := decodeFromBase64(txStr)
 		if err != nil {
 			return false, "", fmt.Errorf("Error base64 decoding tx: %s", err.Error())
 		}
 		var tx xdr.Transaction
 		tx = txe.E.Tx
-		if tx.SourceAccount.Address() != cnf.AuthServerSigningAccountPK {
+		if tx.SourceAccount.Address() != serverKeyPair.Address() {
 			return false, "", fmt.Errorf("tx source invalid")
 		}
 
@@ -357,11 +367,6 @@ func verifySEP10Data(txStr string, userID int64, uc *mw.IcopContext, c *gin.Cont
 		//check sgnatures
 		if txe.E.Signatures == nil || len(txe.E.Signatures) != 2 {
 			return false, "", fmt.Errorf("wrong signature amount")
-		}
-
-		serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
-		if err != nil {
-			return false, "", fmt.Errorf("could not parse server key: %s", err.Error())
 		}
 
 		userKeyPair, err := keypair.Parse(userPK)
