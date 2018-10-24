@@ -98,7 +98,6 @@ func main() {
 	//the middleware will check for full logged in (calim must be present)
 	//this is the main group, that is used to read data etc.
 	auth := r.Group("/portal/pay/")
-	auth.Use(authMiddlewareFull.MiddlewareFunc())
 	auth.Use(mw.MessageCount()) //Messagecount only for fully logged in users
 	{
 		auth.POST("refresh", authMiddlewareFull.RefreshHandler)
