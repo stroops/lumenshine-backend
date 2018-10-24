@@ -59,6 +59,7 @@ type LoginStep1Response struct {
 	WordlistEncryptionIV          string `json:"wordlist_encryption_iv"`
 	PublicKeyIndex0               string `json:"public_key_index0"`
 	TfaConfirmed                  bool   `json:"tfa_confirmed"`
+	SEP10TransactionChallenge     string `json:"sep10_transaction_challenge"`
 }
 
 //LoginStep1 is the first step of the login
@@ -137,6 +138,12 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, user.Id)
 
+	sep10ChallangeTX, err := getSEP10Challenge(user.PublicKey_0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
+		return
+	}
+
 	c.JSON(http.StatusOK, &LoginStep1Response{
 		KdfPasswordSalt:               s.KdfSalt,
 		EncryptedMnemonicMasterKey:    s.MnemonicMasterKey,
@@ -148,12 +155,16 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 		EncryptedWordlist:             s.Wordlist,
 		WordlistEncryptionIV:          s.WordlistIv,
 		PublicKeyIndex0:               s.PublicKey_0,
+		SEP10TransactionChallenge:     sep10ChallangeTX,
 	})
 }
 
 //LoginStep2Request is the data needed for the second step of the login
 type LoginStep2Request struct {
-	Key string `form:"key" json:"key" validate:"required"`
+	/*Key string `form:"key" json:"key" validate:"required"`
+	PublicKey0 string `form:"public_key_0" json:"public_key_0" validate:"required"`*/
+	Key              string `form:"key" json:"key"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //LoginStep2Response to the api
@@ -196,16 +207,29 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	match := CheckPasswordHash(uc.Log, l.Key, u.Password)
-	if !match {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("key", cerr.InvalidArgument, "Can not login user, public key is invalid", "loginStep2.key.invalid"))
-		return
+	if l.SEP10Transaction == "" {
+		match := CheckPasswordHash(uc.Log, l.Key, u.Password)
+		if !match {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("key", cerr.InvalidArgument, "Can not login user, public key is invalid", "loginStep2.key.invalid"))
+			return
+		}
+	} else {
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
+		}
 	}
 
 	ret := &LoginStep2Response{
 		MailConfirmed:     user.MailConfirmed,
 		TfaConfirmed:      user.TfaConfirmed,
 		MnemonicConfirmed: user.MnemonicConfirmed,
+		PaymentState:      u.PaymentState,
 	}
 
 	if user.TfaConfirmed {
@@ -241,42 +265,7 @@ func CheckPasswordHash(log *logrus.Entry, password, hash string) bool {
 	return err == nil
 }
 
-//LoginSEP10Request is the data needed for creating the challenge
-// swagger:parameters LoginSEP10Request LoginSEP10Get
-type LoginSEP10Request struct {
-	// Account is the stellar account wanted to log in
-	// required: true
-	Account string `form:"account" json:"account" validate:"required"`
-}
-
-//LoginSEP10Response to the api
-type LoginSEP10Response struct {
-	Transaction string `json:"transaction"`
-}
-
-// LoginSEP10Get returns the SEP10 challenge for the account
-// swagger:route GET /portal/auth/login LoginSEP10Get
-//     returns the SEP10 challenge for the account
-//     Consumes:
-//     - multipart/form-data
-//
-//     Produces:
-//     - application/json
-//
-//     Responses:
-//       200: LoginSEP10Response
-func LoginSEP10Get(uc *mw.IcopContext, c *gin.Context) {
-	var l LoginSEP10Request
-	if err := c.Bind(&l); err != nil {
-		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
-		return
-	}
-
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
+func getSEP10Challenge(account string) (string, error) {
 	now := time.Now()
 	validTo := now.Add(time.Second * 300)
 	var keyName = helpers.RandomString(50) + " auth"
@@ -284,14 +273,17 @@ func LoginSEP10Get(uc *mw.IcopContext, c *gin.Context) {
 	value := make([]byte, 64)
 	_, err := rand.Read(value)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Could not create random string", cerr.GeneralError))
-		return
+		return "", fmt.Errorf("Could not create random string: %s", err.Error())
 	}
-	//value := base64.StdEncoding.EncodeToString(b)
+
+	serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
+	if err != nil {
+		return "", fmt.Errorf("could not parse server key: %s", err.Error())
+	}
 
 	//create challange
 	tx, err := build.Transaction(
-		build.SourceAccount{AddressOrSeed: cnf.AuthServerSigningAccountPK},
+		build.SourceAccount{AddressOrSeed: serverKeyPair.Address()},
 		build.Network{Passphrase: cnf.StellarNetworkPassphrase},
 		build.Sequence{Sequence: 0},
 		build.Timebounds{
@@ -299,137 +291,121 @@ func LoginSEP10Get(uc *mw.IcopContext, c *gin.Context) {
 		},
 		build.SetData(
 			keyName, value,
-			build.SourceAccount{AddressOrSeed: l.Account},
+			build.SourceAccount{AddressOrSeed: account},
 		),
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating transaction", cerr.GeneralError))
-		return
+		return "", fmt.Errorf("Error creating transaction: %s", err.Error())
 	}
 
 	txe, err := tx.Sign(cnf.AuthServerSigningAccountSeed)
 	txeStr, err := txe.Base64()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error base64 encoding tx", cerr.GeneralError))
-		return
+		return "", fmt.Errorf("Error base64 encoding tx: %s", err.Error())
 	}
 
-	c.JSON(http.StatusOK, &LoginSEP10Response{Transaction: txeStr})
+	return txeStr, nil
 }
 
-//LoginSEP10PostRequest is the data needed for doing the validation
-// swagger:parameters LoginSEP10PostRequest LoginSEP10Post
-type LoginSEP10PostRequest struct {
-	// Transaction is the (user)signed transaction from the client
-	// required: true
-	Transaction string `form:"transaction" json:"transaction" validate:"required"`
-}
+//verifySEP10Data verifies the SEP10 transaction and returns the user publickey and validity
+//also checks, that the given UserID matches to the data in the DB (based on the user account/pubKey0)
+func verifySEP10Data(txStr string, userID int64, uc *mw.IcopContext, c *gin.Context) (bool, string, error) {
+	var userPK string
+	if cnf.SEP10FakeLoginEnabled && txStr == "I am the king of the world" {
+		//read key from simple jwt
+		userSec, err := dbClient.GetUserSecurities(c, &pb.IDRequest{
+			Base: NewBaseRequest(uc),
+			Id:   userID,
+		})
+		if err != nil {
+			return false, "", fmt.Errorf("error reading user securities: %s", err.Error())
+		}
 
-//LoginSEP10PostResponse valid jwt token
-type LoginSEP10PostResponse struct {
-	Token string `json:"token"`
-}
+		if userSec.UserNotFound {
+			return false, "", fmt.Errorf("User-Sec could not be found in db: %s", err.Error())
+		}
+		userPK = userSec.PublicKey_0
+	} else {
+		serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
+		if err != nil {
+			return false, "", fmt.Errorf("could not parse server key: %s", err.Error())
+		}
 
-// LoginSEP10Post validates a login transaction and returns a valid full authenticated JWT token on success
-// swagger:route GET /portal/auth/login LoginSEP10Get
-//     validates a login transaction and returns a valid full authenticated JWT token on success
-//     Consumes:
-//     - application/x-www-form-urlencoded
-//	   - application/json
-//
-//     Produces:
-//     - application/json
-//
-//     Responses:
-//       200: LoginSEP10PostResponse
-func LoginSEP10Post(uc *mw.IcopContext, c *gin.Context) {
-	var l LoginSEP10PostRequest
-	if err := c.Bind(&l); err != nil {
-		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
-		return
+		txe, err := decodeFromBase64(txStr)
+		if err != nil {
+			return false, "", fmt.Errorf("Error base64 decoding tx: %s", err.Error())
+		}
+		var tx xdr.Transaction
+		tx = txe.E.Tx
+		if tx.SourceAccount.Address() != serverKeyPair.Address() {
+			return false, "", fmt.Errorf("tx source invalid")
+		}
+
+		now := xdr.Uint64(time.Now().Unix())
+		if now < tx.TimeBounds.MinTime || tx.TimeBounds.MinTime == 0 {
+			return false, "", fmt.Errorf("tx not valid yet")
+		}
+		if now > tx.TimeBounds.MaxTime || tx.TimeBounds.MaxTime == 0 {
+			return false, "", fmt.Errorf("tx not valid any more")
+		}
+
+		if len(tx.Operations) != 1 {
+			return false, "", fmt.Errorf("invalid operation count")
+		}
+
+		op := tx.Operations[0]
+		if op.Body.Type != xdr.OperationTypeManageData {
+			return false, "", fmt.Errorf("invalid operation type")
+		}
+
+		if op.SourceAccount == nil {
+			return false, "", fmt.Errorf("no source account")
+		}
+
+		userPK = op.SourceAccount.Address()
+
+		//check sgnatures
+		if txe.E.Signatures == nil || len(txe.E.Signatures) != 2 {
+			return false, "", fmt.Errorf("wrong signature amount")
+		}
+
+		userKeyPair, err := keypair.Parse(userPK)
+		if err != nil {
+			return false, "", fmt.Errorf("could not parse user key: %s", err.Error())
+		}
+
+		hash32, err := network.HashTransaction(&txe.E.Tx, cnf.StellarNetworkPassphrase)
+		txHash := hash32[:]
+
+		err = serverKeyPair.Verify(txHash, txe.E.Signatures[0].Signature)
+		if err != nil {
+			return false, "", fmt.Errorf("could not verify server signature: %s", err.Error())
+		}
+
+		err = userKeyPair.Verify(txHash, txe.E.Signatures[1].Signature)
+		if err != nil {
+			return false, "", fmt.Errorf("could not verify user signature: %s", err.Error())
+		}
 	}
 
-	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
-		c.JSON(http.StatusBadRequest, validErrors)
-		return
-	}
-
-	txe, err := decodeFromBase64(l.Transaction)
+	//check that userPK matches transaction data
+	userSec, err := dbClient.GetUserSecurities(c, &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID,
+	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error base64 decoding tx", cerr.GeneralError))
-		return
-	}
-	var tx xdr.Transaction
-	tx = txe.E.Tx
-	if tx.SourceAccount.Address() != cnf.AuthServerSigningAccountPK {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "tx source invalid", cerr.GeneralError))
-		return
+		return false, "", fmt.Errorf("error reading user securities: %s", err.Error())
 	}
 
-	now := xdr.Uint64(time.Now().Unix())
-	if now < tx.TimeBounds.MinTime || tx.TimeBounds.MinTime == 0 {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "tx not valid yet", cerr.GeneralError))
-		return
-	}
-	if now > tx.TimeBounds.MaxTime || tx.TimeBounds.MaxTime == 0 {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "tx not valid any more", cerr.GeneralError))
-		return
+	if userSec.UserNotFound {
+		return false, "", fmt.Errorf("User-Sec could not be found in db: %s", err.Error())
 	}
 
-	if len(tx.Operations) != 1 {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "invalid operation count", cerr.GeneralError))
-		return
+	if userSec.PublicKey_0 != userPK {
+		return false, "", fmt.Errorf("account does not match user-data")
 	}
 
-	op := tx.Operations[0]
-	if op.Body.Type != xdr.OperationTypeManageData {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "invalid operation type", cerr.GeneralError))
-		return
-	}
-
-	if op.SourceAccount == nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "invalid operation source", cerr.GeneralError))
-		return
-	}
-
-	userPK := op.SourceAccount.Address()
-
-	//check sgnatures
-	if txe.E.Signatures == nil || len(txe.E.Signatures) != 2 {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "wrong signature amount", cerr.GeneralError))
-		return
-	}
-
-	serverKeyPair, err := keypair.Parse(cnf.AuthServerSigningAccountSeed)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not parse server key", cerr.GeneralError))
-		return
-	}
-
-	userKeyPair, err := keypair.Parse(userPK)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not parse server key", cerr.GeneralError))
-		return
-	}
-
-	hash32, err := network.HashTransaction(&txe.E.Tx, cnf.StellarNetworkPassphrase)
-	txHash := hash32[:]
-
-	err = serverKeyPair.Verify(txHash, txe.E.Signatures[0].Signature)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not verify server signature", cerr.GeneralError))
-		return
-	}
-
-	err = userKeyPair.Verify(txHash, txe.E.Signatures[1].Signature)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "could not verify user signature", cerr.GeneralError))
-		return
-	}
-
-	//generate JWT and return it
-
-	c.JSON(http.StatusOK, &LoginSEP10PostResponse{Token: ""})
+	return true, userPK, nil
 }
 
 // DecodeFromBase64 decodes the transaction from a base64 string into a TransactionEnvelopeBuilder

@@ -66,6 +66,7 @@ type UserProfile struct {
 	UpdatedBy                  string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 	OccupationName             string    `boil:"occupation_name" json:"occupation_name" toml:"occupation_name" yaml:"occupation_name"`
 	OccupationCode88           string    `boil:"occupation_code88" json:"occupation_code88" toml:"occupation_code88" yaml:"occupation_code88"`
+	PublicKey0                 string    `boil:"public_key_0" json:"public_key_0" toml:"public_key_0" yaml:"public_key_0"`
 
 	R *userProfileR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userProfileL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -117,6 +118,7 @@ var UserProfileColumns = struct {
 	UpdatedBy                  string
 	OccupationName             string
 	OccupationCode88           string
+	PublicKey0                 string
 }{
 	ID:                         "id",
 	Email:                      "email",
@@ -163,6 +165,7 @@ var UserProfileColumns = struct {
 	UpdatedBy:                  "updated_by",
 	OccupationName:             "occupation_name",
 	OccupationCode88:           "occupation_code88",
+	PublicKey0:                 "public_key_0",
 }
 
 // UserProfileRels is where relationship names are stored.
@@ -216,9 +219,9 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "occupation_name", "occupation_code88"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "occupation_name", "occupation_code88", "public_key_0"}
 	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
-	userProfileColumnsWithDefault    = []string{"id", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "occupation_name", "occupation_code88"}
+	userProfileColumnsWithDefault    = []string{"id", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "occupation_name", "occupation_code88", "public_key_0"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )
 

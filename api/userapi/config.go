@@ -55,7 +55,6 @@ type Config struct {
 	IsDevSystem                  bool
 	LogLevel                     string
 	CORSHosts                    []string
-	AuthServerSigningAccountPK   string
 	AuthServerSigningAccountSeed string
 	StellarNetworkPassphrase     string
 
@@ -64,6 +63,8 @@ type Config struct {
 	WebLinks ConfigWebLinks
 
 	Kyc ConfigKyc
+
+	SEP10FakeLoginEnabled bool
 }
 
 var cnf *Config
