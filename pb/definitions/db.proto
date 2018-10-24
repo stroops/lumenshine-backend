@@ -329,6 +329,13 @@ message WalletChangeNameRequest {
   string name = 4;
 }
 
+message WalletChangeOrderRequest {
+  BaseRequest base = 1;
+  string public_key_0 = 2;
+  int64 order_nr = 3;
+  int64 user_id = 4;
+}
+
 message WalletSetHomescreenRequest {
   BaseRequest base = 1;
   int64 user_id = 2;
@@ -587,6 +594,7 @@ service DBService {
   rpc AddWallet (AddWalletRequest) returns (IDResponse) {}
   rpc RemoveWallet (RemoveWalletRequest) returns (Empty) {}
   rpc WalletChangeName (WalletChangeNameRequest) returns (Empty) {}
+  rpc WalletChangeOrder (WalletChangeOrderRequest) returns (Empty) {}
   rpc WalletChangeFederationAddress (WalletChangeFederationAddressRequest) returns (Empty) {}
   rpc GetUserWallets (GetWalletsRequest) returns (GetWalletsResponse) {}
   rpc WalletIsLast (WalletIsLastRequest) returns (BoolResponse) {}

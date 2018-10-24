@@ -555,7 +555,7 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	q = append(q, qm.OrderBy(m.UserWalletColumns.CreatedAt))
+	q = append(q, qm.OrderBy(m.UserWalletColumns.OrderNR))
 
 	qP := pageinate.Paginate(q, &rr.PaginationRequestStruct, &r.PaginationResponseStruct)
 	wallets, err := m.UserWallets(qP...).All(db.DBC)

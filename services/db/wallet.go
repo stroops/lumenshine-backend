@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/Soneso/lumenshine-backend/pb"
 
@@ -72,6 +74,12 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 			return nil, errors.New("FederationName already exists for other user")
 		}
 	}
+	maxOrder, err := models.UserWallets(qm.Select(models.UserWalletColumns.OrderNR),
+		qm.Where(models.UserWalletColumns.UserID+"=?", r.UserId),
+		qm.OrderBy(models.UserWalletColumns.OrderNR+" DESC")).One(db)
+	if err != nil {
+		return nil, err
+	}
 
 	//add the wallet for the user
 	w := &models.UserWallet{
@@ -83,6 +91,9 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 		ShowOnHomescreen: r.ShowOnHomescreen,
 		UpdatedBy:        r.Base.UpdateBy,
 	}
+	if maxOrder != nil {
+		w.OrderNR = maxOrder.OrderNR + 1
+	}
 
 	err = w.Insert(db, boil.Infer())
 	if err != nil {
@@ -93,16 +104,112 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 }
 
 func (s *server) RemoveWallet(ctx context.Context, r *pb.RemoveWalletRequest) (*pb.Empty, error) {
-	w, err := models.UserWallets(qm.Where("id=? and user_id=?", r.Id, r.UserId)).One(db)
+	wallet, err := models.UserWallets(qm.Where("id=? and user_id=?", r.Id, r.UserId),
+		qm.Load(models.UserWalletRels.WalletPaymentTemplates)).One(db)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = w.Delete(db)
+	tx, err := db.Begin()
 	if err != nil {
 		return nil, err
 	}
 
+	if wallet.R != nil && wallet.R.WalletPaymentTemplates != nil {
+		_, err = wallet.R.WalletPaymentTemplates.DeleteAll(tx)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+	_, err = wallet.Delete(tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	wallets, err := models.UserWallets(qm.Select(models.UserWalletColumns.ID, models.UserWalletColumns.OrderNR),
+		qm.Where(models.UserWalletColumns.UserID+"=?", r.UserId),
+		qm.OrderBy(models.UserWalletColumns.OrderNR)).All(tx)
+	if err != nil {
+		return nil, err
+	}
+	for i, wallet := range wallets {
+		wallet.OrderNR = i
+		wallet.UpdatedBy = r.Base.UpdateBy
+		wallet.UpdatedAt = time.Now()
+		_, err = wallet.Update(tx, boil.Whitelist(models.UserWalletColumns.OrderNR,
+			models.UserWalletColumns.UpdatedBy,
+			models.UserWalletColumns.UpdatedAt))
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	tx.Commit()
+	return &pb.Empty{}, nil
+}
+
+func (s *server) WalletChangeOrder(ctx context.Context, r *pb.WalletChangeOrderRequest) (*pb.Empty, error) {
+	orderTo := int(r.OrderNr)
+	if r.OrderNr < 0 {
+		orderTo = 0
+	}
+	wallet, err := models.UserWallets(qm.Where(models.UserWalletColumns.PublicKey0+"=? and "+models.UserContactColumns.UserID+"=?", r.PublicKey_0, r.UserId)).One(db)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+	if wallet == nil {
+		return nil, errors.New("Wallet not found")
+	}
+	if wallet.OrderNR == orderTo {
+		return &pb.Empty{}, nil
+	}
+	wallets, err := models.UserWallets(qm.Select(models.UserWalletColumns.ID, models.UserWalletColumns.OrderNR),
+		qm.Where(models.UserWalletColumns.UserID+"=?", r.UserId),
+		qm.OrderBy(models.UserWalletColumns.OrderNR)).All(db)
+	if err != nil {
+		return nil, err
+	}
+	if len(wallets) == 1 {
+		return &pb.Empty{}, nil
+	}
+	max := wallets[len(wallets)-1]
+	if orderTo > max.OrderNR {
+		orderTo = max.OrderNR
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	orderFrom := wallet.OrderNR
+	for _, wallet := range wallets {
+		newOrder := wallet.OrderNR
+		if orderTo < orderFrom && wallet.OrderNR >= orderTo && wallet.OrderNR < orderFrom {
+			newOrder = wallet.OrderNR + 1
+		}
+		if orderTo > orderFrom && wallet.OrderNR <= orderTo && wallet.OrderNR > orderFrom {
+			newOrder = wallet.OrderNR - 1
+		}
+		if wallet.OrderNR == orderFrom {
+			newOrder = orderTo
+		}
+		if wallet.OrderNR != newOrder {
+			wallet.OrderNR = newOrder
+			wallet.UpdatedBy = r.Base.UpdateBy
+			wallet.UpdatedAt = time.Now()
+			_, err = wallet.Update(tx, boil.Whitelist(models.UserWalletColumns.OrderNR,
+				models.UserWalletColumns.UpdatedBy,
+				models.UserWalletColumns.UpdatedAt))
+			if err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	tx.Commit()
 	return &pb.Empty{}, nil
 }
 
@@ -151,7 +258,7 @@ func (s *server) WalletChangeFederationAddress(ctx context.Context, r *pb.Wallet
 }
 
 func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*pb.GetWalletsResponse, error) {
-	wallets, err := models.UserWallets(qm.Where("user_id=?", r.UserId)).All(db)
+	wallets, err := models.UserWallets(qm.Where("user_id=?", r.UserId), qm.OrderBy(models.UserWalletColumns.OrderNR)).All(db)
 	if err != nil {
 		return nil, err
 	}

@@ -191,6 +191,64 @@ func RemoveWallet(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, "{}")
 }
 
+//WalletChangeOrderRequest - request
+type WalletChangeOrderRequest struct {
+	PublicKey0 string `form:"public_key_0" json:"public_key_0"  validate:"required,base64,len=56"`
+	OrderNr    int    `form:"order_nr" json:"order_nr"`
+}
+
+//WalletChangeOrder changes the wallet order
+func WalletChangeOrder(uc *mw.IcopContext, c *gin.Context) {
+	var r WalletChangeOrderRequest
+	if err := c.Bind(&r); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, r); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	userID := mw.GetAuthUser(c).UserID
+	_, err := dbClient.WalletChangeOrder(c, &pb.WalletChangeOrderRequest{
+		Base:        NewBaseRequest(uc),
+		UserId:      userID,
+		PublicKey_0: r.PublicKey0,
+		OrderNr:     int64(r.OrderNr),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating wallet order", cerr.GeneralError))
+		return
+	}
+
+	req := &pb.GetWalletsRequest{
+		Base:   NewBaseRequest(uc),
+		UserId: userID,
+	}
+	wallets, err := dbClient.GetUserWallets(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+		return
+	}
+
+	ws := make([]GetUserWalletsResponse, len(wallets.Wallets))
+	for i, w := range wallets.Wallets {
+		federationAddress := ""
+		if w.FriendlyId != "" && w.Domain != "" {
+			federationAddress = w.FriendlyId + "*" + w.Domain
+		}
+		ws[i] = GetUserWalletsResponse{
+			ID:                w.Id,
+			PublicKey0:        w.PublicKey_0,
+			WalletName:        w.WalletName,
+			FederationAddress: federationAddress,
+			ShowOnHomescreen:  w.ShowOnHomescreen,
+		}
+	}
+
+	c.JSON(http.StatusOK, ws)
+}
+
 //WalletChangeDataRequest request
 type WalletChangeDataRequest struct {
 	ID                int64  `form:"id" json:"id"  validate:"required"`
