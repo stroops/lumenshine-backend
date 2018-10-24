@@ -41,17 +41,17 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user, err := dbClient.GetUserDetails(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, user not found", cerr.GeneralError))
 		return
 	}
 
 	if user.UserNotFound {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email could not be found in db", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email not found", cerr.GeneralError))
 		return
 	}
 
 	if !user.MailConfirmed {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not confirmed", ""))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not verified", ""))
 		return
 	}
 
@@ -64,7 +64,7 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 	}
 	_, err = dbClient.SetUserMailToken(c, reqConf)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting token in DB", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not set token", cerr.GeneralError))
 		return
 	}
 
@@ -74,7 +74,7 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		Id:   user.Id,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting userProfile", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, profile not found", cerr.GeneralError))
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "lost_password_mail", gin.H{
@@ -85,7 +85,7 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 			time.Unix(reqConf.MailConfirmationExpiry, 0), uc.Language,
 		),
 	})
-	msgSubject := fmt.Sprintf("%s :: Lost Password", cnf.Site.SiteName)
+	msgSubject := fmt.Sprintf("%s :: Reset password", cnf.Site.SiteName)
 
 	_, err = mailClient.SendMail(c, &pb.SendMailRequest{
 		Base:    NewBaseRequest(uc),
@@ -95,7 +95,7 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		Body:    msgBody,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, could not send mail", cerr.GeneralError))
 		return
 	}
 
@@ -117,12 +117,12 @@ func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user, err := dbClient.GetUserDetails(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, user not found", cerr.GeneralError))
 		return
 	}
 
 	if user.UserNotFound {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email could not be found in db", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email not found", cerr.GeneralError))
 		return
 	}
 
@@ -162,17 +162,17 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user, err := dbClient.GetUserDetails(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, user not found", cerr.GeneralError))
 		return
 	}
 
 	if user.UserNotFound {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email could not be found in db", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email not found", cerr.GeneralError))
 		return
 	}
 
 	if !user.TfaConfirmed {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.TfaNotYetConfirmed, "tfa not confirmed yet", ""))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.TfaNotYetConfirmed, "2FA secret not confirmed yet", ""))
 		return
 	}
 
@@ -183,7 +183,7 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 	}
 	resp2FA, err := twoFAClient.Authenticate(c, req2FA)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error doing 2FA", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, 2FA authentication failed", cerr.GeneralError))
 		return
 	}
 
@@ -197,12 +197,12 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 		Id:   userID,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user seciruties", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, 2FA securities", cerr.GeneralError))
 		return
 	}
 
 	if userSec.UserNotFound {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User-Sec could not be found in db", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, 2FA user not found", cerr.GeneralError))
 		return
 	}
 
@@ -281,7 +281,7 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	_, err := dbClient.SetUserSecurities(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updateing security data", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, update security data", cerr.GeneralError))
 		return
 	}
 
@@ -344,7 +344,7 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	_, err := dbClient.UpdateUserSecurityPassword(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updateing security data", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, update security data", cerr.GeneralError))
 		return
 	}
 
@@ -376,17 +376,17 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user, err := dbClient.GetUserDetails(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, user not found", cerr.GeneralError))
 		return
 	}
 
 	if user.UserNotFound {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email could not be found in db", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email not found", cerr.GeneralError))
 		return
 	}
 
 	if !user.MailConfirmed {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not confirmed", ""))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not verified", ""))
 		return
 	}
 
@@ -399,7 +399,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 	}
 	_, err = dbClient.SetUserMailToken(c, reqConf)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting token in DB", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not set token", cerr.GeneralError))
 	}
 
 	ur, err := dbClient.GetUserProfile(c, &pb.IDRequest{
@@ -407,7 +407,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		Id:   user.Id,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting userProfile", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, profile not found", cerr.GeneralError))
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "lost_tfa_mail", gin.H{
@@ -418,7 +418,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 			time.Unix(reqConf.MailConfirmationExpiry, 0), uc.Language,
 		),
 	})
-	msgSubject := fmt.Sprintf("%s :: Lost 2FA Secret", cnf.Site.SiteName)
+	msgSubject := fmt.Sprintf("%s :: Reset 2FA Secret", cnf.Site.SiteName)
 
 	_, err = mailClient.SendMail(c, &pb.SendMailRequest{
 		Base:    NewBaseRequest(uc),
@@ -428,7 +428,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		Body:    msgBody,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not send mail", cerr.GeneralError))
 		return
 	}
 
@@ -464,11 +464,11 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 		}
 		user, err := dbClient.GetUserDetails(c, req)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user", cerr.GeneralError))
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, user not found", cerr.GeneralError))
 			return
 		}
 		if !user.Reset2FaByAdmin {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.MissingMandatoryField, "Missing mandatory field", ""))
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.MissingMandatoryField, "Missing parameter", ""))
 			return
 		}
 	} else {
@@ -499,7 +499,7 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	tfaResp, err := twoFAClient.NewSecret(c, req2FA)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error generating 2FAcode", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not generate 2FA code", cerr.GeneralError))
 		return
 	}
 
@@ -510,7 +510,7 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	_, err = dbClient.SetTempTfaSecret(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting tfa data in DB", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not set 2FA secret", cerr.GeneralError))
 		return
 	}
 
@@ -554,14 +554,14 @@ func UpdateSecurityData(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	if user.MnemonicConfirmed {
-		c.JSON(http.StatusForbidden, cerr.NewIcopError("menmeonic", cerr.GeneralError, "Mnemonic is confirmed", ""))
+		c.JSON(http.StatusForbidden, cerr.NewIcopError("menmeonic", cerr.GeneralError, "Mnemonic is already confirmed", ""))
 		return
 	}
 
 	if user.TfaConfirmed {
 
 		if l.TfaCode == "" {
-			c.JSON(http.StatusForbidden, cerr.NewIcopError("tfa_code", cerr.MissingMandatoryField, "TFA is required", ""))
+			c.JSON(http.StatusForbidden, cerr.NewIcopError("tfa_code", cerr.MissingMandatoryField, "Missing parameter: 2FA code", ""))
 			return
 		}
 
@@ -573,7 +573,7 @@ func UpdateSecurityData(uc *mw.IcopContext, c *gin.Context) {
 		}
 		resp2FA, err := twoFAClient.Authenticate(c, req2FA)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error doing 2FA", cerr.GeneralError))
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not authenticate 2FA", cerr.GeneralError))
 			return
 		}
 
@@ -600,7 +600,7 @@ func UpdateSecurityData(uc *mw.IcopContext, c *gin.Context) {
 	}
 	_, err := dbClient.SetUserSecurities(c, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updateing security data", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not update data", cerr.GeneralError))
 		return
 	}
 
