@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/Soneso/lumenshine-backend/pb"
 
@@ -11,6 +10,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	context "golang.org/x/net/context"
 )
@@ -128,23 +128,11 @@ func (s *server) RemoveWallet(ctx context.Context, r *pb.RemoveWalletRequest) (*
 		return nil, err
 	}
 
-	wallets, err := models.UserWallets(qm.Select(models.UserWalletColumns.ID, models.UserWalletColumns.OrderNR),
-		qm.Where(models.UserWalletColumns.UserID+"=?", r.UserId),
-		qm.OrderBy(models.UserWalletColumns.OrderNR)).All(tx)
+	updatesql := "UPDATE user_wallet SET order_nr = order_nr - 1 WHERE user_id=$1 AND order_nr>$2"
+	_, err = queries.Raw(updatesql, r.UserId, wallet.OrderNR).Exec(tx)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
-	}
-	for i, wallet := range wallets {
-		wallet.OrderNR = i
-		wallet.UpdatedBy = r.Base.UpdateBy
-		wallet.UpdatedAt = time.Now()
-		_, err = wallet.Update(tx, boil.Whitelist(models.UserWalletColumns.OrderNR,
-			models.UserWalletColumns.UpdatedBy,
-			models.UserWalletColumns.UpdatedAt))
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
 	}
 
 	tx.Commit()
@@ -166,16 +154,15 @@ func (s *server) WalletChangeOrder(ctx context.Context, r *pb.WalletChangeOrderR
 	if wallet.OrderNR == orderTo {
 		return &pb.Empty{}, nil
 	}
-	wallets, err := models.UserWallets(qm.Select(models.UserWalletColumns.ID, models.UserWalletColumns.OrderNR),
+	max, err := models.UserWallets(qm.Select(models.UserWalletColumns.ID, models.UserWalletColumns.OrderNR),
 		qm.Where(models.UserWalletColumns.UserID+"=?", r.UserId),
-		qm.OrderBy(models.UserWalletColumns.OrderNR)).All(db)
+		qm.OrderBy(models.UserWalletColumns.OrderNR+" DESC")).One(db)
 	if err != nil {
 		return nil, err
 	}
-	if len(wallets) == 1 {
+	if max.OrderNR == 0 {
 		return &pb.Empty{}, nil
 	}
-	max := wallets[len(wallets)-1]
 	if orderTo > max.OrderNR {
 		orderTo = max.OrderNR
 	}
@@ -184,29 +171,24 @@ func (s *server) WalletChangeOrder(ctx context.Context, r *pb.WalletChangeOrderR
 		return nil, err
 	}
 	orderFrom := wallet.OrderNR
-	for _, wallet := range wallets {
-		newOrder := wallet.OrderNR
-		if orderTo < orderFrom && wallet.OrderNR >= orderTo && wallet.OrderNR < orderFrom {
-			newOrder = wallet.OrderNR + 1
-		}
-		if orderTo > orderFrom && wallet.OrderNR <= orderTo && wallet.OrderNR > orderFrom {
-			newOrder = wallet.OrderNR - 1
-		}
-		if wallet.OrderNR == orderFrom {
-			newOrder = orderTo
-		}
-		if wallet.OrderNR != newOrder {
-			wallet.OrderNR = newOrder
-			wallet.UpdatedBy = r.Base.UpdateBy
-			wallet.UpdatedAt = time.Now()
-			_, err = wallet.Update(tx, boil.Whitelist(models.UserWalletColumns.OrderNR,
-				models.UserWalletColumns.UpdatedBy,
-				models.UserWalletColumns.UpdatedAt))
-			if err != nil {
-				tx.Rollback()
-				return nil, err
-			}
-		}
+
+	updatesql := "UPDATE user_wallet SET order_nr = order_nr + 1 WHERE user_id=$1 AND order_nr>=$2 AND order_nr<$3"
+	if orderTo > orderFrom {
+		updatesql = "UPDATE user_wallet SET order_nr = order_nr - 1 WHERE user_id=$1 AND order_nr<=$2 AND order_nr>$3"
+	}
+	_, err = queries.Raw(updatesql, r.UserId, orderTo, orderFrom).Exec(tx)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	wallet.OrderNR = orderTo
+	_, err = wallet.Update(tx, boil.Whitelist(models.UserWalletColumns.OrderNR,
+		models.UserWalletColumns.UpdatedBy,
+		models.UserWalletColumns.UpdatedAt))
+	if err != nil {
+		tx.Rollback()
+		return nil, err
 	}
 
 	tx.Commit()
