@@ -50,17 +50,21 @@ type ConfigWebLinks struct {
 
 //Config for the app
 type Config struct {
-	Port           int
-	ApplicationDir string
-	IsDevSystem    bool
-	LogLevel       string
-	CORSHosts      []string
+	Port                         int
+	ApplicationDir               string
+	IsDevSystem                  bool
+	LogLevel                     string
+	CORSHosts                    []string
+	AuthServerSigningAccountSeed string
+	StellarNetworkPassphrase     string
 
 	Services ServicesConfig
 	Site     ConfigSite
 	WebLinks ConfigWebLinks
 
 	Kyc ConfigKyc
+
+	SEP10FakeLoginEnabled bool
 }
 
 var cnf *Config

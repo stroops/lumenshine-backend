@@ -55,7 +55,9 @@ type RegisterUserRequest struct {
 	BankPhoneNumber   string `form:"bank_phone_number" json:"bank_phone_number" validate:"max=256"`
 	TaxID             string `form:"tax_id" json:"tax_id" validate:"max=256"`
 	TaxIDName         string `form:"tax_id_name" json:"tax_id_name" validate:"max=256"`
-	Occupation        string `form:"occupation" json:"occupation" validate:"max=8"`
+	OccupationName    string `form:"occupation_name" json:"occupation_name" validate:"max=256"`
+	OccupationCode08  string `form:"occupation_code08" json:"occupation_code08" validate:"max=8"`
+	OccupationCode88  string `form:"occupation_code88" json:"occupation_code88" validate:"max=8"`
 	EmployerName      string `form:"employer_name" json:"employer_name" validate:"max=512"`
 	EmployerAddress   string `form:"employer_address" json:"employer_address" validate:"max=512"`
 	LanguageCode      string `form:"language_code" json:"language_code" validate:"max=16"`
@@ -63,8 +65,9 @@ type RegisterUserRequest struct {
 
 //RegisterUserResponse response for registration
 type RegisterUserResponse struct {
-	TFASecret  string `json:"tfa_secret,omitempty"`
-	TFAQrImage string `json:"tfa_qr_image,omitempty"`
+	TFASecret                 string `json:"tfa_secret,omitempty"`
+	TFAQrImage                string `json:"tfa_qr_image,omitempty"`
+	SEP10TransactionChallenge string `json:"sep10_transaction_challenge"`
 }
 
 //RegisterUser registers and creates the user in the db
@@ -124,6 +127,14 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if ur.LanguageCode == "" {
+		if uc.Language != "" {
+			ur.LanguageCode = uc.Language
+		} else {
+			ur.LanguageCode = c.Request.Header.Get("Accept-Language")
+		}
+	}
+
 	reqC := &pb.CreateUserRequest{
 		Base:                   NewBaseRequest(uc),
 		Email:                  ur.Email,
@@ -151,7 +162,9 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		BankPhoneNumber:        ur.BankPhoneNumber,
 		TaxId:                  ur.TaxID,
 		TaxIdName:              ur.TaxIDName,
-		Occupation:             ur.Occupation,
+		OccupationName:         ur.OccupationName,
+		OccupationCode08:       ur.OccupationCode08,
+		OccupationCode88:       ur.OccupationCode88,
 		EmployerName:           ur.EmployerName,
 		EmployerAddress:        ur.EmployerAddress,
 		LanguageCode:           ur.LanguageCode,
@@ -199,15 +212,23 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, user.Id)
 
+	sep10ChallangeTX, err := getSEP10Challenge(ur.PublicKey0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
+		return
+	}
+
 	c.JSON(http.StatusOK, &RegisterUserResponse{
-		TFAQrImage: base64.StdEncoding.EncodeToString(twoFaResp.Bitmap),
-		TFASecret:  twoFaResp.Secret,
+		TFAQrImage:                base64.StdEncoding.EncodeToString(twoFaResp.Bitmap),
+		TFASecret:                 twoFaResp.Secret,
+		SEP10TransactionChallenge: sep10ChallangeTX,
 	})
 }
 
 //Confirm2FARequest is the data needed for the 2fa registration
 type Confirm2FARequest struct {
-	TfaCode string `form:"tfa_code" json:"tfa_code" validate:"required"`
+	TfaCode          string `form:"tfa_code" json:"tfa_code" validate:"required"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //Confirm2FAResponse response for API
@@ -292,6 +313,17 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting user 2fa confirmed", cerr.GeneralError))
+		return
+	}
+
+	//TODO: check with Christian
+	valid, _, err := verifySEP10Data(cd.SEP10Transaction, user.Id, uc, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 		return
 	}
 

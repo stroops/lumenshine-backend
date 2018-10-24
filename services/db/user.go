@@ -9,8 +9,8 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/pb"
 
+	qq "github.com/Soneso/lumenshine-backend/db/querying"
 	"github.com/Soneso/lumenshine-backend/services/db/models"
-
 	_ "github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -63,6 +63,7 @@ func (s *server) GetUserByMailtoken(ctx context.Context, r *pb.UserMailTokenRequ
 		MailConfirmationExpiry: u.MailConfirmationExpiryDate.Unix(),
 		MailConfirmed:          u.MailConfirmed,
 		Email:                  u.Email,
+		PublicKey_0:            u.PublicKey0,
 	}, nil
 }
 
@@ -89,6 +90,8 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		Email:                  u.Email,
 		MessageCount:           int64(u.MessageCount),
 		Reset2FaByAdmin:        u.Reset2faByAdmin,
+		PublicKey_0:            u.PublicKey0,
+		PaymentState:           u.PaymentState,
 	}
 
 	return ret, nil
@@ -131,11 +134,14 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		BankPhoneNumber:   u.BankPhoneNumber,
 		TaxId:             u.TaxID,
 		TaxIdName:         u.TaxIDName,
-		Occupation:        u.Occupation,
+		OccupationName:    u.OccupationName,
+		OccupationCode08:  u.OccupationCode08,
+		OccupationCode88:  u.OccupationCode88,
 		EmployerName:      u.EmployerName,
 		EmployerAddress:   u.EmployerAddress,
 		LanguageCode:      u.LanguageCode,
 		CreatedAt:         int64(u.CreatedAt.Unix()),
+		PublicKey_0:       u.PublicKey0,
 	}, nil
 }
 
@@ -156,6 +162,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.MailConfirmationExpiryDate = time.Unix(r.MailConfirmationExpiry, 0)
 	u.TfaTempSecret = r.TfaTempSecret
 	u.TfaConfirmed = false
+	u.PublicKey0 = r.PublicKey_0
 
 	u.Salutation = r.Salutation
 	u.Title = r.Title
@@ -179,7 +186,9 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.BankPhoneNumber = r.BankPhoneNumber
 	u.TaxID = r.TaxId
 	u.TaxIDName = r.TaxIdName
-	u.Occupation = r.Occupation
+	u.OccupationName = r.OccupationName
+	u.OccupationCode08 = r.OccupationCode08
+	u.OccupationCode88 = r.OccupationCode88
 	u.EmployerName = r.EmployerName
 	u.EmployerAddress = r.EmployerAddress
 	u.LanguageCode = r.LanguageCode
@@ -280,6 +289,36 @@ func (s *server) GetSalutationList(ctx context.Context, r *pb.LanguageCodeReques
 	ret := new(pb.SalutationListResponse)
 	for _, s := range salutations {
 		ret.Salutation = append(ret.Salutation, s.Salutation)
+	}
+
+	return ret, nil
+}
+
+func (s *server) GetLanguageList(ctx context.Context, r *pb.Empty) (*pb.LanguageListResponse, error) {
+	languages, err := models.Languages().All(db)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := new(pb.LanguageListResponse)
+	for _, lang := range languages {
+		ret.Languages = append(ret.Languages, &pb.Language{Code: lang.LangCode, Name: lang.LangName})
+	}
+
+	return ret, nil
+}
+
+func (s *server) GetOccupationList(ctx context.Context, r *pb.OccupationListRequest) (*pb.OccupationListResponse, error) {
+	occupations, err := models.Occupations(qm.Where(models.OccupationColumns.Name+" ilike ?", qq.Like(r.Name)),
+		qm.OrderBy(models.OccupationColumns.Name),
+		qm.Limit(int(r.LimitCount))).All(db)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := new(pb.OccupationListResponse)
+	for _, occupation := range occupations {
+		ret.Occupations = append(ret.Occupations, &pb.Occupation{Code08: int64(occupation.Isco08), Code88: int64(occupation.Isco88), Name: occupation.Name})
 	}
 
 	return ret, nil
@@ -835,7 +874,9 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 	u.BirthCountryCode = r.BirthCountryCode
 	u.TaxID = r.TaxId
 	u.TaxIDName = r.TaxIdName
-	u.Occupation = r.Occupation
+	u.OccupationName = r.OccupationName
+	u.OccupationCode08 = r.OccupationCode08
+	u.OccupationCode88 = r.OccupationCode88
 	u.EmployerName = r.EmployerName
 	u.EmployerAddress = r.EmployerAddress
 	u.LanguageCode = r.LanguageCode
@@ -860,7 +901,9 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 		models.UserProfileColumns.BirthCountryCode,
 		models.UserProfileColumns.TaxID,
 		models.UserProfileColumns.TaxIDName,
-		models.UserProfileColumns.Occupation,
+		models.UserProfileColumns.OccupationName,
+		models.UserProfileColumns.OccupationCode08,
+		models.UserProfileColumns.OccupationCode88,
 		models.UserProfileColumns.EmployerName,
 		models.UserProfileColumns.EmployerAddress,
 		models.UserProfileColumns.LanguageCode,

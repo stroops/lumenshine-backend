@@ -1,9 +1,13 @@
 package config
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
+	"crypto/tls"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
+
+	"net/http"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -50,9 +54,8 @@ type CleanupConfig struct {
 
 // Config holds the data imported from the config file and command line
 type Config struct {
-	LocalDownloadDir     string
-	HorizonURL           string
-	TruncateHistoryTable bool // this is not set from the toml file but from a command line arg
+	LocalDownloadDir string
+	HorizonURL       string
 
 	CORSHosts []string
 
@@ -65,6 +68,8 @@ type Config struct {
 	SQLMigrationDir string
 	ApplicationDir  string
 	IsDevSystem     bool
+
+	HTTPClient *http.Client
 }
 
 // DataColumns struct
@@ -174,6 +179,12 @@ func ReadConfig(cmd *cobra.Command) error {
 	//this should be set by reading the config toml
 	Cnf.ImportTransactions = tx
 
+	//create a default http client, that allows insecure https connections
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	Cnf.HTTPClient = &http.Client{Transport: tr}
+
 	// set currency code to currency name relation
 	for _, v := range Cnf.ImportTransactions {
 		CurrencyCodeToName[v.SourceCurrency] = v.SourceCurrencyName
@@ -192,6 +203,7 @@ func ReadConfig(cmd *cobra.Command) error {
 		Cnf.SQLMigrationDir = filepath.Join(Cnf.ApplicationDir, "db", "migrations")
 	}
 	helpers.CreateDirIfNotExists(Cnf.SQLMigrationDir)
+	helpers.CreateDirIfNotExists(Cnf.LocalDownloadDir)
 
 	return nil
 }

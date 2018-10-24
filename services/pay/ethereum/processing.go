@@ -5,8 +5,6 @@ import (
 	"math/big"
 	"time"
 
-	m "github.com/Soneso/lumenshine-backend/services/db/models"
-
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stellar/go/support/errors"
@@ -134,7 +132,7 @@ func (l *Channel) processTransaction(hash string, valueWei *big.Int, toAddress s
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.db.GetOrderForAddress(m.PaymentNetworkEthereum, toAddress, "")
+	order, err := l.db.GetOrderForAddress(l, toAddress, "")
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -145,7 +143,7 @@ func (l *Channel) processTransaction(hash string, valueWei *big.Int, toAddress s
 	}
 
 	// Add transaction as processing.
-	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order.ID, valueWei, 0)
+	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order, valueWei, 0)
 	if err != nil {
 		return err
 	}

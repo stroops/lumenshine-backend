@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
@@ -32,6 +33,33 @@ func SalutationList(uc *mw.IcopContext, c *gin.Context) {
 
 	c.JSON(http.StatusOK, &SalutationResponse{
 		Salutations: salutations.Salutation,
+	})
+}
+
+//Language represents one language
+type Language struct {
+	Code string `json:"lang_code"`
+	Name string `json:"lang_name"`
+}
+
+//LanguagesResponse list for languages
+type LanguagesResponse struct {
+	Languages []Language `json:"languages"`
+}
+
+//LanguageList returns a list of all languages
+func LanguageList(uc *mw.IcopContext, c *gin.Context) {
+	languages, err := dbClient.GetLanguageList(c, &pb.Empty{Base: NewBaseRequest(uc)})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading languages", cerr.GeneralError))
+		return
+	}
+	var retLanguages []Language
+	for _, language := range languages.Languages {
+		retLanguages = append(retLanguages, Language{Code: language.Code, Name: language.Name})
+	}
+	c.JSON(http.StatusOK, &LanguagesResponse{
+		Languages: retLanguages,
 	})
 }
 
@@ -66,6 +94,54 @@ func CountryList(uc *mw.IcopContext, c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, &CountryResponse{
 		Countries: retCountries,
+	})
+}
+
+//GetOccupationsRequest - filtered by name
+type GetOccupationsRequest struct {
+	Name string `form:"name"`
+}
+
+//Occupation represents one occupation
+type Occupation struct {
+	Code08 string `json:"code08"`
+	Code88 string `json:"code88"`
+	Name   string `json:"name"`
+}
+
+//OccupationResponse list for occupations
+type OccupationResponse struct {
+	Occupations []Occupation `json:"occupations"`
+}
+
+//OccupationList returns a list of occupations filtered by name
+func OccupationList(uc *mw.IcopContext, c *gin.Context) {
+
+	rr := new(GetOccupationsRequest)
+	if err := c.Bind(rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	uc.Log.Print("request name: " + rr.Name)
+
+	req := &pb.OccupationListRequest{
+		Base:       NewBaseRequest(uc),
+		Name:       rr.Name,
+		LimitCount: 50,
+	}
+	occupations, err := dbClient.GetOccupationList(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading occupations", cerr.GeneralError))
+		return
+	}
+
+	var retOccupations []Occupation
+	for _, occupation := range occupations.Occupations {
+		retOccupations = append(retOccupations, Occupation{Code08: strconv.FormatInt(occupation.Code08, 10), Code88: strconv.FormatInt(occupation.Code88, 10), Name: occupation.Name})
+	}
+	c.JSON(http.StatusOK, &OccupationResponse{
+		Occupations: retOccupations,
 	})
 }
 
@@ -112,9 +188,10 @@ type ConfirmTokeRequest struct {
 
 //ConfirmTokeResponse response
 type ConfirmTokeResponse struct {
-	Email                 string    `json:"email"`
-	ConfirmationDate      time.Time `json:"confirmation_date"`
-	TokenAlreadyConfirmed bool      `json:"token_already_confirmed"`
+	Email                     string    `json:"email"`
+	ConfirmationDate          time.Time `json:"confirmation_date"`
+	TokenAlreadyConfirmed     bool      `json:"token_already_confirmed"`
+	SEP10TransactionChallenge string    `json:"sep10_transaction_challenge"`
 }
 
 //ConfirmToken confirms a mail token
@@ -185,8 +262,15 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 
 	authMiddlewareSimple.SetAuthHeader(c, u.UserId)
 
+	sep10ChallangeTX, err := getSEP10Challenge(u.PublicKey_0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
+		return
+	}
+
 	c.JSON(http.StatusOK, &ConfirmTokeResponse{
-		Email: u.Email,
+		Email:                     u.Email,
+		SEP10TransactionChallenge: sep10ChallangeTX,
 	})
 }
 
@@ -239,7 +323,8 @@ func UserSecurityData(uc *mw.IcopContext, c *gin.Context) {
 
 //GetTfaSecretRequest for requesting the tfa secrete
 type GetTfaSecretRequest struct {
-	PublicKey188 string `form:"public_key_188" json:"public_key_188" validate:"required"`
+	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
 }
 
 //GetTfaSecretResponse response for the api call
@@ -276,9 +361,21 @@ func GetTfaSecret(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if !CheckPasswordHash(uc.Log, l.PublicKey188, user.Password) {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
-		return
+	if l.SEP10Transaction == "" {
+		if !CheckPasswordHash(uc.Log, l.PublicKey188, user.Password) {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
+			return
+		}
+	} else {
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, userID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, &GetTfaSecretResponse{

@@ -12,6 +12,17 @@ CREATE TABLE currency (
     CONSTRAINT "unique_currency" UNIQUE (currency_code, currency_name, currency_issuer)
 );
 
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (1, 'XLM', 'Stellar Lumens', '', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (2, 'BTC', 'Bitcoin','', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (3, 'ETH', 'Ethereum','', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (4, 'USD', 'United States Dollar','', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (5, 'EURO', 'Euro','', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (6, 'CNY', 'Chinese Yuan Renminbi','', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (7, 'KRW', 'South Korean Won','', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (8, 'MOBI', 'Mobi on Stellar','GA6HCMBLTZS5VYYBCATRBRZ3BZJMAFUDKYYF6AH6MVCMGWMRDNSWJPIH', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (9, 'CNY', 'CNY Stellar Anchor','GAREELUB43IRHWEASCFBLKHURCGMHE5IF6XSE7EXDLACYHGRHM43RFOX', 'chris');
+INSERT INTO currency (id, currency_code, currency_name, currency_issuer, updated_by) VALUES (10, 'RMT', 'SureRemit','GDEGOXPCHXWFYY234D2YZSPEJ24BX42ESJNVHY5H7TWWQSYRN5ZKZE3N', 'chris');
+
 CREATE TABLE current_chart_data_minutely (
     id SERIAL PRIMARY KEY NOT NULL,
     exchange_rate_time timestamp with time zone NOT NULL DEFAULT current_timestamp,
@@ -72,6 +83,6 @@ ALTER TABLE history_chart_data ADD CONSTRAINT history_chart_data_un UNIQUE (exch
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 DROP TABLE IF EXISTS currency CASCADE;
-DROP TABLE current_chart_data_minutely CASCADE;
-DROP TABLE current_chart_data_hourly CASCADE;
+DROP TABLE IF EXISTS current_chart_data_minutely CASCADE;
+DROP TABLE IF EXISTS current_chart_data_hourly CASCADE;
 DROP TABLE IF EXISTS history_chart_data CASCADE;

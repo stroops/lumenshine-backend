@@ -98,6 +98,14 @@ const (
 	IcoPhaseStatusStopped   = "stopped"
 )
 
+// Enum values for transaction_status
+const (
+	TransactionStatusNew     = "new"
+	TransactionStatusError   = "error"
+	TransactionStatusRefund  = "refund"
+	TransactionStatusCashout = "cashout"
+)
+
 // Enum values for message_type
 const (
 	MessageTypeIos     = "ios"
@@ -125,12 +133,6 @@ const (
 	MemoTypeID     = "id"
 	MemoTypeHash   = "hash"
 	MemoTypeReturn = "return"
-)
-
-// Enum values for transaction_status
-const (
-	TransactionStatusNew       = "new"
-	TransactionStatusProcessed = "processed"
 )
 
 // Enum values for kyc_document_type

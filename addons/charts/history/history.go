@@ -36,11 +36,11 @@ type ExchangeHistory struct {
 }
 
 // GetHistoricalData gathers history data
-func GetHistoricalData() error {
+func GetHistoricalData(truncateHistroyTable bool) error {
 	var err error
 
 	// empty history table
-	if config.Cnf.TruncateHistoryTable {
+	if truncateHistroyTable {
 		err = utils.TruncateHistoryTable()
 		if err != nil {
 			return err

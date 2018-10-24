@@ -66,10 +66,7 @@ func main() {
 	go startGRPC()
 
 	r := gin.New()
-	// Add CORS middleware
-	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		//AllowOrigins: config.Cnf.CORSHosts,
+	corsConfig := cors.Config{
 		AllowMethods: []string{"POST", "GET", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type", "Content-Length",
 			"Accept-Encoding", "X-CSRF-Token", "Authorization", "Access-Control-Allow-Credentials",
@@ -77,7 +74,14 @@ func main() {
 		ExposeHeaders:    []string{"Authorization", "X-Request-Id", "X-MessageCount", "Access-Control-Allow-Origin"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}))
+	}
+	if len(config.Cnf.CORSHosts) > 0 {
+		corsConfig.AllowOrigins = config.Cnf.CORSHosts
+	} else {
+		corsConfig.AllowAllOrigins = true
+	}
+	// Add CORS middleware
+	r.Use(cors.New(corsConfig))
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.JSONFormatter{}

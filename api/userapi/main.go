@@ -71,10 +71,7 @@ func main() {
 	ic := &mw.IcopContextMiddleware{ServiceName: ServiceName}
 	r.Use(ic.MiddlewareFunc())
 
-	// Add CORS middleware
-	r.Use(cors.New(cors.Config{
-		//AllowAllOrigins: true,
-		AllowOrigins: cnf.CORSHosts,
+	corsConfig := cors.Config{
 		AllowMethods: []string{"POST", "GET", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type", "Content-Length",
 			"Accept-Encoding", "X-CSRF-Token", "Authorization", "Access-Control-Allow-Credentials",
@@ -82,12 +79,21 @@ func main() {
 		ExposeHeaders:    []string{"Authorization", "X-Request-Id", "X-MessageCount"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}))
+	}
+	if len(cnf.CORSHosts) > 0 {
+		corsConfig.AllowOrigins = cnf.CORSHosts
+	} else {
+		corsConfig.AllowAllOrigins = true
+	}
+	// Add CORS middleware
+	r.Use(cors.New(corsConfig))
 
 	r.GET("/portal/test", Test)
 	r.POST("/portal/user/register_user", mw.UseIcopContext(RegisterUser))
 	r.GET("/portal/user/salutation_list", mw.UseIcopContext(SalutationList))
+	r.GET("/portal/user/language_list", mw.UseIcopContext(LanguageList))
 	r.GET("/portal/user/country_list", mw.UseIcopContext(CountryList))
+	r.GET("/portal/user/occupation_list", mw.UseIcopContext(OccupationList))
 	r.POST("/portal/user/confirm_token", mw.UseIcopContext(ConfirmToken))
 	r.POST("/portal/user/resend_confirmation_mail", mw.UseIcopContext(ResendConfirmMail))
 	r.GET("/portal/user/get_user_details", mw.UseIcopContext(GetUserRegistrationDetails)) //called without jwt, so email and 2fa is present
@@ -137,9 +143,14 @@ func main() {
 		authDash.GET("/get_user_wallets", mw.UseIcopContext(GetUserWallets))
 		authDash.POST("/add_wallet", mw.UseIcopContext(AddWallet))
 		authDash.POST("/remove_wallet", mw.UseIcopContext(RemoveWallet))
+		authDash.POST("/change_wallet_order", mw.UseIcopContext(WalletChangeOrder))
 		authDash.POST("/change_wallet_data", mw.UseIcopContext(WalletChangeData))
 		authDash.POST("/remove_wallet_federation_address", mw.UseIcopContext(RemoveWalletFederationAddress))
 		authDash.POST("/wallet_set_homescreen", mw.UseIcopContext(WalletSetHomescreen))
+
+		authDash.GET("/get_payment_templates", mw.UseIcopContext(GetPaymentTemplates))
+		authDash.POST("/add_payment_template", mw.UseIcopContext(AddPaymentTemplate))
+		authDash.POST("/remove_payment_template", mw.UseIcopContext(RemovePaymentTemplate))
 
 		authDash.POST("/subscribe_push_token", mw.UseIcopContext(SubscribeForPushNotifications))
 		authDash.POST("/unsubscribe_push_token", mw.UseIcopContext(UnsubscribeFromPushNotifications))

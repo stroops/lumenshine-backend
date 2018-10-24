@@ -53,10 +53,12 @@ message CreateUserRequest {
 	string bank_phone_number = 36;
 	string tax_id = 37;
 	string tax_id_name = 38;
-	string occupation = 39;
-	string employer_name = 40;
-	string employer_address = 41;
-	string language_code = 42;
+  string occupation_name = 39;
+  string occupation_code08 = 40;
+  string occupation_code88 = 41;
+	string employer_name = 42;
+	string employer_address = 43;
+	string language_code = 44;
 }
 
 message UserProfileResponse {
@@ -84,12 +86,15 @@ message UserProfileResponse {
 	string bank_phone_number = 22;
 	string tax_id = 23;
 	string tax_id_name = 24;
-	string occupation = 25;
-	string employer_name = 26;
-	string employer_address = 27;
-  string language_code = 28;
-  int64 created_at = 29;
-  bool user_not_found = 30;  
+  string occupation_name = 25;
+  string occupation_code08 = 26;
+  string occupation_code88 = 27;
+	string employer_name = 28;
+	string employer_address = 29;
+  string language_code = 30;
+  int64 created_at = 31;
+  bool user_not_found = 32;
+  string public_key_0 = 33;
 }
 
 message UpdateUserProfileRequest {
@@ -116,10 +121,12 @@ message UpdateUserProfileRequest {
 	string bank_phone_number = 21;
 	string tax_id = 22;
 	string tax_id_name = 23;
-	string occupation = 24;
-	string employer_name = 25;
-	string employer_address = 26;
-  string language_code = 27;
+  string occupation_name = 24;
+  string occupation_code08 = 25;
+  string occupation_code88 = 26;
+	string employer_name = 27;
+	string employer_address = 28;
+  string language_code = 29;
 }
 
 message UserDetailsResponse {
@@ -136,6 +143,8 @@ message UserDetailsResponse {
   bool user_not_found = 11;
   string tfa_temp_secret = 12;
   bool reset2fa_by_admin =  13;
+  string public_key_0 = 14;
+  string payment_state = 15;
 }
 
 message ExistsEmailRequest {
@@ -165,6 +174,31 @@ message SalutationListResponse {
   repeated string salutation = 1;
 }
 
+message LanguageListResponse {
+  repeated Language languages = 1;
+}
+
+message Language {
+  string code = 1;
+  string name = 2;
+}
+
+message OccupationListResponse {
+  repeated Occupation occupations = 1;
+}
+
+message Occupation {
+  int64 code08 = 1;
+  int64 code88 = 2;
+  string name = 3;
+}
+
+message OccupationListRequest {
+  BaseRequest base = 1;
+  string name = 2;
+  int64 limit_count = 3;
+}
+
 message UserMailTokenRequest {
   BaseRequest base = 1;
   string token = 2;
@@ -177,6 +211,7 @@ message UserMailTokenResponse {
   bool token_already_confirmed = 5;
   bool mail_confirmed = 6;
   int64 confirmed_date = 7;
+  string public_key_0 = 8;
 }
 
 message UserSecurityRequest {
@@ -298,6 +333,13 @@ message WalletChangeNameRequest {
   string name = 4;
 }
 
+message WalletChangeOrderRequest {
+  BaseRequest base = 1;
+  string public_key_0 = 2;
+  int64 order_nr = 3;
+  int64 user_id = 4;
+}
+
 message WalletSetHomescreenRequest {
   BaseRequest base = 1;
   int64 user_id = 2;
@@ -357,6 +399,47 @@ message WalletIsLastRequest {
   BaseRequest base = 1;
   int64 id = 2;
   int64 user_id = 3;
+}
+
+message AddPaymentTemplateRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  int64 wallet_id = 3;
+  string recipient_stellar_address = 4;
+  string recipient_publickey = 5;
+  string asset_code = 6;
+  string issuer_publickey = 7;
+  int64 amount = 8;
+  MemoType memoType = 9;
+  string memo = 10;
+}
+
+message RemovePaymentTemplateRequest {
+  BaseRequest base = 1;
+  int64 id = 2;
+  int64 user_id = 3;
+}
+
+message GetTemplatesRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  int64 wallet_id = 3;
+}
+
+message PaymentTemplate {
+  int64 id = 1;
+  int64 wallet_id = 2;
+  string recipient_stellar_address = 3;
+  string recipient_publickey = 4;
+  string asset_code = 5;
+  string issuer_publickey = 6;
+  int64 amount = 7;
+  MemoType memoType = 8;
+  string memo = 9;
+}
+
+message GetTemplatesResponse {
+  repeated PaymentTemplate templates = 1;
 }
 
 message QueuePushNotificationRequest {
@@ -492,6 +575,8 @@ service DBService {
   rpc ExistsEmail (ExistsEmailRequest) returns (ExistsEmailResponse) {}
   rpc GetCountryList (LanguageCodeRequest) returns (CountryListResponse) {}
   rpc GetSalutationList (LanguageCodeRequest) returns (SalutationListResponse) {}
+  rpc GetLanguageList (Empty) returns (LanguageListResponse) {}
+  rpc GetOccupationList (OccupationListRequest) returns (OccupationListResponse) {}
 
   rpc GetUserByMailtoken (UserMailTokenRequest) returns (UserMailTokenResponse) {}
   rpc SetUserMailToken (SetMailTokenRequest) returns (Empty) {}
@@ -513,10 +598,14 @@ service DBService {
   rpc AddWallet (AddWalletRequest) returns (IDResponse) {}
   rpc RemoveWallet (RemoveWalletRequest) returns (Empty) {}
   rpc WalletChangeName (WalletChangeNameRequest) returns (Empty) {}
+  rpc WalletChangeOrder (WalletChangeOrderRequest) returns (Empty) {}
   rpc WalletChangeFederationAddress (WalletChangeFederationAddressRequest) returns (Empty) {}
   rpc GetUserWallets (GetWalletsRequest) returns (GetWalletsResponse) {}
   rpc WalletIsLast (WalletIsLastRequest) returns (BoolResponse) {}
   rpc WalletSetHomescreen (WalletSetHomescreenRequest) returns (Empty) {}
+  rpc AddPaymentTemplate (AddPaymentTemplateRequest) returns (IDResponse) {}
+  rpc GetPaymentTemplates (GetTemplatesRequest) returns (GetTemplatesResponse) {}
+  rpc RemovePaymentTemplate (RemovePaymentTemplateRequest) returns (Empty) {}
   rpc AddKycDocument(AddKycDocumentRequest) returns (AddKycDocumentResponse) {}
 
   rpc AddPushToken(AddPushTokenRequest) returns (Empty) {}

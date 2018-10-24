@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -22,15 +21,15 @@ import (
 
 // OrderTransactionLog is an object representing the database table.
 type OrderTransactionLog struct {
-	ID         int         `boil:"id" json:"id" toml:"id" yaml:"id"`
-	OrderID    int         `boil:"order_id" json:"order_id" toml:"order_id" yaml:"order_id"`
-	Status     bool        `boil:"status" json:"status" toml:"status" yaml:"status"`
-	TX         string      `boil:"tx" json:"tx" toml:"tx" yaml:"tx"`
-	TXHash     string      `boil:"tx_hash" json:"tx_hash" toml:"tx_hash" yaml:"tx_hash"`
-	ResultCode null.String `boil:"result_code" json:"result_code,omitempty" toml:"result_code" yaml:"result_code,omitempty"`
-	ResultXDR  null.String `boil:"result_xdr" json:"result_xdr,omitempty" toml:"result_xdr" yaml:"result_xdr,omitempty"`
-	ErrorText  null.String `boil:"error_text" json:"error_text,omitempty" toml:"error_text" yaml:"error_text,omitempty"`
-	CreatedAt  time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ID         int       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	OrderID    int       `boil:"order_id" json:"order_id" toml:"order_id" yaml:"order_id"`
+	Status     bool      `boil:"status" json:"status" toml:"status" yaml:"status"`
+	TX         string    `boil:"tx" json:"tx" toml:"tx" yaml:"tx"`
+	TXHash     string    `boil:"tx_hash" json:"tx_hash" toml:"tx_hash" yaml:"tx_hash"`
+	ResultCode string    `boil:"result_code" json:"result_code" toml:"result_code" yaml:"result_code"`
+	ResultXDR  string    `boil:"result_xdr" json:"result_xdr" toml:"result_xdr" yaml:"result_xdr"`
+	ErrorText  string    `boil:"error_text" json:"error_text" toml:"error_text" yaml:"error_text"`
+	CreatedAt  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
 	R *orderTransactionLogR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L orderTransactionLogL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -80,8 +79,8 @@ type orderTransactionLogL struct{}
 
 var (
 	orderTransactionLogColumns               = []string{"id", "order_id", "status", "tx", "tx_hash", "result_code", "result_xdr", "error_text", "created_at"}
-	orderTransactionLogColumnsWithoutDefault = []string{"order_id", "status", "tx", "tx_hash", "result_code", "result_xdr", "error_text"}
-	orderTransactionLogColumnsWithDefault    = []string{"id", "created_at"}
+	orderTransactionLogColumnsWithoutDefault = []string{"order_id", "status"}
+	orderTransactionLogColumnsWithDefault    = []string{"id", "tx", "tx_hash", "result_code", "result_xdr", "error_text", "created_at"}
 	orderTransactionLogPrimaryKeyColumns     = []string{"id"}
 )
 

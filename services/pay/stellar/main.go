@@ -10,15 +10,21 @@ import (
 
 	"github.com/Soneso/lumenshine-backend/helpers"
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
+	"github.com/Soneso/lumenshine-backend/services/pay/channel"
 	"github.com/Soneso/lumenshine-backend/services/pay/config"
 	"github.com/Soneso/lumenshine-backend/services/pay/db"
+	h "github.com/Soneso/lumenshine-backend/services/pay/horizon"
 	"github.com/Soneso/lumenshine-backend/services/pay/paymentchannel"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/boil"
 
+	"github.com/Soneso/lumenshine-backend/services/pay/constants"
+	"github.com/stellar/go/build"
 	"github.com/stellar/go/clients/horizon"
 	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/support/log"
+	"github.com/volatiletech/null"
 )
 
 //Ensure, that we implement all methods
@@ -29,9 +35,10 @@ type Channel struct {
 	dbh *DBH
 	db  *db.DB
 
-	log    *logrus.Entry
-	cnf    *config.Config
-	client *horizon.Client
+	log        *logrus.Entry
+	cnf        *config.Config
+	client     *horizon.Client
+	ChannelMgr *channel.Manager
 }
 
 //DBH connection to horizon db
@@ -40,11 +47,12 @@ type DBH struct {
 }
 
 //NewStellarChannel connects the stellar-client
-func NewStellarChannel(DB *db.DB, cnf *config.Config) *Channel {
+func NewStellarChannel(DB *db.DB, cnf *config.Config, cm *channel.Manager) *Channel {
 	stl := new(Channel)
 	stl.db = DB
 	stl.cnf = cnf
 	stl.log = helpers.GetDefaultLog("Stellar-Listener", "")
+	stl.ChannelMgr = cm
 
 	stl.client = &horizon.Client{
 		URL: cnf.Stellar.Horizon,
@@ -88,10 +96,70 @@ func NewStellarChannel(DB *db.DB, cnf *config.Config) *Channel {
 	return stl
 }
 
-//TransferAmount transfers the given amount to the given address in the btc network
+//TransferAmount transfers the given amount to the given address in the stellar network
 //also adds the transaction logs
-func (l *Channel) TransferAmount(Order *m.UserOrder, TxHash string, Amount *big.Int, fromAddress string, PaymentType string, BTCOutIndex int) error {
-	return nil
+func (l *Channel) TransferAmount(Order *m.UserOrder, inTx *m.IncomingTransaction, Amount *big.Int, fromAddress string, TransationStatus string, BTCOutIndex int) error {
+
+	phase, err := Order.IcoPhase().One(l.db)
+	if err != nil {
+		return errors.Wrap(err, "Could not read order-phase")
+	}
+
+	ch, err := l.ChannelMgr.GetChannel(phase.DistPK, phase.DistPresignerSeed, phase.DistPostsignerSeed)
+	if err != nil {
+		return errors.Wrap(err, "Could not get free channel")
+	}
+	defer l.ChannelMgr.ReleaseChannel(ch.PK)
+
+	nc := db.NewNativeCalculator(constants.StellarDecimalPlaces) // stellar uses 8 decimals
+	opDenom, err := nc.DenomFromString(l.cnf.StellarOperationFeeDenom)
+	if err != nil {
+		return errors.Wrap(err, "Could not read stellar base-base")
+	}
+
+	realAmount := Amount.Sub(Amount, opDenom)
+
+	tx, err := build.Transaction(
+		build.SourceAccount{AddressOrSeed: ch.PK},
+		build.Network{Passphrase: l.cnf.Stellar.NetworkPassphrase},
+		build.AutoSequence{SequenceProvider: l.client},
+		build.Payment(
+			build.SourceAccount{AddressOrSeed: Order.PaymentAddress},
+			build.Destination{AddressOrSeed: fromAddress},
+			build.NativeAmount{Amount: nc.ToNativ(realAmount)},
+		),
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not create transfer transaction")
+	}
+
+	txe, err := tx.Sign(ch.Seed, Order.PaymentSeed)
+	txeStr, err := txe.Base64()
+	if err != nil {
+		return errors.Wrap(err, "error signing transfer transaction")
+	}
+
+	hash, result, err := h.SubmitTransaction(Order, txeStr, l.log, false)
+	//create out-transaction log
+	var oTx m.OutgoingTransaction
+	oTx.IncomingTransactionID = null.IntFrom(inTx.ID)
+	oTx.OrderID = Order.ID
+	oTx.Status = TransationStatus
+	oTx.PaymentNetwork = m.PaymentNetworkStellar
+	oTx.SenderAddress = Order.PaymentAddress
+	oTx.ReceivingAddress = fromAddress
+	oTx.TransactionString = txeStr
+	oTx.TransactionHash = hash
+	oTx.TransactionError = result
+	oTx.PaymentNetworkAmountDenomination = Amount.String()
+	oTx.ExecuteStatus = (err == nil)
+
+	if err := oTx.Insert(l.db, boil.Infer()); err != nil {
+		//just log the error
+		l.log.WithError(err).WithField("order_id", Order.ID).Error("error saving outgoing transaction")
+	}
+
+	return err
 }
 
 //Start the listener for the eth blockchain

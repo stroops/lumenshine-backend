@@ -228,6 +228,7 @@ type LostPasswordUpdateRequest struct {
 	EncryptionWordlistIV string `form:"encryption_wordlist_iv" json:"encryption_wordlist_iv" validate:"required,base64,len=24"`
 	PublicKey0           string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 	PublicKey188         string `form:"public_key_188" json:"public_key_188" validate:"required,base64,len=56"`
+	SEP10Transaction     string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
 }
 
 //LostPasswordUpdate updates the security data for the user
@@ -244,14 +245,32 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
+<<<<<<< HEAD
 	//check that public key 188 is correct
 	match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
 	if !match {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid publick key", ""))
 		return
+=======
+	if l.SEP10Transaction == "" {
+		//check that public key 188 is correct
+		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
+		if !match {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Password does not match", ""))
+			return
+		}
+	} else {
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
+		}
+>>>>>>> develop
 	}
-
-	//TODO: check data more in detail
 
 	req := &pb.UserSecurityRequest{
 		Base:              NewBaseRequest(uc),
@@ -284,7 +303,9 @@ type ChangePasswordUpdateRequest struct {
 	MnemonicMasterIV  string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
 	WordlistMasterKey string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
 	WordlistMasterIV  string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
-	PublicKey188      string `form:"public_key_188" json:"public_key_188" validate:"required,base64,len=56"`
+
+	PublicKey188     string `form:"public_key_188" json:"public_key_188" validate:"base64,len=56"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
 }
 
 //ChangePasswordUpdate updates the security data for the user
@@ -301,11 +322,31 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
+<<<<<<< HEAD
 	//check that the password_188 was correct
 	match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
 	if !match {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
 		return
+=======
+	if l.SEP10Transaction == "" {
+		//check that the password_188 was correct
+		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
+		if !match {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "password does not match", ""))
+			return
+		}
+	} else {
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
+		}
+>>>>>>> develop
 	}
 
 	req := &pb.UserSecurityRequest{
@@ -412,7 +453,8 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 
 //NewTfaRequest for proving the password
 type NewTfaRequest struct {
-	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
+	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
 }
 
 //NewTfaResponse response for update
@@ -446,11 +488,31 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 	} else {
+<<<<<<< HEAD
 		//check that public key 188 is correct
 		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
 		if !match {
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
 			return
+=======
+		if l.SEP10Transaction == "" {
+			//check that public key 188 is correct
+			match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
+			if !match {
+				c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Password does not match", ""))
+				return
+			}
+		} else {
+			valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+				return
+			}
+			if !valid {
+				c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+				return
+			}
+>>>>>>> develop
 		}
 	}
 

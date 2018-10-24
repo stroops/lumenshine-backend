@@ -335,6 +335,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//TODO add memo for stellarpayment
 	c.JSON(http.StatusOK, &CreateOrderResponse{
 		OrderID:               o.OrderId,
 		OrderStatus:           o.OrderStatus,
@@ -346,7 +347,7 @@ func CreateOrder(uc *mw.IcopContext, c *gin.Context) {
 		ExchangeValueToPay:    o.ExchangeValueToPay,
 		ExchangeCurrencyType:  ec.ExchangeCurrencyType,
 		PaymentAddress:        o.PaymentAddress,
-		QRCode:                o.PaymentQrImage,
+		QRCode:                o.PaymentQrImage, //TODO up
 		FiatBIC:               o.FiatBic,
 		FiatIBAN:              o.FiatIban,
 		FiatDestinationName:   o.FiatRecepientName,
@@ -715,6 +716,7 @@ func FakeTransaction(uc *mw.IcopContext, c *gin.Context) {
 		RecipientAddress: l.RecipientAddress,
 		DenomAmount:      l.DenominationAmount,
 		SenderAddress:    l.SenderAddress,
+		PaymentUsage:     l.PaymentUsage,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating fake-transaction", cerr.GeneralError))

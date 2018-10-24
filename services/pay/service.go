@@ -264,7 +264,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	q := []qm.QueryMod{
 		qm.Where(m.UserOrderColumns.UserID+"=?", r.UserId),
-		qm.Load(m.UserOrderRels.ProcessedTransaction),
+		//TODO: qm.Load(m.UserOrderRels.ProcessedTransaction),
 	}
 
 	if r.OrderStatus != "" {
@@ -313,6 +313,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 			PaymentUsage:                       o.PaymentUsage,
 		}
 
+		/* TODO:
 		if o.R.ProcessedTransaction != nil {
 			if o.R.ProcessedTransaction.PaymentNetworkAmountDenomination != "" {
 				denomReceived, err := ec.DenomFromString(o.R.ProcessedTransaction.PaymentNetworkAmountDenomination)
@@ -322,6 +323,7 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 				ret.UserOrders[i].AmountReceived = ec.ToNativ(denomReceived)
 			}
 		}
+		*/
 
 		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeFiat {
 			ret.UserOrders[i].FiatBic = aec.R.IcoPhaseBankAccount.BicSwift
@@ -333,9 +335,11 @@ func (s *server) GetUserOrders(ctx context.Context, r *pb.UserOrdersRequest) (*p
 		if ec.ExchangeCurrencyType == m.ExchangeCurrencyTypeCrypto {
 			ret.UserOrders[i].PaymentAddress = o.PaymentAddress
 			ret.UserOrders[i].StellarTransactionId = o.StellarTransactionID
+			/* TODO:
 			if o.R.ProcessedTransaction != nil {
 				ret.UserOrders[i].PaymentRefundTxId = o.R.ProcessedTransaction.RefundTXID
 			}
+			*/
 
 			//TODO
 			//ret.UserOrders[i].PaymentQrImage = o.PaymentQRImage
@@ -461,8 +465,14 @@ func (s *server) PayExecuteTransaction(ctx context.Context, r *pb.PayExecuteTran
 func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransaction) (*pb.BoolResponse, error) {
 	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 	if s.Env.Config.AllowFakeTransactions {
+
+		ch, ok := s.Env.Clients[r.PaymentChannel]
+		if !ok {
+			return nil, fmt.Errorf("PaymentChannel %s does not exist", r.PaymentChannel)
+		}
+
 		// Need to read the order first, because this is the normal "procedure". This will also update the order-status
-		o, err := s.Env.DBC.GetOrderForAddress(r.PaymentChannel, r.RecipientAddress, r.PaymentUsage)
+		o, err := s.Env.DBC.GetOrderForAddress(ch, r.RecipientAddress, r.PaymentUsage)
 		if err != nil {
 			return &pb.BoolResponse{Value: false}, nil
 		}
@@ -477,11 +487,8 @@ func (s *server) FakePaymentTransaction(ctx context.Context, r *pb.TestTransacti
 		}
 		v := big.NewInt(r.DenomAmount)
 		fmt.Println(v.String())
-		ch, ok := s.Env.Clients[r.PaymentChannel]
-		if !ok {
-			return nil, fmt.Errorf("PaymentChannel %s does not exist", r.PaymentChannel)
-		}
-		ok, err = s.Env.DBC.AddNewTransaction(log, ch, tx, r.RecipientAddress, r.SenderAddress, o.ID, v, 0)
+
+		ok, err = s.Env.DBC.AddNewTransaction(log, ch, tx, r.RecipientAddress, r.SenderAddress, o, v, 0)
 		return &pb.BoolResponse{Value: ok}, err
 	}
 

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
-	//m "github.com/Soneso/lumenshine-backend/services/db/models"
 	"database/sql"
 
 	mh "github.com/Soneso/lumenshine-backend/db/horizon/models"
@@ -109,6 +109,7 @@ func (l *Channel) processLedger(ledger *mh.HistoryLedger) error {
 	})
 	localLog.Info("Processing ledger")
 
+	// TODO: Process only transactions, which have the correct memo
 	for _, transaction := range transactions {
 		//get all operations for transaction
 		operations, err := mh.HistoryOperations(qm.Where(mh.HistoryOperationColumns.TransactionID+"=?", transaction.ID)).All(l.dbh)
@@ -139,18 +140,23 @@ func (l *Channel) processLedger(ledger *mh.HistoryLedger) error {
 		}
 	}
 
-	localLog.Info("Processed block")
+	localLog.Info("Processed ledger")
 
 	return nil
 }
 
 func (l *Channel) processTransaction(ledger *mh.HistoryLedger, transaction *mh.HistoryTransaction, operation *Operation) error {
 
-	/*localLog := l.log.WithFields(logrus.Fields{"transaction": hash, "rail": "ethereum"})
+	localLog := l.log.WithFields(logrus.Fields{"transaction": transaction.TransactionHash, "rail": "stellar"})
 	localLog.Debug("Processing transaction")
 
 	//get the order from the database
-	order, err := l.db.GetOrderForAddress(m.PaymentNetworkEthereum, toAddress, "")
+	memo := ""
+	if !transaction.Memo.IsZero() {
+		memo = transaction.Memo.String
+	}
+
+	order, err := l.db.GetOrderForAddress(l, operation.To, memo)
 	if err != nil {
 		return errors.Wrap(err, "Error getting association")
 	}
@@ -160,8 +166,20 @@ func (l *Channel) processTransaction(ledger *mh.HistoryLedger, transaction *mh.H
 		return nil
 	}
 
+	ec, err := l.db.GetExchangeCurrecnyByID(order.ExchangeCurrencyID, localLog)
+
+	//_, aec, err := l.db.GetActiveExchangeCurrecnyByID(order.ExchangeCurrencyID, order.IcoPhaseID, localLog)
+	if err != nil {
+		return err
+	}
+
+	valueStoops, err := ec.DenomFromNativ(operation.Amount)
+	if err != nil {
+		return err
+	}
+
 	// Add transaction as processing.
-	isDuplicate, err := l.db.AddNewTransaction(l.log, l, hash, toAddress, fromAddress, order.ID, valueWei, 0)
+	isDuplicate, err := l.db.AddNewTransaction(l.log, l, transaction.TransactionHash, operation.To, operation.From, order, valueStoops, 0)
 	if err != nil {
 		return err
 	}
@@ -170,6 +188,6 @@ func (l *Channel) processTransaction(ledger *mh.HistoryLedger, transaction *mh.H
 		localLog.Debug("Transaction already processed, skipping")
 		return nil
 	}
-	*/
+
 	return nil
 }

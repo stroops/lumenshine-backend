@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/Soneso/lumenshine-backend/addons/charts/config"
@@ -149,7 +148,7 @@ func getDecentralizedExchangeData(ex *exchange, sourceIssuer string, destIssuer 
 	var url string
 	url = config.Cnf.HorizonURL + "order_book?selling_asset_type=" + assets[sourceIssuer].assetType + "&selling_asset_code=" + assets[sourceIssuer].assetCode + "&selling_asset_issuer=" + sourceIssuer + "&buying_asset_type=native"
 
-	resp, err := http.Get(url)
+	resp, err := config.Cnf.HTTPClient.Get(url)
 	if err != nil {
 		return err
 	}
@@ -206,7 +205,7 @@ func getAssetInformation(aIssuer string, aCode string) (assetStruct, error) {
 	} else {
 		url := config.Cnf.HorizonURL + "assets?asset_issuer=" + aIssuer + "&asset_code=" + aCode
 
-		resp, err := http.Get(url)
+		resp, err := config.Cnf.HTTPClient.Get(url)
 		if err != nil {
 			return asset, err
 		}
