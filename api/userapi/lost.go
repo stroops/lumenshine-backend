@@ -245,13 +245,6 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
-<<<<<<< HEAD
-	//check that public key 188 is correct
-	match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-	if !match {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid publick key", ""))
-		return
-=======
 	if l.SEP10Transaction == "" {
 		//check that public key 188 is correct
 		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
@@ -269,7 +262,6 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 			return
 		}
->>>>>>> develop
 	}
 
 	req := &pb.UserSecurityRequest{
@@ -322,13 +314,6 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
-<<<<<<< HEAD
-	//check that the password_188 was correct
-	match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-	if !match {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
-		return
-=======
 	if l.SEP10Transaction == "" {
 		//check that the password_188 was correct
 		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
@@ -346,7 +331,6 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 			return
 		}
->>>>>>> develop
 	}
 
 	req := &pb.UserSecurityRequest{
@@ -488,13 +472,6 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 	} else {
-<<<<<<< HEAD
-		//check that public key 188 is correct
-		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-		if !match {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
-			return
-=======
 		if l.SEP10Transaction == "" {
 			//check that public key 188 is correct
 			match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
@@ -512,7 +489,6 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 				c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 				return
 			}
->>>>>>> develop
 		}
 	}
 
