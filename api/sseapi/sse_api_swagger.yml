@@ -1,0 +1,48 @@
+basePath: /portal/pay
+definitions:
+  InfoStruct:
+    description: InfoStruct represents the information for the application
+    properties:
+      BuildDate:
+        type: string
+      GitRemote:
+        type: string
+      GitVersion:
+        type: string
+      MemMbUsedAlloc:
+        format: uint64
+        type: integer
+      MemMbUsedTotalAlloc:
+        format: uint64
+        type: integer
+      NumGoRutines:
+        format: int64
+        type: integer
+      Version:
+        type: string
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/sseapi
+host: demoapi.lumenshine.com
+info:
+  description: the package for payment
+  termsOfService: there is not TOS right now
+  title: Payment API.
+  version: 0.0.1
+paths:
+  /info:
+    get:
+      description: Prints some information on the binary and runtime
+      operationId: InfoPage
+      responses:
+        "200":
+          description: InfoStruct
+          schema:
+            $ref: '#/definitions/InfoStruct'
+schemes:
+- https
+securityDefinitions:
+  fullAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
