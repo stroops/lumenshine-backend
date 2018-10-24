@@ -3,12 +3,12 @@ package ticker
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 )
 
 // ticker for coinmarketcap
@@ -87,7 +87,7 @@ func getCoinmarketcapData(ex *exchange, internalID int) error {
 
 	url := "https://api.coinmarketcap.com/v2/ticker/" + strconv.Itoa(internalID) + "/?convert=" + ex.destination
 
-	resp, err := http.Get(url)
+	resp, err := config.Cnf.HTTPClient.Get(url)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func getCoinmarketcapListing(currencySymbol string) (int, error) {
 
 	url := "https://api.coinmarketcap.com/v2/listings/"
 
-	resp, err := http.Get(url)
+	resp, err := config.Cnf.HTTPClient.Get(url)
 	if err != nil {
 		return -1, err
 	}

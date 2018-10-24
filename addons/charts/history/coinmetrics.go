@@ -1,11 +1,11 @@
 package history
 
 import (
-	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 	"io"
-	"net/http"
 	"os"
 	"path"
+
+	"github.com/Soneso/lumenshine-backend/addons/charts/config"
 )
 
 //downloadFile will download the file from the url location to a localpath
@@ -20,7 +20,7 @@ func downloadFile(url string) (localPath string, err error) {
 	defer out.Close()
 
 	// Get the data
-	resp, err := http.Get(url)
+	resp, err := config.Cnf.HTTPClient.Get(url)
 	if err != nil {
 		return
 	}

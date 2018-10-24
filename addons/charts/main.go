@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/Soneso/lumenshine-backend/addons/charts/api"
@@ -56,13 +57,13 @@ func main() {
 		log.Fatalf("Error reading flag %v", err)
 	}
 
-	config.Cnf.TruncateHistoryTable = truncateHistoryPtr
-
 	if historyPtr {
-		err = history.GetHistoricalData()
+		err = history.GetHistoricalData(truncateHistoryPtr)
 		if err != nil {
 			log.Panicf("Error on getHistoricalData %v", err)
 		}
+		log.Println("Loaded history data. Will exit")
+		os.Exit(0)
 	}
 
 	ticker.Ticker()
