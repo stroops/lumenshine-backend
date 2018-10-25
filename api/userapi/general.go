@@ -324,7 +324,7 @@ func UserSecurityData(uc *mw.IcopContext, c *gin.Context) {
 //GetTfaSecretRequest for requesting the tfa secrete
 type GetTfaSecretRequest struct {
 	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
-	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //GetTfaSecretResponse response for the api call

@@ -228,7 +228,7 @@ type LostPasswordUpdateRequest struct {
 	EncryptionWordlistIV string `form:"encryption_wordlist_iv" json:"encryption_wordlist_iv" validate:"required,base64,len=24"`
 	PublicKey0           string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 	PublicKey188         string `form:"public_key_188" json:"public_key_188" validate:"required,base64,len=56"`
-	SEP10Transaction     string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
+	SEP10Transaction     string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //LostPasswordUpdate updates the security data for the user
@@ -297,7 +297,7 @@ type ChangePasswordUpdateRequest struct {
 	WordlistMasterIV  string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
 
 	PublicKey188     string `form:"public_key_188" json:"public_key_188" validate:"base64,len=56"`
-	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //ChangePasswordUpdate updates the security data for the user
@@ -438,7 +438,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 //NewTfaRequest for proving the password
 type NewTfaRequest struct {
 	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
-	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"base64"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //NewTfaResponse response for update
