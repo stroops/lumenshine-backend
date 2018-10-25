@@ -1,3 +1,12 @@
+//go:generate swagger generate spec -o ./userapi_swagger.yml -m
+//https://github.com/go-swagger/go-swagger
+//open swagger with swagger-template:
+//  swagger serve userapi_swagger.yml -F swagger --port=8088 --host=localhost --no-open
+//  browser: http://petstore.swagger.io/?url=http%3A%2F%2F127.0.0.1%3A8088%2Fswagger.json
+//open swagger with redoc-template:
+//  swagger serve userapi_swagger.yml --port=8088 --host=localhost --no-open
+//  browser: http://127.0.0.1:8088/docs
+
 package main
 
 import (
@@ -169,6 +178,8 @@ func main() {
 		authDash.POST("/add_contact", mw.UseIcopContext(AddContact))
 		authDash.POST("/edit_contact", mw.UseIcopContext(EditContact))
 		authDash.POST("/remove_contact", mw.UseIcopContext(RemoveContact))
+
+		authDash.GET("/get_stellar_transactions", mw.UseIcopContext(GetStellarTransactions))
 	}
 
 	//this group is used only for the change password functionality. It is a special key, which is received from

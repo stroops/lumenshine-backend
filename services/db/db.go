@@ -19,6 +19,7 @@ import (
 var (
 	flags = flag.NewFlagSet("goose", flag.ExitOnError)
 	db    *sql.DB
+	hdb   *sql.DB
 )
 
 //createNewDB create a new DB connection
@@ -26,8 +27,7 @@ func createNewDB(log *logrus.Entry, cnf *Config) error {
 	var err error
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cnf.DBHost, cnf.DBPort, cnf.DBUser, cnf.DBPassword, cnf.DBName)
-
+		cnf.CustomerDB.DBHost, cnf.CustomerDB.DBPort, cnf.CustomerDB.DBUser, cnf.CustomerDB.DBPassword, cnf.CustomerDB.DBName)
 	db, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
@@ -45,6 +45,28 @@ func createNewDB(log *logrus.Entry, cnf *Config) error {
 	}
 
 	boil.SetDB(db)
+
+	return nil
+}
+
+//createNewDB create a new DB connection
+func createNewHorizonDB(log *logrus.Entry, cnf *Config) error {
+	var err error
+
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cnf.HorizonDB.DBHost, cnf.HorizonDB.DBPort, cnf.HorizonDB.DBUser, cnf.HorizonDB.DBPassword, cnf.HorizonDB.DBName)
+
+	hdb, err = sql.Open("postgres", psqlInfo)
+
+	if err != nil {
+		log.WithError(err).Fatalf("Failed to connect to horizondb")
+	}
+
+	//try to ping the db
+	err = hdb.Ping()
+	if err != nil {
+		log.WithError(err).Fatalf("Failed to ping horizon db")
+	}
 
 	return nil
 }

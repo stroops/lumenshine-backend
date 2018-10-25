@@ -1,0 +1,126 @@
+basePath: /portal/user/
+definitions:
+  StellarTransactionRequest:
+    description: StellarTransactionRequest request-data
+    properties:
+      end_timestamp:
+        description: TX-Endtime timestamp without time zone, eg. 2006-01-02 15:04:05
+        type: string
+        x-go-name: EndTimestamp
+      start_timestamp:
+        description: TX-Starting timestamp without time zone, eg. 2006-01-02 15:04:05
+        type: string
+        x-go-name: StartTimestamp
+      stellar_account_pk:
+        description: Filter for stellar account
+        type: string
+        x-go-name: StellarAccountPK
+    required:
+    - stellar_account_pk
+    - start_timestamp
+    - end_timestamp
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  StellarTransactionResponse:
+    description: StellarTransactionResponse transactions for one user account, including
+      all operations
+    properties:
+      created_at:
+        format: date-time
+        type: string
+        x-go-name: CreatedAt
+      fee_paid:
+        format: int64
+        type: integer
+        x-go-name: FeePaid
+      memo:
+        type: string
+        x-go-name: Memo
+      memo_type:
+        description: TXResult        string               `json:"tx_result"`
+        type: string
+        x-go-name: MemoType
+      operation_count:
+        format: int64
+        type: integer
+        x-go-name: OperationCount
+      operations:
+        items:
+          $ref: '#/definitions/stellarOperations'
+        type: array
+        x-go-name: Operations
+      transaction_hash:
+        type: string
+        x-go-name: TransactionHash
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  stellarOperations:
+    properties:
+      application_order:
+        format: int64
+        type: integer
+        x-go-name: ApplicationOrder
+      details:
+        type: string
+        x-go-name: Details
+      source_account:
+        type: string
+        x-go-name: SourceAccount
+      type:
+        format: int64
+        type: integer
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+host: demoapi.lumenshine.com
+info:
+  description: the package for the user management
+  termsOfService: there is not TOS right now
+  title: User-API.
+  version: 0.0.1
+paths:
+  /portal/user/dashboard/get_stellar_transactions:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Lists all transactions including all operations for one account
+        xx
+      operationId: GetStellarTransactions
+      parameters:
+      - description: Filter for stellar account
+        in: query
+        name: stellar_account_pk
+        required: true
+        type: string
+        x-go-name: StellarAccountPK
+      - description: TX-Starting timestamp without time zone, eg. 2006-01-02 15:04:05
+        in: query
+        name: start_timestamp
+        required: true
+        type: string
+        x-go-name: StartTimestamp
+      - description: TX-Endtime timestamp without time zone, eg. 2006-01-02 15:04:05
+        in: query
+        name: end_timestamp
+        required: true
+        type: string
+        x-go-name: EndTimestamp
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: StellarTransactionResponse
+          schema:
+            items:
+              $ref: '#/definitions/StellarTransactionResponse'
+            type: array
+      tags:
+      - stellar
+schemes:
+- https
+securityDefinitions:
+  fullAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

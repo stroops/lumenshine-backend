@@ -47,6 +47,12 @@ func main() {
 	}
 	defer db.Close()
 
+	if err = createNewHorizonDB(log, cnf); err != nil {
+		log.WithError(err).Error("Error creating horizon db connection")
+	} else {
+		defer hdb.Close()
+	}
+
 	//start the service
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cnf.Port))
 	if err != nil {

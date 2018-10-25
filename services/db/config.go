@@ -1,21 +1,28 @@
 package main
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-//Config for the app
-type Config struct {
+//DBConfig is the definition for a DB connection
+type DBConfig struct {
 	DBUser     string
 	DBPassword string
 	DBHost     string
 	DBPort     int64
 	DBName     string
+}
+
+//Config for the app
+type Config struct {
+	CustomerDB DBConfig
+	HorizonDB  DBConfig
 
 	Port            int
 	SQLMigrationDir string

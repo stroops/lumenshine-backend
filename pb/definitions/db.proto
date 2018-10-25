@@ -567,6 +567,35 @@ message UserContact {
   string public_key = 4;
 }
 
+message GetStellarTransactionsRequest {
+  BaseRequest base = 1;
+  string stellar_account_pk = 2;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
+}
+
+message StellarOperations {
+  int64 application_order = 1;
+  int64 type = 2;
+  string details = 3;
+  string source_account = 4;
+}
+
+message StellarTransaction {
+  string transaction_hash = 1;
+  int64 fee_paid = 2;
+  int64 operation_count = 3;
+  int64 created_at = 4;
+  //string tx_result = 5;
+  string memo_type = 6;
+  string memo = 7;
+  repeated StellarOperations operations = 8;
+}
+
+message StellarTransactionResponse {
+  repeated StellarTransaction transactions = 1;
+}
+
 service DBService {
   rpc GetUserDetails (GetUserByIDOrEmailRequest) returns (UserDetailsResponse) {}
   rpc GetUserSecurities (IDRequest) returns (UserSecurityResponse) {}
@@ -624,4 +653,6 @@ service DBService {
   rpc UpdateUserContact(UpdateUserContactRequest) returns (Empty) {}
   rpc DeleteUserContact(IDRequest) returns (Empty) {}
   rpc GetUserContacts(IDRequest) returns (GetUserContactsResponse) {}
+
+  rpc GetStellarTransactions(GetStellarTransactionsRequest) returns (StellarTransactionResponse) {}
 }

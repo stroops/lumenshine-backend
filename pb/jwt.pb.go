@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -34,16 +36,17 @@ func (m *KeyListResponse) Reset()         { *m = KeyListResponse{} }
 func (m *KeyListResponse) String() string { return proto.CompactTextString(m) }
 func (*KeyListResponse) ProtoMessage()    {}
 func (*KeyListResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jwt_3a8da9c149fc45aa, []int{0}
+	return fileDescriptor_b5cacc9c239fa0c7, []int{0}
 }
+
 func (m *KeyListResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyListResponse.Unmarshal(m, b)
 }
 func (m *KeyListResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_KeyListResponse.Marshal(b, m, deterministic)
 }
-func (dst *KeyListResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyListResponse.Merge(dst, src)
+func (m *KeyListResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyListResponse.Merge(m, src)
 }
 func (m *KeyListResponse) XXX_Size() int {
 	return xxx_messageInfo_KeyListResponse.Size(m)
@@ -76,16 +79,17 @@ func (m *KeyListResponse_KeyValue) Reset()         { *m = KeyListResponse_KeyVal
 func (m *KeyListResponse_KeyValue) String() string { return proto.CompactTextString(m) }
 func (*KeyListResponse_KeyValue) ProtoMessage()    {}
 func (*KeyListResponse_KeyValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jwt_3a8da9c149fc45aa, []int{0, 0}
+	return fileDescriptor_b5cacc9c239fa0c7, []int{0, 0}
 }
+
 func (m *KeyListResponse_KeyValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyListResponse_KeyValue.Unmarshal(m, b)
 }
 func (m *KeyListResponse_KeyValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_KeyListResponse_KeyValue.Marshal(b, m, deterministic)
 }
-func (dst *KeyListResponse_KeyValue) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyListResponse_KeyValue.Merge(dst, src)
+func (m *KeyListResponse_KeyValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyListResponse_KeyValue.Merge(m, src)
 }
 func (m *KeyListResponse_KeyValue) XXX_Size() int {
 	return xxx_messageInfo_KeyListResponse_KeyValue.Size(m)
@@ -143,16 +147,17 @@ func (m *JwtKeysResponse) Reset()         { *m = JwtKeysResponse{} }
 func (m *JwtKeysResponse) String() string { return proto.CompactTextString(m) }
 func (*JwtKeysResponse) ProtoMessage()    {}
 func (*JwtKeysResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jwt_3a8da9c149fc45aa, []int{1}
+	return fileDescriptor_b5cacc9c239fa0c7, []int{1}
 }
+
 func (m *JwtKeysResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JwtKeysResponse.Unmarshal(m, b)
 }
 func (m *JwtKeysResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_JwtKeysResponse.Marshal(b, m, deterministic)
 }
-func (dst *JwtKeysResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_JwtKeysResponse.Merge(dst, src)
+func (m *JwtKeysResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_JwtKeysResponse.Merge(m, src)
 }
 func (m *JwtKeysResponse) XXX_Size() int {
 	return xxx_messageInfo_JwtKeysResponse.Size(m)
@@ -255,9 +260,9 @@ var _JwtService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "jwt.proto",
 }
 
-func init() { proto.RegisterFile("jwt.proto", fileDescriptor_jwt_3a8da9c149fc45aa) }
+func init() { proto.RegisterFile("jwt.proto", fileDescriptor_b5cacc9c239fa0c7) }
 
-var fileDescriptor_jwt_3a8da9c149fc45aa = []byte{
+var fileDescriptor_b5cacc9c239fa0c7 = []byte{
 	// 272 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0xcf, 0x4e, 0x83, 0x40,
 	0x10, 0xc6, 0xdd, 0xb6, 0x2a, 0x4c, 0x8d, 0x4d, 0xd6, 0x0b, 0xa2, 0x26, 0x84, 0x13, 0x27, 0x12,
