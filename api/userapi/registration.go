@@ -317,7 +317,7 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	//TODO: check with Christian
-	valid, _, err := verifySEP10Data(cd.SEP10Transaction, user.Id, uc, c)
+	/*valid, _, err := verifySEP10Data(cd.SEP10Transaction, user.Id, uc, c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
 		return
@@ -325,7 +325,7 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 	if !valid {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 		return
-	}
+	}*/
 
 	authMiddlewareFull.SetAuthHeader(c, user.Id)
 
