@@ -509,8 +509,9 @@ type CustomerWalletsRequest struct {
 
 //WalletListItem is one item in the list
 type WalletListItem struct {
-	Name      string `json:"name"`
-	PublicKey string `json:"public_key"`
+	Name       string `json:"name"`
+	PublicKey  string `json:"public_key"`
+	WalletType string `json:"wallet_type"`
 }
 
 //WalletListResponse list of wallets
@@ -542,6 +543,7 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 		qm.Select(
 			m.UserWalletColumns.WalletName,
 			m.UserWalletColumns.PublicKey0,
+			m.UserWalletColumns.WalletType,
 		),
 	}
 	q = append(q, qm.Where(m.UserWalletColumns.UserID+"=?", id))
@@ -567,8 +569,9 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 	r.Items = make([]WalletListItem, len(wallets))
 	for i, w := range wallets {
 		r.Items[i] = WalletListItem{
-			Name:      w.WalletName,
-			PublicKey: w.PublicKey0,
+			Name:       w.WalletName,
+			PublicKey:  w.PublicKey0,
+			WalletType: w.WalletType,
 		}
 	}
 	c.JSON(http.StatusOK, r)
