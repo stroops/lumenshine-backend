@@ -542,7 +542,7 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 	q := []qm.QueryMod{
 		qm.Select(
 			m.UserWalletColumns.WalletName,
-			m.UserWalletColumns.PublicKey0,
+			m.UserWalletColumns.PublicKey,
 			m.UserWalletColumns.WalletType,
 		),
 	}
@@ -570,7 +570,7 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 	for i, w := range wallets {
 		r.Items[i] = WalletListItem{
 			Name:       w.WalletName,
-			PublicKey:  w.PublicKey0,
+			PublicKey:  w.PublicKey,
 			WalletType: w.WalletType,
 		}
 	}

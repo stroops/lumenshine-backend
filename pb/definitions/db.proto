@@ -319,7 +319,7 @@ message UserMessageListResponse {
 message AddWalletRequest {
   BaseRequest base = 1;
   int64 user_id = 2;
-  string public_key_0 = 3;
+  string public_key = 3;
   string wallet_name = 4;
   string friendly_id = 5;
   string domain = 6;
@@ -336,7 +336,7 @@ message WalletChangeNameRequest {
 
 message WalletChangeOrderRequest {
   BaseRequest base = 1;
-  string public_key_0 = 2;
+  string public_key = 2;
   int64 order_nr = 3;
   int64 user_id = 4;
 }
@@ -362,19 +362,19 @@ message CheckWalletRequest {
   string wallet_name = 3;
   string friendly_id = 4;
   string domain = 5;
-  string public_key_0 = 6;
+  string public_key = 6;
 }
 
 message CheckWalletResponse {
   bool name_ok = 1;
   bool federation_address_ok = 2;
-  bool public_key_0_ok = 3;
+  bool public_key_ok = 3;
 }
 
 message Wallet {
   int64 id = 1;
   int64 user_id = 2;
-  string public_key_0 = 3;
+  string public_key = 3;
   string wallet_name = 4;
   string friendly_id = 5;
   string domain = 6;

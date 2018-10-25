@@ -19,12 +19,12 @@ import (
 func (s *server) CheckWalletData(ctx context.Context, r *pb.CheckWalletRequest) (*pb.CheckWalletResponse, error) {
 	resp := new(pb.CheckWalletResponse)
 
-	if r.PublicKey_0 != "" {
-		exists, err := models.UserWallets(qm.Where("user_id=? and public_key_0 ilike ?", r.UserId, r.PublicKey_0)).Exists(db)
+	if r.PublicKey != "" {
+		exists, err := models.UserWallets(qm.Where("user_id=? and public_key ilike ?", r.UserId, r.PublicKey)).Exists(db)
 		if err != nil {
 			return nil, err
 		}
-		resp.PublicKey_0Ok = !exists
+		resp.PublicKeyOk = !exists
 	}
 
 	if r.WalletName != "" {
@@ -84,7 +84,7 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 	//add the wallet for the user
 	w := &models.UserWallet{
 		UserID:           int(r.UserId),
-		PublicKey0:       r.PublicKey_0,
+		PublicKey:        r.PublicKey,
 		WalletName:       r.WalletName,
 		FriendlyID:       r.FriendlyId,
 		Domain:           r.Domain,
@@ -145,7 +145,7 @@ func (s *server) WalletChangeOrder(ctx context.Context, r *pb.WalletChangeOrderR
 	if r.OrderNr < 0 {
 		orderTo = 0
 	}
-	wallet, err := models.UserWallets(qm.Where(models.UserWalletColumns.PublicKey0+"=? and "+models.UserContactColumns.UserID+"=?", r.PublicKey_0, r.UserId)).One(db)
+	wallet, err := models.UserWallets(qm.Where(models.UserWalletColumns.PublicKey+"=? and "+models.UserContactColumns.UserID+"=?", r.PublicKey, r.UserId)).One(db)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -251,7 +251,7 @@ func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*
 		ret.Wallets = append(ret.Wallets, &pb.Wallet{
 			Id:               int64(w.ID),
 			UserId:           int64(w.UserID),
-			PublicKey_0:      w.PublicKey0,
+			PublicKey:        w.PublicKey,
 			WalletName:       w.WalletName,
 			ShowOnHomescreen: w.ShowOnHomescreen,
 			FriendlyId:       w.FriendlyID,

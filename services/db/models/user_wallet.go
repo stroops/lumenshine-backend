@@ -23,7 +23,7 @@ import (
 type UserWallet struct {
 	ID               int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	UserID           int       `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	PublicKey0       string    `boil:"public_key_0" json:"public_key_0" toml:"public_key_0" yaml:"public_key_0"`
+	PublicKey        string    `boil:"public_key" json:"public_key" toml:"public_key" yaml:"public_key"`
 	WalletName       string    `boil:"wallet_name" json:"wallet_name" toml:"wallet_name" yaml:"wallet_name"`
 	FriendlyID       string    `boil:"friendly_id" json:"friendly_id" toml:"friendly_id" yaml:"friendly_id"`
 	Domain           string    `boil:"domain" json:"domain" toml:"domain" yaml:"domain"`
@@ -41,7 +41,7 @@ type UserWallet struct {
 var UserWalletColumns = struct {
 	ID               string
 	UserID           string
-	PublicKey0       string
+	PublicKey        string
 	WalletName       string
 	FriendlyID       string
 	Domain           string
@@ -54,7 +54,7 @@ var UserWalletColumns = struct {
 }{
 	ID:               "id",
 	UserID:           "user_id",
-	PublicKey0:       "public_key_0",
+	PublicKey:        "public_key",
 	WalletName:       "wallet_name",
 	FriendlyID:       "friendly_id",
 	Domain:           "domain",
@@ -90,8 +90,8 @@ func (*userWalletR) NewStruct() *userWalletR {
 type userWalletL struct{}
 
 var (
-	userWalletColumns               = []string{"id", "user_id", "public_key_0", "wallet_name", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "updated_by", "order_nr", "wallet_type"}
-	userWalletColumnsWithoutDefault = []string{"user_id", "public_key_0", "wallet_name", "updated_by"}
+	userWalletColumns               = []string{"id", "user_id", "public_key", "wallet_name", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "updated_by", "order_nr", "wallet_type"}
+	userWalletColumnsWithoutDefault = []string{"user_id", "public_key", "wallet_name", "updated_by"}
 	userWalletColumnsWithDefault    = []string{"id", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "order_nr", "wallet_type"}
 	userWalletPrimaryKeyColumns     = []string{"id"}
 )

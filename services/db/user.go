@@ -230,7 +230,7 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	var w models.UserWallet
 	w.UserID = u.ID
 	w.WalletName = "Primary"
-	w.PublicKey0 = r.PublicKey_0
+	w.PublicKey = r.PublicKey_0
 	w.ShowOnHomescreen = true
 	w.OrderNR = 0
 	w.WalletType = models.WalletTypeInternal
