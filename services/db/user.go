@@ -232,6 +232,8 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	w.WalletName = "Primary"
 	w.PublicKey0 = r.PublicKey_0
 	w.ShowOnHomescreen = true
+	w.OrderNR = 0
+	w.WalletType = models.WalletTypeInternal
 	err = w.Insert(tx, boil.Infer())
 	if err != nil {
 		tx.Rollback()

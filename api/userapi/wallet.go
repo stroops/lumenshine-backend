@@ -18,6 +18,7 @@ type AddWalletRequest struct {
 	WalletName        string `form:"wallet_name" json:"wallet_name" validate:"required,max=500"`
 	FederationAddress string `form:"federation_address" json:"federation_address" validate:"max=255"`
 	ShowOnHomescreen  bool   `form:"show_on_homescreen" json:"show_on_homescreen"`
+	WalletType        string `form:"wallet_type" json:"wallet_type"`
 }
 
 //AddWalletResponse request
@@ -78,6 +79,15 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("wallet_name", cerr.InvalidArgument, "Walletname already exists for user", ""))
 		return
 	}
+	walletType := int32(pb.WalletType_internal)
+	if l.WalletType != "" {
+		ok := false
+		walletType, ok = pb.WalletType_value[l.WalletType]
+		if !ok {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("wallet_type", cerr.InvalidArgument, "Invalid wallet type.", ""))
+			return
+		}
+	}
 
 	//add the wallet
 	req := &pb.AddWalletRequest{
@@ -88,6 +98,7 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 		FriendlyId:       friendlyID,
 		Domain:           domain,
 		ShowOnHomescreen: l.ShowOnHomescreen,
+		WalletType:       pb.WalletType(walletType),
 	}
 	id, err := dbClient.AddWallet(c, req)
 	if err != nil {
@@ -107,6 +118,7 @@ type GetUserWalletsResponse struct {
 	WalletName        string `json:"wallet_name"`
 	FederationAddress string `json:"federation_address"`
 	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
+	WalletType        string `json:"wallet_type"`
 }
 
 //GetUserWallets returns all wallets for one user
@@ -134,6 +146,7 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 			WalletName:        w.WalletName,
 			FederationAddress: federationAddress,
 			ShowOnHomescreen:  w.ShowOnHomescreen,
+			WalletType:        w.WalletType.String(),
 		}
 	}
 

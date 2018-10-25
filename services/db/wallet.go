@@ -89,6 +89,7 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 		FriendlyID:       r.FriendlyId,
 		Domain:           r.Domain,
 		ShowOnHomescreen: r.ShowOnHomescreen,
+		WalletType:       r.WalletType.String(),
 		UpdatedBy:        r.Base.UpdateBy,
 	}
 	if maxOrder != nil {
@@ -255,6 +256,7 @@ func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*
 			ShowOnHomescreen: w.ShowOnHomescreen,
 			FriendlyId:       w.FriendlyID,
 			Domain:           w.Domain,
+			WalletType:       pb.WalletType(pb.WalletType_value[w.WalletType]),
 		})
 	}
 

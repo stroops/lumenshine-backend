@@ -324,6 +324,7 @@ message AddWalletRequest {
   string friendly_id = 5;
   string domain = 6;
   bool show_on_homescreen = 7;
+  WalletType wallet_type = 8;
 }
 
 message WalletChangeNameRequest {
@@ -378,6 +379,7 @@ message Wallet {
   string friendly_id = 5;
   string domain = 6;
   bool show_on_homescreen = 7;
+  WalletType wallet_type = 8;
 }
 
 message GetWalletsRequest {

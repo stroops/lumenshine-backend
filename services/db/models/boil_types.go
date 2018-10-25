@@ -193,3 +193,9 @@ const (
 	DeviceTypeApple  = "apple"
 	DeviceTypeGoogle = "google"
 )
+
+// Enum values for wallet_type
+const (
+	WalletTypeInternal = "internal"
+	WalletTypeExternal = "external"
+)

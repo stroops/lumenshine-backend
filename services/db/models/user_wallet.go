@@ -32,6 +32,7 @@ type UserWallet struct {
 	UpdatedAt        time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy        string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 	OrderNR          int       `boil:"order_nr" json:"order_nr" toml:"order_nr" yaml:"order_nr"`
+	WalletType       string    `boil:"wallet_type" json:"wallet_type" toml:"wallet_type" yaml:"wallet_type"`
 
 	R *userWalletR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userWalletL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -49,6 +50,7 @@ var UserWalletColumns = struct {
 	UpdatedAt        string
 	UpdatedBy        string
 	OrderNR          string
+	WalletType       string
 }{
 	ID:               "id",
 	UserID:           "user_id",
@@ -61,6 +63,7 @@ var UserWalletColumns = struct {
 	UpdatedAt:        "updated_at",
 	UpdatedBy:        "updated_by",
 	OrderNR:          "order_nr",
+	WalletType:       "wallet_type",
 }
 
 // UserWalletRels is where relationship names are stored.
@@ -68,7 +71,7 @@ var UserWalletRels = struct {
 	User                   string
 	WalletPaymentTemplates string
 }{
-	User:                   "User",
+	User: "User",
 	WalletPaymentTemplates: "WalletPaymentTemplates",
 }
 
@@ -87,9 +90,9 @@ func (*userWalletR) NewStruct() *userWalletR {
 type userWalletL struct{}
 
 var (
-	userWalletColumns               = []string{"id", "user_id", "public_key_0", "wallet_name", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "updated_by", "order_nr"}
+	userWalletColumns               = []string{"id", "user_id", "public_key_0", "wallet_name", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "updated_by", "order_nr", "wallet_type"}
 	userWalletColumnsWithoutDefault = []string{"user_id", "public_key_0", "wallet_name", "updated_by"}
-	userWalletColumnsWithDefault    = []string{"id", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "order_nr"}
+	userWalletColumnsWithDefault    = []string{"id", "friendly_id", "domain", "show_on_homescreen", "created_at", "updated_at", "order_nr", "wallet_type"}
 	userWalletPrimaryKeyColumns     = []string{"id"}
 )
 
