@@ -77,7 +77,7 @@ func (s *server) AddWallet(ctx context.Context, r *pb.AddWalletRequest) (*pb.IDR
 	maxOrder, err := models.UserWallets(qm.Select(models.UserWalletColumns.OrderNR),
 		qm.Where(models.UserWalletColumns.UserID+"=?", r.UserId),
 		qm.OrderBy(models.UserWalletColumns.OrderNR+" DESC")).One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
