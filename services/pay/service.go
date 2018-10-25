@@ -387,19 +387,19 @@ func (s *server) PayGetTransaction(ctx context.Context, r *pb.PayGetTransactionR
 			return nil, err
 		}
 		for _, w := range wallets {
-			_, pkExists, err = ac.GetAccount(w.PublicKey0)
+			_, pkExists, err = ac.GetAccount(w.PublicKey)
 			if err != nil {
 				return nil, err
 			}
 			if pkExists {
 				//we use this pk for the order
-				pk = w.PublicKey0
+				pk = w.PublicKey
 				break
 			}
 		}
 		if pk == "" {
 			//there is no existing pk in stellar. therefore we take the first one from the wallets
-			pk = wallets[0].PublicKey0
+			pk = wallets[0].PublicKey
 
 			//if no pk was found, we need to check, if we ever created one account for the user. if so, the user merged the account and we will return an error
 			//we create only one account per user and lifetime

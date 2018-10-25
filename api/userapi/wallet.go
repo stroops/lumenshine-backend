@@ -14,7 +14,7 @@ import (
 
 //AddWalletRequest request
 type AddWalletRequest struct {
-	PublicKey0        string `form:"public_key_0" json:"public_key_0"  validate:"required,base64,len=56"`
+	PublicKey         string `form:"public_key" json:"public_key"  validate:"required,base64,len=56"`
 	WalletName        string `form:"wallet_name" json:"wallet_name" validate:"required,max=500"`
 	FederationAddress string `form:"federation_address" json:"federation_address" validate:"max=255"`
 	ShowOnHomescreen  bool   `form:"show_on_homescreen" json:"show_on_homescreen"`
@@ -54,11 +54,11 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 
 	//first check the walletdata
 	reqData := &pb.CheckWalletRequest{
-		UserId:      userID,
-		WalletName:  l.WalletName,
-		FriendlyId:  friendlyID,
-		Domain:      domain,
-		PublicKey_0: l.PublicKey0,
+		UserId:     userID,
+		WalletName: l.WalletName,
+		FriendlyId: friendlyID,
+		Domain:     domain,
+		PublicKey:  l.PublicKey,
 	}
 	walletStatus, err := dbClient.CheckWalletData(c, reqData)
 	if err != nil {
@@ -70,8 +70,8 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if !walletStatus.PublicKey_0Ok {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_0", cerr.InvalidArgument, "Publickey already exists for user", ""))
+	if !walletStatus.PublicKeyOk {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key", cerr.InvalidArgument, "Publickey already exists for user", ""))
 		return
 	}
 
@@ -93,7 +93,7 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 	req := &pb.AddWalletRequest{
 		Base:             NewBaseRequest(uc),
 		UserId:           userID,
-		PublicKey_0:      l.PublicKey0,
+		PublicKey:        l.PublicKey,
 		WalletName:       l.WalletName,
 		FriendlyId:       friendlyID,
 		Domain:           domain,
@@ -114,7 +114,7 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 //GetUserWalletsResponse result
 type GetUserWalletsResponse struct {
 	ID                int64  `json:"id"`
-	PublicKey0        string `json:"public_key_0"`
+	PublicKey         string `json:"public_key"`
 	WalletName        string `json:"wallet_name"`
 	FederationAddress string `json:"federation_address"`
 	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
@@ -142,7 +142,7 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 		}
 		ws[i] = GetUserWalletsResponse{
 			ID:                w.Id,
-			PublicKey0:        w.PublicKey_0,
+			PublicKey:         w.PublicKey,
 			WalletName:        w.WalletName,
 			FederationAddress: federationAddress,
 			ShowOnHomescreen:  w.ShowOnHomescreen,
@@ -206,8 +206,8 @@ func RemoveWallet(uc *mw.IcopContext, c *gin.Context) {
 
 //WalletChangeOrderRequest - request
 type WalletChangeOrderRequest struct {
-	PublicKey0 string `form:"public_key_0" json:"public_key_0"  validate:"required,base64,len=56"`
-	OrderNr    int    `form:"order_nr" json:"order_nr"`
+	PublicKey string `form:"public_key" json:"public_key"  validate:"required,base64,len=56"`
+	OrderNr   int    `form:"order_nr" json:"order_nr"`
 }
 
 //WalletChangeOrder changes the wallet order
@@ -224,10 +224,10 @@ func WalletChangeOrder(uc *mw.IcopContext, c *gin.Context) {
 
 	userID := mw.GetAuthUser(c).UserID
 	_, err := dbClient.WalletChangeOrder(c, &pb.WalletChangeOrderRequest{
-		Base:        NewBaseRequest(uc),
-		UserId:      userID,
-		PublicKey_0: r.PublicKey0,
-		OrderNr:     int64(r.OrderNr),
+		Base:      NewBaseRequest(uc),
+		UserId:    userID,
+		PublicKey: r.PublicKey,
+		OrderNr:   int64(r.OrderNr),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating wallet order", cerr.GeneralError))
@@ -252,7 +252,7 @@ func WalletChangeOrder(uc *mw.IcopContext, c *gin.Context) {
 		}
 		ws[i] = GetUserWalletsResponse{
 			ID:                w.Id,
-			PublicKey0:        w.PublicKey_0,
+			PublicKey:         w.PublicKey,
 			WalletName:        w.WalletName,
 			FederationAddress: federationAddress,
 			ShowOnHomescreen:  w.ShowOnHomescreen,
