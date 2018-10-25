@@ -296,7 +296,7 @@ type ChangePasswordUpdateRequest struct {
 	WordlistMasterKey string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
 	WordlistMasterIV  string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
 
-	PublicKey188     string `form:"public_key_188" json:"public_key_188" validate:"base64,len=56"`
+	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
