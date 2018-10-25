@@ -32,7 +32,7 @@ type RegisterUserRequest struct {
 	WordlistIV        string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
 
 	PublicKey0   string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
-	PublicKey188 string `form:"public_key_188" json:"public_key_188" validate:"required,base64,len=56"`
+	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Title             string `form:"title" json:"title" validate:"max=64"`
