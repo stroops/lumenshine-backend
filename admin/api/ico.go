@@ -51,6 +51,7 @@ func AddICORoutes(rg *gin.RouterGroup) {
 }
 
 //ICOListResponse response
+// swagger:model
 type ICOListResponse struct {
 	ID                 int    `json:"ico_id"`
 	Name               string `json:"name"`
@@ -64,6 +65,15 @@ type ICOListResponse struct {
 }
 
 //ICOList returns the list of ICOs
+// swagger:route GET /portal/admin/dash/ico/list ico ICOList
+//
+// Returns the list of ICOs
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:ICOListResponse
 func ICOList(uc *mw.AdminContext, c *gin.Context) {
 	icos, err := m.Icos(
 		qm.Select(m.IcoColumns.ID,
@@ -118,11 +128,14 @@ func ICOList(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //ExchangeCurrencyListRequest request
+//swagger:parameters ExchangeCurrencyListRequest ExchangeCurrencyList
 type ExchangeCurrencyListRequest struct {
+	//required : true
 	IcoID int `form:"ico_id" json:"ico_id"`
 }
 
 //ExchangeCurrencyListResponse response
+// swagger:model
 type ExchangeCurrencyListResponse struct {
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
@@ -132,7 +145,19 @@ type ExchangeCurrencyListResponse struct {
 	Enabled   string `json:"enabled"`
 }
 
-//ExchangeCurrencyList returns the list of ICOs
+//ExchangeCurrencyList returns the list of exchange currencies
+// swagger:route GET /portal/admin/dash/ico/exchange_currencies ico ExchangeCurrencyList
+//
+// Returns the list of exchange currencies
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:ExchangeCurrencyListResponse
 func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 	var rr ExchangeCurrencyListRequest
 	if err := c.Bind(&rr); err != nil {
@@ -181,16 +206,34 @@ func ExchangeCurrencyList(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AddIcoRequest - request
+//swagger:parameters AddIcoRequest AddIco
 type AddIcoRequest struct {
-	Name                string `form:"name" json:"name" validate:"required,max=256"`
-	Kyc                 bool   `form:"kyc" json:"kyc"`
-	SalesModel          string `form:"sales_model" json:"sales_model" validate:"required"`
-	IssuerPublicKey     string `form:"issuing_account_pk" json:"issuing_account_pk" validate:"required,base64,len=56"`
-	AssetCode           string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
-	SupportedCurrencies []int  `form:"supported_currencies" json:"supported_currencies" validate:"required"`
+	//required : true
+	Name string `form:"name" json:"name" validate:"required,max=256"`
+	Kyc  bool   `form:"kyc" json:"kyc"`
+	//required : true
+	SalesModel string `form:"sales_model" json:"sales_model" validate:"required"`
+	//required : true
+	IssuerPublicKey string `form:"issuing_account_pk" json:"issuing_account_pk" validate:"required,base64,len=56"`
+	//required : true
+	AssetCode string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+	//required : true
+	SupportedCurrencies []int `form:"supported_currencies" json:"supported_currencies" validate:"required"`
 }
 
 //AddIco - adds new ico
+// swagger:route POST /portal/admin/dash/ico/add ico AddIco
+//
+// Adds new ico
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddIco(uc *mw.AdminContext, c *gin.Context) {
 	var rr AddIcoRequest
 	if err := c.Bind(&rr); err != nil {
@@ -294,12 +337,27 @@ func AddIco(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //UpdateIcoNameRequest - request
+//swagger:parameters UpdateIcoNameRequest UpdateIcoName
 type UpdateIcoNameRequest struct {
-	ID   int    `form:"id" json:"id"`
+	//required : true
+	ID int `form:"id" json:"id"`
+	//required : true
 	Name string `form:"name" json:"name" validate:"required,max=256"`
 }
 
-//UpdateIcoName - update the name
+//UpdateIcoName - updates the name
+// swagger:route POST /portal/admin/dash/ico/update_name ico UpdateIcoName
+//
+// Updates the ico name
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdateIcoName(uc *mw.AdminContext, c *gin.Context) {
 	var rr UpdateIcoNameRequest
 	if err := c.Bind(&rr); err != nil {
@@ -338,12 +396,27 @@ func UpdateIcoName(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //UpdateIcoKycRequest - request
+//swagger:parameters UpdateIcoKycRequest UpdateIcoKyc
 type UpdateIcoKycRequest struct {
-	ID  int  `form:"id" json:"id"`
+	//required : true
+	ID int `form:"id" json:"id"`
+	//required : true
 	Kyc bool `form:"kyc" json:"kyc"`
 }
 
-//UpdateIcoKyc - update the kyc flag
+//UpdateIcoKyc - updates the kyc flag
+// swagger:route POST /portal/admin/dash/ico/update_kyc ico UpdateIcoKyc
+//
+// Updates the KYC flag
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdateIcoKyc(uc *mw.AdminContext, c *gin.Context) {
 	var rr UpdateIcoKycRequest
 	if err := c.Bind(&rr); err != nil {
@@ -369,13 +442,29 @@ func UpdateIcoKyc(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //UpdateIcoIssuerRequest - request
+//swagger:parameters UpdateIcoIssuerRequest UpdateIcoIssuer
 type UpdateIcoIssuerRequest struct {
-	ID              int    `form:"id" json:"id"`
+	//required : true
+	ID int `form:"id" json:"id"`
+	//required : true
 	IssuerPublicKey string `form:"issuing_account_pk" json:"issuing_account_pk" validate:"required,base64,len=56"`
-	AssetCode       string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+	//required : true
+	AssetCode string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
 }
 
 //UpdateIcoIssuer - updates the issuer data
+// swagger:route POST /portal/admin/dash/ico/update_issuer_data ico UpdateIcoIssuer
+//
+// Updates the issuer data
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdateIcoIssuer(uc *mw.AdminContext, c *gin.Context) {
 	var rr UpdateIcoIssuerRequest
 	if err := c.Bind(&rr); err != nil {
@@ -430,12 +519,27 @@ func UpdateIcoIssuer(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //UpdateIcoCurrenciesRequest - request
+//swagger:parameters UpdateIcoCurrenciesRequest UpdateIcoCurrencies
 type UpdateIcoCurrenciesRequest struct {
-	ID                  int   `form:"id" json:"id"`
+	//required : true
+	ID int `form:"id" json:"id"`
+	//required : true
 	SupportedCurrencies []int `form:"supported_currencies" json:"supported_currencies" validate:"required"`
 }
 
 //UpdateIcoCurrencies - updates the supported currencies
+// swagger:route POST /portal/admin/dash/ico/update_supported_currencies ico UpdateIcoCurrencies
+//
+// Updates the supported currencies
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdateIcoCurrencies(uc *mw.AdminContext, c *gin.Context) {
 	var rr UpdateIcoCurrenciesRequest
 	if err := c.Bind(&rr); err != nil {
@@ -478,11 +582,25 @@ func UpdateIcoCurrencies(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //RemoveIcoRequest - request
+//swagger:parameters RemoveIcoRequest RemoveIco
 type RemoveIcoRequest struct {
+	//required : true
 	ID int `form:"id" json:"id"`
 }
 
 //RemoveIco - deletes ico from db
+// swagger:route POST /portal/admin/dash/ico/remove ico RemoveIco
+//
+// Deletes ico from db
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveIco(uc *mw.AdminContext, c *gin.Context) {
 	var rr RemoveIcoRequest
 	if err := c.Bind(&rr); err != nil {
@@ -512,20 +630,34 @@ func RemoveIco(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AddIcoPhaseRequest - request
+//swagger:parameters AddIcoPhaseRequest AddIcoPhase
 type AddIcoPhaseRequest struct {
-	IcoID                 int             `form:"ico_id" json:"ico_id"`
-	Name                  string          `form:"phase_name" json:"phase_name" validate:"required,max=256"`
-	DistributionPublicKey string          `form:"distribution_account_pk" json:"distribution_account_pk" validate:"required,base64,len=56"`
-	PreSignerPublicKey    string          `form:"pre_signer_pk" json:"pre_signer_pk" validate:"required,base64,len=56"`
-	PreSignerSeed         string          `form:"pre_signer_seed" json:"pre_signer_seed" validate:"required,base64,len=56"`
-	PostSignerPublicKey   string          `form:"post_signer_pk" json:"post_signer_pk" validate:"required,base64,len=56"`
-	PostSignerSeed        string          `form:"post_signer_seed" json:"post_signer_seed" validate:"required,base64,len=56"`
-	StartDate             string          `form:"start" json:"start" validate:"required"`
-	EndDate               string          `form:"end" json:"end" validate:"required"`
-	TokensToDistribute    int64           `form:"tokens_to_distribute" json:"tokens_to_distribute"`
-	MinPerOrder           int64           `form:"min_tokens_per_order" json:"min_tokens_per_order"`
-	MaxPerOrder           int64           `form:"max_tokens_per_order" json:"max_tokens_per_order"`
-	ActivatedCurrencies   []PhaseCurrency `form:"activated_currencies" json:"activated_currencies" validate:"required"`
+	//required : true
+	IcoID int `form:"ico_id" json:"ico_id"`
+	//required : true
+	Name string `form:"phase_name" json:"phase_name" validate:"required,max=256"`
+	//required : true
+	DistributionPublicKey string `form:"distribution_account_pk" json:"distribution_account_pk" validate:"required,base64,len=56"`
+	//required : true
+	PreSignerPublicKey string `form:"pre_signer_pk" json:"pre_signer_pk" validate:"required,base64,len=56"`
+	//required : true
+	PreSignerSeed string `form:"pre_signer_seed" json:"pre_signer_seed" validate:"required,base64,len=56"`
+	//required : true
+	PostSignerPublicKey string `form:"post_signer_pk" json:"post_signer_pk" validate:"required,base64,len=56"`
+	//required : true
+	PostSignerSeed string `form:"post_signer_seed" json:"post_signer_seed" validate:"required,base64,len=56"`
+	//required : true
+	StartDate string `form:"start" json:"start" validate:"required"`
+	//required : true
+	EndDate string `form:"end" json:"end" validate:"required"`
+	//required : true
+	TokensToDistribute int64 `form:"tokens_to_distribute" json:"tokens_to_distribute"`
+	//required : true
+	MinPerOrder int64 `form:"min_tokens_per_order" json:"min_tokens_per_order"`
+	//required : true
+	MaxPerOrder int64 `form:"max_tokens_per_order" json:"max_tokens_per_order"`
+	//required : true
+	ActivatedCurrencies []PhaseCurrency `form:"activated_currencies" json:"activated_currencies" validate:"required"`
 }
 
 //PhaseCurrency - request
@@ -536,6 +668,18 @@ type PhaseCurrency struct {
 }
 
 //AddIcoPhase - adds new ico phase
+// swagger:route POST /portal/admin/dash/ico/add_phase ico AddIcoPhase
+//
+// Adds new ico phase
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddIcoPhase(uc *mw.AdminContext, c *gin.Context) {
 	var rr AddIcoPhaseRequest
 	if err := c.Bind(&rr); err != nil {

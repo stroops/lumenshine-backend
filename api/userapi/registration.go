@@ -83,7 +83,7 @@ type RegisterUserResponse struct {
 }
 
 //RegisterUser registers and creates the user in the db
-// swagger:route GET /portal/user/register_user register RegisterUser
+// swagger:route POST /portal/user/register_user register RegisterUser
 //
 // Registers and creates the user in the db
 //
@@ -265,7 +265,7 @@ type Confirm2FAResponse struct {
 }
 
 //Confirm2FA checks and confirms the given 2fa code
-// swagger:route GET /portal/user/dashboard/confirm_tfa_registration register Confirm2FA
+// swagger:route POST /portal/user/dashboard/confirm_tfa_registration register Confirm2FA
 //
 // Checks and confirms the given 2fa code
 //
@@ -278,7 +278,7 @@ type Confirm2FAResponse struct {
 //     Responses:
 //       200: Confirm2FAResponse
 func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
-	// swagger:route GET /portal/user/dashboard/confirm_new_2fa_secret register Confirm2FA
+	// swagger:route POST /portal/user/dashboard/confirm_new_2fa_secret register Confirm2FA
 	//
 	// Checks and confirms the given 2fa code
 	//
@@ -394,7 +394,7 @@ type ResendConfirmationMailRequest struct {
 }
 
 //ResendConfirmMail resends the confirmation mail
-// swagger:route GET /portal/user/resend_confirmation_mail register ResendConfirmMail
+// swagger:route POST /portal/user/resend_confirmation_mail register ResendConfirmMail
 //
 //  Resends the confirmation mail
 //
@@ -475,7 +475,7 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //ConfirmMnemonic sets the flag in the database
-// swagger:route GET /portal/user/dashboard/confirm_mnemonic register ConfirmMnemonic
+// swagger:route POST /portal/user/dashboard/confirm_mnemonic register ConfirmMnemonic
 //
 //  Sets the flag in the database
 //

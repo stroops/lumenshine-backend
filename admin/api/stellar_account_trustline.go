@@ -28,15 +28,33 @@ func init() {
 }
 
 //AddTrustlineRequest - info
+//swagger:parameters AddTrustlineRequest AddTrustline
 type AddTrustlineRequest struct {
+	//required : true
 	TrustorPublicKey string `form:"trusting_account_public_key" json:"trusting_account_public_key" validate:"required,base64,len=56"`
+	//required : true
 	IssuingPublicKey string `form:"issuing_account_public_key" json:"issuing_account_public_key" validate:"required,base64,len=56"`
-	AssetCode        string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
-	Status           string `form:"status" json:"status" validate:"required,max=50"`
-	Reason           string `form:"reason" json:"reason" validate:"required,max=1000"`
+	//required : true
+	AssetCode string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+	//required : true
+	Status string `form:"status" json:"status" validate:"required,max=50"`
+	//required : true
+	Reason string `form:"reason" json:"reason" validate:"required,max=1000"`
 }
 
 //AddTrustline creates new entry in the db
+// swagger:route POST /portal/admin/dash/stellar_account/add_unathorized_trustline StellarAccount AddTrustline
+//
+// Creates new entry in the db
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddTrustline(uc *mw.AdminContext, c *gin.Context) {
 	var rr AddTrustlineRequest
 	if err := c.Bind(&rr); err != nil {
@@ -111,13 +129,29 @@ func AddTrustline(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //RemoveTrustlineRequest - info
+//swagger:parameters RemoveTrustlineRequest RemoveTrustline
 type RemoveTrustlineRequest struct {
+	//required : true
 	TrustorPublicKey string `form:"trusting_account_public_key" json:"trusting_account_public_key" validate:"required,base64,len=56"`
+	//required : true
 	IssuingPublicKey string `form:"issuing_account_public_key" json:"issuing_account_public_key" validate:"required,base64,len=56"`
-	AssetCode        string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+	//required : true
+	AssetCode string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
 }
 
-//RemoveTrustline creates new entry in the db
+//RemoveTrustline deletes trustline
+// swagger:route POST /portal/admin/dash/stellar_account/remove_unathorized_trustline StellarAccount RemoveTrustline
+//
+// Deletes trustline from the DB
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveTrustline(uc *mw.AdminContext, c *gin.Context) {
 	var rr RemoveTrustlineRequest
 	if err := c.Bind(&rr); err != nil {
@@ -172,11 +206,14 @@ func RemoveTrustline(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //WorkerAccountTrustlinesRequest - info
+//swagger:parameters WorkerAccountTrustlinesRequest WorkerAccountTrustlines
 type WorkerAccountTrustlinesRequest struct {
+	//required : true
 	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
 }
 
 //WorkerTrustlineItem - response item
+// swagger:model
 type WorkerTrustlineItem struct {
 	AssetCode string `json:"asset_code"`
 	Issuer    string `json:"asset_issuer"`
@@ -185,6 +222,18 @@ type WorkerTrustlineItem struct {
 }
 
 //WorkerAccountTrustlines - returns worker account trustlines
+// swagger:route GET /portal/admin/dash/stellar_account/worker_account_trustlines/:publickey StellarAccount WorkerAccountTrustlines
+//
+// Returns worker account trustlines
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:[]WorkerTrustlineItem
 func WorkerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
 	publicKey := c.Param("publickey")
 	rr := WorkerAccountTrustlinesRequest{PublicKey: publicKey}
@@ -268,18 +317,22 @@ func WorkerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //SearchAccountsRequest for filtering the issuer's trusting accounts
+//swagger:parameters SearchAccountsRequest IssuerAccountTrustlines
 type SearchAccountsRequest struct {
 	pageinate.PaginationRequestStruct
-
-	IssueingPublicKey string   `form:"issuing_account_public_key" validate:"required,base64,len=56"`
-	AssetCode         string   `form:"asset_code" validate:"required,icop_assetcode"`
-	FilterName        string   `form:"filter_name"`
-	FilterPublicKey   string   `form:"filter_public_key" validate:"omitempty,base64,len=56"`
-	FilterType        string   `form:"filter_type" validate:"required"`
-	FilterStatuses    []string `form:"filter_statuses"`
+	//required : true
+	IssueingPublicKey string `form:"issuing_account_public_key" json:"issuing_account_public_key" validate:"required,base64,len=56"`
+	//required : true
+	AssetCode       string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
+	FilterName      string `form:"filter_name" json:"filter_name"`
+	FilterPublicKey string `form:"filter_public_key" json:"filter_public_key" validate:"omitempty,base64,len=56"`
+	//required : true
+	FilterType     string   `form:"filter_type" json:"filter_type" validate:"required"`
+	FilterStatuses []string `form:"filter_statuses" json:"filter_statuses"`
 }
 
 //SearchAccountsItem is one item in the list
+// swagger:model
 type SearchAccountsItem struct {
 	Name      string `json:"name"`
 	PublicKey string `json:"public_key"`
@@ -290,12 +343,25 @@ type SearchAccountsItem struct {
 }
 
 //SearchAccountsResponse list of accounts
+// swagger:model
 type SearchAccountsResponse struct {
 	pageinate.PaginationResponseStruct
 	Items []SearchAccountsItem `json:"items"`
 }
 
 //IssuerAccountTrustlines returns list of all accounts, filtered by given params
+// swagger:route GET /portal/admin/dash/stellar_account/search_trusting_accounts StellarAccount IssuerAccountTrustlines
+//
+// Returns list of all accounts, filtered by given params
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:SearchAccountsResponse
 func IssuerAccountTrustlines(uc *mw.AdminContext, c *gin.Context) {
 	var err error
 	var rr SearchAccountsRequest

@@ -1,13 +1,14 @@
 package api
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
 	"github.com/Soneso/lumenshine-backend/admin/route"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,11 +37,14 @@ func AddKnownCurrenciesRoutes(rg *gin.RouterGroup) {
 }
 
 //KnownCurrencyIDRequest request used in get one and delete
+//swagger:parameters KnownCurrencyIDRequest GetKnownCurrency
 type KnownCurrencyIDRequest struct {
+	//required : true
 	ID int `form:"id" json:"id"  validate:"required"`
 }
 
 //GetKnownCurrenciesResponse response
+// swagger:model
 type GetKnownCurrenciesResponse struct {
 	ID               int    `form:"id" json:"id"`
 	Name             string `form:"name" json:"name"`
@@ -52,6 +56,18 @@ type GetKnownCurrenciesResponse struct {
 }
 
 //GetKnownCurrency returns currency by id
+// swagger:route GET /portal/admin/dash/known_currencies/get/:id KnownCurrencies GetKnownCurrency
+//
+// Returns currency by id
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:GetKnownCurrenciesResponse
 func GetKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -87,6 +103,15 @@ func GetKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AllKnownCurrencies returns all currencies
+// swagger:route GET /portal/admin/dash/known_currencies/all KnownCurrencies AllKnownCurrencies
+//
+// Returns all currencies
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:GetKnownCurrenciesResponse
 func AllKnownCurrencies(uc *mw.AdminContext, c *gin.Context) {
 
 	currencies, err := db.GetKnownCurrencies()
@@ -116,15 +141,33 @@ func AllKnownCurrencies(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AddKnownCurrencyRequest request
+//swagger:parameters AddKnownCurrencyRequest AddKnownCurrency
 type AddKnownCurrencyRequest struct {
-	Name             string `form:"name" json:"name"  validate:"required,max=500"`
-	IssuerPublicKey  string `form:"issuer_public_key" json:"issuer_public_key"  validate:"required,max=500"`
-	AssetCode        string `form:"asset_code" json:"asset_code"  validate:"required,max=500"`
+	//required : true
+	Name string `form:"name" json:"name"  validate:"required,max=500"`
+	//required : true
+	IssuerPublicKey string `form:"issuer_public_key" json:"issuer_public_key"  validate:"required,max=500"`
+	//required : true
+	AssetCode string `form:"asset_code" json:"asset_code"  validate:"required,max=500"`
+	//required : true
 	ShortDescription string `form:"short_description" json:"short_description"  validate:"required,max=500"`
-	LongDescription  string `form:"long_description" json:"long_description"  validate:"required,max=500"`
+	//required : true
+	LongDescription string `form:"long_description" json:"long_description"  validate:"required,max=500"`
 }
 
 //AddKnownCurrency adds a new currency
+// swagger:route POST /portal/admin/dash/known_currencies/add KnownCurrencies AddKnownCurrency
+//
+// Adds a new currency
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 	var r AddKnownCurrencyRequest
 	if err := c.Bind(&r); err != nil {
@@ -171,7 +214,9 @@ func AddKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //EditKnownCurrencyRequest request
+//swagger:parameters EditKnownCurrencyRequest EditKnownCurrency
 type EditKnownCurrencyRequest struct {
+	//required : true
 	ID               int     `form:"id" json:"id"  validate:"required"`
 	Name             *string `form:"name" json:"name"  validate:"max=500"`
 	IssuerPublicKey  *string `form:"issuer_public_key" json:"issuer_public_key"  validate:"max=500"`
@@ -181,6 +226,18 @@ type EditKnownCurrencyRequest struct {
 }
 
 //EditKnownCurrency edits known currency details
+// swagger:route POST /portal/admin/dash/known_currencies/edit KnownCurrencies EditKnownCurrency
+//
+// Edits known currency details
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func EditKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 	var r EditKnownCurrencyRequest
 	if err := c.Bind(&r); err != nil {
@@ -240,9 +297,28 @@ func EditKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 	c.JSON(http.StatusOK, "{}")
 }
 
+//KnownCurrencyDeleteRequest request used in get one and delete
+//swagger:parameters KnownCurrencyDeleteRequest DeleteKnownCurrency
+type KnownCurrencyDeleteRequest struct {
+	//required : true
+	ID int `form:"id" json:"id"  validate:"required"`
+}
+
 //DeleteKnownCurrency deletes known currency
+// swagger:route POST /portal/admin/dash/known_currencies/delete KnownCurrencies DeleteKnownCurrency
+//
+// Deletes known currency
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func DeleteKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
-	var r KnownCurrencyIDRequest
+	var r KnownCurrencyDeleteRequest
 	if err := c.Bind(&r); err != nil {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
 		return
@@ -273,12 +349,27 @@ func DeleteKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //ChangeOrderKnownCurrencyRequest request
+//swagger:parameters ChangeOrderKnownCurrencyRequest ChangeOrderKnownCurrency
 type ChangeOrderKnownCurrencyRequest struct {
-	ID            int `form:"id" json:"id"  validate:"required"`
+	//required : true
+	ID int `form:"id" json:"id"  validate:"required"`
+	//required : true
 	OrderModifier int `form:"order_modifier" json:"order_modifier" validate:"required"`
 }
 
 //ChangeOrderKnownCurrency alters a currency and changes the order index with +-1
+// swagger:route POST /portal/admin/dash/known_currencies/changeOrder KnownCurrencies ChangeOrderKnownCurrency
+//
+// Alters a currency and changes the order index with +-1
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func ChangeOrderKnownCurrency(uc *mw.AdminContext, c *gin.Context) {
 	var r ChangeOrderKnownCurrencyRequest
 	if err := c.Bind(&r); err != nil {

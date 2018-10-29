@@ -150,7 +150,7 @@ type UpdateUserDataRequest struct {
 }
 
 //UpdateUserData - updates the authenticated user's data
-// swagger:route GET /portal/user/dashboard/update_user_data userdata UpdateUserData
+// swagger:route POST /portal/user/dashboard/update_user_data userdata UpdateUserData
 //
 // Updates the authenticated user's data
 //

@@ -1450,7 +1450,7 @@ info:
   version: 0.0.1
 paths:
   /portal/user/auth/login_step2:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Is the second step to login
@@ -1474,7 +1474,7 @@ paths:
       tags:
       - auth
   /portal/user/auth/lost_password_tfa:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Called from the API when the user initiates the lost password TFA
@@ -1509,7 +1509,7 @@ paths:
       tags:
       - lost
   /portal/user/auth/update_security_data:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Will update the security data in the DB
@@ -1593,7 +1593,7 @@ paths:
       tags:
       - general
   /portal/user/auth2/lost_password_update:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Updates the security data for the user
@@ -1664,7 +1664,7 @@ paths:
       tags:
       - lost
   /portal/user/confirm_token:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Confirms the mail token
@@ -1699,7 +1699,7 @@ paths:
       tags:
       - general
   /portal/user/dashboard/add_contact:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Adds a new contact to the user
@@ -1737,7 +1737,7 @@ paths:
       tags:
       - contact
   /portal/user/dashboard/add_payment_template:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Adds a new template to the wallet
@@ -1794,7 +1794,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/add_wallet:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: AddWallet adds a new wallet to the user
@@ -1832,7 +1832,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/change_password:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Called from the API when the user initiates the reset 2fa function
@@ -1850,7 +1850,7 @@ paths:
       tags:
       - lost
   /portal/user/dashboard/change_wallet_data:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Changes the wallet data
@@ -1877,7 +1877,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/change_wallet_order:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Changes the wallet orders
@@ -1901,7 +1901,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/confirm_mnemonic:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Sets the flag in the database
@@ -1916,7 +1916,7 @@ paths:
       tags:
       - register
   /portal/user/dashboard/confirm_new_2fa_secret:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Checks and confirms the given 2fa code
@@ -1941,7 +1941,7 @@ paths:
       tags:
       - register
   /portal/user/dashboard/confirm_tfa_registration:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Checks and confirms the given 2fa code
@@ -1981,7 +1981,7 @@ paths:
       tags:
       - contact
   /portal/user/dashboard/edit_contact:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Edits the user contact
@@ -2233,7 +2233,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/new_2fa_secret:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Called for updating the tfa data
@@ -2257,7 +2257,7 @@ paths:
       tags:
       - lost
   /portal/user/dashboard/remove_contact:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Deletes the user contact
@@ -2282,7 +2282,7 @@ paths:
       tags:
       - contact
   /portal/user/dashboard/remove_payment_template:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Removes a template from the wallet
@@ -2301,7 +2301,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/remove_wallet:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Removes a wallet from the user
@@ -2320,7 +2320,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/remove_wallet_federation_address:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Removes federation name from the wallet
@@ -2339,7 +2339,7 @@ paths:
       tags:
       - wallet
   /portal/user/dashboard/subscribe_push_token:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Adds a new token to the user
@@ -2389,7 +2389,7 @@ paths:
       tags:
       - general
   /portal/user/dashboard/unsubscribe_previous_user_push_token:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Removes the specified token from the user
@@ -2412,7 +2412,7 @@ paths:
       tags:
       - pushtoken
   /portal/user/dashboard/unsubscribe_push_token:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Removes the specified token from the user
@@ -2430,7 +2430,7 @@ paths:
       tags:
       - pushtoken
   /portal/user/dashboard/update_push_token:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Updates the push token
@@ -2459,7 +2459,7 @@ paths:
       tags:
       - pushtoken
   /portal/user/dashboard/update_user_data:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Updates the authenticated user's data
@@ -2580,10 +2580,11 @@ paths:
       tags:
       - userdata
   /portal/user/dashboard/upload_kyc_document:
-    get:
+    post:
       consumes:
       - multipart/form-data
-      description: Stores the document on the server
+      description: Stores the document on the server; the file needs to be uploaded
+        in the field called 'upload_file', along with the other request parameters
       operationId: UploadKycDocument
       parameters:
       - description: document type, e.g. passport, id_card
@@ -2643,7 +2644,7 @@ paths:
       tags:
       - general
   /portal/user/dashboard/wallet_set_homescreen:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Sets the wallet visible flag
@@ -2693,7 +2694,7 @@ paths:
       tags:
       - general
   /portal/user/login_step1:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Is the first step to login
@@ -2718,7 +2719,7 @@ paths:
       tags:
       - auth
   /portal/user/lost_password:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Called from the API when the user initiates the lost password function
@@ -2757,7 +2758,7 @@ paths:
       tags:
       - general
   /portal/user/register_user:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Registers and creates the user in the db
@@ -2940,7 +2941,7 @@ paths:
       tags:
       - register
   /portal/user/resend_confirmation_mail:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: Resends the confirmation mail

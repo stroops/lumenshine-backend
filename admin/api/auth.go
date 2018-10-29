@@ -28,6 +28,18 @@ func LoginFunc(f func(email string, password string, uc *mw.AdminContext, c *gin
 }
 
 //Login logs in the user
+// swagger:route POST /portal/admin/login auth Login
+//
+// Logs in the user
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func Login(email string, password string, uc *mw.AdminContext, c *gin.Context) (string, bool) {
 	user, err := db.GetUserByEmail(email)
 	if err != nil {

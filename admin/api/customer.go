@@ -57,24 +57,26 @@ func AddCustomerRoutes(rg *gin.RouterGroup) {
 }
 
 //CustomerListRequest for filtering the customers
+//swagger:parameters CustomerListRequest CustomerList
 type CustomerListRequest struct {
 	pageinate.PaginationRequestStruct
 
-	FilterCustomerID int      `form:"filter_customer_id"`
-	FilterForeName   string   `form:"filter_forename"`
-	FilterLastName   string   `form:"filter_lastname"`
-	FilterEmail      string   `form:"filter_email"`
-	FilterKycStatus  []string `form:"filter_kyc_status"`
+	FilterCustomerID int      `form:"filter_customer_id" json:"filter_customer_id"`
+	FilterForeName   string   `form:"filter_forename" json:"filter_forename"`
+	FilterLastName   string   `form:"filter_lastname" json:"filter_lastname"`
+	FilterEmail      string   `form:"filter_email" json:"filter_email"`
+	FilterKycStatus  []string `form:"filter_kyc_status" json:"filter_kyc_status"`
 
-	SortCustomerID       string `form:"sort_customer_id"`
-	SortForeName         string `form:"sort_forename"`
-	SortLastName         string `form:"sort_lastname"`
-	SortEmail            string `form:"sort_email"`
-	SortRegistrationDate string `form:"sort_registration_date"`
-	SortLastLogin        string `form:"sort_last_login"`
+	SortCustomerID       string `form:"sort_customer_id" json:"sort_customer_id"`
+	SortForeName         string `form:"sort_forename" json:"sort_forename"`
+	SortLastName         string `form:"sort_lastname" json:"sort_lastname"`
+	SortEmail            string `form:"sort_email" json:"sort_email"`
+	SortRegistrationDate string `form:"sort_registration_date" json:"sort_registration_date"`
+	SortLastLogin        string `form:"sort_last_login" json:"sort_last_login"`
 }
 
 //CustomerListItem is one item in the list
+// swagger:model
 type CustomerListItem struct {
 	ID               int       `json:"id"`
 	Forename         string    `json:"forename"`
@@ -86,12 +88,25 @@ type CustomerListItem struct {
 }
 
 //CustomerListResponse list of customers
+// swagger:model
 type CustomerListResponse struct {
 	pageinate.PaginationResponseStruct
 	Items []CustomerListItem `json:"items"`
 }
 
 //CustomerList returns list of all customers, filtered by given params
+// swagger:route GET /portal/admin/dash/customer/list customer CustomerList
+//
+// Returns list of all customers, filtered by given params
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:CustomerListResponse
 func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 	var err error
 	var rr CustomerListRequest
@@ -181,6 +196,7 @@ func CustomerList(uc *mw.AdminContext, c *gin.Context) {
 }
 
 // CustomerDetailsResponse - customer details response
+// swagger:model
 type CustomerDetailsResponse struct {
 	ID         int    `json:"id"`
 	Email      string `json:"email"`
@@ -215,7 +231,19 @@ type CustomerDetailsResponse struct {
 	RegistrationDate  time.Time  `json:"registration_date"`
 }
 
-//CustomerDetails returns details of stefiied customer
+//CustomerDetails returns details of specified customer
+// swagger:route GET /portal/admin/dash/customer/details/:id customer CustomerDetails
+//
+// Returns details of specified customer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:CustomerDetailsResponse
 func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -273,7 +301,9 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 }
 
 // CustomerEditRequest - request data
+//swagger:parameters CustomerEditRequest CustomerEdit
 type CustomerEditRequest struct {
+	//required : true
 	ID                int    `form:"id" json:"id"`
 	Forename          string `form:"forename" json:"forename" validate:"max=64"`
 	Lastname          string `form:"lastname" json:"lastname" validate:"max=64"`
@@ -305,6 +335,18 @@ type CustomerEditRequest struct {
 }
 
 //CustomerEdit updates customer details and returns customer
+// swagger:route POST /portal/admin/dash/customer/update_personal_data customer CustomerEdit
+//
+// Updates customer details and returns customer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:CustomerDetailsResponse
 func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 	var err error
 	var rr CustomerEditRequest
@@ -415,11 +457,13 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //CustomerOrdersRequest to get the orders
+//swagger:parameters CustomerOrdersRequest CustomerOrders
 type CustomerOrdersRequest struct {
 	pageinate.PaginationRequestStruct
 }
 
 //OrderListItem is one item in the list
+// swagger:model
 type OrderListItem struct {
 	ID     int       `json:"id"`
 	Date   time.Time `json:"date"`
@@ -430,12 +474,25 @@ type OrderListItem struct {
 }
 
 //OrderListResponse list of orders
+// swagger:model
 type OrderListResponse struct {
 	pageinate.PaginationResponseStruct
 	Items []OrderListItem `json:"items"`
 }
 
 //CustomerOrders returns list of all customer's orders
+// swagger:route GET /portal/admin/dash/customer/orders customer CustomerOrders
+//
+// Returns list of all customer's orders
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:OrderListResponse
 func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -503,11 +560,13 @@ func CustomerOrders(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //CustomerWalletsRequest to get the wallets
+//swagger:parameters CustomerWalletsRequest CustomerWallets
 type CustomerWalletsRequest struct {
 	pageinate.PaginationRequestStruct
 }
 
 //WalletListItem is one item in the list
+// swagger:model
 type WalletListItem struct {
 	Name       string `json:"name"`
 	PublicKey  string `json:"public_key"`
@@ -515,12 +574,25 @@ type WalletListItem struct {
 }
 
 //WalletListResponse list of wallets
+// swagger:model
 type WalletListResponse struct {
 	pageinate.PaginationResponseStruct
 	Items []WalletListItem `json:"items"`
 }
 
-//CustomerWallets returns list of all customer's orders
+//CustomerWallets returns list of all customer's wallets
+// swagger:route GET /portal/admin/dash/customer/wallets/:id customer CustomerWallets
+//
+// Returns list of all customer's wallets
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:WalletListResponse
 func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -578,12 +650,29 @@ func CustomerWallets(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //CustomerUpdateKYCStatusRequest - request
+//swagger:parameters CustomerUpdateKYCStatusRequest CustomerUpdateKYCStatus
 type CustomerUpdateKYCStatusRequest struct {
-	ID        int    `form:"id" json:"id"`
+	// the customer id
+	//required : true
+	ID int `form:"id" json:"id"`
+	//KYC status, e.g. InReview, Pending
+	//required : true
 	KycStatus string `form:"kyc_status" json:"kyc_status" validate:"required,max=64"`
 }
 
 //CustomerUpdateKYCStatus updates status
+// swagger:route POST /portal/admin/dash/customer/update_kyc_status customer CustomerUpdateKYCStatus
+//
+// Updates KYC status
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func CustomerUpdateKYCStatus(uc *mw.AdminContext, c *gin.Context) {
 	var err error
 	var rr CustomerUpdateKYCStatusRequest
@@ -642,11 +731,26 @@ func CustomerUpdateKYCStatus(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //Reset2faRequest - request
+//swagger:parameters Reset2faRequest Reset2fa
 type Reset2faRequest struct {
+	// the customer id
+	//required : true
 	ID int `form:"id" json:"id"`
 }
 
 //Reset2fa resets the flag and sends the email
+// swagger:route POST /portal/admin/dash/customer/reset2fa customer Reset2fa
+//
+// Resets the flag and sends the email
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func Reset2fa(uc *mw.AdminContext, c *gin.Context) {
 	var err error
 	var rr Reset2faRequest

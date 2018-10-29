@@ -77,7 +77,7 @@ type AddContactResponse struct {
 }
 
 //AddContact - adds a new contact to the user
-// swagger:route GET /portal/user/dashboard/add_contact contact AddContact
+// swagger:route POST /portal/user/dashboard/add_contact contact AddContact
 //
 // Adds a new contact to the user
 //
@@ -161,7 +161,7 @@ type EditContactRequest struct {
 }
 
 //EditContact - edits the user contact
-// swagger:route GET /portal/user/dashboard/edit_contact contact EditContact
+// swagger:route POST /portal/user/dashboard/edit_contact contact EditContact
 //
 // Edits the user contact
 //
@@ -235,7 +235,7 @@ type RemoveContactRequest struct {
 }
 
 //RemoveContact - deletes the user contact
-// swagger:route GET /portal/user/dashboard/remove_contact contact RemoveContact
+// swagger:route POST /portal/user/dashboard/remove_contact contact RemoveContact
 //
 // Deletes the user contact
 //

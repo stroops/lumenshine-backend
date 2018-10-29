@@ -24,7 +24,7 @@ type LostPasswordRequest struct {
 }
 
 //LostPassword called from the API when the user initiates the lost password function
-// swagger:route GET /portal/user/lost_password lost LostPassword
+// swagger:route POST /portal/user/lost_password lost LostPassword
 //
 // Called from the API when the user initiates the lost password function
 //
@@ -170,7 +170,7 @@ type LostPasswordTfaResponse struct {
 }
 
 //LostPasswordTfa called from the API when the user initiates the lost password TFA function
-// swagger:route GET /portal/user/auth/lost_password_tfa lost LostPasswordTfa
+// swagger:route POST /portal/user/auth/lost_password_tfa lost LostPasswordTfa
 //
 // Called from the API when the user initiates the lost password TFA function
 //
@@ -282,7 +282,7 @@ type LostPasswordUpdateRequest struct {
 }
 
 //LostPasswordUpdate updates the security data for the user
-// swagger:route GET /portal/user/auth2/lost_password_update lost LostPasswordUpdate
+// swagger:route POST /portal/user/auth2/lost_password_update lost LostPasswordUpdate
 //
 // Updates the security data for the user
 //
@@ -369,7 +369,7 @@ type ChangePasswordUpdateRequest struct {
 }
 
 //ChangePasswordUpdate updates the security data for the user
-// swagger:route GET /portal/user/dashboard/change_password lost ChangePasswordUpdate
+// swagger:route POST /portal/user/dashboard/change_password lost ChangePasswordUpdate
 //
 // Updates the security data for the user
 //
@@ -439,7 +439,7 @@ type LostTfaRequest struct {
 }
 
 //LostTfa called from the API when the user initiates the reset 2fa function
-// swagger:route GET /portal/user/dashboard/change_password lost LostTfa
+// swagger:route POST /portal/user/dashboard/change_password lost LostTfa
 //
 // Called from the API when the user initiates the reset 2fa function
 //
@@ -544,7 +544,7 @@ type NewTfaResponse struct {
 }
 
 //NewTfaUpdate called for updating the tfa data
-// swagger:route GET /portal/user/dashboard/new_2fa_secret lost NewTfaUpdate
+// swagger:route POST /portal/user/dashboard/new_2fa_secret lost NewTfaUpdate
 //
 // Called for updating the tfa data
 //
@@ -657,7 +657,7 @@ type UpdateSecurityDataRequest struct {
 }
 
 //UpdateSecurityData will update the security data in the DB
-// swagger:route GET /portal/user/auth/update_security_data lost UpdateSecurityData
+// swagger:route POST /portal/user/auth/update_security_data lost UpdateSecurityData
 //
 // Will update the security data in the DB
 //

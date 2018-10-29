@@ -604,7 +604,7 @@ type ExecuteTransactionResponse struct {
 
 // ExecuteTransaction signs the tx with the postsigner and runs the transaction
 // The transaction must be signed with the customers seed on the client
-// swagger:route GET /execute_transaction ExecuteTransaction
+// swagger:route POST /execute_transaction ExecuteTransaction
 //     signs the tx with the postsigner and runs the transaction. must be signed with the customers seed on the client
 //     Consumes:
 //     - multipart/form-data

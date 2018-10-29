@@ -1,13 +1,14 @@
 package api
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/labstack/echo"
@@ -43,6 +44,7 @@ func AddUserRoutes(rg *gin.RouterGroup) {
 }
 
 // UserAuthData of the logged in user
+// swagger:model
 type UserAuthData struct {
 	UserID      int      `json:"id"`
 	Email       string   `json:"email"`
@@ -56,6 +58,18 @@ type UserAuthData struct {
 }
 
 //UserData returns the current logged in user info
+// swagger:route GET /portal/admin/dash/user/user_data user UserData
+//
+// Returns the current logged in user info
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:UserAuthData
 func UserData(uc *mw.AdminContext, c *gin.Context) {
 
 	u := uc.User
@@ -77,6 +91,7 @@ func UserData(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //UserResponse holds the user reponse info
+// swagger:model
 type UserResponse struct {
 	ID        int      `json:"id"`
 	Email     string   `json:"email"`
@@ -92,24 +107,45 @@ func getUpdatedBy(c *gin.Context) string {
 }
 
 //RegisterRequest new user information
+//swagger:parameters RegisterRequest Register
 type RegisterRequest struct {
-	Email     string   `form:"email" json:"email" validate:"required,icop_email"`
-	Password  string   `form:"password" json:"password" validate:"required"`
-	FirstName string   `form:"firstname" json:"firstname" validate:"required"`
-	LastName  string   `form:"lastname" json:"lastname" validate:"required"`
-	Phone     string   `form:"phone" json:"phone" validate:"required,icop_phone"`
-	Active    bool     `form:"active" json:"active"`
-	Groups    []string `form:"groups" json:"groups" validate:"required"`
+	//required : true
+	Email string `form:"email" json:"email" validate:"required,icop_email"`
+	//required : true
+	Password string `form:"password" json:"password" validate:"required"`
+	//required : true
+	FirstName string `form:"firstname" json:"firstname" validate:"required"`
+	//required : true
+	LastName string `form:"lastname" json:"lastname" validate:"required"`
+	//required : true
+	Phone string `form:"phone" json:"phone" validate:"required,icop_phone"`
+	//required : true
+	Active bool `form:"active" json:"active"`
+	//required : true
+	Groups []string `form:"groups" json:"groups" validate:"required"`
 }
 
 //RegisterResponse after registration
+// swagger:model
 type RegisterResponse struct {
 	ID     int    `form:"id" json:"id"`
 	Email  string `form:"email" json:"email"`
 	Active bool   `form:"active" json:"active"`
 }
 
-//Register creates new use in the db
+//Register creates new user in the db
+// swagger:route POST /portal/admin/dash/user/register user Register
+//
+// Creates a new user in the db
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:RegisterResponse
 func Register(uc *mw.AdminContext, c *gin.Context) {
 	var rr RegisterRequest
 	if err := c.Bind(&rr); err != nil {
@@ -150,18 +186,34 @@ func Register(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //ActivateRequest for activate/deactivate
+//swagger:parameters ActivateRequest Activate
 type ActivateRequest struct {
-	ID     int  `form:"id" json:"id" validate:"required"`
+	//required : true
+	ID int `form:"id" json:"id" validate:"required"`
+	//required : true
 	Active bool `form:"active" json:"active"`
 }
 
 //ActivateResponse after activation/deactivation
+// swagger:model
 type ActivateResponse struct {
 	ID     int  `form:"id" json:"id"`
 	Active bool `form:"active" json:"active"`
 }
 
 //Activate - activates or deactivates a user
+// swagger:route POST /portal/admin/dash/user/activate user Activate
+//
+// Activates or deactivates a user
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:ActivateResponse
 func Activate(uc *mw.AdminContext, c *gin.Context) {
 	var ar ActivateRequest
 	if err := c.Bind(&ar); err != nil {
@@ -199,11 +251,21 @@ func Activate(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //UsersResponse holds the user list
+// swagger:model
 type UsersResponse struct {
 	Users []UserResponse `form:"users" json:"users"`
 }
 
 //Users reads the list of users from the db
+// swagger:route GET /portal/admin/dash/user/list user Users
+//
+// Reads the list of users from the db
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:UsersResponse
 func Users(uc *mw.AdminContext, c *gin.Context) {
 	dbUsers, err := db.AllUsers()
 	if err != nil {
@@ -231,6 +293,18 @@ func Users(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //User gets the specified user by id
+// swagger:route GET /portal/admin/dash/user/details/:id user User
+//
+// Gets the specified user by id
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:UserResponse
 func User(uc *mw.AdminContext, c *gin.Context) {
 	idParam := c.Param("id")
 
@@ -263,7 +337,9 @@ func User(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //EditRequest - edits user information
+//swagger:parameters EditRequest EditUser
 type EditRequest struct {
+	//required : true
 	ID        int    `form:"id" json:"id" validate:"required"`
 	Password  string `form:"password" json:"password"`
 	FirstName string `form:"firstname" json:"firstname"`
@@ -273,6 +349,18 @@ type EditRequest struct {
 }
 
 //EditUser - edits the user's properties
+// swagger:route POST /portal/admin/dash/user/edit user EditUser
+//
+// Edits the user's properties
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:UserResponse
 func EditUser(uc *mw.AdminContext, c *gin.Context) {
 	var editRequest EditRequest
 	if err := c.Bind(&editRequest); err != nil {
@@ -323,12 +411,27 @@ func EditUser(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //SetGroupsRequest information
+//swagger:parameters SetGroupsRequest SetGroups
 type SetGroupsRequest struct {
-	ID     int      `form:"id" json:"id" validate:"required"`
+	//required : true
+	ID int `form:"id" json:"id" validate:"required"`
+	//required : true
 	Groups []string `form:"groups" json:"groups" validate:"required"`
 }
 
 //SetGroups updates the groups for the specified user
+// swagger:route POST /portal/admin/dash/user/setgroups user SetGroups
+//
+// Updates the groups for the specified user
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:UserResponse
 func SetGroups(uc *mw.AdminContext, c *gin.Context) {
 	var setGroupRequest SetGroupsRequest
 	if err := c.Bind(&setGroupRequest); err != nil {
