@@ -13,8 +13,11 @@ import (
 )
 
 //AddWalletRequest request
+//swagger:parameters AddWalletRequest AddWallet
 type AddWalletRequest struct {
-	PublicKey         string `form:"public_key" json:"public_key"  validate:"required,base64,len=56"`
+	// required: true
+	PublicKey string `form:"public_key" json:"public_key"  validate:"required,base64,len=56"`
+	// required: true
 	WalletName        string `form:"wallet_name" json:"wallet_name" validate:"required,max=500"`
 	FederationAddress string `form:"federation_address" json:"federation_address" validate:"max=255"`
 	ShowOnHomescreen  bool   `form:"show_on_homescreen" json:"show_on_homescreen"`
@@ -22,11 +25,24 @@ type AddWalletRequest struct {
 }
 
 //AddWalletResponse request
+// swagger:model
 type AddWalletResponse struct {
 	ID int64 `json:"id"`
 }
 
 //AddWallet adds a new wallet to the user
+// swagger:route GET /portal/user/dashboard/add_wallet wallet AddWallet
+//
+// AddWallet adds a new wallet to the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:AddWalletResponse
 func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 	var l AddWalletRequest
 	if err := c.Bind(&l); err != nil {
@@ -112,6 +128,7 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetUserWalletsResponse result
+// swagger:model
 type GetUserWalletsResponse struct {
 	ID                int64  `json:"id"`
 	PublicKey         string `json:"public_key"`
@@ -122,6 +139,15 @@ type GetUserWalletsResponse struct {
 }
 
 //GetUserWallets returns all wallets for one user
+// swagger:route GET /portal/user/dashboard/get_user_wallets wallet GetUserWallets
+//
+// Returns all wallets for one user
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:[]GetUserWalletsResponse
 func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 	userID := mw.GetAuthUser(c).UserID
 	req := &pb.GetWalletsRequest{
@@ -154,11 +180,25 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //RemoveWalletRequest request
+//swagger:parameters RemoveWalletRequest RemoveWallet
 type RemoveWalletRequest struct {
+	// required: true
 	ID int64 `form:"id" json:"id"  validate:"required"`
 }
 
-//RemoveWallet removes a wallet to the user
+//RemoveWallet removes a wallet from the user
+// swagger:route GET /portal/user/dashboard/remove_wallet wallet RemoveWallet
+//
+// Removes a wallet from the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveWallet(uc *mw.IcopContext, c *gin.Context) {
 	var l RemoveWalletRequest
 	if err := c.Bind(&l); err != nil {
@@ -205,12 +245,27 @@ func RemoveWallet(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //WalletChangeOrderRequest - request
+//swagger:parameters WalletChangeOrderRequest WalletChangeOrder
 type WalletChangeOrderRequest struct {
+	// required: true
 	PublicKey string `form:"public_key" json:"public_key"  validate:"required,base64,len=56"`
-	OrderNr   int    `form:"order_nr" json:"order_nr"`
+	// required: true
+	OrderNr int `form:"order_nr" json:"order_nr"`
 }
 
-//WalletChangeOrder changes the wallet order
+//WalletChangeOrder changes the wallet orders
+// swagger:route GET /portal/user/dashboard/change_wallet_order wallet WalletChangeOrder
+//
+// Changes the wallet orders
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func WalletChangeOrder(uc *mw.IcopContext, c *gin.Context) {
 	var r WalletChangeOrderRequest
 	if err := c.Bind(&r); err != nil {
@@ -263,13 +318,27 @@ func WalletChangeOrder(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //WalletChangeDataRequest request
+//swagger:parameters WalletChangeDataRequest WalletChangeData
 type WalletChangeDataRequest struct {
+	// required: true
 	ID                int64  `form:"id" json:"id"  validate:"required"`
 	WalletName        string `form:"wallet_name" json:"wallet_name"  validate:"max=500"`
 	FederationAddress string `form:"federation_address" json:"federation_address"  validate:"max=255"`
 }
 
 //WalletChangeData changes the wallet data
+// swagger:route GET /portal/user/dashboard/change_wallet_data wallet WalletChangeData
+//
+// Changes the wallet data
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func WalletChangeData(uc *mw.IcopContext, c *gin.Context) {
 	var l WalletChangeDataRequest
 	if err := c.Bind(&l); err != nil {
@@ -357,11 +426,25 @@ func WalletChangeData(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //RemoveWalletFederationAddressRequest request
+//swagger:parameters RemoveWalletFederationAddressRequest RemoveWalletFederationAddress
 type RemoveWalletFederationAddressRequest struct {
+	// required: true
 	ID int64 `form:"id" json:"id"  validate:"required"`
 }
 
 //RemoveWalletFederationAddress removes federation name from the wallet
+// swagger:route GET /portal/user/dashboard/remove_wallet_federation_address wallet RemoveWalletFederationAddress
+//
+// Removes federation name from the wallet
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveWalletFederationAddress(uc *mw.IcopContext, c *gin.Context) {
 	var l RemoveWalletFederationAddressRequest
 	if err := c.Bind(&l); err != nil {
@@ -394,12 +477,27 @@ func RemoveWalletFederationAddress(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //WalletSetHomescreenRequest request
+//swagger:parameters WalletSetHomescreenRequest WalletSetHomescreen
 type WalletSetHomescreenRequest struct {
-	ID      int64 `form:"id" json:"id"  validate:"required"`
-	Visible bool  `form:"visible" json:"visible"`
+	// required: true
+	ID int64 `form:"id" json:"id"  validate:"required"`
+	// required: true
+	Visible bool `form:"visible" json:"visible"`
 }
 
 //WalletSetHomescreen sets the wallet visible flag
+// swagger:route GET /portal/user/dashboard/wallet_set_homescreen wallet WalletSetHomescreen
+//
+// Sets the wallet visible flag
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func WalletSetHomescreen(uc *mw.IcopContext, c *gin.Context) {
 	var l WalletSetHomescreenRequest
 	if err := c.Bind(&l); err != nil {
@@ -431,11 +529,14 @@ func WalletSetHomescreen(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetKnownCurrencyRequest request
+//swagger:parameters GetKnownCurrencyRequest GetKnownCurrency
 type GetKnownCurrencyRequest struct {
+	// required: true
 	ID int64 `form:"id" json:"id"  validate:"required"`
 }
 
 //GetKnownCurrenciesResponse response
+// swagger:model
 type GetKnownCurrenciesResponse struct {
 	ID               int64  `form:"id" json:"id"`
 	Name             string `form:"name" json:"name"`
@@ -447,6 +548,18 @@ type GetKnownCurrenciesResponse struct {
 }
 
 //GetKnownCurrency returns currency with specified id
+// swagger:route GET /portal/user/dashboard/get_known_currency wallet GetKnownCurrency
+//
+// Returns currency with specified id
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetKnownCurrenciesResponse
 func GetKnownCurrency(uc *mw.IcopContext, c *gin.Context) {
 	var l GetKnownCurrencyRequest
 	if err := c.Bind(&l); err != nil {
@@ -482,6 +595,15 @@ func GetKnownCurrency(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetKnownCurrencies returns all known currencies
+// swagger:route GET /portal/user/dashboard/get_known_currencies wallet GetKnownCurrencies
+//
+// Returns all known currencies
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetKnownCurrenciesResponse
 func GetKnownCurrencies(uc *mw.IcopContext, c *gin.Context) {
 
 	//get the currency
@@ -509,11 +631,14 @@ func GetKnownCurrencies(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetKnownInflationDestinationRequest request
+//swagger:parameters GetKnownInflationDestinationRequest GetKnownInflationDestination
 type GetKnownInflationDestinationRequest struct {
+	// required: true
 	ID int64 `form:"id" json:"id"  validate:"required"`
 }
 
 //GetKnownInflationDestinationsResponse response
+// swagger:model
 type GetKnownInflationDestinationsResponse struct {
 	ID               int64  `form:"id" json:"id"`
 	Name             string `form:"name" json:"name"`
@@ -524,6 +649,18 @@ type GetKnownInflationDestinationsResponse struct {
 }
 
 //GetKnownInflationDestination returns destination with specified id
+// swagger:route GET /portal/user/dashboard/get_known_inflation_destination wallet GetKnownInflationDestination
+//
+// Returns destination with specified id
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetKnownInflationDestinationsResponse
 func GetKnownInflationDestination(uc *mw.IcopContext, c *gin.Context) {
 	var l GetKnownInflationDestinationRequest
 	if err := c.Bind(&l); err != nil {
@@ -558,6 +695,15 @@ func GetKnownInflationDestination(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetKnownInflationDestinations returns all known destinations
+// swagger:route GET /portal/user/dashboard/get_known_inflation_destinations wallet GetKnownInflationDestinations
+//
+// Returns all known destinations
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetKnownInflationDestinationsResponse
 func GetKnownInflationDestinations(uc *mw.IcopContext, c *gin.Context) {
 
 	//get the destinations
@@ -582,11 +728,14 @@ func GetKnownInflationDestinations(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetPaymentTemplatesRequest request
+//swagger:parameters GetPaymentTemplatesRequest GetPaymentTemplates
 type GetPaymentTemplatesRequest struct {
+	// required: true
 	WalletID int64 `form:"wallet_id" json:"wallet_id"`
 }
 
 //GetPaymentTemplateResponse result
+// swagger:model
 type GetPaymentTemplateResponse struct {
 	ID                      int    `json:"id"`
 	RecipientStellarAddress string `json:"recipient_stellar_address"`
@@ -599,6 +748,18 @@ type GetPaymentTemplateResponse struct {
 }
 
 //GetPaymentTemplates returns all templates for a wallet
+// swagger:route GET /portal/user/dashboard/get_payment_templates wallet GetPaymentTemplates
+//
+// Returns all templates for a wallet
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []GetPaymentTemplateResponse
 func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
 	var r GetPaymentTemplatesRequest
 	if err := c.Bind(&r); err != nil {
@@ -636,23 +797,45 @@ func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //AddPaymentTemplateRequest request
+//swagger:parameters AddPaymentTemplateRequest AddPaymentTemplate
 type AddPaymentTemplateRequest struct {
-	WalletID                int    `form:"wallet_id" json:"wallet_id"`
+	// required: true
+	WalletID int `form:"wallet_id" json:"wallet_id"`
+	// required: if recipient public key is not specified
 	RecipientStellarAddress string `form:"recipient_stellar_address" json:"recipient_stellar_address" validate:"max=256"`
-	RecipientPK             string `form:"recipient_pk" json:"recipient_pk" validate:"omitempty,base64,len=56"`
-	AssetCode               string `form:"asset_code" json:"asset_code" validate:"icop_assetcode"`
-	IssuerPK                string `form:"issuer_pk" json:"issuer_pk" validate:"omitempty,base64,len=56"`
-	Amount                  int64  `form:"amount" json:"amount"`
-	MemoType                string `form:"memo_type" json:"memo_type" validate:"required,max=8"`
-	Memo                    string `form:"memo" json:"memo"`
+	// required: if recipient stellar address is not specified
+	RecipientPK string `form:"recipient_pk" json:"recipient_pk" validate:"omitempty,base64,len=56"`
+	// required: true
+	AssetCode string `form:"asset_code" json:"asset_code" validate:"icop_assetcode"`
+	// required: asset code is not XLM
+	IssuerPK string `form:"issuer_pk" json:"issuer_pk" validate:"omitempty,base64,len=56"`
+	// required: true
+	Amount int64 `form:"amount" json:"amount"`
+	// required: true
+	MemoType string `form:"memo_type" json:"memo_type" validate:"required,max=8"`
+	Memo     string `form:"memo" json:"memo"`
 }
 
 //AddTemplateResponse response
+// swagger:model
 type AddTemplateResponse struct {
+	//newly added template id
 	ID int64 `json:"id"`
 }
 
 //AddPaymentTemplate adds a new template to the wallet
+// swagger:route GET /portal/user/dashboard/add_payment_template wallet AddPaymentTemplate
+//
+// Adds a new template to the wallet
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: AddTemplateResponse
 func AddPaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
 	var r AddPaymentTemplateRequest
 	if err := c.Bind(&r); err != nil {
@@ -703,11 +886,25 @@ func AddPaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //RemovePaymentTemplateRequest request
+//swagger:parameters RemovePaymentTemplateRequest RemovePaymentTemplate
 type RemovePaymentTemplateRequest struct {
+	// required: true
 	ID int64 `form:"id" json:"id"`
 }
 
 //RemovePaymentTemplate removes a template from the wallet
+// swagger:route GET /portal/user/dashboard/remove_payment_template wallet RemovePaymentTemplate
+//
+// Removes a template from the wallet
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemovePaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
 	var r RemovePaymentTemplateRequest
 	if err := c.Bind(&r); err != nil {

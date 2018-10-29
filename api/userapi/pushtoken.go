@@ -1,10 +1,11 @@
 package main
 
 import (
-	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	"github.com/Soneso/lumenshine-backend/pb"
 	"net/http"
 	"strings"
+
+	cerr "github.com/Soneso/lumenshine-backend/icop_error"
+	"github.com/Soneso/lumenshine-backend/pb"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 
@@ -12,12 +13,28 @@ import (
 )
 
 //SubscribeForPushNotificationsRequest request
+//swagger:parameters SubscribeForPushNotificationsRequest SubscribeForPushNotifications
 type SubscribeForPushNotificationsRequest struct {
-	PushToken  string `form:"push_token" json:"push_token"  validate:"required,max=500"`
+	//required: true
+	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
+	//Device type, e.g. apple, google
+	//required: true
 	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
 }
 
 //SubscribeForPushNotifications adds a new token to the user
+// swagger:route GET /portal/user/dashboard/subscribe_push_token pushtoken SubscribeForPushNotifications
+//
+// Adds a new token to the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func SubscribeForPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 	var l SubscribeForPushNotificationsRequest
 	if err := c.Bind(&l); err != nil {
@@ -47,13 +64,30 @@ func SubscribeForPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //UpdatePushTokenRequest request
+//swagger:parameters UpdatePushTokenRequest UpdatePushToken
 type UpdatePushTokenRequest struct {
+	//required: true
 	NewPushToken string `form:"new_push_token" json:"new_push_token"  validate:"required,max=500"`
+	//required: true
 	OldPushToken string `form:"old_push_token" json:"old_push_token"  validate:"required,max=500"`
-	DeviceType   string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	//Device type, e.g. apple, google
+	//required: true
+	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
 }
 
-//UpdatePushToken adds a new token to the user
+//UpdatePushToken updates the push token
+// swagger:route GET /portal/user/dashboard/update_push_token pushtoken UpdatePushToken
+//
+// Updates the push token
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdatePushToken(uc *mw.IcopContext, c *gin.Context) {
 	var l UpdatePushTokenRequest
 	if err := c.Bind(&l); err != nil {
@@ -84,11 +118,25 @@ func UpdatePushToken(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //UnsubscribeFromPushNotificationsRequest request
+//swagger:parameters UnsubscribeFromPushNotificationsRequest UnsubscribeFromPushNotifications
 type UnsubscribeFromPushNotificationsRequest struct {
+	//required: true
 	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
 }
 
 //UnsubscribeFromPushNotifications removes the specified token from the user
+// swagger:route GET /portal/user/dashboard/unsubscribe_push_token pushtoken UnsubscribeFromPushNotifications
+//
+// Removes the specified token from the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UnsubscribeFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 	var l UnsubscribeFromPushNotificationsRequest
 	if err := c.Bind(&l); err != nil {
@@ -117,12 +165,27 @@ func UnsubscribeFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //UnsubscribePreviousUserFromPushNotificationsRequest request
+//swagger:parameters UnsubscribePreviousUserFromPushNotificationsRequest UnsubscribePreviousUserFromPushNotifications
 type UnsubscribePreviousUserFromPushNotificationsRequest struct {
-	Email     string `form:"user_email" json:"user_email" validate:"required,icop_email"`
+	//required: true
+	Email string `form:"user_email" json:"user_email" validate:"required,icop_email"`
+	//required: true
 	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
 }
 
 //UnsubscribePreviousUserFromPushNotifications removes the specified token from the user
+// swagger:route GET /portal/user/dashboard/unsubscribe_previous_user_push_token pushtoken UnsubscribePreviousUserFromPushNotifications
+//
+// Removes the specified token from the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 	var l UnsubscribePreviousUserFromPushNotificationsRequest
 	if err := c.Bind(&l); err != nil {

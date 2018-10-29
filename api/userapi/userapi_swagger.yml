@@ -1,5 +1,1098 @@
 basePath: /portal/user/
 definitions:
+  AddContactRequest:
+    description: AddContactRequest request-data
+    properties:
+      contact_name:
+        description: Contact name
+        type: string
+        x-go-name: ContactName
+      public_key:
+        description: |-
+          Stellar account public key - identifies the account
+          required: required if stellar address is not specified
+        type: string
+        x-go-name: PublicKey
+      stellar_address:
+        description: |-
+          Stellar account federation address - identifies the account
+          required: required if stellar public key is not specified
+        type: string
+        x-go-name: StellarAddress
+    required:
+    - contact_name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  AddContactResponse:
+    description: AddContactResponse - list of contacts and newly added contact id
+    properties:
+      contacts:
+        items:
+          $ref: '#/definitions/Contact'
+        type: array
+        x-go-name: Contacts
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  AddPaymentTemplateRequest:
+    description: AddPaymentTemplateRequest request
+    properties:
+      amount:
+        format: int64
+        type: integer
+        x-go-name: Amount
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      issuer_pk:
+        description: 'required: asset code is not XLM'
+        type: string
+        x-go-name: IssuerPK
+      memo:
+        type: string
+        x-go-name: Memo
+      memo_type:
+        type: string
+        x-go-name: MemoType
+      recipient_pk:
+        description: 'required: if recipient stellar address is not specified'
+        type: string
+        x-go-name: RecipientPK
+      recipient_stellar_address:
+        description: 'required: if recipient public key is not specified'
+        type: string
+        x-go-name: RecipientStellarAddress
+      wallet_id:
+        format: int64
+        type: integer
+        x-go-name: WalletID
+    required:
+    - wallet_id
+    - asset_code
+    - amount
+    - memo_type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  AddTemplateResponse:
+    description: AddTemplateResponse response
+    properties:
+      id:
+        description: newly added template id
+        format: int64
+        type: integer
+        x-go-name: ID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  AddWalletRequest:
+    description: AddWalletRequest request
+    properties:
+      federation_address:
+        type: string
+        x-go-name: FederationAddress
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      show_on_homescreen:
+        type: boolean
+        x-go-name: ShowOnHomescreen
+      wallet_name:
+        type: string
+        x-go-name: WalletName
+      wallet_type:
+        type: string
+        x-go-name: WalletType
+    required:
+    - public_key
+    - wallet_name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  AddWalletResponse:
+    description: AddWalletResponse request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  ChangePasswordUpdateRequest:
+    description: ChangePasswordUpdateRequest is the new security data for the user
+    properties:
+      kdf_salt:
+        type: string
+        x-go-name: KDFSalt
+      mnemonic_master_iv:
+        type: string
+        x-go-name: MnemonicMasterIV
+      mnemonic_master_key:
+        type: string
+        x-go-name: MnemonicMasterKey
+      public_key_188:
+        type: string
+        x-go-name: PublicKey188
+      sep10_transaction:
+        type: string
+        x-go-name: SEP10Transaction
+      wordlist_master_iv:
+        type: string
+        x-go-name: WordlistMasterIV
+      wordlist_master_key:
+        type: string
+        x-go-name: WordlistMasterKey
+    required:
+    - kdf_salt
+    - mnemonic_master_key
+    - mnemonic_master_iv
+    - wordlist_master_key
+    - wordlist_master_iv
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Confirm2FARequest:
+    description: Confirm2FARequest is the data needed for the 2fa registration
+    properties:
+      sep10_transaction:
+        type: string
+        x-go-name: SEP10Transaction
+      tfa_code:
+        type: string
+        x-go-name: TfaCode
+    required:
+    - tfa_code
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Confirm2FAResponse:
+    description: Confirm2FAResponse response for API
+    properties:
+      mail_confirmed:
+        type: boolean
+        x-go-name: MailConfirmed
+      mnemonic_confirmed:
+        type: boolean
+        x-go-name: MnemonicConfirmed
+      tfa_confirmed:
+        type: boolean
+        x-go-name: TfaConfirmed
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  ConfirmTokeRequest:
+    description: ConfirmTokeRequest is the data needed for confirming the mail
+    properties:
+      token:
+        description: Mail token to confirm
+        type: string
+        x-go-name: Token
+    required:
+    - token
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  ConfirmTokenResponse:
+    description: ConfirmTokenResponse response
+    properties:
+      confirmation_date:
+        format: date-time
+        type: string
+        x-go-name: ConfirmationDate
+      email:
+        type: string
+        x-go-name: Email
+      sep10_transaction_challenge:
+        type: string
+        x-go-name: SEP10TransactionChallenge
+      token_already_confirmed:
+        type: boolean
+        x-go-name: TokenAlreadyConfirmed
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Contact:
+    description: Contact - user contact details
+    properties:
+      contact_name:
+        type: string
+        x-go-name: ContactName
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      stellar_address:
+        type: string
+        x-go-name: StellarAddress
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Country:
+    description: Country represents one country
+    properties:
+      code:
+        type: string
+        x-go-name: Code
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  CountryResponse:
+    description: CountryResponse list for countries
+    properties:
+      countries:
+        items:
+          $ref: '#/definitions/Country'
+        type: array
+        x-go-name: Countries
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  EditContactRequest:
+    description: EditContactRequest request-data
+    properties:
+      contact_name:
+        description: Contact name
+        type: string
+        x-go-name: ContactName
+      id:
+        description: Contact id
+        format: int64
+        type: integer
+        x-go-name: ID
+      public_key:
+        description: |-
+          Stellar account public key - identifies the account
+          required: required if stellar address is not specified
+        type: string
+        x-go-name: PublicKey
+      stellar_address:
+        description: |-
+          Stellar account federation address - identifies the account
+          required: required if stellar public key is not specified
+        type: string
+        x-go-name: StellarAddress
+    required:
+    - id
+    - contact_name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetKnownCurrenciesResponse:
+    description: GetKnownCurrenciesResponse response
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      order_index:
+        format: int64
+        type: integer
+        x-go-name: OrderIndex
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetKnownCurrencyRequest:
+    description: GetKnownCurrencyRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetKnownInflationDestinationRequest:
+    description: GetKnownInflationDestinationRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetKnownInflationDestinationsResponse:
+    description: GetKnownInflationDestinationsResponse response
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      order_index:
+        format: int64
+        type: integer
+        x-go-name: OrderIndex
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetOccupationsRequest:
+    description: GetOccupationsRequest - filters occupations by name
+    properties:
+      Name:
+        description: Occupation name
+        type: string
+    required:
+    - Name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetPaymentTemplateResponse:
+    description: GetPaymentTemplateResponse result
+    properties:
+      amount:
+        format: int64
+        type: integer
+        x-go-name: Amount
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_pk:
+        type: string
+        x-go-name: IssuerPK
+      memo:
+        type: string
+        x-go-name: Memo
+      memo_type:
+        type: string
+        x-go-name: MemoType
+      recipien_pk:
+        type: string
+        x-go-name: RecipientPK
+      recipient_stellar_address:
+        type: string
+        x-go-name: RecipientStellarAddress
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetPaymentTemplatesRequest:
+    description: GetPaymentTemplatesRequest request
+    properties:
+      wallet_id:
+        format: int64
+        type: integer
+        x-go-name: WalletID
+    required:
+    - wallet_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetTfaSecretRequest:
+    description: GetTfaSecretRequest for requesting the tfa secrete
+    properties:
+      public_key_188:
+        description: users public key of index 188
+        type: string
+        x-go-name: PublicKey188
+      sep10_transaction:
+        description: SEP 10 transaction
+        type: string
+        x-go-name: SEP10Transaction
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetTfaSecretResponse:
+    description: GetTfaSecretResponse response for the api call
+    properties:
+      tfa_secret:
+        type: string
+        x-go-name: TfaSecret
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetUserDataResponse:
+    description: GetUserDataResponse - user data response
+    properties:
+      additional_name:
+        type: string
+        x-go-name: AdditionalName
+      address:
+        type: string
+        x-go-name: Address
+      bank_account_number:
+        type: string
+        x-go-name: BankAccountNumber
+      bank_number:
+        type: string
+        x-go-name: BankNumber
+      bank_phone_number:
+        type: string
+        x-go-name: BankPhoneNumber
+      birth_country_code:
+        type: string
+        x-go-name: BirthCountryCode
+      birth_day:
+        format: date-time
+        type: string
+        x-go-name: BirthDay
+      birth_place:
+        type: string
+        x-go-name: BirthPlace
+      city:
+        type: string
+        x-go-name: City
+      company:
+        type: string
+        x-go-name: Company
+      country_code:
+        type: string
+        x-go-name: CountryCode
+      email:
+        type: string
+        x-go-name: Email
+      employer_address:
+        type: string
+        x-go-name: EmployerAddress
+      employer_name:
+        type: string
+        x-go-name: EmployerName
+      forename:
+        type: string
+        x-go-name: Forename
+      language_code:
+        type: string
+        x-go-name: LanguageCode
+      lastname:
+        type: string
+        x-go-name: Lastname
+      mobile_nr:
+        type: string
+        x-go-name: MobileNR
+      nationality:
+        type: string
+        x-go-name: Nationality
+      occupation_code08:
+        type: string
+        x-go-name: OccupationCode08
+      occupation_code88:
+        type: string
+        x-go-name: OccupationCode88
+      occupation_name:
+        type: string
+        x-go-name: OccupationName
+      registration_date:
+        format: date-time
+        type: string
+        x-go-name: RegistrationDate
+      salutation:
+        type: string
+        x-go-name: Salutation
+      state:
+        type: string
+        x-go-name: State
+      tax_id:
+        type: string
+        x-go-name: TaxID
+      tax_id_name:
+        type: string
+        x-go-name: TaxIDName
+      title:
+        type: string
+        x-go-name: Title
+      zip_code:
+        type: string
+        x-go-name: ZipCode
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetUserMessageListRequest:
+    description: |-
+      GetUserMessageListRequest used for requesting the user messages
+      if from_archive specified, the data will be read from the archive
+    properties:
+      from_archive:
+        description: Flag to filter the archived messages
+        type: boolean
+        x-go-name: FromArchive
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetUserMessageListResponse:
+    description: GetUserMessageListResponse response for the api call
+    properties:
+      archive_count:
+        format: int64
+        type: integer
+        x-go-name: ArchiveCount
+      current_count:
+        format: int64
+        type: integer
+        x-go-name: CurrentCount
+      messages:
+        items:
+          $ref: '#/definitions/MessageListItem'
+        type: array
+        x-go-name: Messages
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetUserMessageRequest:
+    description: GetUserMessageRequest used for requesting the user message
+    properties:
+      from_archive:
+        description: Flag to filter the archived messages
+        type: boolean
+        x-go-name: FromArchive
+      message_id:
+        description: Filter by message id
+        format: int64
+        type: integer
+        x-go-name: MessageID
+    required:
+    - message_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetUserWalletsResponse:
+    description: GetUserWalletsResponse result
+    properties:
+      federation_address:
+        type: string
+        x-go-name: FederationAddress
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      show_on_homescreen:
+        type: boolean
+        x-go-name: ShowOnHomescreen
+      wallet_name:
+        type: string
+        x-go-name: WalletName
+      wallet_type:
+        type: string
+        x-go-name: WalletType
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Language:
+    description: Language represents one language
+    properties:
+      lang_code:
+        type: string
+        x-go-name: Code
+      lang_name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LanguagesResponse:
+    description: LanguagesResponse list for languages
+    properties:
+      languages:
+        items:
+          $ref: '#/definitions/Language'
+        type: array
+        x-go-name: Languages
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LoginStep1Request:
+    description: LoginStep1Request is the data needed for the first step of the login
+    properties:
+      email:
+        type: string
+        x-go-name: Email
+      tfa_code:
+        type: string
+        x-go-name: TfaCode
+    required:
+    - email
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LoginStep1Response:
+    description: LoginStep1Response response for API
+    properties:
+      encrypted_mnemonic:
+        type: string
+        x-go-name: EncryptedMnemonic
+      encrypted_mnemonic_master_key:
+        type: string
+        x-go-name: EncryptedMnemonicMasterKey
+      encrypted_wordlist:
+        type: string
+        x-go-name: EncryptedWordlist
+      encrypted_wordlist_master_key:
+        type: string
+        x-go-name: EncryptedWordlistMasterKey
+      kdf_password_salt:
+        type: string
+        x-go-name: KdfPasswordSalt
+      mnemonic_encryption_iv:
+        type: string
+        x-go-name: MnemonicEncryptionIV
+      mnemonic_master_key_encryption_iv:
+        type: string
+        x-go-name: MnemonicMasterKeyEncryptionIV
+      public_key_index0:
+        type: string
+        x-go-name: PublicKeyIndex0
+      sep10_transaction_challenge:
+        type: string
+        x-go-name: SEP10TransactionChallenge
+      tfa_confirmed:
+        type: boolean
+        x-go-name: TfaConfirmed
+      wordlist_encryption_iv:
+        type: string
+        x-go-name: WordlistEncryptionIV
+      wordlist_master_key_encryption_iv:
+        type: string
+        x-go-name: WordlistMasterKeyEncryptionIV
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LoginStep2Request:
+    description: LoginStep2Request is the data needed for the second step of the login
+    properties:
+      key:
+        type: string
+        x-go-name: Key
+      sep10_transaction:
+        type: string
+        x-go-name: SEP10Transaction
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LoginStep2Response:
+    description: LoginStep2Response to the api
+    properties:
+      mail_confirmed:
+        type: boolean
+        x-go-name: MailConfirmed
+      mnemonic_confirmed:
+        type: boolean
+        x-go-name: MnemonicConfirmed
+      payment_state:
+        type: string
+        x-go-name: PaymentState
+      tfa_confirmed:
+        type: boolean
+        x-go-name: TfaConfirmed
+      tfa_qr_image:
+        items:
+          format: uint8
+          type: integer
+        type: array
+        x-go-name: TfaQRImage
+      tfa_secret:
+        type: string
+        x-go-name: TfaSecret
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LostPasswordRequest:
+    description: LostPasswordRequest is the data needed for the first step of the
+      login
+    properties:
+      email:
+        type: string
+        x-go-name: Email
+    required:
+    - email
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LostPasswordTfaRequest:
+    description: |-
+      LostPasswordTfaRequest is the data needed for the first step of the login
+      The user clicked the confirm link and thus called the /ico/confirm_token function, which sets the simple-auth-token
+    properties:
+      tfa_code:
+        type: string
+        x-go-name: TfaCode
+    required:
+    - tfa_code
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LostPasswordTfaResponse:
+    description: LostPasswordTfaResponse returned from the API
+    properties:
+      public_key_0:
+        type: string
+        x-go-name: PublicKey0
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LostPasswordUpdateRequest:
+    description: LostPasswordUpdateRequest is the new secuurity data for the user
+    properties:
+      encrypted_mnemonic:
+        type: string
+        x-go-name: EncryptedMnemonic
+      encrypted_wordlist:
+        type: string
+        x-go-name: EncryptedWordlist
+      encryption_mnemonic_iv:
+        type: string
+        x-go-name: EncryptedMnemonicIV
+      encryption_wordlist_iv:
+        type: string
+        x-go-name: EncryptionWordlistIV
+      kdf_salt:
+        type: string
+        x-go-name: KDFSalt
+      mnemonic_master_iv:
+        type: string
+        x-go-name: MnemonicMasterIV
+      mnemonic_master_key:
+        type: string
+        x-go-name: MnemonicMasterKey
+      public_key_0:
+        type: string
+        x-go-name: PublicKey0
+      public_key_188:
+        type: string
+        x-go-name: PublicKey188
+      sep10_transaction:
+        type: string
+        x-go-name: SEP10Transaction
+      wordlist_master_iv:
+        type: string
+        x-go-name: WordlistMasterIV
+      wordlist_master_key:
+        type: string
+        x-go-name: WordlistMasterKey
+    required:
+    - kdf_salt
+    - mnemonic_master_key
+    - mnemonic_master_iv
+    - encrypted_mnemonic
+    - encryption_mnemonic_iv
+    - wordlist_master_key
+    - wordlist_master_iv
+    - encrypted_wordlist
+    - encryption_wordlist_iv
+    - public_key_0
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LostTfaRequest:
+    description: LostTfaRequest initiates the reset 2fa function
+    properties:
+      email:
+        type: string
+        x-go-name: Email
+    required:
+    - email
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  MessageItem:
+    description: MessageItem is one user message
+    properties:
+      date_created:
+        format: date-time
+        type: string
+        x-go-name: DateCreated
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      message:
+        type: string
+        x-go-name: Message
+      title:
+        type: string
+        x-go-name: Title
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  MessageListItem:
+    description: MessageListItem is the list of the messages (short)
+    properties:
+      date_created:
+        format: date-time
+        type: string
+        x-go-name: DateCreated
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      title:
+        type: string
+        x-go-name: Title
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Need2FAResetPasswordResponse:
+    description: Need2FAResetPasswordResponse returned from the API
+    properties:
+      need2fa_reset_pwd:
+        type: boolean
+        x-go-name: Need2FAResetPassword
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  NewTfaRequest:
+    description: NewTfaRequest for proving the password
+    properties:
+      public_key_188:
+        type: string
+        x-go-name: PublicKey188
+      sep10_transaction:
+        type: string
+        x-go-name: SEP10Transaction
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  NewTfaResponse:
+    description: NewTfaResponse response for update
+    properties:
+      tfa_qr_image:
+        type: string
+        x-go-name: TFAQrImage
+      tfa_secret:
+        type: string
+        x-go-name: TFASecret
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  Occupation:
+    description: Occupation represents one occupation
+    properties:
+      code08:
+        type: string
+        x-go-name: Code08
+      code88:
+        type: string
+        x-go-name: Code88
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  OccupationResponse:
+    description: OccupationResponse list for occupations
+    properties:
+      occupations:
+        items:
+          $ref: '#/definitions/Occupation'
+        type: array
+        x-go-name: Occupations
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  RegisterUserRequest:
+    description: RegisterUserRequest is the data needed for registration
+    properties:
+      additional_name:
+        type: string
+        x-go-name: AdditionalName
+      address:
+        type: string
+        x-go-name: Address
+      bank_account_number:
+        type: string
+        x-go-name: BankAccountNumber
+      bank_number:
+        type: string
+        x-go-name: BankNumber
+      bank_phone_number:
+        type: string
+        x-go-name: BankPhoneNumber
+      birth_country_code:
+        type: string
+        x-go-name: BirthCountryCode
+      birth_day:
+        type: string
+        x-go-name: BirthDay
+      birth_place:
+        type: string
+        x-go-name: BirthPlace
+      city:
+        type: string
+        x-go-name: City
+      company:
+        type: string
+        x-go-name: Company
+      country_code:
+        type: string
+        x-go-name: CountryCode
+      email:
+        type: string
+        x-go-name: Email
+      employer_address:
+        type: string
+        x-go-name: EmployerAddress
+      employer_name:
+        type: string
+        x-go-name: EmployerName
+      forename:
+        type: string
+        x-go-name: Forename
+      kdf_salt:
+        type: string
+        x-go-name: KDFSalt
+      language_code:
+        type: string
+        x-go-name: LanguageCode
+      lastname:
+        type: string
+        x-go-name: Lastname
+      mnemonic:
+        type: string
+        x-go-name: Mnemonic
+      mnemonic_iv:
+        type: string
+        x-go-name: MnemonicIV
+      mnemonic_master_iv:
+        type: string
+        x-go-name: MnemonicMasterIV
+      mnemonic_master_key:
+        type: string
+        x-go-name: MnemonicMasterKey
+      mobile_nr:
+        type: string
+        x-go-name: MobileNr
+      nationality:
+        type: string
+        x-go-name: Nationality
+      occupation_code08:
+        type: string
+        x-go-name: OccupationCode08
+      occupation_code88:
+        type: string
+        x-go-name: OccupationCode88
+      occupation_name:
+        type: string
+        x-go-name: OccupationName
+      public_key_0:
+        type: string
+        x-go-name: PublicKey0
+      public_key_188:
+        type: string
+        x-go-name: PublicKey188
+      salutation:
+        type: string
+        x-go-name: Salutation
+      state:
+        type: string
+        x-go-name: State
+      tax_id:
+        type: string
+        x-go-name: TaxID
+      tax_id_name:
+        type: string
+        x-go-name: TaxIDName
+      title:
+        type: string
+        x-go-name: Title
+      wordlist:
+        type: string
+        x-go-name: Wordlist
+      wordlist_iv:
+        type: string
+        x-go-name: WordlistIV
+      wordlist_master_iv:
+        type: string
+        x-go-name: WordlistMasterIV
+      wordlist_master_key:
+        type: string
+        x-go-name: WordlistMasterKey
+      zip_code:
+        type: string
+        x-go-name: ZipCode
+    required:
+    - email
+    - kdf_salt
+    - mnemonic_master_key
+    - mnemonic_master_iv
+    - wordlist_master_key
+    - wordlist_master_iv
+    - mnemonic
+    - mnemonic_iv
+    - wordlist
+    - wordlist_iv
+    - public_key_0
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  RegisterUserResponse:
+    description: RegisterUserResponse response for registration
+    properties:
+      sep10_transaction_challenge:
+        type: string
+        x-go-name: SEP10TransactionChallenge
+      tfa_qr_image:
+        type: string
+        x-go-name: TFAQrImage
+      tfa_secret:
+        type: string
+        x-go-name: TFASecret
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  RemoveContactRequest:
+    description: RemoveContactRequest request-data
+    properties:
+      id:
+        description: Contact id
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  RemovePaymentTemplateRequest:
+    description: RemovePaymentTemplateRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  RemoveWalletFederationAddressRequest:
+    description: RemoveWalletFederationAddressRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  RemoveWalletRequest:
+    description: RemoveWalletRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  ResendConfirmationMailRequest:
+    description: ResendConfirmationMailRequest is the data needed for confirming the
+      mail
+    properties:
+      email:
+        type: string
+        x-go-name: Email
+    required:
+    - email
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  SalutationResponse:
+    description: SalutationResponse List of all salutations
+    properties:
+      salutations:
+        items:
+          type: string
+        type: array
+        x-go-name: Salutations
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   StellarTransactionRequest:
     description: StellarTransactionRequest request-data
     properties:
@@ -54,6 +1147,283 @@ definitions:
         x-go-name: TransactionHash
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UpdateSecurityDataRequest:
+    description: UpdateSecurityDataRequest is the data needed for updateing the data
+    properties:
+      kdf_salt:
+        type: string
+        x-go-name: KDFSalt
+      mnemonic:
+        type: string
+        x-go-name: Mnemonic
+      mnemonic_iv:
+        type: string
+        x-go-name: MnemonicIV
+      mnemonic_master_iv:
+        type: string
+        x-go-name: MnemonicMasterIV
+      mnemonic_master_key:
+        type: string
+        x-go-name: MnemonicMasterKey
+      public_key_0:
+        type: string
+        x-go-name: PublicKey0
+      public_key_188:
+        type: string
+        x-go-name: PublicKey188
+      tfa_code:
+        type: string
+        x-go-name: TfaCode
+      wordlist:
+        type: string
+        x-go-name: Wordlist
+      wordlist_iv:
+        type: string
+        x-go-name: WordlistIV
+      wordlist_master_iv:
+        type: string
+        x-go-name: WordlistMasterIV
+      wordlist_master_key:
+        type: string
+        x-go-name: WordlistMasterKey
+    required:
+    - kdf_salt
+    - mnemonic_master_key
+    - mnemonic_master_iv
+    - wordlist_master_key
+    - wordlist_master_iv
+    - mnemonic
+    - mnemonic_iv
+    - wordlist
+    - wordlist_iv
+    - public_key_0
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UpdateUserDataRequest:
+    description: UpdateUserDataRequest - edit user request
+    properties:
+      additional_name:
+        type: string
+        x-go-name: AdditionalName
+      address:
+        type: string
+        x-go-name: Address
+      bank_account_number:
+        type: string
+        x-go-name: BankAccountNumber
+      bank_number:
+        type: string
+        x-go-name: BankNumber
+      bank_phone_number:
+        type: string
+        x-go-name: BankPhoneNumber
+      birth_country_code:
+        type: string
+        x-go-name: BirthCountryCode
+      birth_day:
+        type: string
+        x-go-name: BirthDay
+      birth_place:
+        type: string
+        x-go-name: BirthPlace
+      city:
+        type: string
+        x-go-name: City
+      company:
+        type: string
+        x-go-name: Company
+      country_code:
+        type: string
+        x-go-name: CountryCode
+      employer_address:
+        type: string
+        x-go-name: EmployerAddress
+      employer_name:
+        type: string
+        x-go-name: EmployerName
+      forename:
+        type: string
+        x-go-name: Forename
+      language_code:
+        type: string
+        x-go-name: LanguageCode
+      lastname:
+        type: string
+        x-go-name: Lastname
+      mobile_nr:
+        type: string
+        x-go-name: MobileNR
+      nationality:
+        type: string
+        x-go-name: Nationality
+      occupation_code08:
+        type: string
+        x-go-name: OccupationCode08
+      occupation_code88:
+        type: string
+        x-go-name: OccupationCode88
+      occupation_name:
+        type: string
+        x-go-name: OccupationName
+      salutation:
+        type: string
+        x-go-name: Salutation
+      state:
+        type: string
+        x-go-name: State
+      tax_id:
+        type: string
+        x-go-name: TaxID
+      tax_id_name:
+        type: string
+        x-go-name: TaxIDName
+      title:
+        type: string
+        x-go-name: Title
+      zip_code:
+        type: string
+        x-go-name: ZipCode
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UploadKycDocumentRequest:
+    description: UploadKycDocumentRequest is the data needed for the kyc document
+    properties:
+      document_side:
+        description: document side, e.g. front, back
+        type: string
+        x-go-name: DocumentSide
+      document_type:
+        description: document type, e.g. passport, id_card
+        type: string
+        x-go-name: DocumentType
+      id_country_code:
+        description: Country code of the id card
+        type: string
+        x-go-name: IDCountryCode
+      id_expiration_date:
+        description: Expiration date of the id card
+        format: date-time
+        type: string
+        x-go-name: IDExpirationDate
+      id_issue_date:
+        description: Issuing date of the id card
+        format: date-time
+        type: string
+        x-go-name: IDIssueDate
+      id_number:
+        description: Number of the id card
+        type: string
+        x-go-name: IDNumber
+    required:
+    - document_type
+    - document_side
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UploadKycDocumentResponse:
+    description: UploadKycDocumentResponse - response
+    properties:
+      document_id:
+        format: int64
+        type: integer
+        x-go-name: DocumentID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UserDetails:
+    description: UserDetails response for the API
+    properties:
+      mail_confirmed:
+        type: boolean
+        x-go-name: MailConfirmed
+      mnemonic_confirmed:
+        type: boolean
+        x-go-name: MnemonicConfirmed
+      tfa_confirmed:
+        type: boolean
+        x-go-name: TfaConfirmed
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UserSecurityDataResponse:
+    description: UserSecurityDataResponse response for API
+    properties:
+      encrypted_mnemonic:
+        type: string
+        x-go-name: EncryptedMnemonic
+      encrypted_mnemonic_master_key:
+        type: string
+        x-go-name: EncryptedMnemonicMasterKey
+      encrypted_wordlist:
+        type: string
+        x-go-name: EncryptedWordlist
+      encrypted_wordlist_master_key:
+        type: string
+        x-go-name: EncryptedWordlistMasterKey
+      kdf_password_salt:
+        type: string
+        x-go-name: KdfPasswordSalt
+      mnemonic_encryption_iv:
+        type: string
+        x-go-name: MnemonicEncryptionIV
+      mnemonic_master_key_encryption_iv:
+        type: string
+        x-go-name: MnemonicMasterKeyEncryptionIV
+      public_key_index0:
+        type: string
+        x-go-name: PublicKeyIndex0
+      wordlist_encryption_iv:
+        type: string
+        x-go-name: WordlistEncryptionIV
+      wordlist_master_key_encryption_iv:
+        type: string
+        x-go-name: WordlistMasterKeyEncryptionIV
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  WalletChangeDataRequest:
+    description: WalletChangeDataRequest request
+    properties:
+      federation_address:
+        type: string
+        x-go-name: FederationAddress
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      wallet_name:
+        type: string
+        x-go-name: WalletName
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  WalletChangeOrderRequest:
+    description: WalletChangeOrderRequest - request
+    properties:
+      order_nr:
+        format: int64
+        type: integer
+        x-go-name: OrderNr
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    - order_nr
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  WalletSetHomescreenRequest:
+    description: WalletSetHomescreenRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      visible:
+        type: boolean
+        x-go-name: Visible
+    required:
+    - id
+    - visible
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   stellarOperations:
     properties:
       application_order:
@@ -79,12 +1449,681 @@ info:
   title: User-API.
   version: 0.0.1
 paths:
+  /portal/user/auth/login_step2:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Is the second step to login
+      operationId: LoginStep2
+      parameters:
+      - in: query
+        name: key
+        type: string
+        x-go-name: Key
+      - in: query
+        name: sep10_transaction
+        type: string
+        x-go-name: SEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: LoginStep2Response
+          schema:
+            $ref: '#/definitions/LoginStep2Response'
+      tags:
+      - auth
+  /portal/user/auth/lost_password_tfa:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Called from the API when the user initiates the lost password TFA
+        function
+      operationId: LostPasswordTfa
+      parameters:
+      - in: query
+        name: tfa_code
+        required: true
+        type: string
+        x-go-name: TfaCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: LostPasswordTfaResponse
+          schema:
+            $ref: '#/definitions/LostPasswordTfaResponse'
+      tags:
+      - lost
+  /portal/user/auth/need_2fa_reset_pwd:
+    get:
+      description: Returns the flag
+      operationId: Need2FAResetPassword
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Need2FAResetPasswordResponse
+          schema:
+            $ref: '#/definitions/Need2FAResetPasswordResponse'
+      tags:
+      - lost
+  /portal/user/auth/update_security_data:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Will update the security data in the DB
+      operationId: UpdateSecurityData
+      parameters:
+      - in: query
+        name: kdf_salt
+        required: true
+        type: string
+        x-go-name: KDFSalt
+      - in: query
+        name: mnemonic_master_key
+        required: true
+        type: string
+        x-go-name: MnemonicMasterKey
+      - in: query
+        name: mnemonic_master_iv
+        required: true
+        type: string
+        x-go-name: MnemonicMasterIV
+      - in: query
+        name: wordlist_master_key
+        required: true
+        type: string
+        x-go-name: WordlistMasterKey
+      - in: query
+        name: wordlist_master_iv
+        required: true
+        type: string
+        x-go-name: WordlistMasterIV
+      - in: query
+        name: mnemonic
+        required: true
+        type: string
+        x-go-name: Mnemonic
+      - in: query
+        name: mnemonic_iv
+        required: true
+        type: string
+        x-go-name: MnemonicIV
+      - in: query
+        name: wordlist
+        required: true
+        type: string
+        x-go-name: Wordlist
+      - in: query
+        name: wordlist_iv
+        required: true
+        type: string
+        x-go-name: WordlistIV
+      - in: query
+        name: public_key_0
+        required: true
+        type: string
+        x-go-name: PublicKey0
+      - in: query
+        name: public_key_188
+        type: string
+        x-go-name: PublicKey188
+      - in: query
+        name: tfa_code
+        type: string
+        x-go-name: TfaCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - lost
+  /portal/user/auth/user_auth_data:
+    get:
+      description: Returns the security data for the authenticated user
+      operationId: UserSecurityData
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserSecurityDataResponse
+          schema:
+            $ref: '#/definitions/UserSecurityDataResponse'
+      tags:
+      - general
+  /portal/user/auth2/lost_password_update:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Updates the security data for the user
+      operationId: LostPasswordUpdate
+      parameters:
+      - in: query
+        name: kdf_salt
+        required: true
+        type: string
+        x-go-name: KDFSalt
+      - in: query
+        name: mnemonic_master_key
+        required: true
+        type: string
+        x-go-name: MnemonicMasterKey
+      - in: query
+        name: mnemonic_master_iv
+        required: true
+        type: string
+        x-go-name: MnemonicMasterIV
+      - in: query
+        name: encrypted_mnemonic
+        required: true
+        type: string
+        x-go-name: EncryptedMnemonic
+      - in: query
+        name: encryption_mnemonic_iv
+        required: true
+        type: string
+        x-go-name: EncryptedMnemonicIV
+      - in: query
+        name: wordlist_master_key
+        required: true
+        type: string
+        x-go-name: WordlistMasterKey
+      - in: query
+        name: wordlist_master_iv
+        required: true
+        type: string
+        x-go-name: WordlistMasterIV
+      - in: query
+        name: encrypted_wordlist
+        required: true
+        type: string
+        x-go-name: EncryptedWordlist
+      - in: query
+        name: encryption_wordlist_iv
+        required: true
+        type: string
+        x-go-name: EncryptionWordlistIV
+      - in: query
+        name: public_key_0
+        required: true
+        type: string
+        x-go-name: PublicKey0
+      - in: query
+        name: public_key_188
+        type: string
+        x-go-name: PublicKey188
+      - in: query
+        name: sep10_transaction
+        type: string
+        x-go-name: SEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - lost
+  /portal/user/confirm_token:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Confirms the mail token
+      operationId: ConfirmToken
+      parameters:
+      - description: Mail token to confirm
+        in: query
+        name: token
+        required: true
+        type: string
+        x-go-name: Token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ConfirmTokenResponse
+          schema:
+            $ref: '#/definitions/ConfirmTokenResponse'
+      tags:
+      - general
+  /portal/user/country_list:
+    get:
+      description: List all countries for the current language
+      operationId: CountryList
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- List of all countries'
+          schema:
+            $ref: '#/definitions/CountryResponse'
+      tags:
+      - general
+  /portal/user/dashboard/add_contact:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Adds a new contact to the user
+      operationId: AddContact
+      parameters:
+      - description: |-
+          Stellar account public key - identifies the account
+          required: required if stellar address is not specified
+        in: query
+        name: public_key
+        type: string
+        x-go-name: PublicKey
+      - description: |-
+          Stellar account federation address - identifies the account
+          required: required if stellar public key is not specified
+        in: query
+        name: stellar_address
+        type: string
+        x-go-name: StellarAddress
+      - description: Contact name
+        in: query
+        name: contact_name
+        required: true
+        type: string
+        x-go-name: ContactName
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: AddContactResponse
+          schema:
+            items:
+              $ref: '#/definitions/AddContactResponse'
+            type: array
+      tags:
+      - contact
+  /portal/user/dashboard/add_payment_template:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Adds a new template to the wallet
+      operationId: AddPaymentTemplate
+      parameters:
+      - format: int64
+        in: query
+        name: wallet_id
+        required: true
+        type: integer
+        x-go-name: WalletID
+      - description: 'required: if recipient public key is not specified'
+        in: query
+        name: recipient_stellar_address
+        type: string
+        x-go-name: RecipientStellarAddress
+      - description: 'required: if recipient stellar address is not specified'
+        in: query
+        name: recipient_pk
+        type: string
+        x-go-name: RecipientPK
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      - description: 'required: asset code is not XLM'
+        in: query
+        name: issuer_pk
+        type: string
+        x-go-name: IssuerPK
+      - format: int64
+        in: query
+        name: amount
+        required: true
+        type: integer
+        x-go-name: Amount
+      - in: query
+        name: memo_type
+        required: true
+        type: string
+        x-go-name: MemoType
+      - in: query
+        name: memo
+        type: string
+        x-go-name: Memo
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: AddTemplateResponse
+          schema:
+            $ref: '#/definitions/AddTemplateResponse'
+      tags:
+      - wallet
+  /portal/user/dashboard/add_wallet:
+    get:
+      consumes:
+      - multipart/form-data
+      description: AddWallet adds a new wallet to the user
+      operationId: AddWallet
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - in: query
+        name: wallet_name
+        required: true
+        type: string
+        x-go-name: WalletName
+      - in: query
+        name: federation_address
+        type: string
+        x-go-name: FederationAddress
+      - in: query
+        name: show_on_homescreen
+        type: boolean
+        x-go-name: ShowOnHomescreen
+      - in: query
+        name: wallet_type
+        type: string
+        x-go-name: WalletType
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: AddWalletResponse
+          schema:
+            $ref: '#/definitions/AddWalletResponse'
+      tags:
+      - wallet
+  /portal/user/dashboard/change_password:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Called from the API when the user initiates the reset 2fa function
+      operationId: LostTfa
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+        x-go-name: Email
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - lost
+  /portal/user/dashboard/change_wallet_data:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Changes the wallet data
+      operationId: WalletChangeData
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: wallet_name
+        type: string
+        x-go-name: WalletName
+      - in: query
+        name: federation_address
+        type: string
+        x-go-name: FederationAddress
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - wallet
+  /portal/user/dashboard/change_wallet_order:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Changes the wallet orders
+      operationId: WalletChangeOrder
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - format: int64
+        in: query
+        name: order_nr
+        required: true
+        type: integer
+        x-go-name: OrderNr
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - wallet
+  /portal/user/dashboard/confirm_mnemonic:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Sets the flag in the database
+      operationId: ConfirmMnemonic
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Confirm2FAResponse
+          schema:
+            $ref: '#/definitions/Confirm2FAResponse'
+      tags:
+      - register
+  /portal/user/dashboard/confirm_new_2fa_secret:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Checks and confirms the given 2fa code
+      operationId: Confirm2FA
+      parameters:
+      - in: query
+        name: tfa_code
+        required: true
+        type: string
+        x-go-name: TfaCode
+      - in: query
+        name: sep10_transaction
+        type: string
+        x-go-name: SEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Confirm2FAResponse
+          schema:
+            $ref: '#/definitions/Confirm2FAResponse'
+      tags:
+      - register
+  /portal/user/dashboard/confirm_tfa_registration:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Checks and confirms the given 2fa code
+      operationId: Confirm2FA
+      parameters:
+      - in: query
+        name: tfa_code
+        required: true
+        type: string
+        x-go-name: TfaCode
+      - in: query
+        name: sep10_transaction
+        type: string
+        x-go-name: SEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Confirm2FAResponse
+          schema:
+            $ref: '#/definitions/Confirm2FAResponse'
+      tags:
+      - register
+  /portal/user/dashboard/contact_list:
+    get:
+      description: Lists all contacts of a user
+      operationId: ContactList
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- Lists all contacts of a user'
+          schema:
+            items:
+              $ref: '#/definitions/Contact'
+            type: array
+      tags:
+      - contact
+  /portal/user/dashboard/edit_contact:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Edits the user contact
+      operationId: EditContact
+      parameters:
+      - description: Contact id
+        format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - description: |-
+          Stellar account public key - identifies the account
+          required: required if stellar address is not specified
+        in: query
+        name: public_key
+        type: string
+        x-go-name: PublicKey
+      - description: |-
+          Stellar account federation address - identifies the account
+          required: required if stellar public key is not specified
+        in: query
+        name: stellar_address
+        type: string
+        x-go-name: StellarAddress
+      - description: Contact name
+        in: query
+        name: contact_name
+        required: true
+        type: string
+        x-go-name: ContactName
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- Lists all contacts of a user'
+          schema:
+            items:
+              $ref: '#/definitions/Contact'
+            type: array
+      tags:
+      - contact
+  /portal/user/dashboard/get_known_currencies:
+    get:
+      description: Returns all known currencies
+      operationId: GetKnownCurrencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownCurrenciesResponse
+          schema:
+            $ref: '#/definitions/GetKnownCurrenciesResponse'
+      tags:
+      - wallet
+  /portal/user/dashboard/get_known_currency:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns currency with specified id
+      operationId: GetKnownCurrency
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownCurrenciesResponse
+          schema:
+            $ref: '#/definitions/GetKnownCurrenciesResponse'
+      tags:
+      - wallet
+  /portal/user/dashboard/get_known_inflation_destination:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns destination with specified id
+      operationId: GetKnownInflationDestination
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownInflationDestinationsResponse
+          schema:
+            $ref: '#/definitions/GetKnownInflationDestinationsResponse'
+      tags:
+      - wallet
+  /portal/user/dashboard/get_known_inflation_destinations:
+    get:
+      description: Returns all known destinations
+      operationId: GetKnownInflationDestinations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownInflationDestinationsResponse
+          schema:
+            $ref: '#/definitions/GetKnownInflationDestinationsResponse'
+      tags:
+      - wallet
+  /portal/user/dashboard/get_payment_templates:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns all templates for a wallet
+      operationId: GetPaymentTemplates
+      parameters:
+      - format: int64
+        in: query
+        name: wallet_id
+        required: true
+        type: integer
+        x-go-name: WalletID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetPaymentTemplateResponse
+          schema:
+            items:
+              $ref: '#/definitions/GetPaymentTemplateResponse'
+            type: array
+      tags:
+      - wallet
   /portal/user/dashboard/get_stellar_transactions:
     get:
       consumes:
       - multipart/form-data
       description: Lists all transactions including all operations for one account
-        xx
       operationId: GetStellarTransactions
       parameters:
       - description: Filter for stellar account
@@ -116,6 +2155,821 @@ paths:
             type: array
       tags:
       - stellar
+  /portal/user/dashboard/get_user_data:
+    get:
+      description: Returns the authenticated user's data
+      operationId: GetUserData
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetUserDataResponse
+          schema:
+            $ref: '#/definitions/GetUserDataResponse'
+      tags:
+      - userdata
+  /portal/user/dashboard/get_user_message:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the requested message
+      operationId: GetUserMessage
+      parameters:
+      - description: Filter by message id
+        format: int64
+        in: query
+        name: message_id
+        required: true
+        type: integer
+        x-go-name: MessageID
+      - description: Flag to filter the archived messages
+        in: query
+        name: from_archive
+        type: boolean
+        x-go-name: FromArchive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: MessageItem
+          schema:
+            $ref: '#/definitions/MessageItem'
+      tags:
+      - general
+  /portal/user/dashboard/get_user_messages_list:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns a list of all messages for the user
+      operationId: GetUserMessageList
+      parameters:
+      - description: Flag to filter the archived messages
+        in: query
+        name: from_archive
+        type: boolean
+        x-go-name: FromArchive
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetUserMessageListResponse
+          schema:
+            $ref: '#/definitions/GetUserMessageListResponse'
+      tags:
+      - general
+  /portal/user/dashboard/get_user_wallets:
+    get:
+      description: Returns all wallets for one user
+      operationId: GetUserWallets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetUserWalletsResponse
+          schema:
+            items:
+              $ref: '#/definitions/GetUserWalletsResponse'
+            type: array
+      tags:
+      - wallet
+  /portal/user/dashboard/new_2fa_secret:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Called for updating the tfa data
+      operationId: NewTfaUpdate
+      parameters:
+      - in: query
+        name: public_key_188
+        type: string
+        x-go-name: PublicKey188
+      - in: query
+        name: sep10_transaction
+        type: string
+        x-go-name: SEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: NewTfaResponse
+          schema:
+            $ref: '#/definitions/NewTfaResponse'
+      tags:
+      - lost
+  /portal/user/dashboard/remove_contact:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Deletes the user contact
+      operationId: RemoveContact
+      parameters:
+      - description: Contact id
+        format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- Lists all contacts of a user'
+          schema:
+            items:
+              $ref: '#/definitions/Contact'
+            type: array
+      tags:
+      - contact
+  /portal/user/dashboard/remove_payment_template:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Removes a template from the wallet
+      operationId: RemovePaymentTemplate
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - wallet
+  /portal/user/dashboard/remove_wallet:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Removes a wallet from the user
+      operationId: RemoveWallet
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - wallet
+  /portal/user/dashboard/remove_wallet_federation_address:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Removes federation name from the wallet
+      operationId: RemoveWalletFederationAddress
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - wallet
+  /portal/user/dashboard/subscribe_push_token:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Adds a new token to the user
+      operationId: SubscribeForPushNotifications
+      parameters:
+      - in: query
+        name: push_token
+        required: true
+        type: string
+        x-go-name: PushToken
+      - description: Device type, e.g. apple, google
+        in: query
+        name: wallet_name
+        required: true
+        type: string
+        x-go-name: DeviceType
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - pushtoken
+  /portal/user/dashboard/tfa_secret:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the tfa secrete for the user
+      operationId: GetTfaSecret
+      parameters:
+      - description: users public key of index 188
+        in: query
+        name: public_key_188
+        type: string
+        x-go-name: PublicKey188
+      - description: SEP 10 transaction
+        in: query
+        name: sep10_transaction
+        type: string
+        x-go-name: SEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetTfaSecretResponse
+          schema:
+            $ref: '#/definitions/GetTfaSecretResponse'
+      tags:
+      - general
+  /portal/user/dashboard/unsubscribe_previous_user_push_token:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Removes the specified token from the user
+      operationId: UnsubscribePreviousUserFromPushNotifications
+      parameters:
+      - in: query
+        name: user_email
+        required: true
+        type: string
+        x-go-name: Email
+      - in: query
+        name: push_token
+        required: true
+        type: string
+        x-go-name: PushToken
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - pushtoken
+  /portal/user/dashboard/unsubscribe_push_token:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Removes the specified token from the user
+      operationId: UnsubscribeFromPushNotifications
+      parameters:
+      - in: query
+        name: push_token
+        required: true
+        type: string
+        x-go-name: PushToken
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - pushtoken
+  /portal/user/dashboard/update_push_token:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Updates the push token
+      operationId: UpdatePushToken
+      parameters:
+      - in: query
+        name: new_push_token
+        required: true
+        type: string
+        x-go-name: NewPushToken
+      - in: query
+        name: old_push_token
+        required: true
+        type: string
+        x-go-name: OldPushToken
+      - description: Device type, e.g. apple, google
+        in: query
+        name: wallet_name
+        required: true
+        type: string
+        x-go-name: DeviceType
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - pushtoken
+  /portal/user/dashboard/update_user_data:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Updates the authenticated user's data
+      operationId: UpdateUserData
+      parameters:
+      - in: query
+        name: forename
+        type: string
+        x-go-name: Forename
+      - in: query
+        name: lastname
+        type: string
+        x-go-name: Lastname
+      - in: query
+        name: company
+        type: string
+        x-go-name: Company
+      - in: query
+        name: salutation
+        type: string
+        x-go-name: Salutation
+      - in: query
+        name: title
+        type: string
+        x-go-name: Title
+      - in: query
+        name: address
+        type: string
+        x-go-name: Address
+      - in: query
+        name: zip_code
+        type: string
+        x-go-name: ZipCode
+      - in: query
+        name: city
+        type: string
+        x-go-name: City
+      - in: query
+        name: state
+        type: string
+        x-go-name: State
+      - in: query
+        name: country_code
+        type: string
+        x-go-name: CountryCode
+      - in: query
+        name: nationality
+        type: string
+        x-go-name: Nationality
+      - in: query
+        name: mobile_nr
+        type: string
+        x-go-name: MobileNR
+      - in: query
+        name: birth_day
+        type: string
+        x-go-name: BirthDay
+      - in: query
+        name: birth_place
+        type: string
+        x-go-name: BirthPlace
+      - in: query
+        name: additional_name
+        type: string
+        x-go-name: AdditionalName
+      - in: query
+        name: birth_country_code
+        type: string
+        x-go-name: BirthCountryCode
+      - in: query
+        name: bank_account_number
+        type: string
+        x-go-name: BankAccountNumber
+      - in: query
+        name: bank_number
+        type: string
+        x-go-name: BankNumber
+      - in: query
+        name: bank_phone_number
+        type: string
+        x-go-name: BankPhoneNumber
+      - in: query
+        name: tax_id
+        type: string
+        x-go-name: TaxID
+      - in: query
+        name: tax_id_name
+        type: string
+        x-go-name: TaxIDName
+      - in: query
+        name: occupation_name
+        type: string
+        x-go-name: OccupationName
+      - in: query
+        name: occupation_code08
+        type: string
+        x-go-name: OccupationCode08
+      - in: query
+        name: occupation_code88
+        type: string
+        x-go-name: OccupationCode88
+      - in: query
+        name: employer_name
+        type: string
+        x-go-name: EmployerName
+      - in: query
+        name: employer_address
+        type: string
+        x-go-name: EmployerAddress
+      - in: query
+        name: language_code
+        type: string
+        x-go-name: LanguageCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - userdata
+  /portal/user/dashboard/upload_kyc_document:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Stores the document on the server
+      operationId: UploadKycDocument
+      parameters:
+      - description: document type, e.g. passport, id_card
+        in: query
+        name: document_type
+        required: true
+        type: string
+        x-go-name: DocumentType
+      - description: document side, e.g. front, back
+        in: query
+        name: document_side
+        required: true
+        type: string
+        x-go-name: DocumentSide
+      - description: Country code of the id card
+        in: query
+        name: id_country_code
+        type: string
+        x-go-name: IDCountryCode
+      - description: Issuing date of the id card
+        format: date-time
+        in: query
+        name: id_issue_date
+        type: string
+        x-go-name: IDIssueDate
+      - description: Expiration date of the id card
+        format: date-time
+        in: query
+        name: id_expiration_date
+        type: string
+        x-go-name: IDExpirationDate
+      - description: Number of the id card
+        in: query
+        name: id_number
+        type: string
+        x-go-name: IDNumber
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UploadKycDocumentResponse
+          schema:
+            $ref: '#/definitions/UploadKycDocumentResponse'
+      tags:
+      - kyc
+  /portal/user/dashboard/user_auth_data:
+    get:
+      description: Returns the security data for the authenticated user
+      operationId: UserSecurityData
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserSecurityDataResponse
+          schema:
+            $ref: '#/definitions/UserSecurityDataResponse'
+      tags:
+      - general
+  /portal/user/dashboard/wallet_set_homescreen:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Sets the wallet visible flag
+      operationId: WalletSetHomescreen
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: visible
+        required: true
+        type: boolean
+        x-go-name: Visible
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - wallet
+  /portal/user/get_user_details:
+    get:
+      description: Returns the detail data for the user
+      operationId: GetUserRegistrationDetails
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- user details'
+          schema:
+            $ref: '#/definitions/UserDetails'
+      tags:
+      - general
+  /portal/user/language_list:
+    get:
+      description: Lists all languages
+      operationId: LanguageList
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- List of all languages'
+          schema:
+            $ref: '#/definitions/LanguagesResponse'
+      tags:
+      - general
+  /portal/user/login_step1:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Is the first step to login
+      operationId: LoginStep1
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+        x-go-name: Email
+      - in: query
+        name: tfa_code
+        type: string
+        x-go-name: TfaCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: LoginStep1Response
+          schema:
+            $ref: '#/definitions/LoginStep1Response'
+      tags:
+      - auth
+  /portal/user/lost_password:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Called from the API when the user initiates the lost password function
+      operationId: LostPassword
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+        x-go-name: Email
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - lost
+  /portal/user/occupation_list:
+    get:
+      consumes:
+      - multipart/form-data
+      description: List of occupations filtered by name
+      operationId: OccupationList
+      parameters:
+      - description: Occupation name
+        in: query
+        name: Name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- List of all occupations'
+          schema:
+            $ref: '#/definitions/OccupationResponse'
+      tags:
+      - general
+  /portal/user/register_user:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Registers and creates the user in the db
+      operationId: RegisterUser
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+        x-go-name: Email
+      - in: query
+        name: kdf_salt
+        required: true
+        type: string
+        x-go-name: KDFSalt
+      - in: query
+        name: mnemonic_master_key
+        required: true
+        type: string
+        x-go-name: MnemonicMasterKey
+      - in: query
+        name: mnemonic_master_iv
+        required: true
+        type: string
+        x-go-name: MnemonicMasterIV
+      - in: query
+        name: wordlist_master_key
+        required: true
+        type: string
+        x-go-name: WordlistMasterKey
+      - in: query
+        name: wordlist_master_iv
+        required: true
+        type: string
+        x-go-name: WordlistMasterIV
+      - in: query
+        name: mnemonic
+        required: true
+        type: string
+        x-go-name: Mnemonic
+      - in: query
+        name: mnemonic_iv
+        required: true
+        type: string
+        x-go-name: MnemonicIV
+      - in: query
+        name: wordlist
+        required: true
+        type: string
+        x-go-name: Wordlist
+      - in: query
+        name: wordlist_iv
+        required: true
+        type: string
+        x-go-name: WordlistIV
+      - in: query
+        name: public_key_0
+        required: true
+        type: string
+        x-go-name: PublicKey0
+      - in: query
+        name: public_key_188
+        type: string
+        x-go-name: PublicKey188
+      - in: query
+        name: salutation
+        type: string
+        x-go-name: Salutation
+      - in: query
+        name: title
+        type: string
+        x-go-name: Title
+      - in: query
+        name: forename
+        type: string
+        x-go-name: Forename
+      - in: query
+        name: lastname
+        type: string
+        x-go-name: Lastname
+      - in: query
+        name: company
+        type: string
+        x-go-name: Company
+      - in: query
+        name: address
+        type: string
+        x-go-name: Address
+      - in: query
+        name: zip_code
+        type: string
+        x-go-name: ZipCode
+      - in: query
+        name: city
+        type: string
+        x-go-name: City
+      - in: query
+        name: state
+        type: string
+        x-go-name: State
+      - in: query
+        name: country_code
+        type: string
+        x-go-name: CountryCode
+      - in: query
+        name: nationality
+        type: string
+        x-go-name: Nationality
+      - in: query
+        name: mobile_nr
+        type: string
+        x-go-name: MobileNr
+      - in: query
+        name: birth_day
+        type: string
+        x-go-name: BirthDay
+      - in: query
+        name: birth_place
+        type: string
+        x-go-name: BirthPlace
+      - in: query
+        name: additional_name
+        type: string
+        x-go-name: AdditionalName
+      - in: query
+        name: birth_country_code
+        type: string
+        x-go-name: BirthCountryCode
+      - in: query
+        name: bank_account_number
+        type: string
+        x-go-name: BankAccountNumber
+      - in: query
+        name: bank_number
+        type: string
+        x-go-name: BankNumber
+      - in: query
+        name: bank_phone_number
+        type: string
+        x-go-name: BankPhoneNumber
+      - in: query
+        name: tax_id
+        type: string
+        x-go-name: TaxID
+      - in: query
+        name: tax_id_name
+        type: string
+        x-go-name: TaxIDName
+      - in: query
+        name: occupation_name
+        type: string
+        x-go-name: OccupationName
+      - in: query
+        name: occupation_code08
+        type: string
+        x-go-name: OccupationCode08
+      - in: query
+        name: occupation_code88
+        type: string
+        x-go-name: OccupationCode88
+      - in: query
+        name: employer_name
+        type: string
+        x-go-name: EmployerName
+      - in: query
+        name: employer_address
+        type: string
+        x-go-name: EmployerAddress
+      - in: query
+        name: language_code
+        type: string
+        x-go-name: LanguageCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: RegisterUserResponse
+          schema:
+            $ref: '#/definitions/RegisterUserResponse'
+      tags:
+      - register
+  /portal/user/resend_confirmation_mail:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Resends the confirmation mail
+      operationId: ResendConfirmMail
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+        x-go-name: Email
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - register
+  /portal/user/salutation_list:
+    get:
+      description: Lists all salutations for the current language
+      operationId: SalutationList
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '- List of all salutations'
+          schema:
+            $ref: '#/definitions/SalutationResponse'
+      tags:
+      - general
 schemes:
 - https
 securityDefinitions:

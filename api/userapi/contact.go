@@ -11,7 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//Contact - information about the contact
+// Contact - user contact details
+// swagger:model
 type Contact struct {
 	ID             int64  `json:"id"`
 	ContactName    string `json:"contact_name"`
@@ -19,7 +20,16 @@ type Contact struct {
 	PublicKey      string `json:"public_key"`
 }
 
-//ContactList returns the contacts of a user
+// ContactList returns the contacts of a user
+// swagger:route GET /portal/user/dashboard/contact_list contact ContactList
+//
+// Lists all contacts of a user
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []Contact - Lists all contacts of a user
 func ContactList(uc *mw.IcopContext, c *gin.Context) {
 	userID := mw.GetAuthUser(c).UserID
 	req := &pb.IDRequest{
@@ -45,20 +55,40 @@ func ContactList(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-//AddContactRequest request
+//AddContactRequest request-data
+//swagger:parameters AddContactRequest AddContact
 type AddContactRequest struct {
-	PublicKey      string `form:"public_key" json:"public_key"  validate:"omitempty,base64,len=56"`
+	// Stellar account public key - identifies the account
+	// required: required if stellar address is not specified
+	PublicKey string `form:"public_key" json:"public_key"  validate:"omitempty,base64,len=56"`
+	// Stellar account federation address - identifies the account
+	// required: required if stellar public key is not specified
 	StellarAddress string `form:"stellar_address" json:"stellar_address" validate:"max=256"`
-	ContactName    string `form:"contact_name" json:"contact_name" validate:"required,max=256"`
+	// Contact name
+	// required:true
+	ContactName string `form:"contact_name" json:"contact_name" validate:"required,max=256"`
 }
 
 //AddContactResponse - list of contacts and newly added contact id
+// swagger:model
 type AddContactResponse struct {
 	ID       int64     `json:"id"`
 	Contacts []Contact `json:"contacts"`
 }
 
-//AddContact - adds a contact to the user
+//AddContact - adds a new contact to the user
+// swagger:route GET /portal/user/dashboard/add_contact contact AddContact
+//
+// Adds a new contact to the user
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []AddContactResponse
 func AddContact(uc *mw.IcopContext, c *gin.Context) {
 	var r AddContactRequest
 	if err := c.Bind(&r); err != nil {
@@ -113,15 +143,36 @@ func AddContact(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-//EditContactRequest request
+//EditContactRequest request-data
+//swagger:parameters EditContactRequest EditContact
 type EditContactRequest struct {
-	ID             int64  `form:"id" json:"id"`
-	PublicKey      string `form:"public_key" json:"public_key"  validate:"omitempty,base64,len=56"`
+	// Contact id
+	// required : true
+	ID int64 `form:"id" json:"id"`
+	// Stellar account public key - identifies the account
+	// required: required if stellar address is not specified
+	PublicKey string `form:"public_key" json:"public_key"  validate:"omitempty,base64,len=56"`
+	// Stellar account federation address - identifies the account
+	// required: required if stellar public key is not specified
 	StellarAddress string `form:"stellar_address" json:"stellar_address" validate:"max=256"`
-	ContactName    string `form:"contact_name" json:"contact_name" validate:"required,max=256"`
+	// Contact name
+	// required:true
+	ContactName string `form:"contact_name" json:"contact_name" validate:"required,max=256"`
 }
 
 //EditContact - edits the user contact
+// swagger:route GET /portal/user/dashboard/edit_contact contact EditContact
+//
+// Edits the user contact
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []Contact - Lists all contacts of a user
 func EditContact(uc *mw.IcopContext, c *gin.Context) {
 	var r EditContactRequest
 	if err := c.Bind(&r); err != nil {
@@ -175,12 +226,27 @@ func EditContact(uc *mw.IcopContext, c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-//RemoveContactRequest - contact id
+//RemoveContactRequest request-data
+//swagger:parameters RemoveContactRequest RemoveContact
 type RemoveContactRequest struct {
+	// Contact id
+	// required : true
 	ID int64 `form:"id" json:"id"`
 }
 
-//RemoveContact - removes the contact
+//RemoveContact - deletes the user contact
+// swagger:route GET /portal/user/dashboard/remove_contact contact RemoveContact
+//
+// Deletes the user contact
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []Contact - Lists all contacts of a user
 func RemoveContact(uc *mw.IcopContext, c *gin.Context) {
 	var r RemoveContactRequest
 	if err := c.Bind(&r); err != nil {

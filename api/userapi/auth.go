@@ -41,12 +41,15 @@ func assertAvailablePRNG() {
 }
 
 //LoginStep1Request is the data needed for the first step of the login
+//swagger:parameters LoginStep1Request LoginStep1
 type LoginStep1Request struct {
+	//required : true
 	Email   string `form:"email" json:"email" validate:"required,icop_email"`
 	TfaCode string `form:"tfa_code" json:"tfa_code"`
 }
 
 //LoginStep1Response response for API
+// swagger:model
 type LoginStep1Response struct {
 	KdfPasswordSalt               string `json:"kdf_password_salt"`
 	EncryptedMnemonicMasterKey    string `json:"encrypted_mnemonic_master_key"`
@@ -63,6 +66,18 @@ type LoginStep1Response struct {
 }
 
 //LoginStep1 is the first step of the login
+// swagger:route GET /portal/user/login_step1 auth LoginStep1
+//
+// Is the first step to login
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: LoginStep1Response
 func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 	var l LoginStep1Request
 	if err := c.Bind(&l); err != nil {
@@ -160,14 +175,14 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //LoginStep2Request is the data needed for the second step of the login
+//swagger:parameters LoginStep2Request LoginStep2
 type LoginStep2Request struct {
-	/*Key string `form:"key" json:"key" validate:"required"`
-	PublicKey0 string `form:"public_key_0" json:"public_key_0" validate:"required"`*/
 	Key              string `form:"key" json:"key"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //LoginStep2Response to the api
+// swagger:model
 type LoginStep2Response struct {
 	PaymentState      string `json:"payment_state"`
 	TfaSecret         string `json:"tfa_secret"`
@@ -177,7 +192,19 @@ type LoginStep2Response struct {
 	MnemonicConfirmed bool   `json:"mnemonic_confirmed"`
 }
 
-//LoginStep2 is the first step of the login
+//LoginStep2 is the second step of the login
+// swagger:route GET /portal/user/auth/login_step2 auth LoginStep2
+//
+// Is the second step to login
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: LoginStep2Response
 func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 	var l LoginStep2Request
 	if err := c.Bind(&l); err != nil {

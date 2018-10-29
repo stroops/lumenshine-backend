@@ -22,21 +22,44 @@ var (
 )
 
 //UploadKycDocumentRequest is the data needed for the kyc document
+//swagger:parameters UploadKycDocumentRequest UploadKycDocument
 type UploadKycDocumentRequest struct {
-	DocumentType     string    `form:"document_type" json:"document_type" validate:"required"`
-	DocumentSide     string    `form:"document_side" json:"document_side" validate:"required"`
-	IDCountryCode    string    `form:"id_country_code" json:"id_country_code" validate:"max=20"`
-	IDIssueDate      time.Time `form:"id_issue_date" json:"id_issue_date" time_format:"2006-01-02"`
+	//document type, e.g. passport, id_card
+	//required : true
+	DocumentType string `form:"document_type" json:"document_type" validate:"required"`
+	//document side, e.g. front, back
+	//required: true
+	DocumentSide string `form:"document_side" json:"document_side" validate:"required"`
+	//Country code of the id card
+	IDCountryCode string `form:"id_country_code" json:"id_country_code" validate:"max=20"`
+	//Issuing date of the id card
+	IDIssueDate time.Time `form:"id_issue_date" json:"id_issue_date" time_format:"2006-01-02"`
+	//Expiration date of the id card
 	IDExpirationDate time.Time `form:"id_expiration_date" json:"id_expiration_date" time_format:"2006-01-02"`
-	IDNumber         string    `form:"id_number" json:"id_number" validate:"max=100"`
+	//Number of the id card
+	IDNumber string `form:"id_number" json:"id_number" validate:"max=100"`
 }
 
 //UploadKycDocumentResponse - response
+// swagger:model
 type UploadKycDocumentResponse struct {
 	DocumentID int64 `form:"document_id" json:"document_id"`
 }
 
-//UploadKycDocument - stores the document on the server
+//UploadKycDocument - stores the document on the server;
+//the file needs to be uploaded in the field called 'upload_file', along with the other request parameters
+// swagger:route GET /portal/user/dashboard/upload_kyc_document kyc UploadKycDocument
+//
+// Stores the document on the server; the file needs to be uploaded in the field called 'upload_file', along with the other request parameters
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: UploadKycDocumentResponse
 func UploadKycDocument(uc *mw.IcopContext, c *gin.Context) {
 	var rr UploadKycDocumentRequest
 	if err := c.Bind(&rr); err != nil {

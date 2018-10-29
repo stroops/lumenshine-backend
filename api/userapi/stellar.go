@@ -49,7 +49,7 @@ type StellarTransactionResponse struct {
 // GetStellarTransactions returns all transactions including all operations for one account
 // swagger:route GET /portal/user/dashboard/get_stellar_transactions stellar GetStellarTransactions
 //
-// Lists all transactions including all operations for one account xx
+// Lists all transactions including all operations for one account
 //
 //     Consumes:
 //     - multipart/form-data

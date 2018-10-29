@@ -12,6 +12,7 @@ import (
 )
 
 //GetUserDataResponse - user data response
+// swagger:model
 type GetUserDataResponse struct {
 	Email             string     `form:"email" json:"email"`
 	Forename          string     `form:"forename" json:"forename"`
@@ -45,6 +46,15 @@ type GetUserDataResponse struct {
 }
 
 //GetUserData - returns the authenticated user's data
+// swagger:route GET /portal/user/dashboard/get_user_data userdata GetUserData
+//
+// Returns the authenticated user's data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetUserDataResponse
 func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 	user := mw.GetAuthUser(c)
 	u, err := dbClient.GetUserProfile(c, &pb.IDRequest{
@@ -108,6 +118,7 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //UpdateUserDataRequest - edit user request
+//swagger:parameters UpdateUserDataRequest UpdateUserData
 type UpdateUserDataRequest struct {
 	Forename          string  `form:"forename" json:"forename" validate:"max=64"`
 	Lastname          string  `form:"lastname" json:"lastname" validate:"max=64"`
@@ -139,6 +150,18 @@ type UpdateUserDataRequest struct {
 }
 
 //UpdateUserData - updates the authenticated user's data
+// swagger:route GET /portal/user/dashboard/update_user_data userdata UpdateUserData
+//
+// Updates the authenticated user's data
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 	rr := new(UpdateUserDataRequest)
 	if err := c.Bind(rr); err != nil {

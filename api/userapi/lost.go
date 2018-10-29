@@ -17,11 +17,25 @@ import (
 )
 
 //LostPasswordRequest is the data needed for the first step of the login
+//swagger:parameters LostPasswordRequest LostPassword
 type LostPasswordRequest struct {
+	//required: true
 	Email string `form:"email" json:"email" validate:"required,icop_email"`
 }
 
 //LostPassword called from the API when the user initiates the lost password function
+// swagger:route GET /portal/user/lost_password lost LostPassword
+//
+// Called from the API when the user initiates the lost password function
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 	var l LostPasswordRequest
 	if err := c.Bind(&l); err != nil {
@@ -103,11 +117,21 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //Need2FAResetPasswordResponse returned from the API
+// swagger:model
 type Need2FAResetPasswordResponse struct {
 	Need2FAResetPassword bool `json:"need2fa_reset_pwd"`
 }
 
 //Need2FAResetPassword - returns the flag
+// swagger:route GET /portal/user/auth/need_2fa_reset_pwd lost Need2FAResetPassword
+//
+// Returns the flag
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: Need2FAResetPasswordResponse
 func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
 	userID := mw.GetAuthUser(c).UserID
 
@@ -133,16 +157,31 @@ func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
 
 //LostPasswordTfaRequest is the data needed for the first step of the login
 //The user clicked the confirm link and thus called the /ico/confirm_token function, which sets the simple-auth-token
+//swagger:parameters LostPasswordTfaRequest LostPasswordTfa
 type LostPasswordTfaRequest struct {
+	//required: true
 	TfaCode string `form:"tfa_code" json:"tfa_code" validate:"required"`
 }
 
 //LostPasswordTfaResponse returned from the API
+// swagger:model
 type LostPasswordTfaResponse struct {
 	PublicKey0 string `json:"public_key_0"`
 }
 
-//LostPasswordTfa called from the API
+//LostPasswordTfa called from the API when the user initiates the lost password TFA function
+// swagger:route GET /portal/user/auth/lost_password_tfa lost LostPasswordTfa
+//
+// Called from the API when the user initiates the lost password TFA function
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: LostPasswordTfaResponse
 func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 	var l LostPasswordTfaRequest
 	if err := c.Bind(&l); err != nil {
@@ -216,22 +255,45 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //LostPasswordUpdateRequest is the new secuurity data for the user
+//swagger:parameters LostPasswordUpdateRequest LostPasswordUpdate
 type LostPasswordUpdateRequest struct {
-	KDFSalt              string `form:"kdf_salt" json:"kdf_salt" validate:"required,base64,len=44"`
-	MnemonicMasterKey    string `form:"mnemonic_master_key" json:"mnemonic_master_key" validate:"required,base64,len=44"`
-	MnemonicMasterIV     string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
-	EncryptedMnemonic    string `form:"encrypted_mnemonic" json:"encrypted_mnemonic" validate:"required,base64,len=64"`
-	EncryptedMnemonicIV  string `form:"encryption_mnemonic_iv" json:"encryption_mnemonic_iv" validate:"required,base64,len=24"`
-	WordlistMasterKey    string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
-	WordlistMasterIV     string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
-	EncryptedWordlist    string `form:"encrypted_wordlist" json:"encrypted_wordlist" validate:"required,base64"`
+	//required: true
+	KDFSalt string `form:"kdf_salt" json:"kdf_salt" validate:"required,base64,len=44"`
+	//required: true
+	MnemonicMasterKey string `form:"mnemonic_master_key" json:"mnemonic_master_key" validate:"required,base64,len=44"`
+	//required: true
+	MnemonicMasterIV string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required: true
+	EncryptedMnemonic string `form:"encrypted_mnemonic" json:"encrypted_mnemonic" validate:"required,base64,len=64"`
+	//required: true
+	EncryptedMnemonicIV string `form:"encryption_mnemonic_iv" json:"encryption_mnemonic_iv" validate:"required,base64,len=24"`
+	//required: true
+	WordlistMasterKey string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
+	//required: true
+	WordlistMasterIV string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
+	//required: true
+	EncryptedWordlist string `form:"encrypted_wordlist" json:"encrypted_wordlist" validate:"required,base64"`
+	//required: true
 	EncryptionWordlistIV string `form:"encryption_wordlist_iv" json:"encryption_wordlist_iv" validate:"required,base64,len=24"`
-	PublicKey0           string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
-	PublicKey188         string `form:"public_key_188" json:"public_key_188"`
-	SEP10Transaction     string `form:"sep10_transaction" json:"sep10_transaction"`
+	//required: true
+	PublicKey0       string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
+	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //LostPasswordUpdate updates the security data for the user
+// swagger:route GET /portal/user/auth2/lost_password_update lost LostPasswordUpdate
+//
+// Updates the security data for the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	var l LostPasswordUpdateRequest
 	if err := c.Bind(&l); err != nil {
@@ -289,18 +351,36 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //ChangePasswordUpdateRequest is the new security data for the user
+//swagger:parameters ChangePasswordUpdateRequest ChangePasswordUpdate
 type ChangePasswordUpdateRequest struct {
-	KDFSalt           string `form:"kdf_salt" json:"kdf_salt" validate:"required"`
+	//required: true
+	KDFSalt string `form:"kdf_salt" json:"kdf_salt" validate:"required"`
+	//required: true
 	MnemonicMasterKey string `form:"mnemonic_master_key" json:"mnemonic_master_key" validate:"required,base64,len=44"`
-	MnemonicMasterIV  string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required: true
+	MnemonicMasterIV string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required: true
 	WordlistMasterKey string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
-	WordlistMasterIV  string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
+	//required: true
+	WordlistMasterIV string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
 
 	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //ChangePasswordUpdate updates the security data for the user
+// swagger:route GET /portal/user/dashboard/change_password lost ChangePasswordUpdate
+//
+// Updates the security data for the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	var l ChangePasswordUpdateRequest
 	if err := c.Bind(&l); err != nil {
@@ -352,11 +432,25 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //LostTfaRequest initiates the reset 2fa function
+//swagger:parameters LostTfaRequest LostTfa
 type LostTfaRequest struct {
+	//required: true
 	Email string `form:"email" json:"email" validate:"required,icop_email"`
 }
 
 //LostTfa called from the API when the user initiates the reset 2fa function
+// swagger:route GET /portal/user/dashboard/change_password lost LostTfa
+//
+// Called from the API when the user initiates the reset 2fa function
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 	var l LostTfaRequest
 	if err := c.Bind(&l); err != nil {
@@ -436,18 +530,32 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //NewTfaRequest for proving the password
+//swagger:parameters NewTfaRequest NewTfaUpdate
 type NewTfaRequest struct {
 	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //NewTfaResponse response for update
+// swagger:model
 type NewTfaResponse struct {
 	TFASecret  string `json:"tfa_secret,omitempty"`
 	TFAQrImage string `json:"tfa_qr_image,omitempty"`
 }
 
-//NewTfaUpdate called for updateing the tfa data
+//NewTfaUpdate called for updating the tfa data
+// swagger:route GET /portal/user/dashboard/new_2fa_secret lost NewTfaUpdate
+//
+// Called for updating the tfa data
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: NewTfaResponse
 func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 	var l NewTfaRequest
 	if err := c.Bind(&l); err != nil {
@@ -521,24 +629,46 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //UpdateSecurityDataRequest is the data needed for updateing the data
+//swagger:parameters UpdateSecurityDataRequest UpdateSecurityData
 type UpdateSecurityDataRequest struct {
-	KDFSalt           string `form:"kdf_salt" json:"kdf_salt" validate:"required,base64,len=44"`
+	//required: true
+	KDFSalt string `form:"kdf_salt" json:"kdf_salt" validate:"required,base64,len=44"`
+	//required: true
 	MnemonicMasterKey string `form:"mnemonic_master_key" json:"mnemonic_master_key" validate:"required,base64,len=44"`
-	MnemonicMasterIV  string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required: true
+	MnemonicMasterIV string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required: true
 	WordlistMasterKey string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
-	WordlistMasterIV  string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
-	Mnemonic          string `form:"mnemonic" json:"mnemonic" validate:"required,base64,len=64"`
-	MnemonicIV        string `form:"mnemonic_iv" json:"mnemonic_iv" validate:"required,base64,len=24"`
-	Wordlist          string `form:"wordlist" json:"wordlist" validate:"required,base64"`
-	WordlistIV        string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
-
+	//required: true
+	WordlistMasterIV string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
+	//required: true
+	Mnemonic string `form:"mnemonic" json:"mnemonic" validate:"required,base64,len=64"`
+	//required: true
+	MnemonicIV string `form:"mnemonic_iv" json:"mnemonic_iv" validate:"required,base64,len=24"`
+	//required: true
+	Wordlist string `form:"wordlist" json:"wordlist" validate:"required,base64"`
+	//required: true
+	WordlistIV string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
+	//required: true
 	PublicKey0   string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 
 	TfaCode string `form:"tfa_code" json:"tfa_code"`
 }
 
-//UpdateSecurityData will update the sec data in the DB
+//UpdateSecurityData will update the security data in the DB
+// swagger:route GET /portal/user/auth/update_security_data lost UpdateSecurityData
+//
+// Will update the security data in the DB
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func UpdateSecurityData(uc *mw.IcopContext, c *gin.Context) {
 	user := mw.GetAuthUser(c)
 

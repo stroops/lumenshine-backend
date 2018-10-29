@@ -19,18 +19,29 @@ import (
 )
 
 //RegisterUserRequest is the data needed for registration
+//swagger:parameters RegisterUserRequest RegisterUser
 type RegisterUserRequest struct {
-	Email             string `form:"email" json:"email" validate:"required,icop_email"`
-	KDFSalt           string `form:"kdf_salt" json:"kdf_salt" validate:"required,base64,len=44"`
+	//required : true
+	Email string `form:"email" json:"email" validate:"required,icop_email"`
+	//required : true
+	KDFSalt string `form:"kdf_salt" json:"kdf_salt" validate:"required,base64,len=44"`
+	//required : true
 	MnemonicMasterKey string `form:"mnemonic_master_key" json:"mnemonic_master_key" validate:"required,base64,len=44"`
-	MnemonicMasterIV  string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required : true
+	MnemonicMasterIV string `form:"mnemonic_master_iv" json:"mnemonic_master_iv" validate:"required,base64,len=24"`
+	//required : true
 	WordlistMasterKey string `form:"wordlist_master_key" json:"wordlist_master_key" validate:"required,base64,len=44"`
-	WordlistMasterIV  string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
-	Mnemonic          string `form:"mnemonic" json:"mnemonic" validate:"required,base64,len=64"`
-	MnemonicIV        string `form:"mnemonic_iv" json:"mnemonic_iv" validate:"required,base64,len=24"`
-	Wordlist          string `form:"wordlist" json:"wordlist" validate:"required,base64"`
-	WordlistIV        string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
-
+	//required : true
+	WordlistMasterIV string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
+	//required : true
+	Mnemonic string `form:"mnemonic" json:"mnemonic" validate:"required,base64,len=64"`
+	//required : true
+	MnemonicIV string `form:"mnemonic_iv" json:"mnemonic_iv" validate:"required,base64,len=24"`
+	//required : true
+	Wordlist string `form:"wordlist" json:"wordlist" validate:"required,base64"`
+	//required : true
+	WordlistIV string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
+	//required : true
 	PublicKey0   string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 
@@ -64,6 +75,7 @@ type RegisterUserRequest struct {
 }
 
 //RegisterUserResponse response for registration
+// swagger:model
 type RegisterUserResponse struct {
 	TFASecret                 string `json:"tfa_secret,omitempty"`
 	TFAQrImage                string `json:"tfa_qr_image,omitempty"`
@@ -71,7 +83,18 @@ type RegisterUserResponse struct {
 }
 
 //RegisterUser registers and creates the user in the db
-//func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
+// swagger:route GET /portal/user/register_user register RegisterUser
+//
+// Registers and creates the user in the db
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: RegisterUserResponse
 func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 	ur := new(RegisterUserRequest)
 
@@ -226,20 +249,47 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //Confirm2FARequest is the data needed for the 2fa registration
+//swagger:parameters Confirm2FARequest Confirm2FA
 type Confirm2FARequest struct {
+	//required : true
 	TfaCode          string `form:"tfa_code" json:"tfa_code" validate:"required"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //Confirm2FAResponse response for API
+// swagger:model
 type Confirm2FAResponse struct {
 	MailConfirmed     bool `json:"mail_confirmed"`
 	TfaConfirmed      bool `json:"tfa_confirmed"`
 	MnemonicConfirmed bool `json:"mnemonic_confirmed"`
 }
 
-//Confirm2FA checks the given 2fa code
+//Confirm2FA checks and confirms the given 2fa code
+// swagger:route GET /portal/user/dashboard/confirm_tfa_registration register Confirm2FA
+//
+// Checks and confirms the given 2fa code
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: Confirm2FAResponse
 func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
+	// swagger:route GET /portal/user/dashboard/confirm_new_2fa_secret register Confirm2FA
+	//
+	// Checks and confirms the given 2fa code
+	//
+	// 	  Consumes:
+	//     - multipart/form-data
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Responses:
+	//       200: Confirm2FAResponse
 	var cd Confirm2FARequest
 	if err := c.Bind(&cd); err != nil {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
@@ -337,11 +387,25 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //ResendConfirmationMailRequest is the data needed for confirming the mail
+//swagger:parameters ResendConfirmationMailRequest ResendConfirmMail
 type ResendConfirmationMailRequest struct {
+	//required : true
 	Email string `form:"email" json:"email" validate:"required,icop_email"`
 }
 
-//ResendConfirmMail resend the email confirmation mail
+//ResendConfirmMail resends the confirmation mail
+// swagger:route GET /portal/user/resend_confirmation_mail register ResendConfirmMail
+//
+//  Resends the confirmation mail
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 	var rs ResendConfirmationMailRequest
 	if err := c.Bind(&rs); err != nil {
@@ -411,6 +475,18 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //ConfirmMnemonic sets the flag in the database
+// swagger:route GET /portal/user/dashboard/confirm_mnemonic register ConfirmMnemonic
+//
+//  Sets the flag in the database
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: Confirm2FAResponse
 func ConfirmMnemonic(uc *mw.IcopContext, c *gin.Context) {
 	userID := mw.GetAuthUser(c).UserID
 	req := &pb.GetUserByIDOrEmailRequest{

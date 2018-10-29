@@ -13,11 +13,21 @@ import (
 )
 
 //SalutationResponse List of all salutations
+// swagger:model
 type SalutationResponse struct {
 	Salutations []string `json:"salutations"`
 }
 
-//SalutationList returns a list of all salutations for the given LanguageCode
+//SalutationList returns a list of all salutations for the current language
+// swagger:route GET /portal/user/salutation_list general SalutationList
+//
+// Lists all salutations for the current language
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: SalutationResponse - List of all salutations
 func SalutationList(uc *mw.IcopContext, c *gin.Context) {
 
 	//TODO: check that langcode is valid. We do this in memory
@@ -37,17 +47,28 @@ func SalutationList(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //Language represents one language
+// swagger:model
 type Language struct {
 	Code string `json:"lang_code"`
 	Name string `json:"lang_name"`
 }
 
 //LanguagesResponse list for languages
+// swagger:model
 type LanguagesResponse struct {
 	Languages []Language `json:"languages"`
 }
 
 //LanguageList returns a list of all languages
+// swagger:route GET /portal/user/language_list general LanguageList
+//
+// Lists all languages
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: LanguagesResponse - List of all languages
 func LanguageList(uc *mw.IcopContext, c *gin.Context) {
 	languages, err := dbClient.GetLanguageList(c, &pb.Empty{Base: NewBaseRequest(uc)})
 	if err != nil {
@@ -64,17 +85,28 @@ func LanguageList(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //Country represents one country
+// swagger:model
 type Country struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
 }
 
 //CountryResponse list for countries
+// swagger:model
 type CountryResponse struct {
 	Countries []Country `json:"countries"`
 }
 
-//CountryList returns a list of all countries for the given LanguageCode
+//CountryList returns a list of all countries for the current language
+// swagger:route GET /portal/user/country_list general CountryList
+//
+// List all countries for the current language
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: CountryResponse - List of all countries
 func CountryList(uc *mw.IcopContext, c *gin.Context) {
 
 	//TODO: check that langcode is valid. We do this in memory
@@ -97,12 +129,16 @@ func CountryList(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
-//GetOccupationsRequest - filtered by name
+//GetOccupationsRequest - filters occupations by name
+//swagger:parameters GetOccupationsRequest OccupationList
 type GetOccupationsRequest struct {
+	//Occupation name
+	//required: true
 	Name string `form:"name"`
 }
 
 //Occupation represents one occupation
+// swagger:model
 type Occupation struct {
 	Code08 string `json:"code08"`
 	Code88 string `json:"code88"`
@@ -110,20 +146,29 @@ type Occupation struct {
 }
 
 //OccupationResponse list for occupations
+// swagger:model
 type OccupationResponse struct {
 	Occupations []Occupation `json:"occupations"`
 }
 
 //OccupationList returns a list of occupations filtered by name
+// swagger:route GET /portal/user/occupation_list general OccupationList
+//
+// List of occupations filtered by name
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: OccupationResponse - List of all occupations
 func OccupationList(uc *mw.IcopContext, c *gin.Context) {
-
 	rr := new(GetOccupationsRequest)
 	if err := c.Bind(rr); err != nil {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
 		return
 	}
-
-	uc.Log.Print("request name: " + rr.Name)
 
 	req := &pb.OccupationListRequest{
 		Base:       NewBaseRequest(uc),
@@ -146,6 +191,7 @@ func OccupationList(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //UserDetails response for the API
+// swagger:model
 type UserDetails struct {
 	MailConfirmed     bool `json:"mail_confirmed"`
 	TfaConfirmed      bool `json:"tfa_confirmed"`
@@ -155,6 +201,15 @@ type UserDetails struct {
 //GetUserRegistrationDetails returns the detail data for the user
 //This function may be called either with a valid JWT, then we will use the userID to get the user data
 //or with a tfa code and an email, without a valid jwt. Then we will get the user by 2fa code and email
+// swagger:route GET /portal/user/get_user_details general GetUserRegistrationDetails
+//
+// Returns the detail data for the user
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: UserDetails - user details
 func GetUserRegistrationDetails(uc *mw.IcopContext, c *gin.Context) {
 	// get the user from DB
 	userID := mw.GetAuthUser(c).UserID
@@ -182,12 +237,16 @@ func GetUserRegistrationDetails(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //ConfirmTokeRequest is the data needed for confirming the mail
+//swagger:parameters ConfirmTokeRequest ConfirmToken
 type ConfirmTokeRequest struct {
+	//Mail token to confirm
+	//required: true
 	Token string `form:"token" json:"token" validate:"required"`
 }
 
-//ConfirmTokeResponse response
-type ConfirmTokeResponse struct {
+//ConfirmTokenResponse response
+// swagger:model
+type ConfirmTokenResponse struct {
 	Email                     string    `json:"email"`
 	ConfirmationDate          time.Time `json:"confirmation_date"`
 	TokenAlreadyConfirmed     bool      `json:"token_already_confirmed"`
@@ -195,6 +254,18 @@ type ConfirmTokeResponse struct {
 }
 
 //ConfirmToken confirms a mail token
+// swagger:route GET /portal/user/confirm_token general ConfirmToken
+//
+// Confirms the mail token
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: ConfirmTokenResponse
 func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 	var cm ConfirmTokeRequest
 	if err := c.Bind(&cm); err != nil {
@@ -218,7 +289,7 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	if u.TokenAlreadyConfirmed {
-		c.JSON(http.StatusOK, &ConfirmTokeResponse{
+		c.JSON(http.StatusOK, &ConfirmTokenResponse{
 			TokenAlreadyConfirmed: true,
 			ConfirmationDate:      time.Unix(u.ConfirmedDate, 0),
 		})
@@ -268,13 +339,14 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &ConfirmTokeResponse{
-		Email:                     u.Email,
+	c.JSON(http.StatusOK, &ConfirmTokenResponse{
+		Email: u.Email,
 		SEP10TransactionChallenge: sep10ChallangeTX,
 	})
 }
 
 //UserSecurityDataResponse response for API
+// swagger:model
 type UserSecurityDataResponse struct {
 	KdfPasswordSalt               string `json:"kdf_password_salt"`
 	EncryptedMnemonicMasterKey    string `json:"encrypted_mnemonic_master_key"`
@@ -289,7 +361,26 @@ type UserSecurityDataResponse struct {
 }
 
 //UserSecurityData returns the security data for the user
+// swagger:route GET /portal/user/dashboard/user_auth_data general UserSecurityData
+//
+// Returns the security data for the authenticated user
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: UserSecurityDataResponse
+//
 func UserSecurityData(uc *mw.IcopContext, c *gin.Context) {
+	// swagger:route GET /portal/user/auth/user_auth_data general UserSecurityData
+	//
+	// Returns the security data for the authenticated user
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Responses:
+	//       200: UserSecurityDataResponse
 
 	idRequest := &pb.IDRequest{
 		Base: NewBaseRequest(uc),
@@ -322,17 +413,33 @@ func UserSecurityData(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetTfaSecretRequest for requesting the tfa secrete
+//swagger:parameters GetTfaSecretRequest GetTfaSecret
 type GetTfaSecretRequest struct {
-	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
+	//users public key of index 188
+	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
+	//SEP 10 transaction
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
 //GetTfaSecretResponse response for the api call
+// swagger:model
 type GetTfaSecretResponse struct {
 	TfaSecret string `json:"tfa_secret"`
 }
 
 //GetTfaSecret returns the tfa secrete for the user
+// swagger:route GET /portal/user/dashboard/tfa_secret general GetTfaSecret
+//
+// Returns the tfa secrete for the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetTfaSecretResponse
 func GetTfaSecret(uc *mw.IcopContext, c *gin.Context) {
 	var l GetTfaSecretRequest
 	if err := c.Bind(&l); err != nil {
@@ -385,11 +492,14 @@ func GetTfaSecret(uc *mw.IcopContext, c *gin.Context) {
 
 //GetUserMessageListRequest used for requesting the user messages
 //if from_archive specified, the data will be read from the archive
+//swagger:parameters GetUserMessageListRequest GetUserMessageList
 type GetUserMessageListRequest struct {
+	//Flag to filter the archived messages
 	FromArchive bool `form:"from_archive" json:"from_archive" query:"from_archive"`
 }
 
 //MessageListItem is the list of the messages (short)
+// swagger:model
 type MessageListItem struct {
 	ID          int64     `json:"id"`
 	Title       string    `json:"title"`
@@ -397,6 +507,7 @@ type MessageListItem struct {
 }
 
 //GetUserMessageListResponse response for the api call
+// swagger:model
 type GetUserMessageListResponse struct {
 	Messages     []MessageListItem `json:"messages"`
 	CurrentCount int64             `json:"current_count"`
@@ -404,6 +515,18 @@ type GetUserMessageListResponse struct {
 }
 
 //GetUserMessageList returns a list of all messages for the user
+// swagger:route GET /portal/user/dashboard/get_user_messages_list general GetUserMessageList
+//
+// Returns a list of all messages for the user
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetUserMessageListResponse
 func GetUserMessageList(uc *mw.IcopContext, c *gin.Context) {
 	var l GetUserMessageListRequest
 	if err := c.Bind(&l); err != nil {
@@ -443,12 +566,17 @@ func GetUserMessageList(uc *mw.IcopContext, c *gin.Context) {
 }
 
 //GetUserMessageRequest used for requesting the user message
+//swagger:parameters GetUserMessageRequest GetUserMessage
 type GetUserMessageRequest struct {
-	MessageID   int64 `form:"message_id" json:"message_id" query:"message_id" validate:"required"`
-	FromArchive bool  `form:"from_archive" json:"from_archive" query:"from_archive"`
+	//Filter by message id
+	//required: true
+	MessageID int64 `form:"message_id" json:"message_id" query:"message_id" validate:"required"`
+	//Flag to filter the archived messages
+	FromArchive bool `form:"from_archive" json:"from_archive" query:"from_archive"`
 }
 
 //MessageItem is one user message
+// swagger:model
 type MessageItem struct {
 	ID          int64     `json:"id"`
 	Title       string    `json:"title"`
@@ -457,6 +585,18 @@ type MessageItem struct {
 }
 
 //GetUserMessage returns the requested message
+// swagger:route GET /portal/user/dashboard/get_user_message general GetUserMessage
+//
+// Returns the requested message
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: MessageItem
 func GetUserMessage(uc *mw.IcopContext, c *gin.Context) {
 	var l GetUserMessageRequest
 	if err := c.Bind(&l); err != nil {
