@@ -80,6 +80,7 @@ func manageJWTs() {
 		keys, err := dbClient.GetAllJwtKeys(c, &pb.Empty{})
 		if err != nil {
 			log.WithError(err).Error("Error on calling dbClient.GetAllJwtKeys")
+			time.Sleep(time.Duration(float64(cnf.SleepTimeLoopSeconds) * float64(time.Second)))
 			continue // nothing to do
 		} else {
 			for _, key := range keys.KeyValues {

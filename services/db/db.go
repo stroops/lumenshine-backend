@@ -59,13 +59,13 @@ func createNewHorizonDB(log *logrus.Entry, cnf *Config) error {
 	hdb, err = sql.Open("postgres", psqlInfo)
 
 	if err != nil {
-		log.WithError(err).Fatalf("Failed to connect to horizondb")
+		log.WithError(err).Error("Failed to connect to horizondb")
 	}
 
 	//try to ping the db
 	err = hdb.Ping()
 	if err != nil {
-		log.WithError(err).Fatalf("Failed to ping horizon db")
+		log.WithError(err).Error("Failed to ping horizon db")
 	}
 
 	return nil
