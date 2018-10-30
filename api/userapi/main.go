@@ -125,6 +125,7 @@ func main() {
 		auth.POST("/update_security_data", mw.UseIcopContext(UpdateSecurityData))
 		auth.GET("/get_user_registration_status", mw.UseIcopContext(GetUserRegistrationDetails))
 		auth.GET("/need_2fa_reset_pwd", mw.UseIcopContext(Need2FAResetPassword))
+		auth.GET("/get_sep10_challange", mw.UseIcopContext(GetSEP10Transaction))
 	}
 
 	//this group is used, with the full authenticator, which means, userID and claim is present
@@ -181,6 +182,8 @@ func main() {
 		authDash.POST("/remove_contact", mw.UseIcopContext(RemoveContact))
 
 		authDash.GET("/get_stellar_transactions", mw.UseIcopContext(GetStellarTransactions))
+
+		authDash.GET("/get_sep10_challange", mw.UseIcopContext(GetSEP10Transaction))
 	}
 
 	//this group is used only for the change password functionality. It is a special key, which is received from

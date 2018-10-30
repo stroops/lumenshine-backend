@@ -174,6 +174,47 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
+// GetSEP10TransactionResponse response from API
+// swagger:model
+type GetSEP10TransactionResponse struct {
+	SEP10Transaction string `json:"sep10_transaction"`
+}
+
+//GetSEP10Transaction returns a sep10 challange transaction
+// swagger:route GET /portal/user/auth/get_sep10_challange auth GetSEP10Transaction
+//
+// Returns a sep10 challange transaction for the clinet to sign
+//
+// Can be used with
+//
+// GET /portal/user/auth/get_sep10_challange
+//
+// and
+//
+// GET /portal/user/dashboard/get_sep10_challange
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetSEP10TransactionResponse
+func GetSEP10Transaction(uc *mw.IcopContext, c *gin.Context) {
+
+	user := mw.GetAuthUser(c)
+	sep10ChallangeTX, err := getSEP10Challenge(user.PublicKey0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, &GetSEP10TransactionResponse{
+		SEP10Transaction: sep10ChallangeTX,
+	})
+}
+
 //LoginStep2Request is the data needed for the second step of the login
 //swagger:parameters LoginStep2Request LoginStep2
 type LoginStep2Request struct {

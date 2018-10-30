@@ -95,6 +95,7 @@ type AuthUser struct {
 	Password          string
 	Email             string
 	MessageCount      int
+	PublicKey0        string
 }
 
 // Login form structure.
@@ -390,6 +391,7 @@ func (mw *IcopJWTMiddleware) SetAuthUserData(c *gin.Context, userID int64) bool 
 		Password:          user.Password,
 		Email:             user.Email,
 		MessageCount:      int(user.MessageCount),
+		PublicKey0:        user.PublicKey_0,
 	})
 	return true
 }
