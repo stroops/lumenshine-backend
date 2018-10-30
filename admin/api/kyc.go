@@ -31,6 +31,7 @@ func init() {
 }
 
 //KycDocument - document item
+// swagger:model
 type KycDocument struct {
 	ID               int       `json:"id"`
 	Type             string    `json:"type"`
@@ -44,12 +45,22 @@ type KycDocument struct {
 }
 
 //KycDetailsResponse - kyc details
+// swagger:model
 type KycDetailsResponse struct {
 	Status    string        `json:"status"`
 	Documents []KycDocument `json:"documents"`
 }
 
 //KycDetails returns details of kyc status and documents
+// swagger:route GET /portal/admin/dash/customer/kyc_details/:id kyc KycDetails
+//
+// Returns details of kyc status and documents
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:KycDetailsResponse
 func KycDetails(uc *mw.AdminContext, c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -104,6 +115,7 @@ func KycDetails(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //KycDocumentDownloadResponse - document content and details
+// swagger:model
 type KycDocumentDownloadResponse struct {
 	FileName string `json:"file_name"`
 	Content  string `json:"content"`
@@ -111,6 +123,15 @@ type KycDocumentDownloadResponse struct {
 }
 
 //KycDocumentDownload returns the document
+// swagger:route GET /portal/admin/dash/customer/kyc_document/:id kyc KycDocumentDownload
+//
+// Returns the document
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:KycDocumentDownloadResponse
 func KycDocumentDownload(uc *mw.AdminContext, c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

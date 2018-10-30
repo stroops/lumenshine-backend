@@ -253,7 +253,7 @@ type ConfirmTokenResponse struct {
 }
 
 //ConfirmToken confirms a mail token
-// swagger:route GET /portal/user/confirm_token general ConfirmToken
+// swagger:route POST /portal/user/confirm_token general ConfirmToken
 //
 // Confirms the mail token
 //

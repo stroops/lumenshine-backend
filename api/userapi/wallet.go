@@ -31,7 +31,7 @@ type AddWalletResponse struct {
 }
 
 //AddWallet adds a new wallet to the user
-// swagger:route GET /portal/user/dashboard/add_wallet wallet AddWallet
+// swagger:route POST /portal/user/dashboard/add_wallet wallet AddWallet
 //
 // AddWallet adds a new wallet to the user
 //
@@ -187,7 +187,7 @@ type RemoveWalletRequest struct {
 }
 
 //RemoveWallet removes a wallet from the user
-// swagger:route GET /portal/user/dashboard/remove_wallet wallet RemoveWallet
+// swagger:route POST /portal/user/dashboard/remove_wallet wallet RemoveWallet
 //
 // Removes a wallet from the user
 //
@@ -254,7 +254,7 @@ type WalletChangeOrderRequest struct {
 }
 
 //WalletChangeOrder changes the wallet orders
-// swagger:route GET /portal/user/dashboard/change_wallet_order wallet WalletChangeOrder
+// swagger:route POST /portal/user/dashboard/change_wallet_order wallet WalletChangeOrder
 //
 // Changes the wallet orders
 //
@@ -327,7 +327,7 @@ type WalletChangeDataRequest struct {
 }
 
 //WalletChangeData changes the wallet data
-// swagger:route GET /portal/user/dashboard/change_wallet_data wallet WalletChangeData
+// swagger:route POST /portal/user/dashboard/change_wallet_data wallet WalletChangeData
 //
 // Changes the wallet data
 //
@@ -433,7 +433,7 @@ type RemoveWalletFederationAddressRequest struct {
 }
 
 //RemoveWalletFederationAddress removes federation name from the wallet
-// swagger:route GET /portal/user/dashboard/remove_wallet_federation_address wallet RemoveWalletFederationAddress
+// swagger:route POST /portal/user/dashboard/remove_wallet_federation_address wallet RemoveWalletFederationAddress
 //
 // Removes federation name from the wallet
 //
@@ -486,7 +486,7 @@ type WalletSetHomescreenRequest struct {
 }
 
 //WalletSetHomescreen sets the wallet visible flag
-// swagger:route GET /portal/user/dashboard/wallet_set_homescreen wallet WalletSetHomescreen
+// swagger:route POST /portal/user/dashboard/wallet_set_homescreen wallet WalletSetHomescreen
 //
 // Sets the wallet visible flag
 //
@@ -824,7 +824,7 @@ type AddTemplateResponse struct {
 }
 
 //AddPaymentTemplate adds a new template to the wallet
-// swagger:route GET /portal/user/dashboard/add_payment_template wallet AddPaymentTemplate
+// swagger:route POST /portal/user/dashboard/add_payment_template wallet AddPaymentTemplate
 //
 // Adds a new template to the wallet
 //
@@ -893,7 +893,7 @@ type RemovePaymentTemplateRequest struct {
 }
 
 //RemovePaymentTemplate removes a template from the wallet
-// swagger:route GET /portal/user/dashboard/remove_payment_template wallet RemovePaymentTemplate
+// swagger:route POST /portal/user/dashboard/remove_payment_template wallet RemovePaymentTemplate
 //
 // Removes a template from the wallet
 //

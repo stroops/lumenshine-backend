@@ -48,7 +48,7 @@ type UploadKycDocumentResponse struct {
 
 //UploadKycDocument - stores the document on the server;
 //the file needs to be uploaded in the field called 'upload_file', along with the other request parameters
-// swagger:route GET /portal/user/dashboard/upload_kyc_document kyc UploadKycDocument
+// swagger:route POST /portal/user/dashboard/upload_kyc_document kyc UploadKycDocument
 //
 // Stores the document on the server; the file needs to be uploaded in the field called 'upload_file', along with the other request parameters
 //

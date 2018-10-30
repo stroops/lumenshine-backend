@@ -59,15 +59,33 @@ func AddStellarAccountRoutes(rg *gin.RouterGroup) {
 }
 
 //StellarAccountAddRequest new user information
+//swagger:parameters StellarAccountAddRequest AddStellarAccount
 type StellarAccountAddRequest struct {
-	PublicKey   string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
-	Name        string `form:"name" json:"name" validate:"required,max=256"`
+	//required : true
+	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	//required : true
+	Name string `form:"name" json:"name" validate:"required,max=256"`
+	//required : true
 	Description string `form:"description" json:"description" validate:"required"`
-	Type        string `form:"type" json:"type" validate:"required"`
-	AssetCode   string `form:"asset_code" json:"asset_code" validate:"omitempty,icop_assetcode"`
+	//required : true
+	Type string `form:"type" json:"type" validate:"required"`
+	//required : true
+	AssetCode string `form:"asset_code" json:"asset_code" validate:"omitempty,icop_assetcode"`
 }
 
 //AddStellarAccount creates new account in the db
+// swagger:route POST /portal/admin/dash/stellar_account/add StellarAccount AddStellarAccount
+//
+// Creates new account in the db
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 	var rr StellarAccountAddRequest
 	if err := c.Bind(&rr); err != nil {
@@ -116,6 +134,7 @@ func AddStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //StellarAccountItem new user information
+// swagger:model
 type StellarAccountItem struct {
 	PublicKey   string `form:"public_key" json:"public_key"`
 	Name        string `form:"name" json:"name"`
@@ -124,6 +143,15 @@ type StellarAccountItem struct {
 }
 
 //AllStellarAccounts - returns all stellar accounts
+// swagger:route GET /portal/admin/dash/stellar_account/accounts_list StellarAccount AllStellarAccounts
+//
+// Returns all stellar accounts
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:[]StellarAccountItem
 func AllStellarAccounts(uc *mw.AdminContext, c *gin.Context) {
 	dbAccounts, err := db.AllStellarAccounts()
 	if err != nil {
@@ -144,11 +172,25 @@ func AllStellarAccounts(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AssetCodesRequest new user information
+//swagger:parameters AssetCodesRequest IssuerAssetCodes
 type AssetCodesRequest struct {
+	//required : true
 	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
 }
 
 //IssuerAssetCodes - returns the issuer asset codes
+// swagger:route GET /portal/admin/dash/stellar_account/asset_codes/:publickey StellarAccount IssuerAssetCodes
+//
+// Returns, in a string array, the asset codes of the given issuer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func IssuerAssetCodes(uc *mw.AdminContext, c *gin.Context) {
 	publicKey := c.Param("publickey")
 	rr := AssetCodesRequest{PublicKey: publicKey}
@@ -186,11 +228,14 @@ func IssuerAssetCodes(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //StellarAccountRequest new user information
+//swagger:parameters StellarAccountRequest GetStellarAccount
 type StellarAccountRequest struct {
+	//required : true
 	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
 }
 
 //StellarSigner - signer details
+// swagger:model
 type StellarSigner struct {
 	SignerPublicKey string `form:"public_key" json:"public_key"`
 	Name            string `form:"name" json:"name"`
@@ -198,6 +243,7 @@ type StellarSigner struct {
 }
 
 //StellarAccountResponse new user information
+// swagger:model
 type StellarAccountResponse struct {
 	PublicKey         string          `form:"public_key" json:"public_key"`
 	Name              string          `form:"name" json:"name"`
@@ -209,6 +255,18 @@ type StellarAccountResponse struct {
 }
 
 //GetStellarAccount - returns account details
+// swagger:route GET /portal/admin/dash/stellar_account/details/:publickey StellarAccount GetStellarAccount
+//
+// Returns account details
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: StellarAccountResponse
 func GetStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 	publicKey := c.Param("publickey")
 	rr := AssetCodesRequest{PublicKey: publicKey}
@@ -262,13 +320,27 @@ func getAccountResponse(account models.AdminStellarAccount) StellarAccountRespon
 }
 
 //StellarAccountEditRequest new user information
+//swagger:parameters StellarAccountEditRequest EditStellarAccount
 type StellarAccountEditRequest struct {
+	//required : true
 	PublicKey   string  `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
 	Name        *string `form:"name" json:"name" validate:"max=256"`
 	Description *string `form:"description" json:"description"`
 }
 
-//EditStellarAccount creates new account in the db
+//EditStellarAccount edits the given account details
+// swagger:route POST /portal/admin/dash/stellar_account/edit StellarAccount EditStellarAccount
+//
+// Edits the given account details
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func EditStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 	var rr StellarAccountEditRequest
 	if err := c.Bind(&rr); err != nil {
@@ -306,12 +378,27 @@ func EditStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //IssuerAssetCodeRequest new user information
+//swagger:parameters IssuerAssetCodeRequest AddIssuerAssetCode
 type IssuerAssetCodeRequest struct {
+	//required : true
 	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	//required : true
 	AssetCode string `form:"asset_code" json:"asset_code" validate:"required,icop_assetcode"`
 }
 
 //AddIssuerAssetCode - adds an asset code
+// swagger:route POST /portal/admin/dash/stellar_account/add_asset_code StellarAccount AddIssuerAssetCode
+//
+// Adds an asset code
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddIssuerAssetCode(uc *mw.AdminContext, c *gin.Context) {
 	var rr IssuerAssetCodeRequest
 	if err := c.Bind(&rr); err != nil {
@@ -357,6 +444,18 @@ func AddIssuerAssetCode(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //RemoveIssuerAssetCode - removes an asset code
+// swagger:route POST /portal/admin/dash/stellar_account/remove_asset_code StellarAccount RemoveIssuerAssetCode
+//
+// Removes an asset code
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveIssuerAssetCode(uc *mw.AdminContext, c *gin.Context) {
 	var rr IssuerAssetCodeRequest
 	if err := c.Bind(&rr); err != nil {
@@ -404,15 +503,31 @@ func RemoveIssuerAssetCode(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AddAllowtrustRequest signer info
+//swagger:parameters AddAllowtrustRequest AddAllowtrustSigner
 type AddAllowtrustRequest struct {
+	//required : true
 	IssuingPublicKey  string  `form:"issuing_account_public_key" json:"issuing_account_public_key" validate:"required,base64,len=56"`
 	SignerName        string  `form:"signer_name" json:"signer_name" validate:"max=256"`
 	SignerDescription *string `form:"signer_description" json:"signer_description"`
-	SignerPublicKey   string  `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
-	SignerSecretSeed  string  `form:"signer_secret_seed" json:"signer_secret_seed" validate:"required,base64,len=56"`
+	//required : true
+	SignerPublicKey string `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
+	//required : true
+	SignerSecretSeed string `form:"signer_secret_seed" json:"signer_secret_seed" validate:"required,base64,len=56"`
 }
 
 //AddAllowtrustSigner - adds an allow trust signer
+// swagger:route POST /portal/admin/dash/stellar_account/add_allowtrust_signer StellarAccount AddAllowtrustSigner
+//
+// Adds an allow trust signer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 	var rr AddAllowtrustRequest
 	if err := c.Bind(&rr); err != nil {
@@ -471,12 +586,27 @@ func AddAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //RemoveSignerRequest new user information
+//swagger:parameters RemoveSignerRequest RemoveAllowtrustSigner
 type RemoveSignerRequest struct {
+	//required : true
 	IssuingPublicKey string `form:"issuing_account_public_key" json:"issuing_account_public_key" validate:"required,base64,len=56"`
-	SignerPublicKey  string `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
+	//required : true
+	SignerPublicKey string `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
 }
 
 //RemoveAllowtrustSigner - removes an allow trust signer
+// swagger:route POST /portal/admin/dash/stellar_account/remove_allowtrust_signer StellarAccount RemoveAllowtrustSigner
+//
+// Removes an allow trust signer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 	var rr RemoveSignerRequest
 	if err := c.Bind(&rr); err != nil {
@@ -524,15 +654,31 @@ func RemoveAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AddOtherSignerRequest signer info
+//swagger:parameters AddOtherSignerRequest AddOtherSigner
 type AddOtherSignerRequest struct {
+	//required : true
 	IssuingPublicKey  string  `form:"account_public_key" json:"account_public_key" validate:"required,base64,len=56"`
 	SignerName        string  `form:"signer_name" json:"signer_name" validate:"max=256"`
 	SignerDescription *string `form:"signer_description" json:"signer_description"`
-	SignerPublicKey   string  `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
-	SignerSecretSeed  *string `form:"signer_secret_seed" json:"signer_secret_seed" validate:"omitempty,base64,len=56"`
+	//required : true
+	SignerPublicKey string `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
+	//required : true
+	SignerSecretSeed *string `form:"signer_secret_seed" json:"signer_secret_seed" validate:"omitempty,base64,len=56"`
 }
 
 //AddOtherSigner - adds other signer
+// swagger:route POST /portal/admin/dash/stellar_account/add_other_signer StellarAccount AddOtherSigner
+//
+// Adds other signer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddOtherSigner(uc *mw.AdminContext, c *gin.Context) {
 	var rr AddOtherSignerRequest
 	if err := c.Bind(&rr); err != nil {
@@ -590,12 +736,27 @@ func AddOtherSigner(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //RemoveOtherSignerRequest new user information
+//swagger:parameters RemoveOtherSignerRequest RemoveOtherSigner
 type RemoveOtherSignerRequest struct {
+	//required : true
 	IssuingPublicKey string `form:"account_public_key" json:"account_public_key" validate:"required,base64,len=56"`
-	SignerPublicKey  string `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
+	//required : true
+	SignerPublicKey string `form:"signer_public_key" json:"signer_public_key" validate:"required,base64,len=56"`
 }
 
-//RemoveOtherSigner - removes an allow trust signer
+//RemoveOtherSigner - removes other signer
+// swagger:route POST /portal/admin/dash/stellar_account/remove_other_signer StellarAccount RemoveOtherSigner
+//
+// Removes other signer
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveOtherSigner(uc *mw.AdminContext, c *gin.Context) {
 	var rr RemoveOtherSignerRequest
 	if err := c.Bind(&rr); err != nil {
@@ -639,6 +800,18 @@ func RemoveOtherSigner(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //RemoveStellarAccount - removes a stellar account
+// swagger:route POST /portal/admin/dash/stellar_account/remove StellarAccount RemoveStellarAccount
+//
+// Removes a stellar account
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func RemoveStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 	var rr StellarAccountRequest
 	if err := c.Bind(&rr); err != nil {
@@ -668,11 +841,25 @@ func RemoveStellarAccount(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //GetSignerSeedRequest new user information
+//swagger:parameters GetSignerSeedRequest GetSignerSeed
 type GetSignerSeedRequest struct {
+	//required : true
 	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
 }
 
 //GetSignerSeed - returns the signer's seed
+// swagger:route GET /portal/admin/dash/stellar_account/signer_seed/:publickey StellarAccount GetSignerSeed
+//
+// Returns the signer's seed
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func GetSignerSeed(uc *mw.AdminContext, c *gin.Context) {
 	publicKey := c.Param("publickey")
 	rr := GetSignerSeedRequest{PublicKey: publicKey}
@@ -695,13 +882,28 @@ func GetSignerSeed(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //EditAllowtrustSignerRequest edits signer
+//swagger:parameters EditAllowtrustSignerRequest EditAllowtrustSigner
 type EditAllowtrustSignerRequest struct {
-	PublicKey   string  `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	//required : true
+	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	//required : true
 	Name        string  `form:"name" json:"name" validate:"required,max=256"`
 	Description *string `form:"description" json:"description"`
 }
 
 //EditAllowtrustSigner - edits signer
+// swagger:route POST /portal/admin/dash/stellar_account/edit_allowtrust_signer StellarAccount EditAllowtrustSigner
+//
+// Edits signer's details
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func EditAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 	var rr EditAllowtrustSignerRequest
 	if err := c.Bind(&rr); err != nil {
@@ -741,13 +943,28 @@ func EditAllowtrustSigner(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //EditOtherSignerRequest edits signer
+//swagger:parameters EditOtherSignerRequest EditOtherSigner
 type EditOtherSignerRequest struct {
-	PublicKey   string  `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	//required : true
+	PublicKey string `form:"public_key" json:"public_key" validate:"required,base64,len=56"`
+	//required : true
 	Name        string  `form:"name" json:"name" validate:"required,max=256"`
 	Description *string `form:"description" json:"description"`
 }
 
 //EditOtherSigner - edits signer
+// swagger:route POST /portal/admin/dash/stellar_account/edit_other_signer StellarAccount EditOtherSigner
+//
+// Edits signer's details
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func EditOtherSigner(uc *mw.AdminContext, c *gin.Context) {
 	var rr EditOtherSignerRequest
 	if err := c.Bind(&rr); err != nil {

@@ -66,7 +66,7 @@ type LoginStep1Response struct {
 }
 
 //LoginStep1 is the first step of the login
-// swagger:route GET /portal/user/login_step1 auth LoginStep1
+// swagger:route POST /portal/user/login_step1 auth LoginStep1
 //
 // Is the first step to login
 //
@@ -193,7 +193,7 @@ type LoginStep2Response struct {
 }
 
 //LoginStep2 is the second step of the login
-// swagger:route GET /portal/user/auth/login_step2 auth LoginStep2
+// swagger:route POST /portal/user/auth/login_step2 auth LoginStep2
 //
 // Is the second step to login
 //

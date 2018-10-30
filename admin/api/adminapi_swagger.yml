@@ -1,0 +1,3222 @@
+definitions:
+  ActivateRequest:
+    description: ActivateRequest for activate/deactivate
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    - active
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ActivateResponse:
+    description: ActivateResponse after activation/deactivation
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddAllowtrustRequest:
+    description: AddAllowtrustRequest signer info
+    properties:
+      issuing_account_public_key:
+        type: string
+        x-go-name: IssuingPublicKey
+      signer_description:
+        type: string
+        x-go-name: SignerDescription
+      signer_name:
+        type: string
+        x-go-name: SignerName
+      signer_public_key:
+        type: string
+        x-go-name: SignerPublicKey
+      signer_secret_seed:
+        type: string
+        x-go-name: SignerSecretSeed
+    required:
+    - issuing_account_public_key
+    - signer_public_key
+    - signer_secret_seed
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddIcoPhaseRequest:
+    description: AddIcoPhaseRequest - request
+    properties:
+      activated_currencies:
+        items:
+          $ref: '#/definitions/PhaseCurrency'
+        type: array
+        x-go-name: ActivatedCurrencies
+      distribution_account_pk:
+        type: string
+        x-go-name: DistributionPublicKey
+      end:
+        type: string
+        x-go-name: EndDate
+      ico_id:
+        format: int64
+        type: integer
+        x-go-name: IcoID
+      max_tokens_per_order:
+        format: int64
+        type: integer
+        x-go-name: MaxPerOrder
+      min_tokens_per_order:
+        format: int64
+        type: integer
+        x-go-name: MinPerOrder
+      phase_name:
+        type: string
+        x-go-name: Name
+      post_signer_pk:
+        type: string
+        x-go-name: PostSignerPublicKey
+      post_signer_seed:
+        type: string
+        x-go-name: PostSignerSeed
+      pre_signer_pk:
+        type: string
+        x-go-name: PreSignerPublicKey
+      pre_signer_seed:
+        type: string
+        x-go-name: PreSignerSeed
+      start:
+        type: string
+        x-go-name: StartDate
+      tokens_to_distribute:
+        format: int64
+        type: integer
+        x-go-name: TokensToDistribute
+    required:
+    - ico_id
+    - phase_name
+    - distribution_account_pk
+    - pre_signer_pk
+    - pre_signer_seed
+    - post_signer_pk
+    - post_signer_seed
+    - start
+    - end
+    - tokens_to_distribute
+    - min_tokens_per_order
+    - max_tokens_per_order
+    - activated_currencies
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddIcoRequest:
+    description: AddIcoRequest - request
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      issuing_account_pk:
+        type: string
+        x-go-name: IssuerPublicKey
+      kyc:
+        type: boolean
+        x-go-name: Kyc
+      name:
+        type: string
+        x-go-name: Name
+      sales_model:
+        type: string
+        x-go-name: SalesModel
+      supported_currencies:
+        items:
+          format: int64
+          type: integer
+        type: array
+        x-go-name: SupportedCurrencies
+    required:
+    - name
+    - sales_model
+    - issuing_account_pk
+    - asset_code
+    - supported_currencies
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddKnownCurrencyRequest:
+    description: AddKnownCurrencyRequest request
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    required:
+    - name
+    - issuer_public_key
+    - asset_code
+    - short_description
+    - long_description
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddKnownInflationDestinationRequest:
+    description: AddKnownInflationDestinationRequest request
+    properties:
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    required:
+    - name
+    - issuer_public_key
+    - short_description
+    - long_description
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddOtherSignerRequest:
+    description: AddOtherSignerRequest signer info
+    properties:
+      account_public_key:
+        type: string
+        x-go-name: IssuingPublicKey
+      signer_description:
+        type: string
+        x-go-name: SignerDescription
+      signer_name:
+        type: string
+        x-go-name: SignerName
+      signer_public_key:
+        type: string
+        x-go-name: SignerPublicKey
+      signer_secret_seed:
+        type: string
+        x-go-name: SignerSecretSeed
+    required:
+    - account_public_key
+    - signer_public_key
+    - signer_secret_seed
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddTrustlineRequest:
+    description: AddTrustlineRequest - info
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      issuing_account_public_key:
+        type: string
+        x-go-name: IssuingPublicKey
+      reason:
+        type: string
+        x-go-name: Reason
+      status:
+        type: string
+        x-go-name: Status
+      trusting_account_public_key:
+        type: string
+        x-go-name: TrustorPublicKey
+    required:
+    - trusting_account_public_key
+    - issuing_account_public_key
+    - asset_code
+    - status
+    - reason
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AssetCodesRequest:
+    description: AssetCodesRequest new user information
+    properties:
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ChangeOrderKnownCurrencyRequest:
+    description: ChangeOrderKnownCurrencyRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      order_modifier:
+        format: int64
+        type: integer
+        x-go-name: OrderModifier
+    required:
+    - id
+    - order_modifier
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ChangeOrderKnownInflationDestinationRequest:
+    description: ChangeOrderKnownInflationDestinationRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      order_modifier:
+        format: int64
+        type: integer
+        x-go-name: OrderModifier
+    required:
+    - id
+    - order_modifier
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerDetailsResponse:
+    description: CustomerDetailsResponse - customer details response
+    properties:
+      additional_name:
+        type: string
+        x-go-name: AdditionalName
+      address:
+        description: LastLogin        time.Time `json:"last_login"`
+        type: string
+        x-go-name: Address
+      bank_account_number:
+        type: string
+        x-go-name: BankAccountNumber
+      bank_number:
+        type: string
+        x-go-name: BankNumber
+      bank_phone_number:
+        type: string
+        x-go-name: BankPhoneNumber
+      birth_country_code:
+        type: string
+        x-go-name: BirthCountryCode
+      birth_day:
+        format: date-time
+        type: string
+        x-go-name: BirthDay
+      birth_place:
+        type: string
+        x-go-name: BirthPlace
+      city:
+        type: string
+        x-go-name: City
+      company:
+        type: string
+        x-go-name: Company
+      country_code:
+        type: string
+        x-go-name: CountryCode
+      email:
+        type: string
+        x-go-name: Email
+      employer_address:
+        type: string
+        x-go-name: EmployerAddress
+      employer_name:
+        type: string
+        x-go-name: EmployerName
+      forename:
+        type: string
+        x-go-name: Forename
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      language_code:
+        type: string
+        x-go-name: LanguageCode
+      lastname:
+        type: string
+        x-go-name: Lastname
+      mobile_nr:
+        type: string
+        x-go-name: MobileNR
+      nationality:
+        type: string
+        x-go-name: Nationality
+      occupation_code08:
+        type: string
+        x-go-name: OccupationCode08
+      occupation_code88:
+        type: string
+        x-go-name: OccupationCode88
+      occupation_name:
+        type: string
+        x-go-name: OccupationName
+      registration_date:
+        format: date-time
+        type: string
+        x-go-name: RegistrationDate
+      salutation:
+        type: string
+        x-go-name: Salutation
+      state:
+        type: string
+        x-go-name: State
+      tax_id:
+        type: string
+        x-go-name: TaxID
+      tax_id_name:
+        type: string
+        x-go-name: TaxIDName
+      title:
+        type: string
+        x-go-name: Title
+      zip_code:
+        type: string
+        x-go-name: ZipCode
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerEditRequest:
+    description: CustomerEditRequest - request data
+    properties:
+      additional_name:
+        type: string
+        x-go-name: AdditionalName
+      address:
+        type: string
+        x-go-name: Address
+      bank_account_number:
+        type: string
+        x-go-name: BankAccountNumber
+      bank_number:
+        type: string
+        x-go-name: BankNumber
+      bank_phone_number:
+        type: string
+        x-go-name: BankPhoneNumber
+      birth_country_code:
+        type: string
+        x-go-name: BirthCountryCode
+      birth_day:
+        type: string
+        x-go-name: BirthDay
+      birth_place:
+        type: string
+        x-go-name: BirthPlace
+      city:
+        type: string
+        x-go-name: City
+      company:
+        type: string
+        x-go-name: Company
+      country_code:
+        type: string
+        x-go-name: CountryCode
+      employer_address:
+        type: string
+        x-go-name: EmployerAddress
+      employer_name:
+        type: string
+        x-go-name: EmployerName
+      forename:
+        type: string
+        x-go-name: Forename
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      language_code:
+        type: string
+        x-go-name: LanguageCode
+      lastname:
+        type: string
+        x-go-name: Lastname
+      mobile_nr:
+        type: string
+        x-go-name: MobileNR
+      nationality:
+        type: string
+        x-go-name: Nationality
+      occupation_code08:
+        type: string
+        x-go-name: OccupationCode08
+      occupation_code88:
+        type: string
+        x-go-name: OccupationCode88
+      occupation_name:
+        type: string
+        x-go-name: OccupationName
+      salutation:
+        type: string
+        x-go-name: Salutation
+      state:
+        type: string
+        x-go-name: State
+      tax_id:
+        type: string
+        x-go-name: TaxID
+      tax_id_name:
+        type: string
+        x-go-name: TaxIDName
+      title:
+        type: string
+        x-go-name: Title
+      zip_code:
+        type: string
+        x-go-name: ZipCode
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerListItem:
+    description: CustomerListItem is one item in the list
+    properties:
+      email:
+        type: string
+        x-go-name: Email
+      forename:
+        type: string
+        x-go-name: Forename
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      kyc_status:
+        type: string
+        x-go-name: KycStatus
+      last_login:
+        format: date-time
+        type: string
+        x-go-name: LastLogin
+      last_name:
+        type: string
+        x-go-name: Lastname
+      registration_date:
+        format: date-time
+        type: string
+        x-go-name: RegistrationDate
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerListRequest:
+    description: CustomerListRequest for filtering the customers
+    properties:
+      filter_customer_id:
+        format: int64
+        type: integer
+        x-go-name: FilterCustomerID
+      filter_email:
+        type: string
+        x-go-name: FilterEmail
+      filter_forename:
+        type: string
+        x-go-name: FilterForeName
+      filter_kyc_status:
+        items:
+          type: string
+        type: array
+        x-go-name: FilterKycStatus
+      filter_lastname:
+        type: string
+        x-go-name: FilterLastName
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      per_page_count:
+        format: int64
+        type: integer
+        x-go-name: PerPageCount
+      sort_customer_id:
+        type: string
+        x-go-name: SortCustomerID
+      sort_email:
+        type: string
+        x-go-name: SortEmail
+      sort_forename:
+        type: string
+        x-go-name: SortForeName
+      sort_last_login:
+        type: string
+        x-go-name: SortLastLogin
+      sort_lastname:
+        type: string
+        x-go-name: SortLastName
+      sort_registration_date:
+        type: string
+        x-go-name: SortRegistrationDate
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerListResponse:
+    description: CustomerListResponse list of customers
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/CustomerListItem'
+        type: array
+        x-go-name: Items
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      total_count:
+        format: int64
+        type: integer
+        x-go-name: TotalCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerOrdersRequest:
+    description: CustomerOrdersRequest to get the orders
+    properties:
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      per_page_count:
+        format: int64
+        type: integer
+        x-go-name: PerPageCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerUpdateKYCStatusRequest:
+    description: CustomerUpdateKYCStatusRequest - request
+    properties:
+      id:
+        description: the customer id
+        format: int64
+        type: integer
+        x-go-name: ID
+      kyc_status:
+        description: KYC status, e.g. InReview, Pending
+        type: string
+        x-go-name: KycStatus
+    required:
+    - id
+    - kyc_status
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  CustomerWalletsRequest:
+    description: CustomerWalletsRequest to get the wallets
+    properties:
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      per_page_count:
+        format: int64
+        type: integer
+        x-go-name: PerPageCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  DeleteKnownInflationDestinationRequest:
+    description: DeleteKnownInflationDestinationRequest request used to delete
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  EditAllowtrustSignerRequest:
+    description: EditAllowtrustSignerRequest edits signer
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    - name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  EditKnownCurrencyRequest:
+    description: EditKnownCurrencyRequest request
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  EditKnownInflationDestinationRequest:
+    description: EditKnownInflationDestinationRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  EditOtherSignerRequest:
+    description: EditOtherSignerRequest edits signer
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    - name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  EditRequest:
+    description: EditRequest - edits user information
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      firstname:
+        type: string
+        x-go-name: FirstName
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      lastname:
+        type: string
+        x-go-name: LastName
+      password:
+        type: string
+        x-go-name: Password
+      phone:
+        type: string
+        x-go-name: Phone
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ExchangeCurrencyListRequest:
+    description: ExchangeCurrencyListRequest request
+    properties:
+      ico_id:
+        format: int64
+        type: integer
+        x-go-name: IcoID
+    required:
+    - ico_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ExchangeCurrencyListResponse:
+    description: ExchangeCurrencyListResponse response
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      enabled:
+        type: string
+        x-go-name: Enabled
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer:
+        type: string
+        x-go-name: Issuer
+      name:
+        type: string
+        x-go-name: Name
+      type:
+        type: string
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  GetKnownCurrenciesResponse:
+    description: GetKnownCurrenciesResponse response
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      order_index:
+        format: int64
+        type: integer
+        x-go-name: OrderIndex
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  GetKnownInflationDestinationsResponse:
+    description: GetKnownInflationDestinationsResponse response
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuer_public_key:
+        type: string
+        x-go-name: IssuerPublicKey
+      long_description:
+        type: string
+        x-go-name: LongDescription
+      name:
+        type: string
+        x-go-name: Name
+      order_index:
+        format: int64
+        type: integer
+        x-go-name: OrderIndex
+      short_description:
+        type: string
+        x-go-name: ShortDescription
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  GetSignerSeedRequest:
+    description: GetSignerSeedRequest new user information
+    properties:
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ICOListResponse:
+    description: ICOListResponse response
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      ico_id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuing_account_name:
+        type: string
+        x-go-name: IssuingAccountName
+      issuing_account_pk:
+        type: string
+        x-go-name: IssuingAccountPK
+      kyc:
+        type: boolean
+        x-go-name: KYC
+      name:
+        type: string
+        x-go-name: Name
+      sale_model:
+        type: string
+        x-go-name: SaleModel
+      status:
+        type: string
+        x-go-name: Status
+      tokens_released:
+        format: int64
+        type: integer
+        x-go-name: TokensReleased
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  IssuerAssetCodeRequest:
+    description: IssuerAssetCodeRequest new user information
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    - asset_code
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  KnownCurrencyDeleteRequest:
+    description: KnownCurrencyDeleteRequest request used in get one and delete
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  KnownCurrencyIDRequest:
+    description: KnownCurrencyIDRequest request used in get one and delete
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  KnownInflationDestinationIDRequest:
+    description: KnownInflationDestinationIDRequest request used to get one
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  KycDetailsResponse:
+    description: KycDetailsResponse - kyc details
+    properties:
+      documents:
+        items:
+          $ref: '#/definitions/KycDocument'
+        type: array
+        x-go-name: Documents
+      status:
+        type: string
+        x-go-name: Status
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  KycDocument:
+    description: KycDocument - document item
+    properties:
+      format:
+        type: string
+        x-go-name: Format
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      id_country_code:
+        type: string
+        x-go-name: IDCountryCode
+      id_expiration_date:
+        format: date-time
+        type: string
+        x-go-name: IDExpirationDate
+      id_issue_date:
+        format: date-time
+        type: string
+        x-go-name: IDIssueDate
+      id_number:
+        type: string
+        x-go-name: IDNumber
+      side:
+        type: string
+        x-go-name: Side
+      type:
+        type: string
+        x-go-name: Type
+      upload_date:
+        format: date-time
+        type: string
+        x-go-name: UploadDate
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  KycDocumentDownloadResponse:
+    description: KycDocumentDownloadResponse - document content and details
+    properties:
+      content:
+        type: string
+        x-go-name: Content
+      file_name:
+        type: string
+        x-go-name: FileName
+      mime_type:
+        type: string
+        x-go-name: MimeType
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  OrderListItem:
+    description: OrderListItem is one item in the list
+    properties:
+      amount:
+        format: int64
+        type: integer
+        x-go-name: Amount
+      chain:
+        type: string
+        x-go-name: Chain
+      date:
+        format: date-time
+        type: string
+        x-go-name: Date
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      price:
+        format: double
+        type: number
+        x-go-name: Price
+      status:
+        type: string
+        x-go-name: Status
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  OrderListResponse:
+    description: OrderListResponse list of orders
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/OrderListItem'
+        type: array
+        x-go-name: Items
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      total_count:
+        format: int64
+        type: integer
+        x-go-name: TotalCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  PhaseCurrency:
+    description: PhaseCurrency - request
+    properties:
+      bank_account_id:
+        format: int64
+        type: integer
+        x-go-name: BankAccountID
+      currency_id:
+        format: int64
+        type: integer
+        x-go-name: CurrencyID
+      price:
+        format: int64
+        type: integer
+        x-go-name: Price
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  RegisterRequest:
+    description: RegisterRequest new user information
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      email:
+        type: string
+        x-go-name: Email
+      firstname:
+        type: string
+        x-go-name: FirstName
+      groups:
+        items:
+          type: string
+        type: array
+        x-go-name: Groups
+      lastname:
+        type: string
+        x-go-name: LastName
+      password:
+        type: string
+        x-go-name: Password
+      phone:
+        type: string
+        x-go-name: Phone
+    required:
+    - email
+    - password
+    - firstname
+    - lastname
+    - phone
+    - active
+    - groups
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  RegisterResponse:
+    description: RegisterResponse after registration
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      email:
+        type: string
+        x-go-name: Email
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  RemoveIcoRequest:
+    description: RemoveIcoRequest - request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  RemoveOtherSignerRequest:
+    description: RemoveOtherSignerRequest new user information
+    properties:
+      account_public_key:
+        type: string
+        x-go-name: IssuingPublicKey
+      signer_public_key:
+        type: string
+        x-go-name: SignerPublicKey
+    required:
+    - account_public_key
+    - signer_public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  RemoveSignerRequest:
+    description: RemoveSignerRequest new user information
+    properties:
+      issuing_account_public_key:
+        type: string
+        x-go-name: IssuingPublicKey
+      signer_public_key:
+        type: string
+        x-go-name: SignerPublicKey
+    required:
+    - issuing_account_public_key
+    - signer_public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  RemoveTrustlineRequest:
+    description: RemoveTrustlineRequest - info
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      issuing_account_public_key:
+        type: string
+        x-go-name: IssuingPublicKey
+      trusting_account_public_key:
+        type: string
+        x-go-name: TrustorPublicKey
+    required:
+    - trusting_account_public_key
+    - issuing_account_public_key
+    - asset_code
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  Reset2faRequest:
+    description: Reset2faRequest - request
+    properties:
+      id:
+        description: the customer id
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  SearchAccountsItem:
+    description: SearchAccountsItem is one item in the list
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      reason:
+        type: string
+        x-go-name: Reason
+      status:
+        type: string
+        x-go-name: Status
+      type:
+        type: string
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  SearchAccountsRequest:
+    description: SearchAccountsRequest for filtering the issuer's trusting accounts
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      filter_name:
+        type: string
+        x-go-name: FilterName
+      filter_public_key:
+        type: string
+        x-go-name: FilterPublicKey
+      filter_statuses:
+        items:
+          type: string
+        type: array
+        x-go-name: FilterStatuses
+      filter_type:
+        type: string
+        x-go-name: FilterType
+      issuing_account_public_key:
+        type: string
+        x-go-name: IssueingPublicKey
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      per_page_count:
+        format: int64
+        type: integer
+        x-go-name: PerPageCount
+    required:
+    - issuing_account_public_key
+    - asset_code
+    - filter_type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  SearchAccountsResponse:
+    description: SearchAccountsResponse list of accounts
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/SearchAccountsItem'
+        type: array
+        x-go-name: Items
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      total_count:
+        format: int64
+        type: integer
+        x-go-name: TotalCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  SetGroupsRequest:
+    description: SetGroupsRequest information
+    properties:
+      groups:
+        items:
+          type: string
+        type: array
+        x-go-name: Groups
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    - groups
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  SignerType:
+    description: SignerType holds the type of a signer
+    type: string
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarAccountAddRequest:
+    description: StellarAccountAddRequest new user information
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      type:
+        type: string
+        x-go-name: Type
+    required:
+    - public_key
+    - name
+    - description
+    - type
+    - asset_code
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarAccountEditRequest:
+    description: StellarAccountEditRequest new user information
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarAccountItem:
+    description: StellarAccountItem new user information
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      type:
+        type: string
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarAccountRequest:
+    description: StellarAccountRequest new user information
+    properties:
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarAccountResponse:
+    description: StellarAccountResponse new user information
+    properties:
+      allow_trust_signers:
+        items:
+          $ref: '#/definitions/StellarSigner'
+        type: array
+        x-go-name: AllowTrustSigners
+      asset_codes:
+        items:
+          type: string
+        type: array
+        x-go-name: AssetCodes
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      other_signers:
+        items:
+          $ref: '#/definitions/StellarSigner'
+        type: array
+        x-go-name: OtherSigners
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      type:
+        type: string
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarAccountType:
+    description: StellarAccountType holds the type of the account
+    type: string
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  StellarSigner:
+    description: StellarSigner - signer details
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: SignerPublicKey
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UpdateIcoCurrenciesRequest:
+    description: UpdateIcoCurrenciesRequest - request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      supported_currencies:
+        items:
+          format: int64
+          type: integer
+        type: array
+        x-go-name: SupportedCurrencies
+    required:
+    - id
+    - supported_currencies
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UpdateIcoIssuerRequest:
+    description: UpdateIcoIssuerRequest - request
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      issuing_account_pk:
+        type: string
+        x-go-name: IssuerPublicKey
+    required:
+    - id
+    - issuing_account_pk
+    - asset_code
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UpdateIcoKycRequest:
+    description: UpdateIcoKycRequest - request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      kyc:
+        type: boolean
+        x-go-name: Kyc
+    required:
+    - id
+    - kyc
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UpdateIcoNameRequest:
+    description: UpdateIcoNameRequest - request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+    required:
+    - id
+    - name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UserAuthData:
+    description: UserAuthData of the logged in user
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      email:
+        type: string
+        x-go-name: Email
+      firstname:
+        type: string
+        x-go-name: FirstName
+      groups:
+        items:
+          type: string
+        type: array
+        x-go-name: Groups
+      id:
+        format: int64
+        type: integer
+        x-go-name: UserID
+      is_admin:
+        type: boolean
+        x-go-name: IsAdmin
+      is_developer:
+        type: boolean
+        x-go-name: IsDeveloper
+      lastname:
+        type: string
+        x-go-name: LastName
+      phone:
+        type: string
+        x-go-name: Phone
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UserResponse:
+    description: UserResponse holds the user reponse info
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      email:
+        type: string
+        x-go-name: Email
+      firstname:
+        type: string
+        x-go-name: FirstName
+      groups:
+        items:
+          type: string
+        type: array
+        x-go-name: Groups
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      lastname:
+        type: string
+        x-go-name: LastName
+      phone:
+        type: string
+        x-go-name: Phone
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  UsersResponse:
+    description: UsersResponse holds the user list
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/UserResponse'
+        type: array
+        x-go-name: Users
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  WalletListItem:
+    description: WalletListItem is one item in the list
+    properties:
+      name:
+        type: string
+        x-go-name: Name
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      wallet_type:
+        type: string
+        x-go-name: WalletType
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  WalletListResponse:
+    description: WalletListResponse list of wallets
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/WalletListItem'
+        type: array
+        x-go-name: Items
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      total_count:
+        format: int64
+        type: integer
+        x-go-name: TotalCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  WorkerAccountTrustlinesRequest:
+    description: WorkerAccountTrustlinesRequest - info
+    properties:
+      public_key:
+        type: string
+        x-go-name: PublicKey
+    required:
+    - public_key
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  WorkerTrustlineItem:
+    description: WorkerTrustlineItem - response item
+    properties:
+      asset_code:
+        type: string
+        x-go-name: AssetCode
+      asset_issuer:
+        type: string
+        x-go-name: Issuer
+      reason:
+        type: string
+        x-go-name: Reason
+      status:
+        type: string
+        x-go-name: Status
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+paths:
+  /portal/admin/dash/customer/details/:id:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns details of specified customer
+      operationId: CustomerDetails
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CustomerDetailsResponse
+          schema:
+            $ref: '#/definitions/CustomerDetailsResponse'
+      tags:
+      - customer
+  /portal/admin/dash/customer/kyc_details/:id:
+    get:
+      description: Returns details of kyc status and documents
+      operationId: KycDetails
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: KycDetailsResponse
+          schema:
+            $ref: '#/definitions/KycDetailsResponse'
+      tags:
+      - kyc
+  /portal/admin/dash/customer/kyc_document/:id:
+    get:
+      description: Returns the document
+      operationId: KycDocumentDownload
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: KycDocumentDownloadResponse
+          schema:
+            $ref: '#/definitions/KycDocumentDownloadResponse'
+      tags:
+      - kyc
+  /portal/admin/dash/customer/list:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns list of all customers, filtered by given params
+      operationId: CustomerList
+      parameters:
+      - format: int64
+        in: query
+        name: page_number
+        type: integer
+        x-go-name: PageNumber
+      - format: int64
+        in: query
+        name: per_page_count
+        type: integer
+        x-go-name: PerPageCount
+      - format: int64
+        in: query
+        name: filter_customer_id
+        type: integer
+        x-go-name: FilterCustomerID
+      - in: query
+        name: filter_forename
+        type: string
+        x-go-name: FilterForeName
+      - in: query
+        name: filter_lastname
+        type: string
+        x-go-name: FilterLastName
+      - in: query
+        name: filter_email
+        type: string
+        x-go-name: FilterEmail
+      - in: query
+        items:
+          type: string
+        name: filter_kyc_status
+        type: array
+        x-go-name: FilterKycStatus
+      - in: query
+        name: sort_customer_id
+        type: string
+        x-go-name: SortCustomerID
+      - in: query
+        name: sort_forename
+        type: string
+        x-go-name: SortForeName
+      - in: query
+        name: sort_lastname
+        type: string
+        x-go-name: SortLastName
+      - in: query
+        name: sort_email
+        type: string
+        x-go-name: SortEmail
+      - in: query
+        name: sort_registration_date
+        type: string
+        x-go-name: SortRegistrationDate
+      - in: query
+        name: sort_last_login
+        type: string
+        x-go-name: SortLastLogin
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CustomerListResponse
+          schema:
+            $ref: '#/definitions/CustomerListResponse'
+      tags:
+      - customer
+  /portal/admin/dash/customer/orders:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns list of all customer's orders
+      operationId: CustomerOrders
+      parameters:
+      - format: int64
+        in: query
+        name: page_number
+        type: integer
+        x-go-name: PageNumber
+      - format: int64
+        in: query
+        name: per_page_count
+        type: integer
+        x-go-name: PerPageCount
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OrderListResponse
+          schema:
+            $ref: '#/definitions/OrderListResponse'
+      tags:
+      - customer
+  /portal/admin/dash/customer/reset2fa:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Resets the flag and sends the email
+      operationId: Reset2fa
+      parameters:
+      - description: the customer id
+        format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - customer
+  /portal/admin/dash/customer/update_kyc_status:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates KYC status
+      operationId: CustomerUpdateKYCStatus
+      parameters:
+      - description: the customer id
+        format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - description: KYC status, e.g. InReview, Pending
+        in: query
+        name: kyc_status
+        required: true
+        type: string
+        x-go-name: KycStatus
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - customer
+  /portal/admin/dash/customer/update_personal_data:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates customer details and returns customer
+      operationId: CustomerEdit
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: forename
+        type: string
+        x-go-name: Forename
+      - in: query
+        name: lastname
+        type: string
+        x-go-name: Lastname
+      - in: query
+        name: company
+        type: string
+        x-go-name: Company
+      - in: query
+        name: salutation
+        type: string
+        x-go-name: Salutation
+      - in: query
+        name: title
+        type: string
+        x-go-name: Title
+      - in: query
+        name: address
+        type: string
+        x-go-name: Address
+      - in: query
+        name: zip_code
+        type: string
+        x-go-name: ZipCode
+      - in: query
+        name: city
+        type: string
+        x-go-name: City
+      - in: query
+        name: state
+        type: string
+        x-go-name: State
+      - in: query
+        name: country_code
+        type: string
+        x-go-name: CountryCode
+      - in: query
+        name: nationality
+        type: string
+        x-go-name: Nationality
+      - in: query
+        name: mobile_nr
+        type: string
+        x-go-name: MobileNR
+      - in: query
+        name: birth_day
+        type: string
+        x-go-name: BirthDay
+      - in: query
+        name: birth_place
+        type: string
+        x-go-name: BirthPlace
+      - in: query
+        name: additional_name
+        type: string
+        x-go-name: AdditionalName
+      - in: query
+        name: birth_country_code
+        type: string
+        x-go-name: BirthCountryCode
+      - in: query
+        name: bank_account_number
+        type: string
+        x-go-name: BankAccountNumber
+      - in: query
+        name: bank_number
+        type: string
+        x-go-name: BankNumber
+      - in: query
+        name: bank_phone_number
+        type: string
+        x-go-name: BankPhoneNumber
+      - in: query
+        name: tax_id
+        type: string
+        x-go-name: TaxID
+      - in: query
+        name: tax_id_name
+        type: string
+        x-go-name: TaxIDName
+      - in: query
+        name: occupation_name
+        type: string
+        x-go-name: OccupationName
+      - in: query
+        name: occupation_code08
+        type: string
+        x-go-name: OccupationCode08
+      - in: query
+        name: occupation_code88
+        type: string
+        x-go-name: OccupationCode88
+      - in: query
+        name: employer_name
+        type: string
+        x-go-name: EmployerName
+      - in: query
+        name: employer_address
+        type: string
+        x-go-name: EmployerAddress
+      - in: query
+        name: language_code
+        type: string
+        x-go-name: LanguageCode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: CustomerDetailsResponse
+          schema:
+            $ref: '#/definitions/CustomerDetailsResponse'
+      tags:
+      - customer
+  /portal/admin/dash/customer/wallets/:id:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns list of all customer's wallets
+      operationId: CustomerWallets
+      parameters:
+      - format: int64
+        in: query
+        name: page_number
+        type: integer
+        x-go-name: PageNumber
+      - format: int64
+        in: query
+        name: per_page_count
+        type: integer
+        x-go-name: PerPageCount
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WalletListResponse
+          schema:
+            $ref: '#/definitions/WalletListResponse'
+      tags:
+      - customer
+  /portal/admin/dash/ico/add:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds new ico
+      operationId: AddIco
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: kyc
+        type: boolean
+        x-go-name: Kyc
+      - in: query
+        name: sales_model
+        required: true
+        type: string
+        x-go-name: SalesModel
+      - in: query
+        name: issuing_account_pk
+        required: true
+        type: string
+        x-go-name: IssuerPublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      - in: query
+        items:
+          format: int64
+          type: integer
+        name: supported_currencies
+        required: true
+        type: array
+        x-go-name: SupportedCurrencies
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/ico/add_phase:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds new ico phase
+      operationId: AddIcoPhase
+      parameters:
+      - format: int64
+        in: query
+        name: ico_id
+        required: true
+        type: integer
+        x-go-name: IcoID
+      - in: query
+        name: phase_name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: distribution_account_pk
+        required: true
+        type: string
+        x-go-name: DistributionPublicKey
+      - in: query
+        name: pre_signer_pk
+        required: true
+        type: string
+        x-go-name: PreSignerPublicKey
+      - in: query
+        name: pre_signer_seed
+        required: true
+        type: string
+        x-go-name: PreSignerSeed
+      - in: query
+        name: post_signer_pk
+        required: true
+        type: string
+        x-go-name: PostSignerPublicKey
+      - in: query
+        name: post_signer_seed
+        required: true
+        type: string
+        x-go-name: PostSignerSeed
+      - in: query
+        name: start
+        required: true
+        type: string
+        x-go-name: StartDate
+      - in: query
+        name: end
+        required: true
+        type: string
+        x-go-name: EndDate
+      - format: int64
+        in: query
+        name: tokens_to_distribute
+        required: true
+        type: integer
+        x-go-name: TokensToDistribute
+      - format: int64
+        in: query
+        name: min_tokens_per_order
+        required: true
+        type: integer
+        x-go-name: MinPerOrder
+      - format: int64
+        in: query
+        name: max_tokens_per_order
+        required: true
+        type: integer
+        x-go-name: MaxPerOrder
+      - in: query
+        items:
+          $ref: '#/definitions/PhaseCurrency'
+        name: activated_currencies
+        required: true
+        type: array
+        x-go-name: ActivatedCurrencies
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/ico/exchange_currencies:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the list of exchange currencies
+      operationId: ExchangeCurrencyList
+      parameters:
+      - format: int64
+        in: query
+        name: ico_id
+        required: true
+        type: integer
+        x-go-name: IcoID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ExchangeCurrencyListResponse
+          schema:
+            $ref: '#/definitions/ExchangeCurrencyListResponse'
+      tags:
+      - ico
+  /portal/admin/dash/ico/list:
+    get:
+      description: Returns the list of ICOs
+      operationId: ICOList
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ICOListResponse
+          schema:
+            $ref: '#/definitions/ICOListResponse'
+      tags:
+      - ico
+  /portal/admin/dash/ico/remove:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Deletes ico from db
+      operationId: RemoveIco
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/ico/update_issuer_data:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates the issuer data
+      operationId: UpdateIcoIssuer
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: issuing_account_pk
+        required: true
+        type: string
+        x-go-name: IssuerPublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/ico/update_kyc:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates the KYC flag
+      operationId: UpdateIcoKyc
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: kyc
+        required: true
+        type: boolean
+        x-go-name: Kyc
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/ico/update_name:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates the ico name
+      operationId: UpdateIcoName
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/ico/update_supported_currencies:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates the supported currencies
+      operationId: UpdateIcoCurrencies
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        items:
+          format: int64
+          type: integer
+        name: supported_currencies
+        required: true
+        type: array
+        x-go-name: SupportedCurrencies
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - ico
+  /portal/admin/dash/known_currencies/add:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds a new currency
+      operationId: AddKnownCurrency
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: issuer_public_key
+        required: true
+        type: string
+        x-go-name: IssuerPublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      - in: query
+        name: short_description
+        required: true
+        type: string
+        x-go-name: ShortDescription
+      - in: query
+        name: long_description
+        required: true
+        type: string
+        x-go-name: LongDescription
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownCurrencies
+  /portal/admin/dash/known_currencies/all:
+    get:
+      description: Returns all currencies
+      operationId: AllKnownCurrencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownCurrenciesResponse
+          schema:
+            $ref: '#/definitions/GetKnownCurrenciesResponse'
+      tags:
+      - KnownCurrencies
+  /portal/admin/dash/known_currencies/changeOrder:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Alters a currency and changes the order index with +-1
+      operationId: ChangeOrderKnownCurrency
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - format: int64
+        in: query
+        name: order_modifier
+        required: true
+        type: integer
+        x-go-name: OrderModifier
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownCurrencies
+  /portal/admin/dash/known_currencies/delete:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Deletes known currency
+      operationId: DeleteKnownCurrency
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownCurrencies
+  /portal/admin/dash/known_currencies/edit:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits known currency details
+      operationId: EditKnownCurrency
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: issuer_public_key
+        type: string
+        x-go-name: IssuerPublicKey
+      - in: query
+        name: asset_code
+        type: string
+        x-go-name: AssetCode
+      - in: query
+        name: short_description
+        type: string
+        x-go-name: ShortDescription
+      - in: query
+        name: long_description
+        type: string
+        x-go-name: LongDescription
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownCurrencies
+  /portal/admin/dash/known_currencies/get/:id:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns currency by id
+      operationId: GetKnownCurrency
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownCurrenciesResponse
+          schema:
+            $ref: '#/definitions/GetKnownCurrenciesResponse'
+      tags:
+      - KnownCurrencies
+  /portal/admin/dash/known_inflation_destinations/add:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds a new inflation destination
+      operationId: AddKnownInflationDestination
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: issuer_public_key
+        required: true
+        type: string
+        x-go-name: IssuerPublicKey
+      - in: query
+        name: short_description
+        required: true
+        type: string
+        x-go-name: ShortDescription
+      - in: query
+        name: long_description
+        required: true
+        type: string
+        x-go-name: LongDescription
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownInflationDestinations
+  /portal/admin/dash/known_inflation_destinations/all:
+    get:
+      description: Returns all inflation destinations
+      operationId: AllKnownInflationDestinations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownInflationDestinationsResponse
+          schema:
+            items:
+              $ref: '#/definitions/GetKnownInflationDestinationsResponse'
+            type: array
+      tags:
+      - KnownInflationDestinations
+  /portal/admin/dash/known_inflation_destinations/changeOrder:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Alters an inflation destination and changes the order index with
+        +-1
+      operationId: ChangeOrderKnownInflationDestination
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - format: int64
+        in: query
+        name: order_modifier
+        required: true
+        type: integer
+        x-go-name: OrderModifier
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownInflationDestinations
+  /portal/admin/dash/known_inflation_destinations/delete:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Deletes known inflation destination
+      operationId: DeleteKnownInflationDestination
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownInflationDestinations
+  /portal/admin/dash/known_inflation_destinations/edit:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits known inflation destination details
+      operationId: EditKnownInflationDestination
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: issuer_public_key
+        type: string
+        x-go-name: IssuerPublicKey
+      - in: query
+        name: short_description
+        type: string
+        x-go-name: ShortDescription
+      - in: query
+        name: long_description
+        type: string
+        x-go-name: LongDescription
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - KnownInflationDestinations
+  /portal/admin/dash/known_inflation_destinations/get/:id:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns inflation destination by id
+      operationId: GetKnownInflationDestination
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetKnownInflationDestinationsResponse
+          schema:
+            $ref: '#/definitions/GetKnownInflationDestinationsResponse'
+      tags:
+      - KnownInflationDestinations
+  /portal/admin/dash/stellar_account/accounts_list:
+    get:
+      description: Returns all stellar accounts
+      operationId: AllStellarAccounts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: StellarAccountItem
+          schema:
+            items:
+              $ref: '#/definitions/StellarAccountItem'
+            type: array
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/add:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates new account in the db
+      operationId: AddStellarAccount
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: description
+        required: true
+        type: string
+        x-go-name: Description
+      - in: query
+        name: type
+        required: true
+        type: string
+        x-go-name: Type
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/add_allowtrust_signer:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds an allow trust signer
+      operationId: AddAllowtrustSigner
+      parameters:
+      - in: query
+        name: issuing_account_public_key
+        required: true
+        type: string
+        x-go-name: IssuingPublicKey
+      - in: query
+        name: signer_name
+        type: string
+        x-go-name: SignerName
+      - in: query
+        name: signer_description
+        type: string
+        x-go-name: SignerDescription
+      - in: query
+        name: signer_public_key
+        required: true
+        type: string
+        x-go-name: SignerPublicKey
+      - in: query
+        name: signer_secret_seed
+        required: true
+        type: string
+        x-go-name: SignerSecretSeed
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/add_asset_code:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds an asset code
+      operationId: AddIssuerAssetCode
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/add_other_signer:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds other signer
+      operationId: AddOtherSigner
+      parameters:
+      - in: query
+        name: account_public_key
+        required: true
+        type: string
+        x-go-name: IssuingPublicKey
+      - in: query
+        name: signer_name
+        type: string
+        x-go-name: SignerName
+      - in: query
+        name: signer_description
+        type: string
+        x-go-name: SignerDescription
+      - in: query
+        name: signer_public_key
+        required: true
+        type: string
+        x-go-name: SignerPublicKey
+      - in: query
+        name: signer_secret_seed
+        required: true
+        type: string
+        x-go-name: SignerSecretSeed
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/add_unathorized_trustline:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates new entry in the db
+      operationId: AddTrustline
+      parameters:
+      - in: query
+        name: trusting_account_public_key
+        required: true
+        type: string
+        x-go-name: TrustorPublicKey
+      - in: query
+        name: issuing_account_public_key
+        required: true
+        type: string
+        x-go-name: IssuingPublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      - in: query
+        name: status
+        required: true
+        type: string
+        x-go-name: Status
+      - in: query
+        name: reason
+        required: true
+        type: string
+        x-go-name: Reason
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/asset_codes/:publickey:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns, in a string array, the asset codes of the given issuer
+      operationId: IssuerAssetCodes
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/details/:publickey:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns account details
+      operationId: GetStellarAccount
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: StellarAccountResponse
+          schema:
+            $ref: '#/definitions/StellarAccountResponse'
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/edit:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits the given account details
+      operationId: EditStellarAccount
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: description
+        type: string
+        x-go-name: Description
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/edit_allowtrust_signer:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits signer's details
+      operationId: EditAllowtrustSigner
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: description
+        type: string
+        x-go-name: Description
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/edit_other_signer:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits signer's details
+      operationId: EditOtherSigner
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: description
+        type: string
+        x-go-name: Description
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/remove:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Removes a stellar account
+      operationId: RemoveStellarAccount
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/remove_allowtrust_signer:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Removes an allow trust signer
+      operationId: RemoveAllowtrustSigner
+      parameters:
+      - in: query
+        name: issuing_account_public_key
+        required: true
+        type: string
+        x-go-name: IssuingPublicKey
+      - in: query
+        name: signer_public_key
+        required: true
+        type: string
+        x-go-name: SignerPublicKey
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/remove_asset_code:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Removes an asset code
+      operationId: RemoveIssuerAssetCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/remove_other_signer:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Removes other signer
+      operationId: RemoveOtherSigner
+      parameters:
+      - in: query
+        name: account_public_key
+        required: true
+        type: string
+        x-go-name: IssuingPublicKey
+      - in: query
+        name: signer_public_key
+        required: true
+        type: string
+        x-go-name: SignerPublicKey
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/remove_unathorized_trustline:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Deletes trustline from the DB
+      operationId: RemoveTrustline
+      parameters:
+      - in: query
+        name: trusting_account_public_key
+        required: true
+        type: string
+        x-go-name: TrustorPublicKey
+      - in: query
+        name: issuing_account_public_key
+        required: true
+        type: string
+        x-go-name: IssuingPublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/search_trusting_accounts:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns list of all accounts, filtered by given params
+      operationId: IssuerAccountTrustlines
+      parameters:
+      - format: int64
+        in: query
+        name: page_number
+        type: integer
+        x-go-name: PageNumber
+      - format: int64
+        in: query
+        name: per_page_count
+        type: integer
+        x-go-name: PerPageCount
+      - in: query
+        name: issuing_account_public_key
+        required: true
+        type: string
+        x-go-name: IssueingPublicKey
+      - in: query
+        name: asset_code
+        required: true
+        type: string
+        x-go-name: AssetCode
+      - in: query
+        name: filter_name
+        type: string
+        x-go-name: FilterName
+      - in: query
+        name: filter_public_key
+        type: string
+        x-go-name: FilterPublicKey
+      - in: query
+        name: filter_type
+        required: true
+        type: string
+        x-go-name: FilterType
+      - in: query
+        items:
+          type: string
+        name: filter_statuses
+        type: array
+        x-go-name: FilterStatuses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: SearchAccountsResponse
+          schema:
+            $ref: '#/definitions/SearchAccountsResponse'
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/signer_seed/:publickey:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the signer's seed
+      operationId: GetSignerSeed
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - StellarAccount
+  /portal/admin/dash/stellar_account/worker_account_trustlines/:publickey:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns worker account trustlines
+      operationId: WorkerAccountTrustlines
+      parameters:
+      - in: query
+        name: public_key
+        required: true
+        type: string
+        x-go-name: PublicKey
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: WorkerTrustlineItem
+          schema:
+            items:
+              $ref: '#/definitions/WorkerTrustlineItem'
+            type: array
+      tags:
+      - StellarAccount
+  /portal/admin/dash/user/activate:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Activates or deactivates a user
+      operationId: Activate
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: active
+        required: true
+        type: boolean
+        x-go-name: Active
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ActivateResponse
+          schema:
+            $ref: '#/definitions/ActivateResponse'
+      tags:
+      - user
+  /portal/admin/dash/user/details/:id:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Gets the specified user by id
+      operationId: User
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserResponse
+          schema:
+            $ref: '#/definitions/UserResponse'
+      tags:
+      - user
+  /portal/admin/dash/user/edit:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits the user's properties
+      operationId: EditUser
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: password
+        type: string
+        x-go-name: Password
+      - in: query
+        name: firstname
+        type: string
+        x-go-name: FirstName
+      - in: query
+        name: lastname
+        type: string
+        x-go-name: LastName
+      - in: query
+        name: phone
+        type: string
+        x-go-name: Phone
+      - in: query
+        name: active
+        type: boolean
+        x-go-name: Active
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserResponse
+          schema:
+            $ref: '#/definitions/UserResponse'
+      tags:
+      - user
+  /portal/admin/dash/user/list:
+    get:
+      description: Reads the list of users from the db
+      operationId: Users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UsersResponse
+          schema:
+            $ref: '#/definitions/UsersResponse'
+      tags:
+      - user
+  /portal/admin/dash/user/register:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Creates a new user in the db
+      operationId: Register
+      parameters:
+      - in: query
+        name: email
+        required: true
+        type: string
+        x-go-name: Email
+      - in: query
+        name: password
+        required: true
+        type: string
+        x-go-name: Password
+      - in: query
+        name: firstname
+        required: true
+        type: string
+        x-go-name: FirstName
+      - in: query
+        name: lastname
+        required: true
+        type: string
+        x-go-name: LastName
+      - in: query
+        name: phone
+        required: true
+        type: string
+        x-go-name: Phone
+      - in: query
+        name: active
+        required: true
+        type: boolean
+        x-go-name: Active
+      - in: query
+        items:
+          type: string
+        name: groups
+        required: true
+        type: array
+        x-go-name: Groups
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: RegisterResponse
+          schema:
+            $ref: '#/definitions/RegisterResponse'
+      tags:
+      - user
+  /portal/admin/dash/user/setgroups:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates the groups for the specified user
+      operationId: SetGroups
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        items:
+          type: string
+        name: groups
+        required: true
+        type: array
+        x-go-name: Groups
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserResponse
+          schema:
+            $ref: '#/definitions/UserResponse'
+      tags:
+      - user
+  /portal/admin/dash/user/user_data:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the current logged in user info
+      operationId: UserData
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: UserAuthData
+          schema:
+            $ref: '#/definitions/UserAuthData'
+      tags:
+      - user
+  /portal/admin/login:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Logs in the user
+      operationId: Login
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - auth
+swagger: "2.0"

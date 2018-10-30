@@ -1,13 +1,14 @@
 package api
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
 	"github.com/Soneso/lumenshine-backend/admin/route"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
-	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,12 +36,15 @@ func AddKnownInflationDestinationsRoutes(rg *gin.RouterGroup) {
 	}
 }
 
-//KnownInflationDestinationIDRequest request used in get one and delete
+//KnownInflationDestinationIDRequest request used to get one
+//swagger:parameters KnownInflationDestinationIDRequest GetKnownInflationDestination
 type KnownInflationDestinationIDRequest struct {
+	//required : true
 	ID int `form:"id" json:"id"  validate:"required"`
 }
 
 //GetKnownInflationDestinationsResponse response
+// swagger:model
 type GetKnownInflationDestinationsResponse struct {
 	ID               int    `form:"id" json:"id"`
 	Name             string `form:"name" json:"name"`
@@ -51,6 +55,18 @@ type GetKnownInflationDestinationsResponse struct {
 }
 
 //GetKnownInflationDestination returns inflation destination by id
+// swagger:route GET /portal/admin/dash/known_inflation_destinations/get/:id KnownInflationDestinations GetKnownInflationDestination
+//
+// Returns inflation destination by id
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetKnownInflationDestinationsResponse
 func GetKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -85,6 +101,15 @@ func GetKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AllKnownInflationDestinations returns all inflation destinations
+// swagger:route GET /portal/admin/dash/known_inflation_destinations/all KnownInflationDestinations AllKnownInflationDestinations
+//
+// Returns all inflation destinations
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: []GetKnownInflationDestinationsResponse
 func AllKnownInflationDestinations(uc *mw.AdminContext, c *gin.Context) {
 
 	inflationDestinations, err := db.GetKnownInflationDestinations()
@@ -113,14 +138,31 @@ func AllKnownInflationDestinations(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //AddKnownInflationDestinationRequest request
+//swagger:parameters AddKnownInflationDestinationRequest AddKnownInflationDestination
 type AddKnownInflationDestinationRequest struct {
-	Name             string `form:"name" json:"name"  validate:"required,max=500"`
-	IssuerPublicKey  string `form:"issuer_public_key" json:"issuer_public_key"  validate:"required,max=500"`
+	//required : true
+	Name string `form:"name" json:"name"  validate:"required,max=500"`
+	//required : true
+	IssuerPublicKey string `form:"issuer_public_key" json:"issuer_public_key"  validate:"required,max=500"`
+	//required : true
 	ShortDescription string `form:"short_description" json:"short_description"  validate:"required,max=500"`
-	LongDescription  string `form:"long_description" json:"long_description"  validate:"required,max=500"`
+	//required : true
+	LongDescription string `form:"long_description" json:"long_description"  validate:"required,max=500"`
 }
 
 //AddKnownInflationDestination adds a new inflation destination
+// swagger:route POST /portal/admin/dash/known_inflation_destinations/add KnownInflationDestinations AddKnownInflationDestination
+//
+// Adds a new inflation destination
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func AddKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 	var r AddKnownInflationDestinationRequest
 	if err := c.Bind(&r); err != nil {
@@ -166,7 +208,9 @@ func AddKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //EditKnownInflationDestinationRequest request
+//swagger:parameters EditKnownInflationDestinationRequest EditKnownInflationDestination
 type EditKnownInflationDestinationRequest struct {
+	//required : true
 	ID               int     `form:"id" json:"id"  validate:"required"`
 	Name             *string `form:"name" json:"name"  validate:"max=500"`
 	IssuerPublicKey  *string `form:"issuer_public_key" json:"issuer_public_key"  validate:"max=500"`
@@ -175,6 +219,18 @@ type EditKnownInflationDestinationRequest struct {
 }
 
 //EditKnownInflationDestination edits known inflation destination details
+// swagger:route POST /portal/admin/dash/known_inflation_destinations/edit KnownInflationDestinations EditKnownInflationDestination
+//
+// Edits known inflation destination details
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func EditKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 	var r EditKnownInflationDestinationRequest
 	if err := c.Bind(&r); err != nil {
@@ -231,9 +287,28 @@ func EditKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 	c.JSON(http.StatusOK, "{}")
 }
 
+//DeleteKnownInflationDestinationRequest request used to delete
+//swagger:parameters DeleteKnownInflationDestinationRequest DeleteKnownInflationDestination
+type DeleteKnownInflationDestinationRequest struct {
+	//required : true
+	ID int `form:"id" json:"id"  validate:"required"`
+}
+
 //DeleteKnownInflationDestination deletes known inflation destination
+// swagger:route POST /portal/admin/dash/known_inflation_destinations/delete KnownInflationDestinations DeleteKnownInflationDestination
+//
+// Deletes known inflation destination
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func DeleteKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
-	var r KnownInflationDestinationIDRequest
+	var r DeleteKnownInflationDestinationRequest
 	if err := c.Bind(&r); err != nil {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
 		return
@@ -264,12 +339,27 @@ func DeleteKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 }
 
 //ChangeOrderKnownInflationDestinationRequest request
+//swagger:parameters ChangeOrderKnownInflationDestinationRequest ChangeOrderKnownInflationDestination
 type ChangeOrderKnownInflationDestinationRequest struct {
-	ID            int `form:"id" json:"id"  validate:"required"`
+	//required : true
+	ID int `form:"id" json:"id"  validate:"required"`
+	//required : true
 	OrderModifier int `form:"order_modifier" json:"order_modifier" validate:"required"`
 }
 
 //ChangeOrderKnownInflationDestination alters a inflation destination and changes the order index with +-1
+// swagger:route POST /portal/admin/dash/known_inflation_destinations/changeOrder KnownInflationDestinations ChangeOrderKnownInflationDestination
+//
+// Alters an inflation destination and changes the order index with +-1
+//
+// Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
 func ChangeOrderKnownInflationDestination(uc *mw.AdminContext, c *gin.Context) {
 	var r ChangeOrderKnownInflationDestinationRequest
 	if err := c.Bind(&r); err != nil {

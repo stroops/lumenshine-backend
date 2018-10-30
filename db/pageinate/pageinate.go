@@ -6,8 +6,8 @@ import (
 
 //PaginationRequestStruct represents a pagination request
 type PaginationRequestStruct struct {
-	PageNumber   int `form:"page_number"`
-	PerPageCount int `form:"per_page_count"`
+	PageNumber   int `form:"page_number" json:"page_number"`
+	PerPageCount int `form:"per_page_count" json:"per_page_count"`
 }
 
 //PaginationResponseStruct represents the pagination results

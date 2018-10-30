@@ -23,7 +23,7 @@ type SubscribeForPushNotificationsRequest struct {
 }
 
 //SubscribeForPushNotifications adds a new token to the user
-// swagger:route GET /portal/user/dashboard/subscribe_push_token pushtoken SubscribeForPushNotifications
+// swagger:route POST /portal/user/dashboard/subscribe_push_token pushtoken SubscribeForPushNotifications
 //
 // Adds a new token to the user
 //
@@ -76,7 +76,7 @@ type UpdatePushTokenRequest struct {
 }
 
 //UpdatePushToken updates the push token
-// swagger:route GET /portal/user/dashboard/update_push_token pushtoken UpdatePushToken
+// swagger:route POST /portal/user/dashboard/update_push_token pushtoken UpdatePushToken
 //
 // Updates the push token
 //
@@ -125,7 +125,7 @@ type UnsubscribeFromPushNotificationsRequest struct {
 }
 
 //UnsubscribeFromPushNotifications removes the specified token from the user
-// swagger:route GET /portal/user/dashboard/unsubscribe_push_token pushtoken UnsubscribeFromPushNotifications
+// swagger:route POST /portal/user/dashboard/unsubscribe_push_token pushtoken UnsubscribeFromPushNotifications
 //
 // Removes the specified token from the user
 //
@@ -174,7 +174,7 @@ type UnsubscribePreviousUserFromPushNotificationsRequest struct {
 }
 
 //UnsubscribePreviousUserFromPushNotifications removes the specified token from the user
-// swagger:route GET /portal/user/dashboard/unsubscribe_previous_user_push_token pushtoken UnsubscribePreviousUserFromPushNotifications
+// swagger:route POST /portal/user/dashboard/unsubscribe_previous_user_push_token pushtoken UnsubscribePreviousUserFromPushNotifications
 //
 // Removes the specified token from the user
 //
