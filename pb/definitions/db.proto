@@ -392,6 +392,12 @@ message RemoveWalletRequest {
   int64 user_id = 3;
 }
 
+message GetWalletRequest {
+  BaseRequest base = 1;
+  int64 wallet_id = 2;
+  int64 user_id = 3;
+}
+
 message WalletIsLastRequest {
   BaseRequest base = 1;
   int64 id = 2;
@@ -623,6 +629,7 @@ service DBService {
   rpc CheckWalletData (CheckWalletRequest) returns (CheckWalletResponse) {}
   rpc AddWallet (AddWalletRequest) returns (IDResponse) {}
   rpc RemoveWallet (RemoveWalletRequest) returns (Empty) {}
+  rpc GetWallet (GetWalletRequest) returns (Wallet) {}
   rpc WalletChangeName (WalletChangeNameRequest) returns (Empty) {}
   rpc WalletChangeOrder (WalletChangeOrderRequest) returns (Empty) {}
   rpc WalletChangeFederationAddress (WalletChangeFederationAddressRequest) returns (Empty) {}

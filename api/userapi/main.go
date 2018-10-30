@@ -150,6 +150,7 @@ func main() {
 		authDash.GET("/get_user_message", mw.UseIcopContext(GetUserMessage))
 
 		authDash.GET("/get_user_wallets", mw.UseIcopContext(GetUserWallets))
+		authDash.GET("/get_wallet", mw.UseIcopContext(GetWallet))
 		authDash.POST("/add_wallet", mw.UseIcopContext(AddWallet))
 		authDash.POST("/remove_wallet", mw.UseIcopContext(RemoveWallet))
 		authDash.POST("/change_wallet_order", mw.UseIcopContext(WalletChangeOrder))
