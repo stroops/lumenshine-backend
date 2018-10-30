@@ -593,6 +593,37 @@ definitions:
         x-go-name: WalletType
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetWalletRequest:
+    description: GetWalletRequest used for requesting the wallet
+    properties:
+      wallet_id:
+        format: int64
+        type: integer
+        x-go-name: WalletID
+    required:
+    - wallet_id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetWalletResponse:
+    description: GetWalletResponse result
+    properties:
+      federation_address:
+        type: string
+        x-go-name: FederationAddress
+      public_key:
+        type: string
+        x-go-name: PublicKey
+      show_on_homescreen:
+        type: boolean
+        x-go-name: ShowOnHomescreen
+      wallet_name:
+        type: string
+        x-go-name: WalletName
+      wallet_type:
+        type: string
+        x-go-name: WalletType
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   Language:
     description: Language represents one language
     properties:
@@ -2261,6 +2292,28 @@ paths:
             items:
               $ref: '#/definitions/GetUserWalletsResponse'
             type: array
+      tags:
+      - wallet
+  /portal/user/dashboard/get_wallet:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns wallet details
+      operationId: GetWallet
+      parameters:
+      - format: int64
+        in: query
+        name: wallet_id
+        required: true
+        type: integer
+        x-go-name: WalletID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetWalletResponse
+          schema:
+            $ref: '#/definitions/GetWalletResponse'
       tags:
       - wallet
   /portal/user/dashboard/new_2fa_secret:
