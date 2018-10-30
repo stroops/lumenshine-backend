@@ -2583,7 +2583,8 @@ paths:
     get:
       consumes:
       - multipart/form-data
-      description: Stores the document on the server
+      description: Stores the document on the server; the file needs to be uploaded
+        in the field called 'upload_file', along with the other request parameters
       operationId: UploadKycDocument
       parameters:
       - description: document type, e.g. passport, id_card

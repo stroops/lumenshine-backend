@@ -31,9 +31,9 @@ type SalutationResponse struct {
 func SalutationList(uc *mw.IcopContext, c *gin.Context) {
 
 	//TODO: check that langcode is valid. We do this in memory
-	req := &pb.LanguageCodeRequest{
-		Base:         NewBaseRequest(uc),
-		LanguageCode: uc.Language,
+	req := &pb.IDString{
+		Base: NewBaseRequest(uc),
+		Id:   uc.Language,
 	}
 	salutations, err := dbClient.GetSalutationList(c, req)
 	if err != nil {
@@ -110,9 +110,8 @@ type CountryResponse struct {
 func CountryList(uc *mw.IcopContext, c *gin.Context) {
 
 	//TODO: check that langcode is valid. We do this in memory
-	req := &pb.LanguageCodeRequest{
-		Base:         NewBaseRequest(uc),
-		LanguageCode: uc.Language,
+	req := &pb.Empty{
+		Base: NewBaseRequest(uc),
 	}
 	countries, err := dbClient.GetCountryList(c, req)
 	if err != nil {
@@ -340,7 +339,7 @@ func ConfirmToken(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &ConfirmTokenResponse{
-		Email: u.Email,
+		Email:                     u.Email,
 		SEP10TransactionChallenge: sep10ChallangeTX,
 	})
 }

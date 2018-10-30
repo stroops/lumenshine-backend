@@ -260,12 +260,9 @@ func (s *server) ExistsEmail(ctx context.Context, r *pb.ExistsEmailRequest) (*pb
 	return &pb.ExistsEmailResponse{Exists: exists}, nil
 }
 
-func (s *server) GetCountryList(ctx context.Context, r *pb.LanguageCodeRequest) (*pb.CountryListResponse, error) {
-	if r.LanguageCode == "" {
-		return nil, errors.New("need language code")
-	}
+func (s *server) GetCountryList(ctx context.Context, r *pb.Empty) (*pb.CountryListResponse, error) {
 
-	countries, err := models.Countries(qm.Where(models.CountryColumns.LangCode+"=?", r.LanguageCode)).All(db)
+	countries, err := models.Countries().All(db)
 	if err != nil {
 		return nil, err
 	}
@@ -278,12 +275,12 @@ func (s *server) GetCountryList(ctx context.Context, r *pb.LanguageCodeRequest) 
 	return ret, nil
 }
 
-func (s *server) GetSalutationList(ctx context.Context, r *pb.LanguageCodeRequest) (*pb.SalutationListResponse, error) {
-	if r.LanguageCode == "" {
+func (s *server) GetSalutationList(ctx context.Context, r *pb.IDString) (*pb.SalutationListResponse, error) {
+	if r.Id == "" {
 		return nil, errors.New("need language code")
 	}
 
-	salutations, err := models.Salutations(qm.Where(models.SalutationColumns.LangCode+"=?", r.LanguageCode)).All(db)
+	salutations, err := models.Salutations(qm.Where(models.SalutationColumns.LangCode+"=?", r.Id)).All(db)
 	if err != nil {
 		return nil, err
 	}

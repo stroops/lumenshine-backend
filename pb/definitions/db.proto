@@ -156,11 +156,6 @@ message ExistsEmailResponse {
   bool exists = 1;
 }
 
-message LanguageCodeRequest {
-  BaseRequest base = 1;
-  string language_code = 2;
-}
-
 message Country {
   string code = 1;
   string name = 2;
@@ -604,8 +599,8 @@ service DBService {
   rpc UpdateUserSecurityPassword (UserSecurityRequest) returns (Empty) {}
   rpc CreateUser (CreateUserRequest) returns (IDResponse) {}
   rpc ExistsEmail (ExistsEmailRequest) returns (ExistsEmailResponse) {}
-  rpc GetCountryList (LanguageCodeRequest) returns (CountryListResponse) {}
-  rpc GetSalutationList (LanguageCodeRequest) returns (SalutationListResponse) {}
+  rpc GetCountryList (Empty) returns (CountryListResponse) {}
+  rpc GetSalutationList (IDString) returns (SalutationListResponse) {}
   rpc GetLanguageList (Empty) returns (LanguageListResponse) {}
   rpc GetOccupationList (OccupationListRequest) returns (OccupationListResponse) {}
 
