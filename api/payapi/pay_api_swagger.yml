@@ -479,7 +479,7 @@ paths:
           schema:
             $ref: '#/definitions/CreateOrderResponse'
   /execute_transaction:
-    get:
+    post:
       consumes:
       - multipart/form-data
       description: signs the tx with the postsigner and runs the transaction. must

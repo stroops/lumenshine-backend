@@ -401,6 +401,14 @@ definitions:
     - wallet_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetSEP10TransactionResponse:
+    description: GetSEP10TransactionResponse response from API
+    properties:
+      sep10_transaction:
+        type: string
+        x-go-name: SEP10Transaction
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetTfaSecretRequest:
     description: GetTfaSecretRequest for requesting the tfa secrete
     properties:
@@ -1449,6 +1457,29 @@ info:
   title: User-API.
   version: 0.0.1
 paths:
+  /portal/user/auth/get_sep10_challange:
+    get:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Can be used with
+
+        GET /portal/user/auth/get_sep10_challange
+
+        and
+
+        GET /portal/user/dashboard/get_sep10_challange
+      operationId: GetSEP10Transaction
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetSEP10TransactionResponse
+          schema:
+            $ref: '#/definitions/GetSEP10TransactionResponse'
+      summary: Returns a sep10 challange transaction for the clinet to sign
+      tags:
+      - auth
   /portal/user/auth/login_step2:
     post:
       consumes:
