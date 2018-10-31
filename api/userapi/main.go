@@ -174,6 +174,8 @@ func main() {
 		authDash.POST("/get_known_inflation_destination", mw.UseIcopContext(GetKnownInflationDestination))
 		authDash.POST("/get_known_inflation_destinations", mw.UseIcopContext(GetKnownInflationDestinations))
 
+		authDash.GET("/get_promo_cards", mw.UseIcopContext(GetPromos))
+
 		authDash.POST("/upload_kyc_document", mw.UseIcopContext(UploadKycDocument))
 
 		authDash.GET("/contact_list", mw.UseIcopContext(ContactList))

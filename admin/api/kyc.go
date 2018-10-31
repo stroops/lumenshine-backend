@@ -154,7 +154,7 @@ func KycDocumentDownload(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	str := base64.StdEncoding.EncodeToString(content)
-	mimeType := MimeTypes[doc.Format]
+	mimeType := db.MimeTypes[doc.Format]
 	c.JSON(http.StatusOK, &KycDocumentDownloadResponse{
 		FileName: fileName,
 		Content:  str,

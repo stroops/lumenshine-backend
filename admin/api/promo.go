@@ -149,7 +149,7 @@ func getImageResponse(id int, imageType string) (*PromoImageResponse, error) {
 	}
 
 	str := base64.StdEncoding.EncodeToString(content)
-	mimeType := MimeTypes[imageType]
+	mimeType := db.MimeTypes[imageType]
 
 	return &PromoImageResponse{
 		FileName: fileName,
@@ -218,6 +218,7 @@ type AddPromoRequest struct {
 }
 
 //Button - one button
+// swagger:model
 type Button struct {
 	Name string `form:"name" json:"name"`
 	Link string `form:"link" json:"link"`

@@ -42,6 +42,18 @@ func GetPromos() (models.AdminPromoSlice, error) {
 	return promos, nil
 }
 
+//GetActivePromos - returns active promos
+func GetActivePromos() (models.AdminPromoSlice, error) {
+	promos, err := models.AdminPromos(qm.Where(models.AdminPromoColumns.Active+"=true"),
+		qm.OrderBy(models.AdminPromoColumns.OrderIndex)).AllG()
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return promos, nil
+}
+
 //UpdatePromo - updates the promo in the db
 func UpdatePromo(promo *models.AdminPromo, updatedBy string) error {
 	promo.UpdatedBy = updatedBy
