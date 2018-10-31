@@ -26,6 +26,7 @@ type AdminPromo struct {
 	Title      string    `boil:"title" json:"title" toml:"title" yaml:"title"`
 	PromoText  string    `boil:"promo_text" json:"promo_text" toml:"promo_text" yaml:"promo_text"`
 	PromoType  string    `boil:"promo_type" json:"promo_type" toml:"promo_type" yaml:"promo_type"`
+	ImageType  string    `boil:"image_type" json:"image_type" toml:"image_type" yaml:"image_type"`
 	Buttons    string    `boil:"buttons" json:"buttons" toml:"buttons" yaml:"buttons"`
 	Active     bool      `boil:"active" json:"active" toml:"active" yaml:"active"`
 	OrderIndex int       `boil:"order_index" json:"order_index" toml:"order_index" yaml:"order_index"`
@@ -43,6 +44,7 @@ var AdminPromoColumns = struct {
 	Title      string
 	PromoText  string
 	PromoType  string
+	ImageType  string
 	Buttons    string
 	Active     string
 	OrderIndex string
@@ -55,6 +57,7 @@ var AdminPromoColumns = struct {
 	Title:      "title",
 	PromoText:  "promo_text",
 	PromoType:  "promo_type",
+	ImageType:  "image_type",
 	Buttons:    "buttons",
 	Active:     "active",
 	OrderIndex: "order_index",
@@ -80,8 +83,8 @@ func (*adminPromoR) NewStruct() *adminPromoR {
 type adminPromoL struct{}
 
 var (
-	adminPromoColumns               = []string{"id", "name", "title", "promo_text", "promo_type", "buttons", "active", "order_index", "created_at", "updated_at", "updated_by"}
-	adminPromoColumnsWithoutDefault = []string{"name", "title", "promo_text", "promo_type", "buttons", "order_index", "updated_by"}
+	adminPromoColumns               = []string{"id", "name", "title", "promo_text", "promo_type", "image_type", "buttons", "active", "order_index", "created_at", "updated_at", "updated_by"}
+	adminPromoColumnsWithoutDefault = []string{"name", "title", "promo_text", "promo_type", "image_type", "buttons", "order_index", "updated_by"}
 	adminPromoColumnsWithDefault    = []string{"id", "active", "created_at", "updated_at"}
 	adminPromoPrimaryKeyColumns     = []string{"id"}
 )

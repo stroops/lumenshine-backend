@@ -4,6 +4,9 @@
 /*promo_type*/
 CREATE TYPE promo_type AS ENUM ('small','big');
 
+/*image_type*/
+CREATE TYPE image_type AS ENUM ('png','jpg','jpeg');
+
 /* admin promo table */
 CREATE TABLE admin_promo
 (
@@ -12,6 +15,7 @@ CREATE TABLE admin_promo
     title character varying(512) NOT NULL,
 	promo_text text NOT NULL,	
 	promo_type promo_type NOT NULL,	
+	image_type image_type NOT NULL,
 	buttons text NOT NULL,	
 	active boolean NOT NULL default false,
 	order_index integer NOT NULL,		
@@ -26,3 +30,5 @@ CREATE TABLE admin_promo
 drop table IF EXISTS admin_promo;
 
 drop type IF EXISTS promo_type;
+
+drop type IF EXISTS image_type;

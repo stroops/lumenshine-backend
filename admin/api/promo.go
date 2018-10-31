@@ -1,10 +1,17 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
+	"github.com/Soneso/lumenshine-backend/admin/config"
 	"github.com/Soneso/lumenshine-backend/admin/db"
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
@@ -18,6 +25,12 @@ const (
 	//PromoRoutePrefix for the promo routes
 	PromoRoutePrefix = "promo"
 )
+
+var imageExtensions = map[string]int32{
+	".png":  0,
+	".jpg":  1,
+	".jpeg": 2,
+}
 
 //init setup all the routes for the promo handling
 func init() {
@@ -48,14 +61,22 @@ type GetPromoRequest struct {
 //GetPromoResponse response
 // swagger:model
 type GetPromoResponse struct {
-	ID      int      `form:"id" json:"id"`
-	Name    string   `form:"name" json:"name"`
-	Title   string   `form:"title" json:"title"`
-	Text    string   `form:"text" json:"text"`
-	Image   string   `form:"image" json:"image"`
-	Active  bool     `form:"active" json:"active"`
-	Type    string   `form:"type" json:"type"`
-	Buttons []Button `form:"buttons" json:"buttons"`
+	ID      int                `form:"id" json:"id"`
+	Name    string             `form:"name" json:"name"`
+	Title   string             `form:"title" json:"title"`
+	Text    string             `form:"text" json:"text"`
+	Image   PromoImageResponse `form:"image" json:"image"`
+	Active  bool               `form:"active" json:"active"`
+	Type    string             `form:"type" json:"type"`
+	Buttons []Button           `form:"buttons" json:"buttons"`
+}
+
+//PromoImageResponse - image content and details
+// swagger:model
+type PromoImageResponse struct {
+	FileName string `json:"file_name"`
+	Content  string `json:"content"`
+	MimeType string `json:"mime_type"`
 }
 
 //GetPromo returns promo by id
@@ -99,7 +120,6 @@ func GetPromo(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	//todo - get image
 	response := GetPromoResponse{
 		ID:      promo.ID,
 		Name:    promo.Name,
@@ -110,8 +130,31 @@ func GetPromo(uc *mw.AdminContext, c *gin.Context) {
 		Buttons: buttons,
 	}
 
-	c.JSON(http.StatusOK, response)
+	image, err := getImageResponse(promo.ID, promo.ImageType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Could not read image", cerr.GeneralError))
+		return
+	}
+	response.Image = *image
 
+	c.JSON(http.StatusOK, &response)
+}
+
+func getImageResponse(id int, imageType string) (*PromoImageResponse, error) {
+	fileName := fmt.Sprintf("%d.%v", id, imageType)
+	filePath := filepath.Join(config.Cnf.Promo.ImagesPath, fileName)
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	str := base64.StdEncoding.EncodeToString(content)
+	mimeType := MimeTypes[imageType]
+
+	return &PromoImageResponse{
+		FileName: fileName,
+		Content:  str,
+		MimeType: mimeType}, nil
 }
 
 //AllPromos returns all promos
@@ -132,16 +175,15 @@ func AllPromos(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	var response []GetPromoResponse
-
 	for _, promo := range promos {
-		//todo - get image
 		var buttons []Button
 		err = json.Unmarshal([]byte(promo.Buttons), &buttons)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deserializing buttons", cerr.GeneralError))
 			return
 		}
-		response = append(response, GetPromoResponse{
+
+		item := GetPromoResponse{
 			ID:      promo.ID,
 			Name:    promo.Name,
 			Title:   promo.Title,
@@ -149,10 +191,17 @@ func AllPromos(uc *mw.AdminContext, c *gin.Context) {
 			Type:    promo.PromoType,
 			Active:  promo.Active,
 			Buttons: buttons,
-		})
+		}
+		image, err := getImageResponse(promo.ID, promo.ImageType)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Could not read image", cerr.GeneralError))
+			return
+		}
+		item.Image = *image
 
+		response = append(response, item)
 	}
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, &response)
 }
 
 //AddPromoRequest request
@@ -232,13 +281,30 @@ func AddPromo(uc *mw.AdminContext, c *gin.Context) {
 		return
 	}
 
-	//todo save image to disk
+	file, err := c.FormFile("upload_image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, "Error reading upload image", cerr.InvalidArgument))
+		return
+	}
+	ext := filepath.Ext(strings.TrimSpace(file.Filename))
+	if _, ok := imageExtensions[ext]; !ok {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("upload_image", cerr.InvalidArgument, "Valid image extensions are: png, jpg, jpeg.", ""))
+		return
+	}
+	if _, err = os.Stat(config.Cnf.Promo.ImagesPath); os.IsNotExist(err) {
+		if err = os.MkdirAll(config.Cnf.Promo.ImagesPath, os.ModePerm); err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error creating file path", cerr.GeneralError))
+			return
+		}
+	}
+
 	promo := &models.AdminPromo{
 		Name:       r.Name,
 		Title:      r.Title,
 		PromoText:  r.Text,
 		PromoType:  r.Type,
 		Active:     false,
+		ImageType:  ext[1:],
 		Buttons:    string(buttons),
 		OrderIndex: orderIndex,
 		UpdatedBy:  getUpdatedBy(c)}
@@ -246,6 +312,13 @@ func AddPromo(uc *mw.AdminContext, c *gin.Context) {
 	err = db.AddPromo(promo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error adding promo", cerr.GeneralError))
+		return
+	}
+
+	fileName := fmt.Sprintf("%d%v", promo.ID, ext)
+	filePath := filepath.Join(config.Cnf.Promo.ImagesPath, fileName)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error saving uploaded image", cerr.GeneralError))
 		return
 	}
 
@@ -318,8 +391,6 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 		}
 	}
 
-	//todo - check for image upload and update if the case
-
 	if r.Name != nil {
 		promo.Name = *r.Name
 	}
@@ -345,6 +416,21 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating promo", cerr.GeneralError))
 		return
+	}
+
+	file, err := c.FormFile("upload_image")
+	if err == nil && file.Size > 0 {
+		ext := filepath.Ext(strings.TrimSpace(file.Filename))
+		if _, ok := imageExtensions[ext]; !ok {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("upload_image", cerr.InvalidArgument, "Valid image extensions are: png, jpg, jpeg.", ""))
+			return
+		}
+		fileName := fmt.Sprintf("%d%v", promo.ID, ext)
+		filePath := filepath.Join(config.Cnf.Promo.ImagesPath, fileName)
+		if err := c.SaveUploadedFile(file, filePath); err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error saving uploaded image", cerr.GeneralError))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, "{}")
@@ -395,6 +481,13 @@ func DeletePromo(uc *mw.AdminContext, c *gin.Context) {
 	err = db.DeletePromo(promo)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting promo", cerr.GeneralError))
+		return
+	}
+
+	fileName := fmt.Sprintf("%d.%v", promo.ID, promo.ImageType)
+	filePath := filepath.Join(config.Cnf.Promo.ImagesPath, fileName)
+	if err := os.Remove(filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting image", cerr.GeneralError))
 		return
 	}
 

@@ -57,6 +57,13 @@ const (
 	PromoTypeBig   = "big"
 )
 
+// Enum values for image_type
+const (
+	ImageTypePNG  = "png"
+	ImageTypeJPG  = "jpg"
+	ImageTypeJpeg = "jpeg"
+)
+
 // Enum values for stellar_account_type
 const (
 	StellarAccountTypeFunding = "funding"
