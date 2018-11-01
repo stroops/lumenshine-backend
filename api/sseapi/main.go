@@ -37,6 +37,7 @@ const (
 var (
 	dbClient  pb.DBServiceClient
 	jwtClient pb.JwtServiceClient
+	hub       *Hub
 )
 
 func main() {
@@ -76,7 +77,7 @@ func main() {
 	r.Use(ic.MiddlewareFunc())
 
 	//websocket hub
-	hub := newHub()
+	hub = newHub()
 	go hub.run()
 
 	// Add CORS middleware
@@ -95,27 +96,48 @@ func main() {
 	r.GET("/portal/sse/test", Test)
 	r.GET("/portal/sse/info", Info)
 
-	r.GET("/ws", func(c *gin.Context) {
-		serveWs(hub, c)
-	})
-	r.GET("/test", func(c *gin.Context) {
-		http.ServeFile(c.Writer, c.Request, "templates/test.html")
-	})
+	if cnf.IsDevSystem {
+		//we run this endpoints only in dev mode, because we can't use websockets in insomnia
+		//we have the send_message endpoint for sending messages and the /test which will return a small vue app for doing local test
+		r.GET("/get_ws", SSEContext(GetWS))
+		r.POST("/remove_ws", SSEContext(RemoveWS))
+		r.POST("/listen_account", SSEContext(ListenAccount))
+		r.POST("/remove_account", SSEContext(RemoveAccount))
 
-	//r.StaticFile("/test.html", "./templates/test.html")
+		r.POST("/send_message", SSEContext(SendMessage))
+
+		r.GET("/test", func(c *gin.Context) {
+			http.ServeFile(c.Writer, c.Request, "templates/test.html")
+		})
+	}
 
 	//this group is used, with the full authenticator, which means, userID and claim is present
 	//the middleware will check for full logged in (calim must be present)
 	//this is the main group, that is used to read data etc.
-	auth := r.Group("/portal/sse/")
+	auth := r.Group("/portal/sse")
 	auth.Use(authMiddlewareFull.MiddlewareFunc())
 	{
 		auth.POST("refresh", authMiddlewareFull.RefreshHandler)
+		auth.GET("/get_ws", SSEContext(GetWS))
+		auth.POST("/remove_ws", SSEContext(RemoveWS))
+		auth.POST("/listen_account", SSEContext(ListenAccount))
+		auth.POST("/remove_account", SSEContext(RemoveAccount))
 	}
 
 	//run the api
 	if err := r.Run(fmt.Sprintf(":%d", cnf.Port)); err != nil {
 		log.WithError(err).Fatalf("Failed to run server")
+	}
+}
+
+//SSEContext request context for sse
+func SSEContext(f func(h *Hub, uc *mw.IcopContext, c *gin.Context)) gin.HandlerFunc {
+	uc := &mw.IcopContext{}
+	return func(c *gin.Context) {
+		uc.Language = c.GetString("language")
+		uc.RequestID = c.GetString("request_id")
+		uc.Log = helpers.GetDefaultLog(c.GetString("servicename"), uc.RequestID)
+		f(hub, uc, c)
 	}
 }
 
@@ -141,6 +163,12 @@ var (
 	gitRemote  string
 )
 
+//InfoClient info for all connected clients
+type InfoClient struct {
+	Key       string
+	Addresses []string
+}
+
 // InfoStruct represents the information for the application
 // swagger:model InfoStruct
 type InfoStruct struct {
@@ -151,6 +179,12 @@ type InfoStruct struct {
 	BuildDate           string
 	GitVersion          string
 	GitRemote           string
+
+	HubClients      []*InfoClient
+	HubClientsCount int
+
+	HubAddresses      map[string][]string
+	HubAddressesCount int
 }
 
 func bToMb(b uint64) uint64 {
@@ -176,6 +210,17 @@ func Info(c *gin.Context) {
 	d.BuildDate = buildDate
 	d.GitVersion = gitVersion
 	d.GitRemote = gitRemote
+
+	d.HubClientsCount = len(hub.clients)
+	for key, c := range hub.clients {
+		d.HubClients = append(d.HubClients, &InfoClient{
+			Key:       key,
+			Addresses: c.addresses,
+		})
+	}
+	d.HubAddresses = hub.addresses
+	d.HubAddressesCount = len(hub.addresses)
+
 	c.JSON(http.StatusOK, d)
 }
 
