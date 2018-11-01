@@ -58,9 +58,9 @@ var IncomingTransactionColumns = struct {
 	ReceivingAddress:                 "receiving_address",
 	SenderAddress:                    "sender_address",
 	PaymentNetworkAmountDenomination: "payment_network_amount_denomination",
-	OrderID:   "order_id",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
+	OrderID:                          "order_id",
+	CreatedAt:                        "created_at",
+	UpdatedAt:                        "updated_at",
 }
 
 // IncomingTransactionRels is where relationship names are stored.

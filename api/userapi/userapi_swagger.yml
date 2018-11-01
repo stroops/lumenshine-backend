@@ -401,6 +401,37 @@ definitions:
     - wallet_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetPromoResponse:
+    description: GetPromoResponse - promo response item
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      buttons:
+        items:
+          $ref: '#/definitions/PromoButton'
+        type: array
+        x-go-name: Buttons
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      image:
+        $ref: '#/definitions/PromoImage'
+      name:
+        type: string
+        x-go-name: Name
+      text:
+        type: string
+        x-go-name: Text
+      title:
+        type: string
+        x-go-name: Title
+      type:
+        type: string
+        x-go-name: Type
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetSEP10TransactionResponse:
     description: GetSEP10TransactionResponse response from API
     properties:
@@ -916,6 +947,28 @@ definitions:
           $ref: '#/definitions/Occupation'
         type: array
         x-go-name: Occupations
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  PromoButton:
+    description: PromoButton - one button
+    properties:
+      link:
+        type: string
+        x-go-name: Link
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  PromoImage:
+    description: PromoImage - image content and details
+    properties:
+      content:
+        type: string
+        x-go-name: Content
+      mime_type:
+        type: string
+        x-go-name: MimeType
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   RegisterUserRequest:
@@ -2181,6 +2234,21 @@ paths:
             type: array
       tags:
       - wallet
+  /portal/user/dashboard/get_promo_cards:
+    get:
+      description: Returns all active promo cards
+      operationId: GetPromos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetPromoResponse
+          schema:
+            items:
+              $ref: '#/definitions/GetPromoResponse'
+            type: array
+      tags:
+      - promo
   /portal/user/dashboard/get_stellar_transactions:
     get:
       consumes:

@@ -1,4 +1,19 @@
 definitions:
+  ActivatePromoRequest:
+    description: ActivatePromoRequest request
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    - active
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   ActivateRequest:
     description: ActivateRequest for activate/deactivate
     properties:
@@ -218,6 +233,32 @@ definitions:
     - signer_secret_seed
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  AddPromoRequest:
+    description: AddPromoRequest request
+    properties:
+      buttons:
+        items:
+          $ref: '#/definitions/Button'
+        type: array
+        x-go-name: Buttons
+      name:
+        type: string
+        x-go-name: Name
+      text:
+        type: string
+        x-go-name: Text
+      title:
+        type: string
+        x-go-name: Title
+      type:
+        type: string
+        x-go-name: Type
+    required:
+    - name
+    - type
+    - buttons
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   AddTrustlineRequest:
     description: AddTrustlineRequest - info
     properties:
@@ -254,6 +295,17 @@ definitions:
     - public_key
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  Button:
+    description: Button - one button
+    properties:
+      link:
+        type: string
+        x-go-name: Link
+      name:
+        type: string
+        x-go-name: Name
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   ChangeOrderKnownCurrencyRequest:
     description: ChangeOrderKnownCurrencyRequest request
     properties:
@@ -272,6 +324,22 @@ definitions:
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   ChangeOrderKnownInflationDestinationRequest:
     description: ChangeOrderKnownInflationDestinationRequest request
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      order_modifier:
+        format: int64
+        type: integer
+        x-go-name: OrderModifier
+    required:
+    - id
+    - order_modifier
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  ChangeOrderPromoRequest:
+    description: ChangeOrderPromoRequest request
     properties:
       id:
         format: int64
@@ -710,6 +778,36 @@ definitions:
     - name
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  EditPromoRequest:
+    description: EditPromoRequest request
+    properties:
+      buttons:
+        items:
+          $ref: '#/definitions/Button'
+        type: array
+        x-go-name: Buttons
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      text:
+        type: string
+        x-go-name: Text
+      title:
+        type: string
+        x-go-name: Title
+      type:
+        type: string
+        x-go-name: Type
+    required:
+    - id
+    - type
+    - buttons
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   EditRequest:
     description: EditRequest - edits user information
     properties:
@@ -822,6 +920,48 @@ definitions:
       short_description:
         type: string
         x-go-name: ShortDescription
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  GetPromoRequest:
+    description: GetPromoRequest request used in get one and delete
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  GetPromoResponse:
+    description: GetPromoResponse response
+    properties:
+      active:
+        type: boolean
+        x-go-name: Active
+      buttons:
+        items:
+          $ref: '#/definitions/Button'
+        type: array
+        x-go-name: Buttons
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      image:
+        $ref: '#/definitions/PromoImageResponse'
+      name:
+        type: string
+        x-go-name: Name
+      text:
+        type: string
+        x-go-name: Text
+      title:
+        type: string
+        x-go-name: Title
+      type:
+        type: string
+        x-go-name: Type
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   GetSignerSeedRequest:
@@ -1038,6 +1178,31 @@ definitions:
         format: int64
         type: integer
         x-go-name: Price
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  PromoDeleteRequest:
+    description: PromoDeleteRequest request used in get one and delete
+    properties:
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    required:
+    - id
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  PromoImageResponse:
+    description: PromoImageResponse - image content and details
+    properties:
+      content:
+        type: string
+        x-go-name: Content
+      file_name:
+        type: string
+        x-go-name: FileName
+      mime_type:
+        type: string
+        x-go-name: MimeType
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   RegisterRequest:
@@ -2514,6 +2679,167 @@ paths:
             $ref: '#/definitions/GetKnownInflationDestinationsResponse'
       tags:
       - KnownInflationDestinations
+  /portal/admin/dash/promo/add:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds a new promo
+      operationId: AddPromo
+      parameters:
+      - in: query
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: query
+        name: title
+        type: string
+        x-go-name: Title
+      - in: query
+        name: text
+        type: string
+        x-go-name: Text
+      - in: query
+        name: type
+        required: true
+        type: string
+        x-go-name: Type
+      - in: query
+        items:
+          $ref: '#/definitions/Button'
+        name: buttons
+        required: true
+        type: array
+        x-go-name: Buttons
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - Promo
+  /portal/admin/dash/promo/all:
+    get:
+      description: Returns all promos
+      operationId: AllPromos
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetPromoResponse
+          schema:
+            items:
+              $ref: '#/definitions/GetPromoResponse'
+            type: array
+      tags:
+      - Promo
+  /portal/admin/dash/promo/changeOrder:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Activates/deactivates the promo
+      operationId: ActivatePromo
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: active
+        required: true
+        type: boolean
+        x-go-name: Active
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - Promo
+  /portal/admin/dash/promo/delete:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Deletes the given promo
+      operationId: DeletePromo
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - Promo
+  /portal/admin/dash/promo/edit:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Edits promo details
+      operationId: EditPromo
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: title
+        type: string
+        x-go-name: Title
+      - in: query
+        name: text
+        type: string
+        x-go-name: Text
+      - in: query
+        name: type
+        required: true
+        type: string
+        x-go-name: Type
+      - in: query
+        items:
+          $ref: '#/definitions/Button'
+        name: buttons
+        required: true
+        type: array
+        x-go-name: Buttons
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - Promo
+  /portal/admin/dash/promo/get/:id:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns promo by id
+      operationId: GetPromo
+      parameters:
+      - format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetPromoResponse
+          schema:
+            $ref: '#/definitions/GetPromoResponse'
+      tags:
+      - Promo
   /portal/admin/dash/stellar_account/accounts_list:
     get:
       description: Returns all stellar accounts
