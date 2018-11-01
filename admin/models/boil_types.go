@@ -51,6 +51,19 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	return str
 }
 
+// Enum values for promo_type
+const (
+	PromoTypeSmall = "small"
+	PromoTypeBig   = "big"
+)
+
+// Enum values for image_type
+const (
+	ImageTypePNG  = "png"
+	ImageTypeJPG  = "jpg"
+	ImageTypeJpeg = "jpeg"
+)
+
 // Enum values for stellar_account_type
 const (
 	StellarAccountTypeFunding = "funding"
@@ -66,8 +79,8 @@ const (
 
 // Enum values for stellar_trustline_status
 const (
-	StellarTrustlineStatusDenied  = "denied"
-	StellarTrustlineStatusRevoked = "revoked"
 	StellarTrustlineStatusOk      = "ok"
 	StellarTrustlineStatusWaiting = "waiting"
+	StellarTrustlineStatusDenied  = "denied"
+	StellarTrustlineStatusRevoked = "revoked"
 )

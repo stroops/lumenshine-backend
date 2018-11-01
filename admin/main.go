@@ -112,6 +112,7 @@ func main() {
 	api.AddKnownCurrenciesRoutes(auth)
 	api.AddKnownInflationDestinationsRoutes(auth)
 	api.AddICORoutes(auth)
+	api.AddPromoRoutes(auth)
 
 	//special handling for the refresh
 	auth.GET("refresh", authMiddleware.RefreshHandler)

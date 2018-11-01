@@ -30,6 +30,11 @@ type StellarNetworkConfig struct {
 	HorizonURL string
 }
 
+//PromoConfig - promo configuration
+type PromoConfig struct {
+	ImagesPath string
+}
+
 //SiteConfig globals that define the site behaviour
 type SiteConfig struct {
 	SiteName    string
@@ -67,7 +72,8 @@ type Config struct {
 	IsDevSystem     bool
 	ConnectToCoreDB bool
 
-	Kyc KycConfig
+	Kyc   KycConfig
+	Promo PromoConfig
 }
 
 //Cnf holds the application configuration

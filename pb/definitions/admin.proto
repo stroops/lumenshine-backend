@@ -41,9 +41,34 @@ message GetKnownInflationDestinationsResponse {
   repeated GetKnownInflationDestinationResponse destinations = 1;
 }
 
+message GetPromosResponse {
+  repeated Promo promos = 1;
+}
+
+message Promo {
+  int64 id = 1;
+  string name = 2;
+  string title = 3;
+  string text = 4;
+  PromoImage image = 5;
+  string type = 6;
+  repeated PromoButton buttons = 7;
+}
+
+message PromoButton {
+  string name = 1;
+  string link = 2;
+}
+
+message PromoImage {
+  string content = 1;
+  string mime_type = 2;
+}
+
 service AdminApiService {
   rpc GetKnownCurrency (GetKnownCurrencyRequest) returns (GetKnownCurrencyResponse) {}
   rpc GetKnownCurrencies (Empty) returns (GetKnownCurrenciesResponse) {}
   rpc GetKnownInflationDestination (GetKnownInflationDestinationRequest) returns (GetKnownInflationDestinationResponse) {}
   rpc GetKnownInflationDestinations (Empty) returns (GetKnownInflationDestinationsResponse) {}
+  rpc GetPromos (Empty) returns (GetPromosResponse) {}
 }

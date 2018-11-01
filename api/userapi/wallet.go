@@ -127,6 +127,69 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 	})
 }
 
+//GetWalletRequest used for requesting the wallet
+//swagger:parameters GetWalletRequest GetWallet
+type GetWalletRequest struct {
+	//required: true
+	WalletID int64 `form:"wallet_id" json:"wallet_id" query:"wallet_id" validate:"required"`
+}
+
+//GetWalletResponse result
+// swagger:model
+type GetWalletResponse struct {
+	PublicKey         string `json:"public_key"`
+	WalletName        string `json:"wallet_name"`
+	FederationAddress string `json:"federation_address"`
+	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
+	WalletType        string `json:"wallet_type"`
+}
+
+//GetWallet returns wallet details
+// swagger:route GET /portal/user/dashboard/get_wallet wallet GetWallet
+//
+// Returns wallet details
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetWalletResponse
+func GetWallet(uc *mw.IcopContext, c *gin.Context) {
+	var l GetWalletRequest
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	userID := mw.GetAuthUser(c).UserID
+	req := &pb.GetWalletRequest{
+		Base:     NewBaseRequest(uc),
+		WalletId: l.WalletID,
+		UserId:   userID,
+	}
+	wallet, err := dbClient.GetWallet(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallet", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, &GetWalletResponse{
+		PublicKey:         wallet.PublicKey,
+		WalletName:        wallet.WalletName,
+		FederationAddress: getFederationAddress(wallet),
+		ShowOnHomescreen:  wallet.ShowOnHomescreen,
+		WalletType:        wallet.WalletType.String(),
+	})
+}
+
 //GetUserWalletsResponse result
 // swagger:model
 type GetUserWalletsResponse struct {
@@ -162,21 +225,25 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 
 	ws := make([]GetUserWalletsResponse, len(wallets.Wallets))
 	for i, w := range wallets.Wallets {
-		federationAddress := ""
-		if w.FriendlyId != "" && w.Domain != "" {
-			federationAddress = w.FriendlyId + "*" + w.Domain
-		}
 		ws[i] = GetUserWalletsResponse{
 			ID:                w.Id,
 			PublicKey:         w.PublicKey,
 			WalletName:        w.WalletName,
-			FederationAddress: federationAddress,
+			FederationAddress: getFederationAddress(w),
 			ShowOnHomescreen:  w.ShowOnHomescreen,
 			WalletType:        w.WalletType.String(),
 		}
 	}
 
 	c.JSON(http.StatusOK, ws)
+}
+
+func getFederationAddress(wallet *pb.Wallet) string {
+	federationAddress := ""
+	if wallet.FriendlyId != "" && wallet.Domain != "" {
+		federationAddress = wallet.FriendlyId + "*" + wallet.Domain
+	}
+	return federationAddress
 }
 
 //RemoveWalletRequest request

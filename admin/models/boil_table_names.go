@@ -7,6 +7,7 @@ var TableNames = struct {
 	AdminGroup                      string
 	AdminKnownCurrencies            string
 	AdminKnownInflationDestinations string
+	AdminPromo                      string
 	AdminStellarAccount             string
 	AdminStellarAsset               string
 	AdminStellarSigner              string
@@ -17,6 +18,7 @@ var TableNames = struct {
 	AdminGroup:                      "admin_group",
 	AdminKnownCurrencies:            "admin_known_currencies",
 	AdminKnownInflationDestinations: "admin_known_inflation_destinations",
+	AdminPromo:                      "admin_promo",
 	AdminStellarAccount:             "admin_stellar_account",
 	AdminStellarAsset:               "admin_stellar_asset",
 	AdminStellarSigner:              "admin_stellar_signer",

@@ -3,11 +3,9 @@
 
 package pb
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	math "math"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 import (
 	context "golang.org/x/net/context"
@@ -37,17 +35,16 @@ func (m *GetKnownCurrencyRequest) Reset()         { *m = GetKnownCurrencyRequest
 func (m *GetKnownCurrencyRequest) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrencyRequest) ProtoMessage()    {}
 func (*GetKnownCurrencyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73a7fc70dcc2027c, []int{0}
+	return fileDescriptor_admin_a41446cca2d70e32, []int{0}
 }
-
 func (m *GetKnownCurrencyRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Unmarshal(m, b)
 }
 func (m *GetKnownCurrencyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Marshal(b, m, deterministic)
 }
-func (m *GetKnownCurrencyRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownCurrencyRequest.Merge(m, src)
+func (dst *GetKnownCurrencyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownCurrencyRequest.Merge(dst, src)
 }
 func (m *GetKnownCurrencyRequest) XXX_Size() int {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Size(m)
@@ -89,17 +86,16 @@ func (m *GetKnownCurrencyResponse) Reset()         { *m = GetKnownCurrencyRespon
 func (m *GetKnownCurrencyResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrencyResponse) ProtoMessage()    {}
 func (*GetKnownCurrencyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73a7fc70dcc2027c, []int{1}
+	return fileDescriptor_admin_a41446cca2d70e32, []int{1}
 }
-
 func (m *GetKnownCurrencyResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Unmarshal(m, b)
 }
 func (m *GetKnownCurrencyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Marshal(b, m, deterministic)
 }
-func (m *GetKnownCurrencyResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownCurrencyResponse.Merge(m, src)
+func (dst *GetKnownCurrencyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownCurrencyResponse.Merge(dst, src)
 }
 func (m *GetKnownCurrencyResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Size(m)
@@ -170,17 +166,16 @@ func (m *GetKnownCurrenciesResponse) Reset()         { *m = GetKnownCurrenciesRe
 func (m *GetKnownCurrenciesResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrenciesResponse) ProtoMessage()    {}
 func (*GetKnownCurrenciesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73a7fc70dcc2027c, []int{2}
+	return fileDescriptor_admin_a41446cca2d70e32, []int{2}
 }
-
 func (m *GetKnownCurrenciesResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Unmarshal(m, b)
 }
 func (m *GetKnownCurrenciesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Marshal(b, m, deterministic)
 }
-func (m *GetKnownCurrenciesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownCurrenciesResponse.Merge(m, src)
+func (dst *GetKnownCurrenciesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownCurrenciesResponse.Merge(dst, src)
 }
 func (m *GetKnownCurrenciesResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Size(m)
@@ -210,17 +205,16 @@ func (m *GetKnownInflationDestinationRequest) Reset()         { *m = GetKnownInf
 func (m *GetKnownInflationDestinationRequest) String() string { return proto.CompactTextString(m) }
 func (*GetKnownInflationDestinationRequest) ProtoMessage()    {}
 func (*GetKnownInflationDestinationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73a7fc70dcc2027c, []int{3}
+	return fileDescriptor_admin_a41446cca2d70e32, []int{3}
 }
-
 func (m *GetKnownInflationDestinationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownInflationDestinationRequest.Unmarshal(m, b)
 }
 func (m *GetKnownInflationDestinationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownInflationDestinationRequest.Marshal(b, m, deterministic)
 }
-func (m *GetKnownInflationDestinationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownInflationDestinationRequest.Merge(m, src)
+func (dst *GetKnownInflationDestinationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationRequest.Merge(dst, src)
 }
 func (m *GetKnownInflationDestinationRequest) XXX_Size() int {
 	return xxx_messageInfo_GetKnownInflationDestinationRequest.Size(m)
@@ -262,17 +256,16 @@ func (m *GetKnownInflationDestinationResponse) Reset()         { *m = GetKnownIn
 func (m *GetKnownInflationDestinationResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownInflationDestinationResponse) ProtoMessage()    {}
 func (*GetKnownInflationDestinationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73a7fc70dcc2027c, []int{4}
+	return fileDescriptor_admin_a41446cca2d70e32, []int{4}
 }
-
 func (m *GetKnownInflationDestinationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownInflationDestinationResponse.Unmarshal(m, b)
 }
 func (m *GetKnownInflationDestinationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownInflationDestinationResponse.Marshal(b, m, deterministic)
 }
-func (m *GetKnownInflationDestinationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownInflationDestinationResponse.Merge(m, src)
+func (dst *GetKnownInflationDestinationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationResponse.Merge(dst, src)
 }
 func (m *GetKnownInflationDestinationResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownInflationDestinationResponse.Size(m)
@@ -343,17 +336,16 @@ func (m *GetKnownInflationDestinationsResponse) Reset()         { *m = GetKnownI
 func (m *GetKnownInflationDestinationsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownInflationDestinationsResponse) ProtoMessage()    {}
 func (*GetKnownInflationDestinationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_73a7fc70dcc2027c, []int{5}
+	return fileDescriptor_admin_a41446cca2d70e32, []int{5}
 }
-
 func (m *GetKnownInflationDestinationsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Unmarshal(m, b)
 }
 func (m *GetKnownInflationDestinationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Marshal(b, m, deterministic)
 }
-func (m *GetKnownInflationDestinationsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownInflationDestinationsResponse.Merge(m, src)
+func (dst *GetKnownInflationDestinationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationsResponse.Merge(dst, src)
 }
 func (m *GetKnownInflationDestinationsResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Size(m)
@@ -371,6 +363,222 @@ func (m *GetKnownInflationDestinationsResponse) GetDestinations() []*GetKnownInf
 	return nil
 }
 
+type GetPromosResponse struct {
+	Promos               []*Promo `protobuf:"bytes,1,rep,name=promos,proto3" json:"promos,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetPromosResponse) Reset()         { *m = GetPromosResponse{} }
+func (m *GetPromosResponse) String() string { return proto.CompactTextString(m) }
+func (*GetPromosResponse) ProtoMessage()    {}
+func (*GetPromosResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_a41446cca2d70e32, []int{6}
+}
+func (m *GetPromosResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetPromosResponse.Unmarshal(m, b)
+}
+func (m *GetPromosResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetPromosResponse.Marshal(b, m, deterministic)
+}
+func (dst *GetPromosResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetPromosResponse.Merge(dst, src)
+}
+func (m *GetPromosResponse) XXX_Size() int {
+	return xxx_messageInfo_GetPromosResponse.Size(m)
+}
+func (m *GetPromosResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetPromosResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetPromosResponse proto.InternalMessageInfo
+
+func (m *GetPromosResponse) GetPromos() []*Promo {
+	if m != nil {
+		return m.Promos
+	}
+	return nil
+}
+
+type Promo struct {
+	Id                   int64          `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name                 string         `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Title                string         `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Text                 string         `protobuf:"bytes,4,opt,name=text,proto3" json:"text,omitempty"`
+	Image                *PromoImage    `protobuf:"bytes,5,opt,name=image,proto3" json:"image,omitempty"`
+	Type                 string         `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
+	Buttons              []*PromoButton `protobuf:"bytes,7,rep,name=buttons,proto3" json:"buttons,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *Promo) Reset()         { *m = Promo{} }
+func (m *Promo) String() string { return proto.CompactTextString(m) }
+func (*Promo) ProtoMessage()    {}
+func (*Promo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_a41446cca2d70e32, []int{7}
+}
+func (m *Promo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Promo.Unmarshal(m, b)
+}
+func (m *Promo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Promo.Marshal(b, m, deterministic)
+}
+func (dst *Promo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Promo.Merge(dst, src)
+}
+func (m *Promo) XXX_Size() int {
+	return xxx_messageInfo_Promo.Size(m)
+}
+func (m *Promo) XXX_DiscardUnknown() {
+	xxx_messageInfo_Promo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Promo proto.InternalMessageInfo
+
+func (m *Promo) GetId() int64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *Promo) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Promo) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *Promo) GetText() string {
+	if m != nil {
+		return m.Text
+	}
+	return ""
+}
+
+func (m *Promo) GetImage() *PromoImage {
+	if m != nil {
+		return m.Image
+	}
+	return nil
+}
+
+func (m *Promo) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *Promo) GetButtons() []*PromoButton {
+	if m != nil {
+		return m.Buttons
+	}
+	return nil
+}
+
+type PromoButton struct {
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Link                 string   `protobuf:"bytes,2,opt,name=link,proto3" json:"link,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PromoButton) Reset()         { *m = PromoButton{} }
+func (m *PromoButton) String() string { return proto.CompactTextString(m) }
+func (*PromoButton) ProtoMessage()    {}
+func (*PromoButton) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_a41446cca2d70e32, []int{8}
+}
+func (m *PromoButton) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PromoButton.Unmarshal(m, b)
+}
+func (m *PromoButton) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PromoButton.Marshal(b, m, deterministic)
+}
+func (dst *PromoButton) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoButton.Merge(dst, src)
+}
+func (m *PromoButton) XXX_Size() int {
+	return xxx_messageInfo_PromoButton.Size(m)
+}
+func (m *PromoButton) XXX_DiscardUnknown() {
+	xxx_messageInfo_PromoButton.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PromoButton proto.InternalMessageInfo
+
+func (m *PromoButton) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *PromoButton) GetLink() string {
+	if m != nil {
+		return m.Link
+	}
+	return ""
+}
+
+type PromoImage struct {
+	Content              string   `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	MimeType             string   `protobuf:"bytes,2,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PromoImage) Reset()         { *m = PromoImage{} }
+func (m *PromoImage) String() string { return proto.CompactTextString(m) }
+func (*PromoImage) ProtoMessage()    {}
+func (*PromoImage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_admin_a41446cca2d70e32, []int{9}
+}
+func (m *PromoImage) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PromoImage.Unmarshal(m, b)
+}
+func (m *PromoImage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PromoImage.Marshal(b, m, deterministic)
+}
+func (dst *PromoImage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoImage.Merge(dst, src)
+}
+func (m *PromoImage) XXX_Size() int {
+	return xxx_messageInfo_PromoImage.Size(m)
+}
+func (m *PromoImage) XXX_DiscardUnknown() {
+	xxx_messageInfo_PromoImage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PromoImage proto.InternalMessageInfo
+
+func (m *PromoImage) GetContent() string {
+	if m != nil {
+		return m.Content
+	}
+	return ""
+}
+
+func (m *PromoImage) GetMimeType() string {
+	if m != nil {
+		return m.MimeType
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*GetKnownCurrencyRequest)(nil), "pb.GetKnownCurrencyRequest")
 	proto.RegisterType((*GetKnownCurrencyResponse)(nil), "pb.GetKnownCurrencyResponse")
@@ -378,6 +586,10 @@ func init() {
 	proto.RegisterType((*GetKnownInflationDestinationRequest)(nil), "pb.GetKnownInflationDestinationRequest")
 	proto.RegisterType((*GetKnownInflationDestinationResponse)(nil), "pb.GetKnownInflationDestinationResponse")
 	proto.RegisterType((*GetKnownInflationDestinationsResponse)(nil), "pb.GetKnownInflationDestinationsResponse")
+	proto.RegisterType((*GetPromosResponse)(nil), "pb.GetPromosResponse")
+	proto.RegisterType((*Promo)(nil), "pb.Promo")
+	proto.RegisterType((*PromoButton)(nil), "pb.PromoButton")
+	proto.RegisterType((*PromoImage)(nil), "pb.PromoImage")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -396,6 +608,7 @@ type AdminApiServiceClient interface {
 	GetKnownCurrencies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownCurrenciesResponse, error)
 	GetKnownInflationDestination(ctx context.Context, in *GetKnownInflationDestinationRequest, opts ...grpc.CallOption) (*GetKnownInflationDestinationResponse, error)
 	GetKnownInflationDestinations(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetKnownInflationDestinationsResponse, error)
+	GetPromos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetPromosResponse, error)
 }
 
 type adminApiServiceClient struct {
@@ -442,12 +655,22 @@ func (c *adminApiServiceClient) GetKnownInflationDestinations(ctx context.Contex
 	return out, nil
 }
 
+func (c *adminApiServiceClient) GetPromos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GetPromosResponse, error) {
+	out := new(GetPromosResponse)
+	err := c.cc.Invoke(ctx, "/pb.AdminApiService/GetPromos", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AdminApiServiceServer is the server API for AdminApiService service.
 type AdminApiServiceServer interface {
 	GetKnownCurrency(context.Context, *GetKnownCurrencyRequest) (*GetKnownCurrencyResponse, error)
 	GetKnownCurrencies(context.Context, *Empty) (*GetKnownCurrenciesResponse, error)
 	GetKnownInflationDestination(context.Context, *GetKnownInflationDestinationRequest) (*GetKnownInflationDestinationResponse, error)
 	GetKnownInflationDestinations(context.Context, *Empty) (*GetKnownInflationDestinationsResponse, error)
+	GetPromos(context.Context, *Empty) (*GetPromosResponse, error)
 }
 
 func RegisterAdminApiServiceServer(s *grpc.Server, srv AdminApiServiceServer) {
@@ -526,6 +749,24 @@ func _AdminApiService_GetKnownInflationDestinations_Handler(srv interface{}, ctx
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminApiService_GetPromos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminApiServiceServer).GetPromos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AdminApiService/GetPromos",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminApiServiceServer).GetPromos(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _AdminApiService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pb.AdminApiService",
 	HandlerType: (*AdminApiServiceServer)(nil),
@@ -546,42 +787,56 @@ var _AdminApiService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "GetKnownInflationDestinations",
 			Handler:    _AdminApiService_GetKnownInflationDestinations_Handler,
 		},
+		{
+			MethodName: "GetPromos",
+			Handler:    _AdminApiService_GetPromos_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "admin.proto",
 }
 
-func init() { proto.RegisterFile("admin.proto", fileDescriptor_73a7fc70dcc2027c) }
+func init() { proto.RegisterFile("admin.proto", fileDescriptor_admin_a41446cca2d70e32) }
 
-var fileDescriptor_73a7fc70dcc2027c = []byte{
-	// 451 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0x8d, 0x9d, 0x50, 0x94, 0x49, 0x45, 0xd2, 0xb9, 0xb0, 0x0a, 0x2d, 0x44, 0x2e, 0x88, 0x14,
-	0xa4, 0x1c, 0xc2, 0x95, 0x4b, 0x68, 0x11, 0xaa, 0x8a, 0x00, 0x99, 0x03, 0x52, 0x2f, 0x96, 0xed,
-	0x1d, 0xca, 0x0a, 0x67, 0x77, 0xd9, 0x5d, 0x03, 0xb9, 0xf2, 0x03, 0xf8, 0xb3, 0xfc, 0x01, 0xe4,
-	0x75, 0x9b, 0xba, 0x1f, 0xb8, 0x48, 0x1c, 0xb9, 0xad, 0xde, 0xbc, 0x19, 0xef, 0xbc, 0xf7, 0xbc,
-	0x30, 0x48, 0xf9, 0x52, 0xc8, 0x99, 0x36, 0xca, 0x29, 0x0c, 0x75, 0x36, 0xde, 0x3c, 0x29, 0x54,
-	0x96, 0x16, 0x35, 0x12, 0xbd, 0x81, 0xbb, 0xaf, 0xc8, 0x1d, 0x49, 0xf5, 0x4d, 0xee, 0x97, 0xc6,
-	0x90, 0xcc, 0x57, 0x31, 0x7d, 0x29, 0xc9, 0x3a, 0xdc, 0x85, 0x5e, 0x96, 0x5a, 0x62, 0xc1, 0x24,
-	0x98, 0x0e, 0xe6, 0xc3, 0x99, 0xce, 0x66, 0x2f, 0x52, 0x4b, 0xa7, 0xe5, 0xd8, 0x17, 0xf1, 0x0e,
-	0x84, 0x82, 0xb3, 0x70, 0x12, 0x4c, 0xbb, 0x71, 0x28, 0x78, 0xf4, 0x23, 0x04, 0x76, 0x75, 0xa0,
-	0xd5, 0x4a, 0xae, 0xc9, 0xc1, 0x19, 0x19, 0x11, 0x7a, 0x32, 0x5d, 0x92, 0x6f, 0xef, 0xc7, 0xfe,
-	0x8c, 0x4f, 0x60, 0x4b, 0x58, 0x5b, 0x92, 0x49, 0x74, 0x99, 0x15, 0x22, 0x4f, 0x3e, 0xd3, 0x8a,
-	0x75, 0x3d, 0x61, 0x58, 0x17, 0xde, 0x79, 0xfc, 0x88, 0x56, 0xb8, 0x03, 0x90, 0x5a, 0x4b, 0x2e,
-	0xc9, 0x15, 0x27, 0xd6, 0xf3, 0xa4, 0xbe, 0x47, 0xf6, 0x15, 0x27, 0x7c, 0x0a, 0x5b, 0xf6, 0x93,
-	0x32, 0x2e, 0xe1, 0x64, 0x73, 0x23, 0xb4, 0x13, 0x4a, 0xb2, 0x5b, 0x9e, 0x35, 0xf2, 0x85, 0x83,
-	0x73, 0x1c, 0xf7, 0x60, 0x54, 0x28, 0x79, 0x72, 0x81, 0xbb, 0x51, 0x7f, 0xb6, 0xc2, 0x9b, 0xd4,
-	0x07, 0x30, 0x50, 0x86, 0x93, 0x49, 0x84, 0xe4, 0xf4, 0x9d, 0xdd, 0xf6, 0xfb, 0x80, 0x87, 0x0e,
-	0x2b, 0x24, 0x3a, 0x86, 0xf1, 0x25, 0x0d, 0x04, 0xd9, 0xb5, 0x0a, 0xcf, 0x01, 0xf2, 0x35, 0xca,
-	0x82, 0x49, 0x77, 0x3a, 0x98, 0x6f, 0x57, 0xea, 0xfe, 0x49, 0xb7, 0xb8, 0xc1, 0x8f, 0x8e, 0x61,
-	0xf7, 0x8c, 0x77, 0x28, 0x3f, 0x16, 0x69, 0x75, 0xa3, 0x03, 0xb2, 0x4e, 0x48, 0x7f, 0xfc, 0x27,
-	0xf3, 0x7e, 0x86, 0xf0, 0xb0, 0x7d, 0xf8, 0x7f, 0x66, 0x64, 0x09, 0x8f, 0xda, 0xf4, 0x38, 0xf7,
-	0xf4, 0x35, 0x6c, 0xf2, 0x06, 0x7e, 0xea, 0xea, 0xb4, 0xe9, 0x6a, 0x9b, 0xa0, 0xf1, 0x85, 0xee,
-	0xf9, 0xaf, 0x10, 0x86, 0x8b, 0xea, 0xb7, 0x5d, 0x68, 0xf1, 0x9e, 0xcc, 0x57, 0x91, 0x13, 0xbe,
-	0x85, 0xd1, 0xe5, 0x7c, 0xe0, 0xbd, 0xeb, 0x53, 0xe3, 0x2d, 0x1e, 0xb7, 0x46, 0x2a, 0xea, 0xe0,
-	0x02, 0xf0, 0x6a, 0x48, 0xb1, 0x5f, 0x75, 0xbd, 0x5c, 0x6a, 0xb7, 0x1a, 0xdf, 0xbf, 0x66, 0x40,
-	0x23, 0xc7, 0x51, 0x07, 0x2d, 0x6c, 0xb7, 0x6d, 0x87, 0x8f, 0x6f, 0xde, 0xbf, 0xbe, 0xeb, 0x5f,
-	0x0b, 0x15, 0x75, 0xf0, 0x03, 0xec, 0xb4, 0x7a, 0xd2, 0x5c, 0x61, 0xef, 0xa6, 0xb9, 0x8d, 0x6d,
-	0xb2, 0x0d, 0xff, 0x22, 0x3e, 0xfb, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x6b, 0x37, 0xee, 0x73, 0x32,
-	0x05, 0x00, 0x00,
+var fileDescriptor_admin_a41446cca2d70e32 = []byte{
+	// 617 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x55, 0xdb, 0x6e, 0xd3, 0x40,
+	0x10, 0x8d, 0x73, 0x69, 0xc8, 0xa4, 0x6a, 0xda, 0x15, 0x08, 0x2b, 0x6d, 0xa1, 0x6c, 0x8b, 0x48,
+	0x41, 0x2a, 0x52, 0x10, 0x3c, 0xf1, 0xd2, 0x0b, 0xaa, 0xaa, 0x22, 0xa8, 0x0c, 0x12, 0x52, 0x5f,
+	0x22, 0x5f, 0x86, 0xb2, 0xaa, 0xbd, 0x6b, 0xbc, 0x1b, 0x68, 0x5e, 0xf9, 0x00, 0xbe, 0x82, 0xaf,
+	0xe0, 0xeb, 0x90, 0xc7, 0x8e, 0xe3, 0xb4, 0xc5, 0xad, 0xc4, 0x23, 0x6f, 0xeb, 0x33, 0x67, 0x66,
+	0x67, 0xcf, 0xd9, 0x59, 0x43, 0xd7, 0x0d, 0x22, 0x21, 0x77, 0xe2, 0x44, 0x19, 0xc5, 0xea, 0xb1,
+	0xd7, 0x5f, 0x3c, 0x0b, 0x95, 0xe7, 0x86, 0x19, 0xc2, 0xdf, 0xc1, 0xfd, 0x43, 0x34, 0xc7, 0x52,
+	0x7d, 0x97, 0xfb, 0xe3, 0x24, 0x41, 0xe9, 0x4f, 0x1c, 0xfc, 0x3a, 0x46, 0x6d, 0xd8, 0x26, 0x34,
+	0x3d, 0x57, 0xa3, 0x6d, 0x6d, 0x58, 0x83, 0xee, 0xb0, 0xb7, 0x13, 0x7b, 0x3b, 0x7b, 0xae, 0xc6,
+	0x3c, 0xec, 0x50, 0x90, 0x2d, 0x41, 0x5d, 0x04, 0x76, 0x7d, 0xc3, 0x1a, 0x34, 0x9c, 0xba, 0x08,
+	0xf8, 0x8f, 0x3a, 0xd8, 0x57, 0x0b, 0xea, 0x58, 0xc9, 0x82, 0x6c, 0x4d, 0xc9, 0x8c, 0x41, 0x53,
+	0xba, 0x11, 0x52, 0x7a, 0xc7, 0xa1, 0x35, 0x7b, 0x0a, 0x2b, 0x42, 0xeb, 0x31, 0x26, 0xa3, 0x78,
+	0xec, 0x85, 0xc2, 0x1f, 0x9d, 0xe3, 0xc4, 0x6e, 0x10, 0xa1, 0x97, 0x05, 0x4e, 0x08, 0x3f, 0xc6,
+	0x09, 0x5b, 0x07, 0x70, 0xb5, 0x46, 0x33, 0xf2, 0x55, 0x80, 0x76, 0x93, 0x48, 0x1d, 0x42, 0xf6,
+	0x55, 0x80, 0xec, 0x19, 0xac, 0xe8, 0x2f, 0x2a, 0x31, 0xa3, 0x00, 0xb5, 0x9f, 0x88, 0xd8, 0x08,
+	0x25, 0xed, 0x16, 0xb1, 0x96, 0x29, 0x70, 0x30, 0xc3, 0xd9, 0x36, 0x2c, 0x87, 0x4a, 0x9e, 0xcd,
+	0x71, 0x17, 0xb2, 0x6d, 0x53, 0xbc, 0x4c, 0x7d, 0x08, 0x5d, 0x95, 0x04, 0x98, 0x8c, 0x84, 0x0c,
+	0xf0, 0xc2, 0x6e, 0xd3, 0x79, 0x80, 0xa0, 0xa3, 0x14, 0xe1, 0xa7, 0xd0, 0xbf, 0xa4, 0x81, 0x40,
+	0x5d, 0xa8, 0xf0, 0x1a, 0xc0, 0x2f, 0x50, 0xdb, 0xda, 0x68, 0x0c, 0xba, 0xc3, 0xb5, 0x54, 0xdd,
+	0xbf, 0xe9, 0xe6, 0x94, 0xf8, 0xfc, 0x14, 0x36, 0xa7, 0xbc, 0x23, 0xf9, 0x39, 0x74, 0xd3, 0x8e,
+	0x0e, 0x50, 0x1b, 0x21, 0x69, 0xf9, 0x4f, 0xe6, 0xfd, 0xac, 0xc3, 0x56, 0x75, 0xf1, 0xff, 0xcc,
+	0xc8, 0x31, 0x3c, 0xae, 0xd2, 0x63, 0xe6, 0xe9, 0x5b, 0x58, 0x0c, 0x4a, 0x78, 0xee, 0xea, 0xa0,
+	0xec, 0x6a, 0x95, 0xa0, 0xce, 0x5c, 0x36, 0x7f, 0x05, 0x2b, 0x87, 0x68, 0x4e, 0x12, 0x15, 0xa9,
+	0xd9, 0x16, 0x8f, 0x60, 0x21, 0x26, 0x24, 0x2f, 0xde, 0x49, 0x8b, 0x13, 0xc7, 0xc9, 0x03, 0xfc,
+	0xb7, 0x05, 0x2d, 0x42, 0x6e, 0x65, 0xd0, 0x5d, 0x68, 0x19, 0x61, 0x42, 0xcc, 0x4d, 0xc9, 0x3e,
+	0x52, 0xa6, 0xc1, 0x0b, 0x93, 0x9b, 0x40, 0x6b, 0xb6, 0x05, 0x2d, 0x11, 0xb9, 0x67, 0x48, 0x9a,
+	0x77, 0x87, 0x4b, 0xc5, 0xce, 0x47, 0x29, 0xea, 0x64, 0x41, 0xca, 0x9c, 0xc4, 0x98, 0x8b, 0x4d,
+	0x6b, 0xb6, 0x0d, 0x6d, 0x6f, 0x6c, 0x4c, 0x2a, 0x49, 0x9b, 0xba, 0xee, 0x15, 0xb9, 0x7b, 0x84,
+	0x3b, 0xd3, 0x38, 0x7f, 0x09, 0xdd, 0x12, 0x5e, 0x74, 0x6c, 0x95, 0x3a, 0x66, 0xd0, 0x0c, 0x85,
+	0x3c, 0x9f, 0x9e, 0x22, 0x5d, 0xf3, 0x7d, 0x80, 0x59, 0x2b, 0xcc, 0x86, 0xb6, 0xaf, 0xa4, 0x41,
+	0x69, 0xf2, 0xc4, 0xe9, 0x27, 0x5b, 0x85, 0x4e, 0x24, 0x22, 0x1c, 0x51, 0x8b, 0x59, 0x81, 0x3b,
+	0x29, 0xf0, 0x71, 0x12, 0xe3, 0xf0, 0x57, 0x03, 0x7a, 0xbb, 0xe9, 0x3b, 0xb9, 0x1b, 0x8b, 0x0f,
+	0x98, 0x7c, 0x13, 0x3e, 0xb2, 0xf7, 0xb0, 0x7c, 0x79, 0x20, 0xd9, 0xea, 0xf5, 0x63, 0x4a, 0x33,
+	0xd5, 0xaf, 0x9c, 0x61, 0x5e, 0x63, 0xbb, 0xc0, 0xae, 0xbe, 0x0a, 0x8c, 0x6c, 0x7c, 0x13, 0xc5,
+	0x66, 0xd2, 0x7f, 0x70, 0x4d, 0x81, 0xd2, 0xc3, 0xc1, 0x6b, 0x4c, 0xc3, 0x5a, 0xd5, 0x75, 0x62,
+	0x4f, 0x6e, 0xbe, 0x70, 0x59, 0xaf, 0xb7, 0xbe, 0x99, 0xbc, 0xc6, 0x3e, 0xc1, 0x7a, 0xe5, 0x10,
+	0x94, 0x8f, 0xb0, 0x7d, 0x53, 0xdd, 0xf2, 0x69, 0x9e, 0x43, 0xa7, 0xb8, 0xe6, 0xe5, 0x22, 0xf7,
+	0xf2, 0x22, 0xf3, 0x03, 0xc0, 0x6b, 0xde, 0x02, 0xfd, 0xb3, 0x5e, 0xfc, 0x09, 0x00, 0x00, 0xff,
+	0xff, 0x01, 0x0e, 0x27, 0x03, 0xd4, 0x06, 0x00, 0x00,
 }

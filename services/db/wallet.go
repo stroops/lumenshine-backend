@@ -240,6 +240,24 @@ func (s *server) WalletChangeFederationAddress(ctx context.Context, r *pb.Wallet
 	return &pb.Empty{}, nil
 }
 
+func (s *server) GetWallet(ctx context.Context, r *pb.GetWalletRequest) (*pb.Wallet, error) {
+	wallet, err := models.UserWallets(qm.Where("id=? AND user_id=?", r.WalletId, r.UserId)).One(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Wallet{
+		Id:               int64(wallet.ID),
+		UserId:           int64(wallet.UserID),
+		PublicKey:        wallet.PublicKey,
+		WalletName:       wallet.WalletName,
+		ShowOnHomescreen: wallet.ShowOnHomescreen,
+		FriendlyId:       wallet.FriendlyID,
+		Domain:           wallet.Domain,
+		WalletType:       pb.WalletType(pb.WalletType_value[wallet.WalletType]),
+	}, nil
+}
+
 func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*pb.GetWalletsResponse, error) {
 	wallets, err := models.UserWallets(qm.Where("user_id=?", r.UserId), qm.OrderBy(models.UserWalletColumns.OrderNR)).All(db)
 	if err != nil {

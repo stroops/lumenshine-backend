@@ -115,7 +115,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		Salutation:        u.Salutation,
 		Title:             u.Title,
 		Forename:          u.Forename,
-		Lastname:          u.Company,
+		Lastname:          u.Lastname,
 		Company:           u.Company,
 		Address:           u.Address,
 		ZipCode:           u.ZipCode,

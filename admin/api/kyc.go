@@ -21,13 +21,9 @@ import (
 	m "github.com/Soneso/lumenshine-backend/services/db/models"
 )
 
-var mimeTypes map[string]string
-
 func init() {
 	route.AddRoute("GET", "/kyc_details/:id", KycDetails, []string{}, "kyc_details", CustomerRoutePrefix)
 	route.AddRoute("GET", "/kyc_document/:id", KycDocumentDownload, []string{}, "kyc_document", CustomerRoutePrefix)
-
-	mimeTypes = map[string]string{"pdf": "application/pdf", "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg"}
 }
 
 //KycDocument - document item
@@ -158,7 +154,7 @@ func KycDocumentDownload(uc *mw.AdminContext, c *gin.Context) {
 	}
 
 	str := base64.StdEncoding.EncodeToString(content)
-	mimeType := mimeTypes[doc.Format]
+	mimeType := db.MimeTypes[doc.Format]
 	c.JSON(http.StatusOK, &KycDocumentDownloadResponse{
 		FileName: fileName,
 		Content:  str,
