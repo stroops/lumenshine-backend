@@ -15,13 +15,16 @@ CREATE TABLE sse_config
 CREATE INDEX sse_config_ix1 ON sse_config(source_receiver);
 CREATE index sse_config_ix2 on sse_config(source_receiver, stellar_account);
 
+CREATE TYPE sse_data_status AS ENUM ('new', 'selected');
 CREATE TABLE sse_data
 (
     id SERIAL PRIMARY KEY not null,
     sse_config_id integer not null REFERENCES sse_config (id),
     source_receiver source_receiver not null,
+    status sse_data_status not null,
     stellar_account varchar(56) NOT NULL,
-    operation_types bigint not null,
+    operation_type int not null,
+    operation_data jsonb null,
 
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp

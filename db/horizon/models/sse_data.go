@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -24,8 +25,10 @@ type SseDatum struct {
 	ID             int       `boil:"id" json:"id" toml:"id" yaml:"id"`
 	SseConfigID    int       `boil:"sse_config_id" json:"sse_config_id" toml:"sse_config_id" yaml:"sse_config_id"`
 	SourceReceiver string    `boil:"source_receiver" json:"source_receiver" toml:"source_receiver" yaml:"source_receiver"`
+	Status         string    `boil:"status" json:"status" toml:"status" yaml:"status"`
 	StellarAccount string    `boil:"stellar_account" json:"stellar_account" toml:"stellar_account" yaml:"stellar_account"`
-	OperationTypes int64     `boil:"operation_types" json:"operation_types" toml:"operation_types" yaml:"operation_types"`
+	OperationType  int       `boil:"operation_type" json:"operation_type" toml:"operation_type" yaml:"operation_type"`
+	OperationData  null.JSON `boil:"operation_data" json:"operation_data,omitempty" toml:"operation_data" yaml:"operation_data,omitempty"`
 	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -37,16 +40,20 @@ var SseDatumColumns = struct {
 	ID             string
 	SseConfigID    string
 	SourceReceiver string
+	Status         string
 	StellarAccount string
-	OperationTypes string
+	OperationType  string
+	OperationData  string
 	CreatedAt      string
 	UpdatedAt      string
 }{
 	ID:             "id",
 	SseConfigID:    "sse_config_id",
 	SourceReceiver: "source_receiver",
+	Status:         "status",
 	StellarAccount: "stellar_account",
-	OperationTypes: "operation_types",
+	OperationType:  "operation_type",
+	OperationData:  "operation_data",
 	CreatedAt:      "created_at",
 	UpdatedAt:      "updated_at",
 }
@@ -72,8 +79,8 @@ func (*sseDatumR) NewStruct() *sseDatumR {
 type sseDatumL struct{}
 
 var (
-	sseDatumColumns               = []string{"id", "sse_config_id", "source_receiver", "stellar_account", "operation_types", "created_at", "updated_at"}
-	sseDatumColumnsWithoutDefault = []string{"sse_config_id", "source_receiver", "stellar_account", "operation_types"}
+	sseDatumColumns               = []string{"id", "sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data", "created_at", "updated_at"}
+	sseDatumColumnsWithoutDefault = []string{"sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data"}
 	sseDatumColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	sseDatumPrimaryKeyColumns     = []string{"id"}
 )

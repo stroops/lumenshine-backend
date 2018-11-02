@@ -1210,31 +1210,32 @@ definitions:
     description: StellarTransactionResponse transactions for one user account, including
       all operations
     properties:
-      created_at:
+      op_application_order:
+        format: int64
+        type: integer
+        x-go-name: OpApplicationOrder
+      op_details:
+        type: string
+        x-go-name: OpDetails
+      op_id:
+        format: int64
+        type: integer
+        x-go-name: OpID
+      op_type:
+        format: int64
+        type: integer
+        x-go-name: OpType
+      tx_created_at:
         format: date-time
         type: string
-        x-go-name: CreatedAt
-      fee_paid:
-        format: int64
-        type: integer
-        x-go-name: FeePaid
-      memo:
+        x-go-name: TXCreatedAt
+      tx_memo:
         type: string
-        x-go-name: Memo
-      memo_type:
-        description: TXResult        string               `json:"tx_result"`
+        x-go-name: TXMemo
+      tx_memo_type:
         type: string
-        x-go-name: MemoType
-      operation_count:
-        format: int64
-        type: integer
-        x-go-name: OperationCount
-      operations:
-        items:
-          $ref: '#/definitions/stellarOperations'
-        type: array
-        x-go-name: Operations
-      transaction_hash:
+        x-go-name: TXMemoType
+      tx_transaction_hash:
         type: string
         x-go-name: TransactionHash
     type: object

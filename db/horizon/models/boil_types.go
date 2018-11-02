@@ -57,3 +57,9 @@ const (
 	SourceReceiverNotify  = "notify"
 	SourceReceiverSse     = "sse"
 )
+
+// Enum values for sse_data_status
+const (
+	SseDataStatusNew      = "new"
+	SseDataStatusSelected = "selected"
+)

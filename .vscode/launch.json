@@ -9,28 +9,32 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceRoot}/api/userapi"
+            "program": "${workspaceRoot}/api/userapi",
+            "env": {"icop_debug": "1"}
         },
         {
             "name": "dbSRV",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceRoot}/services/db"
+            "program": "${workspaceRoot}/services/db",
+            "env": {"icop_debug": "1"}
         },
         {
             "name": "paySRV",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceRoot}/services/pay"
+            "program": "${workspaceRoot}/services/pay",
+            "env": {"icop_debug": "1"}
         },
         {
             "name": "sseAPI",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceRoot}/api/sseapi"
+            "program": "${workspaceRoot}/api/sseapi",
+            "env": {"icop_debug": "1"}
         },
     ]
 }

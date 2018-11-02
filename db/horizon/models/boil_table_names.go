@@ -4,15 +4,21 @@
 package horizon
 
 var TableNames = struct {
-	HistoryLedgers      string
-	HistoryOperations   string
-	HistoryTransactions string
-	SseConfig           string
-	SseData             string
+	HistoryAccounts                string
+	HistoryLedgers                 string
+	HistoryOperationParticipants   string
+	HistoryOperations              string
+	HistoryTransactionParticipants string
+	HistoryTransactions            string
+	SseConfig                      string
+	SseData                        string
 }{
-	HistoryLedgers:      "history_ledgers",
-	HistoryOperations:   "history_operations",
-	HistoryTransactions: "history_transactions",
-	SseConfig:           "sse_config",
-	SseData:             "sse_data",
+	HistoryAccounts:                "history_accounts",
+	HistoryLedgers:                 "history_ledgers",
+	HistoryOperationParticipants:   "history_operation_participants",
+	HistoryOperations:              "history_operations",
+	HistoryTransactionParticipants: "history_transaction_participants",
+	HistoryTransactions:            "history_transactions",
+	SseConfig:                      "sse_config",
+	SseData:                        "sse_data",
 }
