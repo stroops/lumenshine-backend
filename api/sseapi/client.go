@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
-	"github.com/Soneso/lumenshine-backend/helpers"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
@@ -98,20 +95,4 @@ func (c *Client) writePump() {
 			}
 		}
 	}
-}
-
-// serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, c *gin.Context) { // w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), key: helpers.RandomString(10)}
-	client.hub.register <- client
-
-	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
-	go client.writePump()
 }

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "global.proto";
+
+package pb;
+
+message ListenForRequest{
+    BaseRequest base = 1;
+    int64 op_types = 2;
+    string source_reciver = 3;
+    string stellar_account = 4;
+}
+
+service SSEService {
+    rpc ListenFor (ListenForRequest) returns (Empty) {}
+}

@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -40,16 +42,17 @@ func (m *SendMailRequest) Reset()         { *m = SendMailRequest{} }
 func (m *SendMailRequest) String() string { return proto.CompactTextString(m) }
 func (*SendMailRequest) ProtoMessage()    {}
 func (*SendMailRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mail_c6e71c3364af632f, []int{0}
+	return fileDescriptor_7cda5f053e74676b, []int{0}
 }
+
 func (m *SendMailRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SendMailRequest.Unmarshal(m, b)
 }
 func (m *SendMailRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SendMailRequest.Marshal(b, m, deterministic)
 }
-func (dst *SendMailRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SendMailRequest.Merge(dst, src)
+func (m *SendMailRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SendMailRequest.Merge(m, src)
 }
 func (m *SendMailRequest) XXX_Size() int {
 	return xxx_messageInfo_SendMailRequest.Size(m)
@@ -185,9 +188,9 @@ var _MailService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "mail.proto",
 }
 
-func init() { proto.RegisterFile("mail.proto", fileDescriptor_mail_c6e71c3364af632f) }
+func init() { proto.RegisterFile("mail.proto", fileDescriptor_7cda5f053e74676b) }
 
-var fileDescriptor_mail_c6e71c3364af632f = []byte{
+var fileDescriptor_7cda5f053e74676b = []byte{
 	// 242 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0x31, 0x4f, 0xc3, 0x30,
 	0x14, 0x84, 0x49, 0x1a, 0x92, 0xe6, 0x05, 0x51, 0xe9, 0x31, 0x60, 0x75, 0x21, 0x2a, 0x4b, 0x06,

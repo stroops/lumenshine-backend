@@ -1,5 +1,16 @@
-basePath: /portal/pay
+basePath: /portal/sse
 definitions:
+  InfoClient:
+    description: InfoClient info for all connected clients
+    properties:
+      Addresses:
+        items:
+          type: string
+        type: array
+      Key:
+        type: string
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/sseapi
   InfoStruct:
     description: InfoStruct represents the information for the application
     properties:
@@ -9,6 +20,22 @@ definitions:
         type: string
       GitVersion:
         type: string
+      HubAddresses:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        type: object
+      HubAddressesCount:
+        format: int64
+        type: integer
+      HubClients:
+        items:
+          $ref: '#/definitions/InfoClient'
+        type: array
+      HubClientsCount:
+        format: int64
+        type: integer
       MemMbUsedAlloc:
         format: uint64
         type: integer
@@ -38,6 +65,119 @@ paths:
           description: InfoStruct
           schema:
             $ref: '#/definitions/InfoStruct'
+  /portal/sse/get_ws:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns a new websocket connection
+      operationId: GetWS
+      parameters:
+      - description: Random key for identlifying the websocket on the backend.
+        in: query
+        name: random_key
+        required: true
+        type: string
+        x-go-name: RandomKey
+      responses:
+        "200": {}
+      tags:
+      - websocket
+  /portal/sse/listen_account:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Adds a listener for an account
+      operationId: ListenAccount
+      parameters:
+      - description: RandomKey from the client, that identifies the websocket. Was
+          provided by get_ws
+        in: query
+        name: key
+        required: true
+        type: string
+        x-go-name: Key
+      - description: Account is the stellar account the client wants to listen for
+          events
+        in: query
+        name: account
+        required: true
+        type: string
+        x-go-name: Account
+      responses:
+        "200": {}
+      tags:
+      - websocket
+  /portal/sse/remove_account:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Removes a listener for an account
+      operationId: RemoveAccount
+      parameters:
+      - description: RandomKey from the client, that identifies the websocket. Was
+          provided by get_ws
+        in: query
+        name: key
+        required: true
+        type: string
+        x-go-name: Key
+      - description: Account is the stellar account the client wants to remove the
+          event listening
+        in: query
+        name: account
+        required: true
+        type: string
+        x-go-name: Account
+      responses:
+        "200": {}
+      tags:
+      - websocket
+  /portal/sse/remove_ws:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Removes a Websocket connection
+      operationId: RemoveWS
+      parameters:
+      - description: RandomKey from the client, that identifies the websocket. Was
+          provided by get_ws
+        in: query
+        name: key
+        required: true
+        type: string
+        x-go-name: Key
+      responses:
+        "200": {}
+      tags:
+      - websocket
+  /send_message:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Send a message to all clients listening for the account. Can only
+        be used when in development mode
+      operationId: SendMessage
+      parameters:
+      - in: query
+        name: account
+        required: true
+        type: string
+        x-go-name: Account
+      - format: int64
+        in: query
+        name: message_type
+        required: true
+        type: integer
+        x-go-name: MessageType
+      - in: query
+        name: data
+        required: true
+        type: string
+        x-go-name: Data
+      responses:
+        "200": {}
+      tags:
+      - websocket
 schemes:
 - https
 securityDefinitions:

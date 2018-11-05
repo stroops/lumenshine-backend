@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	messagingPath, notificationPath, mailPath, dbPath, tfaPath, jwtPath, userAPIPath, payAPIPath, payPath string
+	messagingPath, notificationPath, mailPath, dbPath, tfaPath, jwtPath, userAPIPath, payAPIPath, payPath, ssePath, sseAPIPath string
 )
 
 func main() {
@@ -37,6 +37,8 @@ func main() {
 	notificationPath = path.Join(dir, "services", "notification")
 	messagingPath = path.Join(dir, "services", "messaging")
 	payPath = path.Join(dir, "services", "pay")
+	ssePath = path.Join(dir, "services", "sse")
+	sseAPIPath = path.Join(dir, "api", "sseapi")
 
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(buildCmd)
@@ -108,8 +110,8 @@ var rootCmd = &cobra.Command{
 		// Run the services
 		log.Println(`
 You need to specify a command:
-icop run [2fa, jwt, db, userapi, mail, payapi, pay, notification, messaging]
-e.g. ./lumenshine-backend run 2fa jwt db userapi mail payapi pay notification messaging
+icop run [2fa, jwt, db, userapi, mail, payapi, pay, notification, messaging, sse, sseapi]
+e.g. ./lumenshine-backend run 2fa jwt db userapi mail payapi pay notification messaging sse sseapi
 lumenshine-backend build
 lumenshine-backend migrate [--down]`)
 	},
@@ -136,6 +138,8 @@ var runCmd = &cobra.Command{
 			go runExe(payPath, "pay")
 			go runExe(notificationPath, "notification")
 			go runExe(messagingPath, "messaging")
+			go runExe(sseAPIPath, "sseapi")
+			go runExe(ssePath, "sse")
 		} else {
 			if helpers.StringInSliceI("db", args) {
 				go runExe(dbPath, "db")
@@ -174,6 +178,14 @@ var runCmd = &cobra.Command{
 			if helpers.StringInSliceI("messaging", args) {
 				go runExe(messagingPath, "messaging")
 			}
+
+			if helpers.StringInSliceI("sseapi", args) {
+				go runExe(sseAPIPath, "sseapi")
+			}
+
+			if helpers.StringInSliceI("sse", args) {
+				go runExe(ssePath, "sse")
+			}
 		}
 
 		done := make(chan bool)
@@ -203,6 +215,8 @@ var buildCmd = &cobra.Command{
 		buildApp(payPath, false)
 		buildApp(notificationPath, false)
 		buildApp(messagingPath, false)
+		buildApp(sseAPIPath, true)
+		buildApp(ssePath, true)
 	},
 }
 

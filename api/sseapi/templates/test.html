@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Simple Chat</title>
+    <title>WS Test</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
@@ -36,13 +36,15 @@
             </div>
         </div>
     </div>
+    <button @click="closeWS">Close WS</button>
 
     <div class="row" v-for="(item, key) in dataItems">
         <div class="col s12">
             <div class="card horizontal">
                 <div>
                     Account: {{key}}<br>
-                    Counter: {{item.counter}}<br>
+                    Counter: {{item}}<br>
+                    <a href="#" @click="removeAccount(key)">Remove</a>
                 </div>
             </div>
         </div>
@@ -55,6 +57,8 @@
 <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/md5.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
 <script>
     new Vue({
         el: '#app',
@@ -62,21 +66,43 @@
         data: {
             accounts: {},
             newAccount: "",
+            ws: null,
+            wsKey: [...Array(10)].map(i=>(~~(Math.random()*36)).toString(36)).join(''),
+        },
+        created: function () {
+
+            console.log(this.wsKey);
+            this.ws = new WebSocket('ws://localhost:9006/get_ws?random_key='+this.wsKey);
+            console.log(this.ws);
+            var that=this
+            this.ws.addEventListener('message', function(e) {
+                var msg = JSON.parse(e.data);
+                console.log('got type:' + msg.message_type + ' for account:' + msg.account);
+                that.accounts[msg.account]++;
+            });
         },
         methods: {
-            createWS: function (account) {
-                var ws = new WebSocket('ws://localhost:9006/ws');
-                ws.addEventListener('message', function(e) {
-                    var msg = JSON.parse(e.data);
-                    console.log('got:' + msg);
-                    this.accounts[account].counter++;
-                });
-                //this.accounts[account] = {'ws': ws, 'counter': 0}
-                Vue.set(this.accounts, account, {'ws': ws, 'counter': 0})
-            },
             addAccount: function () {
-                this.createWS(this.newAccount);
+                axios
+                    .post('http://localhost:9006/listen_account?key='+ this.wsKey+"&account="+this.newAccount)
+                    .then(
+                        Vue.set(this.accounts, this.newAccount, 0)
+                    );
             },
+            removeAccount: function (account) {
+                axios
+                .post('http://localhost:9006/remove_account?key='+ this.wsKey+"&account="+account)
+                .then(
+                    Vue.delete(this.accounts, account)
+                );
+            },
+            closeWS: function() {
+                axios
+                    .post('http://localhost:9006/remove_ws?key='+ this.wsKey)
+                    .then(
+                        this.accounts = {}
+                    );
+            }
         },
         computed: {
             dataItems: function() {

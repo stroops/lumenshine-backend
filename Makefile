@@ -10,7 +10,7 @@ define clear
 endef
 
 define copy_services
-    	cp services/db/db $(TARGET_DIR)
+    cp services/db/db $(TARGET_DIR)
 
 	cp services/2fa/2fa $(TARGET_DIR)
 
@@ -24,15 +24,19 @@ define copy_services
 
 	cp services/pay/pay $(TARGET_DIR)
 
+	cp services/sse/sse $(TARGET_DIR)
+
+	cp api/sseapi/sseapi $(TARGET_DIR)
+
 	cp admin/admin $(TARGET_DIR)
 
 	cp addons/charts/charts $(TARGET_DIR)
 
 endef
 
-.PHONY : all service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs
+.PHONY : all service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs service-sse api-sse
 
-all: service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs
+all: service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs service-sse api-sse
 	$(call clear)
 	$(call copy_services)
 
@@ -40,6 +44,13 @@ docs:
 	cd api/userapi; swagger generate spec -o ./userapi_swagger.yml -m
 	cd api/payapi; swagger generate spec -o ./pay_api_swagger.yml -m
 	cd admin; swagger generate spec -o ./adminapi_swagger.yml -m
+	cd api/sseapi; swagger generate spec -o ./sse_api_swagger.yml -m
+
+service-sse:
+	cd services/sse; rice embed-go; go build
+
+api-sse:
+	cd api/sseapi; rice embed-go; go build -ldflags "-X main.buildDate=$(DATE) -X main.gitVersion=$(HASH) -X main.gitRemote=$(BRANCH)"
 
 service-db:
 	cd services/db; rice embed-go; go build

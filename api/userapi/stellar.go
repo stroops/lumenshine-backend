@@ -36,14 +36,15 @@ type stellarOperations struct {
 // StellarTransactionResponse transactions for one user account, including all operations
 // swagger:model
 type StellarTransactionResponse struct {
-	TransactionHash string    `json:"transaction_hash"`
-	FeePaid         int64     `json:"fee_paid"`
-	OperationCount  int64     `json:"operation_count"`
-	CreatedAt       time.Time `json:"created_at"`
-	//TXResult        string               `json:"tx_result"`
-	MemoType   string               `json:"memo_type"`
-	Memo       string               `json:"memo"`
-	Operations []*stellarOperations `json:"operations"`
+	TransactionHash string    `json:"tx_transaction_hash"`
+	TXCreatedAt     time.Time `json:"tx_created_at"`
+	TXMemoType      string    `json:"tx_memo_type"`
+	TXMemo          string    `json:"tx_memo"`
+
+	OpID               int64  `json:"op_id"`
+	OpApplicationOrder int64  `json:"op_application_order"`
+	OpType             int64  `json:"op_type"`
+	OpDetails          string `json:"op_details"`
 }
 
 // GetStellarTransactions returns all transactions including all operations for one account
@@ -95,31 +96,19 @@ func GetStellarTransactions(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	var ret []*StellarTransactionResponse
-	for _, tx := range txs.Transactions {
+	for _, tx := range txs.Operations {
 		ret = append(ret, &StellarTransactionResponse{
-			TransactionHash: tx.TransactionHash,
-			FeePaid:         tx.FeePaid,
-			OperationCount:  tx.OperationCount,
-			CreatedAt:       time.Unix(tx.CreatedAt, 0),
-			//TXResult:        tx.TxResult,
-			MemoType:   tx.MemoType,
-			Memo:       tx.Memo,
-			Operations: getOperations(tx.Operations),
+			TransactionHash: tx.TxTransactionHash,
+			TXCreatedAt:     time.Unix(tx.TxCreatedAt, 0),
+			TXMemoType:      tx.TxMemoType,
+			TXMemo:          tx.TxMemo,
+
+			OpID:               tx.OpId,
+			OpApplicationOrder: tx.OpApplicationOrder,
+			OpType:             tx.OpType,
+			OpDetails:          tx.OpDetails,
 		})
 	}
 
 	c.JSON(http.StatusOK, ret)
-}
-
-func getOperations(ops []*pb.StellarOperations) []*stellarOperations {
-	var ret []*stellarOperations
-	for _, op := range ops {
-		ret = append(ret, &stellarOperations{
-			ApplicationOrder: op.ApplicationOrder,
-			Type:             op.Type,
-			Details:          op.Details,
-			SourceAccount:    op.SourceAccount,
-		})
-	}
-	return ret
 }

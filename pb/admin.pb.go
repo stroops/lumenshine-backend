@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -35,16 +37,17 @@ func (m *GetKnownCurrencyRequest) Reset()         { *m = GetKnownCurrencyRequest
 func (m *GetKnownCurrencyRequest) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrencyRequest) ProtoMessage()    {}
 func (*GetKnownCurrencyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{0}
+	return fileDescriptor_73a7fc70dcc2027c, []int{0}
 }
+
 func (m *GetKnownCurrencyRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Unmarshal(m, b)
 }
 func (m *GetKnownCurrencyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetKnownCurrencyRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownCurrencyRequest.Merge(dst, src)
+func (m *GetKnownCurrencyRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownCurrencyRequest.Merge(m, src)
 }
 func (m *GetKnownCurrencyRequest) XXX_Size() int {
 	return xxx_messageInfo_GetKnownCurrencyRequest.Size(m)
@@ -86,16 +89,17 @@ func (m *GetKnownCurrencyResponse) Reset()         { *m = GetKnownCurrencyRespon
 func (m *GetKnownCurrencyResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrencyResponse) ProtoMessage()    {}
 func (*GetKnownCurrencyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{1}
+	return fileDescriptor_73a7fc70dcc2027c, []int{1}
 }
+
 func (m *GetKnownCurrencyResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Unmarshal(m, b)
 }
 func (m *GetKnownCurrencyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetKnownCurrencyResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownCurrencyResponse.Merge(dst, src)
+func (m *GetKnownCurrencyResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownCurrencyResponse.Merge(m, src)
 }
 func (m *GetKnownCurrencyResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownCurrencyResponse.Size(m)
@@ -166,16 +170,17 @@ func (m *GetKnownCurrenciesResponse) Reset()         { *m = GetKnownCurrenciesRe
 func (m *GetKnownCurrenciesResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownCurrenciesResponse) ProtoMessage()    {}
 func (*GetKnownCurrenciesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{2}
+	return fileDescriptor_73a7fc70dcc2027c, []int{2}
 }
+
 func (m *GetKnownCurrenciesResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Unmarshal(m, b)
 }
 func (m *GetKnownCurrenciesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetKnownCurrenciesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownCurrenciesResponse.Merge(dst, src)
+func (m *GetKnownCurrenciesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownCurrenciesResponse.Merge(m, src)
 }
 func (m *GetKnownCurrenciesResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownCurrenciesResponse.Size(m)
@@ -205,16 +210,17 @@ func (m *GetKnownInflationDestinationRequest) Reset()         { *m = GetKnownInf
 func (m *GetKnownInflationDestinationRequest) String() string { return proto.CompactTextString(m) }
 func (*GetKnownInflationDestinationRequest) ProtoMessage()    {}
 func (*GetKnownInflationDestinationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{3}
+	return fileDescriptor_73a7fc70dcc2027c, []int{3}
 }
+
 func (m *GetKnownInflationDestinationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownInflationDestinationRequest.Unmarshal(m, b)
 }
 func (m *GetKnownInflationDestinationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownInflationDestinationRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetKnownInflationDestinationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownInflationDestinationRequest.Merge(dst, src)
+func (m *GetKnownInflationDestinationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationRequest.Merge(m, src)
 }
 func (m *GetKnownInflationDestinationRequest) XXX_Size() int {
 	return xxx_messageInfo_GetKnownInflationDestinationRequest.Size(m)
@@ -256,16 +262,17 @@ func (m *GetKnownInflationDestinationResponse) Reset()         { *m = GetKnownIn
 func (m *GetKnownInflationDestinationResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownInflationDestinationResponse) ProtoMessage()    {}
 func (*GetKnownInflationDestinationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{4}
+	return fileDescriptor_73a7fc70dcc2027c, []int{4}
 }
+
 func (m *GetKnownInflationDestinationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownInflationDestinationResponse.Unmarshal(m, b)
 }
 func (m *GetKnownInflationDestinationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownInflationDestinationResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetKnownInflationDestinationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownInflationDestinationResponse.Merge(dst, src)
+func (m *GetKnownInflationDestinationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationResponse.Merge(m, src)
 }
 func (m *GetKnownInflationDestinationResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownInflationDestinationResponse.Size(m)
@@ -336,16 +343,17 @@ func (m *GetKnownInflationDestinationsResponse) Reset()         { *m = GetKnownI
 func (m *GetKnownInflationDestinationsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKnownInflationDestinationsResponse) ProtoMessage()    {}
 func (*GetKnownInflationDestinationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{5}
+	return fileDescriptor_73a7fc70dcc2027c, []int{5}
 }
+
 func (m *GetKnownInflationDestinationsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Unmarshal(m, b)
 }
 func (m *GetKnownInflationDestinationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetKnownInflationDestinationsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetKnownInflationDestinationsResponse.Merge(dst, src)
+func (m *GetKnownInflationDestinationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetKnownInflationDestinationsResponse.Merge(m, src)
 }
 func (m *GetKnownInflationDestinationsResponse) XXX_Size() int {
 	return xxx_messageInfo_GetKnownInflationDestinationsResponse.Size(m)
@@ -374,16 +382,17 @@ func (m *GetPromosResponse) Reset()         { *m = GetPromosResponse{} }
 func (m *GetPromosResponse) String() string { return proto.CompactTextString(m) }
 func (*GetPromosResponse) ProtoMessage()    {}
 func (*GetPromosResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{6}
+	return fileDescriptor_73a7fc70dcc2027c, []int{6}
 }
+
 func (m *GetPromosResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetPromosResponse.Unmarshal(m, b)
 }
 func (m *GetPromosResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetPromosResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetPromosResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetPromosResponse.Merge(dst, src)
+func (m *GetPromosResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetPromosResponse.Merge(m, src)
 }
 func (m *GetPromosResponse) XXX_Size() int {
 	return xxx_messageInfo_GetPromosResponse.Size(m)
@@ -418,16 +427,17 @@ func (m *Promo) Reset()         { *m = Promo{} }
 func (m *Promo) String() string { return proto.CompactTextString(m) }
 func (*Promo) ProtoMessage()    {}
 func (*Promo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{7}
+	return fileDescriptor_73a7fc70dcc2027c, []int{7}
 }
+
 func (m *Promo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Promo.Unmarshal(m, b)
 }
 func (m *Promo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Promo.Marshal(b, m, deterministic)
 }
-func (dst *Promo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Promo.Merge(dst, src)
+func (m *Promo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Promo.Merge(m, src)
 }
 func (m *Promo) XXX_Size() int {
 	return xxx_messageInfo_Promo.Size(m)
@@ -499,16 +509,17 @@ func (m *PromoButton) Reset()         { *m = PromoButton{} }
 func (m *PromoButton) String() string { return proto.CompactTextString(m) }
 func (*PromoButton) ProtoMessage()    {}
 func (*PromoButton) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{8}
+	return fileDescriptor_73a7fc70dcc2027c, []int{8}
 }
+
 func (m *PromoButton) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PromoButton.Unmarshal(m, b)
 }
 func (m *PromoButton) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PromoButton.Marshal(b, m, deterministic)
 }
-func (dst *PromoButton) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PromoButton.Merge(dst, src)
+func (m *PromoButton) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoButton.Merge(m, src)
 }
 func (m *PromoButton) XXX_Size() int {
 	return xxx_messageInfo_PromoButton.Size(m)
@@ -545,16 +556,17 @@ func (m *PromoImage) Reset()         { *m = PromoImage{} }
 func (m *PromoImage) String() string { return proto.CompactTextString(m) }
 func (*PromoImage) ProtoMessage()    {}
 func (*PromoImage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_admin_a41446cca2d70e32, []int{9}
+	return fileDescriptor_73a7fc70dcc2027c, []int{9}
 }
+
 func (m *PromoImage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PromoImage.Unmarshal(m, b)
 }
 func (m *PromoImage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PromoImage.Marshal(b, m, deterministic)
 }
-func (dst *PromoImage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PromoImage.Merge(dst, src)
+func (m *PromoImage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PromoImage.Merge(m, src)
 }
 func (m *PromoImage) XXX_Size() int {
 	return xxx_messageInfo_PromoImage.Size(m)
@@ -796,9 +808,9 @@ var _AdminApiService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "admin.proto",
 }
 
-func init() { proto.RegisterFile("admin.proto", fileDescriptor_admin_a41446cca2d70e32) }
+func init() { proto.RegisterFile("admin.proto", fileDescriptor_73a7fc70dcc2027c) }
 
-var fileDescriptor_admin_a41446cca2d70e32 = []byte{
+var fileDescriptor_73a7fc70dcc2027c = []byte{
 	// 617 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x55, 0xdb, 0x6e, 0xd3, 0x40,
 	0x10, 0x8d, 0x73, 0x69, 0xc8, 0xa4, 0x6a, 0xda, 0x15, 0x08, 0x2b, 0x6d, 0xa1, 0x6c, 0x8b, 0x48,

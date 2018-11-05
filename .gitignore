@@ -38,6 +38,12 @@ api/payapi/payapi
 api/userapi/userapi.exe
 api/userapi/userapi
 
+services/sse/sse.exe
+services/sse/sse
+
+api/sseapi/sseapi.exe
+api/sseapi/sseapi
+
 services/2fa/2fa.exe
 services/2fa/2fa
 

@@ -57,7 +57,7 @@ var OutgoingTransactionColumns = struct {
 	CreatedAt                        string
 	UpdatedAt                        string
 }{
-	ID: "id",
+	ID:                               "id",
 	IncomingTransactionID:            "incoming_transaction_id",
 	OrderID:                          "order_id",
 	Status:                           "status",

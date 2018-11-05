@@ -50,3 +50,16 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	strmangle.PutBuffer(buf)
 	return str
 }
+
+// Enum values for source_receiver
+const (
+	SourceReceiverPayment = "payment"
+	SourceReceiverNotify  = "notify"
+	SourceReceiverSse     = "sse"
+)
+
+// Enum values for sse_data_status
+const (
+	SseDataStatusNew      = "new"
+	SseDataStatusSelected = "selected"
+)
