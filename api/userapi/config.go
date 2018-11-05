@@ -28,6 +28,9 @@ type ServicesConfig struct {
 
 	AdminAPISrvPort int64
 	AdminAPISrvHost string
+
+	NotificationSrvPort int64
+	NotificationSrvHost string
 }
 
 //ConfigSite globals that define the site behaviour

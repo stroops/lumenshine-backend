@@ -222,3 +222,32 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 
 	c.JSON(http.StatusOK, "{}")
 }
+
+//TestPushNotifications - for testing
+func TestPushNotifications(uc *mw.IcopContext, c *gin.Context) {
+	publicKey := c.Param("publickey")
+	req := &pb.GetWalletByPublicKeyRequest{
+		Base:      NewBaseRequest(uc),
+		PublicKey: publicKey,
+	}
+	wallet, err := dbClient.GetWalletByPublicKey(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallet", cerr.GeneralError))
+		return
+	}
+	pushReq := &pb.PushNotificationRequest{
+		Base:                       NewBaseRequest(uc),
+		UserID:                     wallet.UserId,
+		Title:                      "Test title",
+		Message:                    "Test message",
+		SendAsMailIfNoTokenPresent: true,
+	}
+
+	_, err = notificationClient.SendPushNotification(c, pushReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending push notification", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{Success : true}")
+}

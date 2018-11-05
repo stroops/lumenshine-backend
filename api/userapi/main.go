@@ -35,11 +35,12 @@ const (
 )
 
 var (
-	twoFAClient    pb.TwoFactorAuthServiceClient
-	dbClient       pb.DBServiceClient
-	jwtClient      pb.JwtServiceClient
-	mailClient     pb.MailServiceClient
-	adminAPIClient pb.AdminApiServiceClient
+	twoFAClient        pb.TwoFactorAuthServiceClient
+	dbClient           pb.DBServiceClient
+	jwtClient          pb.JwtServiceClient
+	mailClient         pb.MailServiceClient
+	adminAPIClient     pb.AdminApiServiceClient
+	notificationClient pb.NotificationServiceClient
 )
 
 func main() {
@@ -110,6 +111,7 @@ func main() {
 	r.POST("/portal/user/lost_password", mw.UseIcopContext(LostPassword))
 	r.POST("/portal/user/lost_tfa", mw.UseIcopContext(LostTfa))
 	r.GET("/portal/info", Info)
+	r.GET("/test_push/:publickey", mw.UseIcopContext(TestPushNotifications))
 
 	//this group is used, with the simple authenticator, which means, only the userID is present
 	//the middleware will not check for full logged in
@@ -238,6 +240,13 @@ func connectServices(log *logrus.Entry) {
 		log.WithError(err).Fatalf("Dial failed: %v", err)
 	}
 	adminAPIClient = pb.NewAdminApiServiceClient(connAdminAPI)
+
+	//connect notification service
+	connNotification, err := grpc.Dial(fmt.Sprintf("%s:%d", cnf.Services.NotificationSrvHost, cnf.Services.NotificationSrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	notificationClient = pb.NewNotificationServiceClient(connNotification)
 }
 
 var (
