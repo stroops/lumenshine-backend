@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -726,15 +725,8 @@ func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*
 }
 
 func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One(db)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("User id:%d does not exist", r.UserId)
-		}
-		return nil, err
-	}
 	pushToken, err := models.UserPushtokens(
-		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
+		qm.Where(models.UserPushtokenColumns.UserID+"=?", r.UserId),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.OldPushToken)).
 		One(db)
 	if err != nil && err != sql.ErrNoRows {
@@ -783,15 +775,8 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 }
 
 func (s *server) DeletePushToken(ctx context.Context, r *pb.DeletePushTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One(db)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("User id:%d does not exist", r.UserId)
-		}
-		return nil, err
-	}
 	pushToken, err := models.UserPushtokens(
-		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
+		qm.Where(models.UserPushtokenColumns.UserID+"=?", r.UserId),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).
 		One(db)
 	if err != nil && err != sql.ErrNoRows {
