@@ -8,12 +8,12 @@ CREATE TABLE sse_config
     source_receiver source_receiver not null,
     stellar_account varchar(56) NOT NULL,
     operation_types bigint not null,
+    with_resume boolean not null default false,
 
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp
 );
-CREATE INDEX sse_config_ix1 ON sse_config(source_receiver);
-CREATE index sse_config_ix2 on sse_config(source_receiver, stellar_account);
+CREATE INDEX sse_config_ix2 ON sse_config(stellar_account, with_resume);
 
 CREATE TYPE sse_data_status AS ENUM ('new', 'selected');
 CREATE TABLE sse_data
@@ -31,9 +31,23 @@ CREATE TABLE sse_data
 );
 CREATE INDEX sse_data_ix1 ON sse_data(source_receiver);
 
+CREATE TYPE sse_index_names AS ENUM ('next_operation_id');
+CREATE TABLE sse_index
+(
+    id SERIAL PRIMARY KEY not null,
+    name sse_index_names not null,
+    value bigint not null default 0
+);
+CREATE INDEX sse_index_ix1 ON sse_index(name);
+
+insert into  sse_index(name, value) values ('next_operation_id', 0);
+
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
 drop table IF EXISTS sse_data;
 drop table IF EXISTS sse_config;
+drop table if exists sse_index;
 
 drop type IF EXISTS source_receiver;
+drop type IF EXISTS sse_data_status;
+drop type IF EXISTS sse_index_names;

@@ -12,6 +12,7 @@ var TableNames = struct {
 	HistoryTransactions            string
 	SseConfig                      string
 	SseData                        string
+	SseIndex                       string
 }{
 	HistoryAccounts:                "history_accounts",
 	HistoryLedgers:                 "history_ledgers",
@@ -21,4 +22,5 @@ var TableNames = struct {
 	HistoryTransactions:            "history_transactions",
 	SseConfig:                      "sse_config",
 	SseData:                        "sse_data",
+	SseIndex:                       "sse_index",
 }

@@ -1229,12 +1229,23 @@ definitions:
         format: date-time
         type: string
         x-go-name: TXCreatedAt
+      tx_fee_paid:
+        format: int64
+        type: integer
+        x-go-name: TxFeePaid
       tx_memo:
         type: string
         x-go-name: TXMemo
       tx_memo_type:
         type: string
         x-go-name: TXMemoType
+      tx_operation_count:
+        format: int64
+        type: integer
+        x-go-name: TxOperationCount
+      tx_source_account:
+        type: string
+        x-go-name: TxSourceAccount
       tx_transaction_hash:
         type: string
         x-go-name: TransactionHash

@@ -52,6 +52,10 @@ func main() {
 	environment.Env.Config = cnf
 	environment.Env.DBH = dbh
 
+	//start stellar processor
+	sp := NewStellarProcessor(log)
+	go sp.StartProcessing()
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cnf.Port))
 	if err != nil {
 		log.WithError(err).WithFields(logrus.Fields{"port": cnf.Port}).Fatalf("Failed to listen")
