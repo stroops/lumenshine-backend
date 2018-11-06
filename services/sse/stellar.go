@@ -1,8 +1,9 @@
 package main
 
 import (
-	"icop/db/querying"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/db/querying"
 
 	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/services/sse/db"
