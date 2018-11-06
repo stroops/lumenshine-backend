@@ -19,7 +19,7 @@ type SubscribeForPushNotificationsRequest struct {
 	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
 	//Device type, e.g. apple, google
 	//required: true
-	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	DeviceType string `form:"device_type" json:"device_type" validate:"required,max=50,icop_devicetype"`
 }
 
 //SubscribeForPushNotifications adds a new token to the user
@@ -72,7 +72,7 @@ type UpdatePushTokenRequest struct {
 	OldPushToken string `form:"old_push_token" json:"old_push_token"  validate:"required,max=500"`
 	//Device type, e.g. apple, google
 	//required: true
-	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	DeviceType string `form:"device_type" json:"device_type" validate:"required,max=50,icop_devicetype"`
 }
 
 //UpdatePushToken updates the push token
@@ -121,7 +121,7 @@ func UpdatePushToken(uc *mw.IcopContext, c *gin.Context) {
 //swagger:parameters UnsubscribeFromPushNotificationsRequest UnsubscribeFromPushNotifications
 type UnsubscribeFromPushNotificationsRequest struct {
 	//required: true
-	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
+	PushToken string `form:"push_token" json:"push_token" validate:"required,max=500"`
 }
 
 //UnsubscribeFromPushNotifications removes the specified token from the user
