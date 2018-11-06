@@ -111,7 +111,7 @@ func main() {
 	r.POST("/portal/user/lost_password", mw.UseIcopContext(LostPassword))
 	r.POST("/portal/user/lost_tfa", mw.UseIcopContext(LostTfa))
 	r.GET("/portal/info", Info)
-	r.GET("/test_push/:publickey", mw.UseIcopContext(TestPushNotifications))
+	r.GET("/portal/test_push/:publickey", mw.UseIcopContext(TestPushNotifications))
 
 	//this group is used, with the simple authenticator, which means, only the userID is present
 	//the middleware will not check for full logged in
