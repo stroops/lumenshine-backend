@@ -9,6 +9,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/sse/db"
 	"github.com/Soneso/lumenshine-backend/services/sse/environment"
 	"github.com/sirupsen/logrus"
+	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 
@@ -123,12 +124,13 @@ func (s *StellarProcessor) processOperation(id int64) error {
 	sC := m.SseConfigColumns
 	mT := m.TableNames
 
+	boil.DebugMode = true
 	q := []qm.QueryMod{
 		qm.From(mT.SseConfig),
 		qm.Select(mT.SseConfig + ".*, " + mT.HistoryOperations + ".*"),
 
 		qm.InnerJoin(m.TableNames.HistoryOperations + " on cast(" + cO.Details + "->>'to' as character varying)=" + sC.StellarAccount),
-		qm.Where(cO.ID+"=?", id),
+		qm.Where(mT.HistoryOperations+"."+cO.ID+"=?", id),
 		qm.And("2<<" + cO.Type + "&" + sC.OperationTypes + "=" + sC.OperationTypes),
 
 		//for payments and paymentPath, we only check the receivers
@@ -142,7 +144,7 @@ func (s *StellarProcessor) processOperation(id int64) error {
 	}
 
 	var sCs []sseConfigData
-	err := m.NewQuery(q...).Bind(nil, s.db, sCs)
+	err := m.NewQuery(q...).Bind(nil, s.db, &sCs)
 	if err != nil {
 		return err
 	}
