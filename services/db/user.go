@@ -691,7 +691,7 @@ func (s *server) MoveMessageToArchive(ctx context.Context, r *pb.IDRequest) (*pb
 
 func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*pb.Empty, error) {
 	pushToken, err := models.UserPushtokens(qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).One(db)
-	if err != nil && err != sql.ErrNoRows{
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
@@ -737,7 +737,7 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.OldPushToken)).
 		One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 	if pushToken != nil {
@@ -748,7 +748,7 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 	}
 
 	pushToken, err = models.UserPushtokens(qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.NewPushToken)).One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
@@ -794,7 +794,7 @@ func (s *server) DeletePushToken(ctx context.Context, r *pb.DeletePushTokenReque
 		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).
 		One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 	if pushToken != nil {
