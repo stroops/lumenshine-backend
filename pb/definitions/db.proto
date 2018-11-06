@@ -398,6 +398,11 @@ message GetWalletRequest {
   int64 user_id = 3;
 }
 
+message GetWalletByPublicKeyRequest {
+  BaseRequest base = 1;
+  string public_key = 2;
+}
+
 message WalletIsLastRequest {
   BaseRequest base = 1;
   int64 id = 2;
@@ -628,6 +633,7 @@ service DBService {
   rpc AddWallet (AddWalletRequest) returns (IDResponse) {}
   rpc RemoveWallet (RemoveWalletRequest) returns (Empty) {}
   rpc GetWallet (GetWalletRequest) returns (Wallet) {}
+  rpc GetWalletByPublicKey (GetWalletByPublicKeyRequest) returns (Wallet) {}
   rpc WalletChangeName (WalletChangeNameRequest) returns (Empty) {}
   rpc WalletChangeOrder (WalletChangeOrderRequest) returns (Empty) {}
   rpc WalletChangeFederationAddress (WalletChangeFederationAddressRequest) returns (Empty) {}

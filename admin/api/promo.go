@@ -16,6 +16,7 @@ import (
 	mw "github.com/Soneso/lumenshine-backend/admin/middleware"
 	"github.com/Soneso/lumenshine-backend/admin/models"
 	"github.com/Soneso/lumenshine-backend/admin/route"
+	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 
 	"github.com/gin-gonic/gin"
@@ -213,8 +214,6 @@ type AddPromoRequest struct {
 	Text  string `form:"text" json:"text"`
 	//required : true
 	Type string `form:"type" json:"type" validate:"required,max=32"`
-	//required : true
-	Buttons []Button `form:"buttons" json:"buttons" validate:"required"`
 }
 
 //Button - one button
@@ -265,12 +264,13 @@ func AddPromo(uc *mw.AdminContext, c *gin.Context) {
 		}
 	}
 
-	if r.Buttons == nil || len(r.Buttons) == 0 {
+	buttons := getButtons(c)
+	if len(buttons) == 0 {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "buttons", cerr.InvalidArgument, "Missing buttons", ""))
 		return
 	}
 
-	buttons, err := json.Marshal(r.Buttons)
+	buttonsJSON, err := json.Marshal(buttons)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "buttons", cerr.InvalidArgument, "Error serializing buttons", ""))
 		return
@@ -306,7 +306,7 @@ func AddPromo(uc *mw.AdminContext, c *gin.Context) {
 		PromoType:  r.Type,
 		Active:     false,
 		ImageType:  ext[1:],
-		Buttons:    string(buttons),
+		Buttons:    string(buttonsJSON),
 		OrderIndex: orderIndex,
 		UpdatedBy:  getUpdatedBy(c)}
 
@@ -326,6 +326,24 @@ func AddPromo(uc *mw.AdminContext, c *gin.Context) {
 	c.JSON(http.StatusOK, "{}")
 }
 
+func getButtons(c *gin.Context) []Button {
+	buttonCollection := helpers.ParseFormCollection(c.Request, "buttons")
+	buttons := make([]Button, 0)
+	for _, bm := range buttonCollection {
+		button := Button{}
+		if name, ok := bm["name"]; ok {
+			button.Name = name
+		}
+		if link, ok := bm["link"]; ok {
+			button.Link = link
+		}
+		if button.Name != "" && button.Link != "" {
+			buttons = append(buttons, button)
+		}
+	}
+	return buttons
+}
+
 //EditPromoRequest request
 //swagger:parameters EditPromoRequest EditPromo
 type EditPromoRequest struct {
@@ -334,10 +352,7 @@ type EditPromoRequest struct {
 	Name  *string `form:"name" json:"name"  validate:"omitempty,max=256"`
 	Title *string `form:"title" json:"title" validate:"omitempty,max=512"`
 	Text  *string `form:"text" json:"text"`
-	//required : true
-	Type *string `form:"type" json:"type" validate:"omitempty,max=32"`
-	//required : true
-	Buttons []Button `form:"buttons" json:"buttons"`
+	Type  *string `form:"type" json:"type" validate:"omitempty,max=32"`
 }
 
 //EditPromo edits promo details
@@ -359,12 +374,10 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
 		return
 	}
-
 	if valid, validErrors := cerr.ValidateStruct(uc.Log, r); !valid {
 		c.JSON(http.StatusBadRequest, validErrors)
 		return
 	}
-
 	promo, err := db.GetPromoByID(r.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading existing promo", cerr.GeneralError))
@@ -374,7 +387,6 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "id", cerr.InvalidArgument, "Promo not found in database", ""))
 		return
 	}
-
 	if r.Type != nil {
 		if *r.Type != models.PromoTypeSmall && *r.Type != models.PromoTypeBig {
 			c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "type", cerr.InvalidArgument, "Invalid promo type", ""))
@@ -391,7 +403,6 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 			}
 		}
 	}
-
 	if r.Name != nil {
 		promo.Name = *r.Name
 	}
@@ -404,19 +415,14 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 	if r.Type != nil {
 		promo.PromoType = *r.Type
 	}
-	if r.Buttons != nil && len(r.Buttons) > 0 {
-		buttons, err := json.Marshal(r.Buttons)
+	buttons := getButtons(c)
+	if len(buttons) > 0 {
+		buttonJSON, err := json.Marshal(buttons)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, cerr.LogAndReturnIcopError(uc.Log, "buttons", cerr.InvalidArgument, "Error serializing buttons", ""))
 			return
 		}
-		promo.Buttons = string(buttons)
-	}
-
-	err = db.UpdatePromo(promo, getUpdatedBy(c))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating promo", cerr.GeneralError))
-		return
+		promo.Buttons = string(buttonJSON)
 	}
 
 	file, err := c.FormFile("upload_image")
@@ -432,6 +438,13 @@ func EditPromo(uc *mw.AdminContext, c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error saving uploaded image", cerr.GeneralError))
 			return
 		}
+		promo.ImageType = ext[1:]
+	}
+
+	err = db.UpdatePromo(promo, getUpdatedBy(c))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating promo", cerr.GeneralError))
+		return
 	}
 
 	c.JSON(http.StatusOK, "{}")

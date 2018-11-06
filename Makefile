@@ -10,7 +10,7 @@ define clear
 endef
 
 define copy_services
-    cp services/db/db $(TARGET_DIR)
+  cp services/db/db $(TARGET_DIR)
 
 	cp services/2fa/2fa $(TARGET_DIR)
 
@@ -26,6 +26,10 @@ define copy_services
 
 	cp services/sse/sse $(TARGET_DIR)
 
+	cp services/messaging/messaging $(TARGET_DIR)
+
+	cp services/notification/notification $(TARGET_DIR)
+
 	cp api/sseapi/sseapi $(TARGET_DIR)
 
 	cp admin/admin $(TARGET_DIR)
@@ -34,9 +38,9 @@ define copy_services
 
 endef
 
-.PHONY : all service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs service-sse api-sse
+.PHONY : all service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs service-sse api-sse service-notification service-messaging
 
-all: service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs service-sse api-sse
+all: service-db service-2fa service-jwt service-mail api-userapi admin-api api-payapi service-pay charts-addon docs service-sse api-sse service-notification service-messaging
 	$(call clear)
 	$(call copy_services)
 
@@ -79,3 +83,9 @@ admin-api:
 
 charts-addon:
 	cd addons/charts; rice embed-go; go build
+
+service-notification:
+	cd services/notification; go build
+
+service-messaging:
+	cd services/messaging; go build

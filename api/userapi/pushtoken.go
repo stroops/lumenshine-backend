@@ -19,7 +19,7 @@ type SubscribeForPushNotificationsRequest struct {
 	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
 	//Device type, e.g. apple, google
 	//required: true
-	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	DeviceType string `form:"device_type" json:"device_type" validate:"required,max=50,icop_devicetype"`
 }
 
 //SubscribeForPushNotifications adds a new token to the user
@@ -72,7 +72,7 @@ type UpdatePushTokenRequest struct {
 	OldPushToken string `form:"old_push_token" json:"old_push_token"  validate:"required,max=500"`
 	//Device type, e.g. apple, google
 	//required: true
-	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	DeviceType string `form:"device_type" json:"device_type" validate:"required,max=50,icop_devicetype"`
 }
 
 //UpdatePushToken updates the push token
@@ -121,7 +121,7 @@ func UpdatePushToken(uc *mw.IcopContext, c *gin.Context) {
 //swagger:parameters UnsubscribeFromPushNotificationsRequest UnsubscribeFromPushNotifications
 type UnsubscribeFromPushNotificationsRequest struct {
 	//required: true
-	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
+	PushToken string `form:"push_token" json:"push_token" validate:"required,max=500"`
 }
 
 //UnsubscribeFromPushNotifications removes the specified token from the user
@@ -221,4 +221,33 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 	}
 
 	c.JSON(http.StatusOK, "{}")
+}
+
+//TestPushNotifications - for testing
+func TestPushNotifications(uc *mw.IcopContext, c *gin.Context) {
+	publicKey := c.Param("publickey")
+	req := &pb.GetWalletByPublicKeyRequest{
+		Base:      NewBaseRequest(uc),
+		PublicKey: publicKey,
+	}
+	wallet, err := dbClient.GetWalletByPublicKey(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallet", cerr.GeneralError))
+		return
+	}
+	pushReq := &pb.PushNotificationRequest{
+		Base:                       NewBaseRequest(uc),
+		UserID:                     wallet.UserId,
+		Title:                      "Test title",
+		Message:                    "Test message",
+		SendAsMailIfNoTokenPresent: true,
+	}
+
+	_, err = notificationClient.SendPushNotification(c, pushReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending push notification", cerr.GeneralError))
+		return
+	}
+
+	c.JSON(http.StatusOK, "{Success : true}")
 }
