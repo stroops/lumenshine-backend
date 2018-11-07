@@ -238,8 +238,8 @@ func TestPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 	pushReq := &pb.PushNotificationRequest{
 		Base:                       NewBaseRequest(uc),
 		UserID:                     wallet.UserId,
-		Title:                      "Test title",
-		Message:                    "Test message",
+		Title:                      "Lumenshine",
+		Message:                    "Payment received.",
 		SendAsMailIfNoTokenPresent: true,
 	}
 

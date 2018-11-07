@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
-	"github.com/Soneso/lumenshine-backend/pb"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
+	"github.com/Soneso/lumenshine-backend/pb"
 
 	"context"
 
@@ -103,27 +105,31 @@ func sendIos(notification *pb.Notification) *pb.NotificationArchive {
 
 	archive := &pb.NotificationArchive{}
 	archive.Id = notification.Id
-	archive.ExternalStatus = string(response.StatusCode)
-	archive.ExternalError = response.Reason
-
-	if response.StatusCode != iosStatuscodeSuccess {
-		archive.Status = pb.NotificationStatusCode_error
-		log.WithFields(logrus.Fields{"token": notification.PushToken, "status": archive.ExternalStatus}).Error("Ios notification failure")
-	} else {
-		archive.Status = pb.NotificationStatusCode_success
-	}
-
-	if response.StatusCode == iosStatuscodeInvalidtoken {
-		ctx := context.Background()
-		_, err := dbClient.DeletePushToken(ctx, &pb.DeletePushTokenRequest{
-			Base:      &pb.BaseRequest{UpdateBy: ServiceName},
-			UserId:    notification.UserId,
-			PushToken: notification.PushToken})
-
-		if err != nil {
-			log.WithError(err).
-				WithFields(logrus.Fields{"user_id": notification.UserId, "token": notification.PushToken}).Error("Error deleting push token")
+	if response != nil {
+		archive.ExternalStatus = strconv.Itoa(response.StatusCode)
+		archive.ExternalError = response.Reason
+		if response.StatusCode != iosStatuscodeSuccess {
+			archive.Status = pb.NotificationStatusCode_error
+			log.WithFields(logrus.Fields{"token": notification.PushToken, "status": archive.ExternalStatus}).Error("Ios notification failure")
+		} else {
+			archive.Status = pb.NotificationStatusCode_success
 		}
+		if response.StatusCode == iosStatuscodeInvalidtoken {
+			ctx := context.Background()
+			_, err := dbClient.DeletePushToken(ctx, &pb.DeletePushTokenRequest{
+				Base:      &pb.BaseRequest{UpdateBy: ServiceName},
+				UserId:    notification.UserId,
+				PushToken: notification.PushToken})
+
+			if err != nil {
+				log.WithError(err).
+					WithFields(logrus.Fields{"user_id": notification.UserId, "token": notification.PushToken}).Error("Error deleting push token")
+			}
+		}
+	} else {
+		archive.ExternalError = "Nil response"
+		archive.ExternalStatus = "Unknown error"
+		archive.Status = pb.NotificationStatusCode_error
 	}
 
 	return archive

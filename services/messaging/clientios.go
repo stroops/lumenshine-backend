@@ -42,13 +42,17 @@ func sendIosNotification(request *pb.Notification) *apns2.Response {
 	notification.Topic = cnf.IOSConfig.BundleID
 	notification.Payload = []byte(request.Content)
 
+	//fmt.Printf("Payload: %v", request.Content)
+
 	response, err := client.Push(notification)
 
 	if err != nil {
 		log.WithError(err).Errorf("Ios push notification error: %v", err)
 	}
 
-	//fmt.Printf("Code: %v Id: %v Reason: %v\n", res.StatusCode, res.ApnsID, res.Reason)
+	// if response != nil {
+	// 	fmt.Printf("Code: %v Id: %v Reason: %v\n", strconv.Itoa(response.StatusCode), response.ApnsID, response.Reason)
+	// }
 
 	return response
 }

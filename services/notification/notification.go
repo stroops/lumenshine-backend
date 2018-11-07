@@ -16,8 +16,13 @@ type ApplePayload struct {
 	Aps ApplePayloadAlert `json:"aps"`
 }
 
-//ApplePayloadAlert - ios payload alert
+//ApplePayloadAlert - alert struct
 type ApplePayloadAlert struct {
+	Alert ApplePayloadAlertContent `json:"alert"`
+}
+
+//ApplePayloadAlertContent - ios payload alert
+type ApplePayloadAlertContent struct {
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
@@ -47,8 +52,8 @@ func (s *server) SendPushNotification(c context.Context, r *pb.PushNotificationR
 	var notificationType pb.NotificationType
 	for _, token := range response.PushTokens {
 		if token.DeviceType == pb.DeviceType_apple {
-			payloadAlert := ApplePayloadAlert{Title: r.Title, Body: r.Message}
-			payload := ApplePayload{Aps: payloadAlert}
+			payloadAlertContent := ApplePayloadAlertContent{Title: r.Title, Body: r.Message}
+			payload := ApplePayload{Aps: ApplePayloadAlert{Alert: payloadAlertContent}}
 			notificationType = pb.NotificationType_ios
 			content, err = json.Marshal(payload)
 			if err != nil {
