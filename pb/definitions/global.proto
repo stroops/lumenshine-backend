@@ -102,7 +102,7 @@ enum WalletType {
 }
 
 enum NotificationParameterType {
-  ios_body_localized_key = 0;
-  ios_action_localized_key = 1;
-  ios_extra_1 = 2;
+  ios_title_localized_key = 0;
+  ios_category = 1;
+  ios_wallet_key = 2;
 }

@@ -13,21 +13,19 @@ import (
 
 //ApplePayload - ios payload
 type ApplePayload struct {
-	Aps   ApplePayloadAlert `json:"aps"`
-	Acme1 string            `json:"acme1,omitempty"`
+	Aps       ApplePayloadAlert `json:"aps"`
+	WalletKey string            `json:"wallet_key,omitempty"`
 }
 
 //ApplePayloadAlert - alert struct
 type ApplePayloadAlert struct {
-	Alert ApplePayloadAlertContent `json:"alert"`
+	Alert    ApplePayloadAlertContent `json:"alert"`
+	Category string                   `json:"category,omitempty"`
 }
 
 //ApplePayloadAlertContent - ios payload alert
 type ApplePayloadAlertContent struct {
-	Title        string `json:"title"`
-	Body         string `json:"body,omitempty"`
-	BodyLocKey   string `json:"loc-key,omitempty"`
-	ActionLocKey string `json:"action-loc-key,omitempty"`
+	TitleLocKey string `json:"title-loc-key,omitempty"`
 }
 
 //GooglePayload - android payload
@@ -55,20 +53,18 @@ func (s *server) SendPushNotification(c context.Context, request *pb.PushNotific
 	var notificationType pb.NotificationType
 	for _, token := range response.PushTokens {
 		if token.DeviceType == pb.DeviceType_apple {
-			payloadAlertContent := ApplePayloadAlertContent{Title: request.Title, Body: request.Message}
-			payload := ApplePayload{}
+			payload := ApplePayload{Aps: ApplePayloadAlert{Alert: ApplePayloadAlertContent{}}}
 			for _, p := range request.Parameters {
-				if p.Type == pb.NotificationParameterType_ios_body_localized_key {
-					payloadAlertContent.BodyLocKey = p.Value
+				if p.Type == pb.NotificationParameterType_ios_title_localized_key {
+					payload.Aps.Alert.TitleLocKey = p.Value
 				}
-				if p.Type == pb.NotificationParameterType_ios_action_localized_key {
-					payloadAlertContent.ActionLocKey = p.Value
+				if p.Type == pb.NotificationParameterType_ios_category {
+					payload.Aps.Category = p.Value
 				}
-				if p.Type == pb.NotificationParameterType_ios_extra_1 {
-					payload.Acme1 = p.Value
+				if p.Type == pb.NotificationParameterType_ios_wallet_key {
+					payload.WalletKey = p.Value
 				}
 			}
-			payload.Aps = ApplePayloadAlert{Alert: payloadAlertContent}
 			notificationType = pb.NotificationType_ios
 			content, err = json.Marshal(payload)
 			if err != nil {

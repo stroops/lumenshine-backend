@@ -207,7 +207,7 @@ func (m *NotificationParameter) GetType() NotificationParameterType {
 	if m != nil {
 		return m.Type
 	}
-	return NotificationParameterType_ios_body_localized_key
+	return NotificationParameterType_ios_title_localized_key
 }
 
 func (m *NotificationParameter) GetValue() string {

@@ -236,15 +236,15 @@ func TestPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	params := []*pb.NotificationParameter{
-		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_body_localized_key, Value: "payment_received"},
-		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_action_localized_key, Value: "push_view"},
-		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_extra_1, Value: publicKey},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_title_localized_key, Value: "payment_received"},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_category, Value: "GENERAL"},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_wallet_key, Value: publicKey},
 	}
 	pushReq := &pb.PushNotificationRequest{
 		Base:                       NewBaseRequest(uc),
 		UserID:                     wallet.UserId,
 		Title:                      "Lumenshine",
-		Message:                    "",
+		Message:                    "Payment received",
 		Parameters:                 params,
 		SendAsMailIfNoTokenPresent: true,
 	}
