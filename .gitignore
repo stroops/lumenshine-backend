@@ -24,7 +24,7 @@ media/
 .idea/
 vendor/
 db/migrations/
-
+no_git.txt
 
 admin/admin.exe
 admin/admin

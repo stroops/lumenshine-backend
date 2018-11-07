@@ -466,9 +466,11 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 		return nil, err
 	}
 	user.Password = string(pwd)
+	user.PublicKey0 = r.PublicKey_0
 	user.UpdatedBy = r.Base.UpdateBy
 	_, err = user.Update(tx, boil.Whitelist(
 		models.UserProfileColumns.Password,
+		models.UserProfileColumns.PublicKey0,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
 	))

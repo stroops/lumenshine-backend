@@ -25,6 +25,7 @@ type SseConfig struct {
 	SourceReceiver string    `boil:"source_receiver" json:"source_receiver" toml:"source_receiver" yaml:"source_receiver"`
 	StellarAccount string    `boil:"stellar_account" json:"stellar_account" toml:"stellar_account" yaml:"stellar_account"`
 	OperationTypes int64     `boil:"operation_types" json:"operation_types" toml:"operation_types" yaml:"operation_types"`
+	WithResume     bool      `boil:"with_resume" json:"with_resume" toml:"with_resume" yaml:"with_resume"`
 	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -37,6 +38,7 @@ var SseConfigColumns = struct {
 	SourceReceiver string
 	StellarAccount string
 	OperationTypes string
+	WithResume     string
 	CreatedAt      string
 	UpdatedAt      string
 }{
@@ -44,6 +46,7 @@ var SseConfigColumns = struct {
 	SourceReceiver: "source_receiver",
 	StellarAccount: "stellar_account",
 	OperationTypes: "operation_types",
+	WithResume:     "with_resume",
 	CreatedAt:      "created_at",
 	UpdatedAt:      "updated_at",
 }
@@ -69,9 +72,9 @@ func (*sseConfigR) NewStruct() *sseConfigR {
 type sseConfigL struct{}
 
 var (
-	sseConfigColumns               = []string{"id", "source_receiver", "stellar_account", "operation_types", "created_at", "updated_at"}
+	sseConfigColumns               = []string{"id", "source_receiver", "stellar_account", "operation_types", "with_resume", "created_at", "updated_at"}
 	sseConfigColumnsWithoutDefault = []string{"source_receiver", "stellar_account", "operation_types"}
-	sseConfigColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
+	sseConfigColumnsWithDefault    = []string{"id", "with_resume", "created_at", "updated_at"}
 	sseConfigPrimaryKeyColumns     = []string{"id"}
 )
 

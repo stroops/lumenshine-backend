@@ -590,6 +590,10 @@ message StellarOperation {
   int64 op_application_order = 6;
   int64 op_type = 7;
   string op_details = 8;
+
+  int64 tx_operation_count = 9;
+  int64 tx_fee_paid = 10;
+  string tx_account = 11;
 }
 
 message StellarOperations {

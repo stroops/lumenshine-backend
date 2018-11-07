@@ -9,6 +9,7 @@ message ListenForRequest{
     int64 op_types = 2;
     string source_reciver = 3;
     string stellar_account = 4;
+    bool with_resume = 5;
 }
 
 service SSEService {
