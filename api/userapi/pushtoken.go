@@ -235,11 +235,17 @@ func TestPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallet", cerr.GeneralError))
 		return
 	}
+	params := []*pb.NotificationParameter{
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_body_localized_key, Value: "payment_received"},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_action_localized_key, Value: "push_view"},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_extra_1, Value: publicKey},
+	}
 	pushReq := &pb.PushNotificationRequest{
 		Base:                       NewBaseRequest(uc),
 		UserID:                     wallet.UserId,
 		Title:                      "Lumenshine",
-		Message:                    "Payment received.",
+		Message:                    "",
+		Parameters:                 params,
 		SendAsMailIfNoTokenPresent: true,
 	}
 

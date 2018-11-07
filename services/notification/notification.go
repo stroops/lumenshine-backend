@@ -13,7 +13,8 @@ import (
 
 //ApplePayload - ios payload
 type ApplePayload struct {
-	Aps ApplePayloadAlert `json:"aps"`
+	Aps   ApplePayloadAlert `json:"aps"`
+	Acme1 string            `json:"acme1,omitempty"`
 }
 
 //ApplePayloadAlert - alert struct
@@ -23,8 +24,10 @@ type ApplePayloadAlert struct {
 
 //ApplePayloadAlertContent - ios payload alert
 type ApplePayloadAlertContent struct {
-	Title string `json:"title"`
-	Body  string `json:"body"`
+	Title        string `json:"title"`
+	Body         string `json:"body,omitempty"`
+	BodyLocKey   string `json:"loc-key,omitempty"`
+	ActionLocKey string `json:"action-loc-key,omitempty"`
 }
 
 //GooglePayload - android payload
@@ -34,17 +37,17 @@ type GooglePayload struct {
 }
 
 //SendPushNotification - stores the notification in the db queue to be picked up and sent by the routine
-func (s *server) SendPushNotification(c context.Context, r *pb.PushNotificationRequest) (*pb.Empty, error) {
+func (s *server) SendPushNotification(c context.Context, request *pb.PushNotificationRequest) (*pb.Empty, error) {
 	var err error
-	log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+	log := helpers.GetDefaultLog(ServiceName, request.Base.RequestId)
 
 	idRequest := &pb.IDRequest{
-		Base: &pb.BaseRequest{RequestId: r.Base.RequestId, UpdateBy: r.Base.UpdateBy},
-		Id:   r.UserID}
+		Base: &pb.BaseRequest{RequestId: request.Base.RequestId, UpdateBy: request.Base.UpdateBy},
+		Id:   request.UserID}
 
 	response, err := dbClient.GetPushTokens(c, idRequest)
 	if err != nil {
-		log.WithFields(logrus.Fields{"userID": r.UserID}).WithError(err).Error("Error reading push tokens")
+		log.WithFields(logrus.Fields{"userID": request.UserID}).WithError(err).Error("Error reading push tokens")
 		return nil, err
 	}
 
@@ -52,61 +55,73 @@ func (s *server) SendPushNotification(c context.Context, r *pb.PushNotificationR
 	var notificationType pb.NotificationType
 	for _, token := range response.PushTokens {
 		if token.DeviceType == pb.DeviceType_apple {
-			payloadAlertContent := ApplePayloadAlertContent{Title: r.Title, Body: r.Message}
-			payload := ApplePayload{Aps: ApplePayloadAlert{Alert: payloadAlertContent}}
+			payloadAlertContent := ApplePayloadAlertContent{Title: request.Title, Body: request.Message}
+			payload := ApplePayload{}
+			for _, p := range request.Parameters {
+				if p.Type == pb.NotificationParameterType_ios_body_localized_key {
+					payloadAlertContent.BodyLocKey = p.Value
+				}
+				if p.Type == pb.NotificationParameterType_ios_action_localized_key {
+					payloadAlertContent.ActionLocKey = p.Value
+				}
+				if p.Type == pb.NotificationParameterType_ios_extra_1 {
+					payload.Acme1 = p.Value
+				}
+			}
+			payload.Aps = ApplePayloadAlert{Alert: payloadAlertContent}
 			notificationType = pb.NotificationType_ios
 			content, err = json.Marshal(payload)
 			if err != nil {
-				log.WithFields(logrus.Fields{"userID": r.UserID, "device": token.DeviceType.String()}).
+				log.WithFields(logrus.Fields{"userID": request.UserID, "device": token.DeviceType.String()}).
 					WithError(err).Error("Error json encoding apple payload")
 				return nil, err
 			}
 		}
 		if token.DeviceType == pb.DeviceType_google {
-			gPayload := GooglePayload{Title: r.Title, Body: r.Message}
+			gPayload := GooglePayload{Title: request.Title, Body: request.Message}
 			notificationType = pb.NotificationType_android
 			content, err = json.Marshal(gPayload)
 			if err != nil {
-				log.WithFields(logrus.Fields{"userID": r.UserID, "device": token.DeviceType.String()}).
+				log.WithFields(logrus.Fields{"userID": request.UserID, "device": token.DeviceType.String()}).
 					WithError(err).Error("Error json encoding apple payload")
 				return nil, err
 			}
 		}
 		_, err = dbClient.QueuePushNotification(c, &pb.QueuePushNotificationRequest{
-			Base:       &pb.BaseRequest{RequestId: r.Base.RequestId, UpdateBy: r.Base.UpdateBy},
+			Base:       &pb.BaseRequest{RequestId: request.Base.RequestId, UpdateBy: request.Base.UpdateBy},
 			Content:    string(content),
 			PushToken:  token.PushToken,
-			UserId:     r.UserID,
+			UserId:     request.UserID,
 			DeviceType: notificationType})
 
 		if err != nil {
-			log.WithFields(logrus.Fields{"userID": r.UserID, "device": token.DeviceType.String()}).
+			log.WithFields(logrus.Fields{"userID": request.UserID, "device": token.DeviceType.String()}).
 				WithError(err).Error("Error json encoding apple payload")
 			return nil, err
 		}
 	}
 
-	if len(response.PushTokens) == 0 && r.SendAsMailIfNoTokenPresent {
+	if len(response.PushTokens) == 0 && request.SendAsMailIfNoTokenPresent {
 		idRequest := &pb.IDRequest{
-			Base: &pb.BaseRequest{RequestId: r.Base.RequestId, UpdateBy: ServiceName},
-			Id:   r.UserID}
+			Base: &pb.BaseRequest{RequestId: request.Base.RequestId, UpdateBy: ServiceName},
+			Id:   request.UserID}
 
 		user, err := dbClient.GetUserProfile(c, idRequest)
 		if err != nil {
-			log.WithFields(logrus.Fields{"userID": r.UserID}).WithError(err).Error("Error reading push tokens")
+			log.WithFields(logrus.Fields{"userID": request.UserID}).WithError(err).Error("Error reading push tokens")
 			return nil, err
 		}
 
 		_, err = dbClient.QueueMailNotification(c, &pb.QueueMailNotificationRequest{
-			Base:      &pb.BaseRequest{RequestId: r.Base.RequestId, UpdateBy: r.Base.UpdateBy},
-			UserId:    r.UserID,
-			Content:   r.Message,
-			Subject:   r.Title,
+			Base:      &pb.BaseRequest{RequestId: request.Base.RequestId, UpdateBy: request.Base.UpdateBy},
+			UserId:    request.UserID,
+			Content:   request.Message,
+			Subject:   request.Title,
 			MailType:  pb.EmailContentType_text,
 			UserEmail: user.Email})
 
 		if err != nil {
-			log.WithFields(logrus.Fields{"userID": r.UserID, "subject": r.Title}).
+			log.WithFields(logrus.Fields{"userID": request.UserID, "subject": request.Title}).
 				WithError(err).Error("Error queueing mail notification")
 			return nil, err
 		}
