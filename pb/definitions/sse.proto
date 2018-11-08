@@ -4,7 +4,7 @@ import "global.proto";
 
 package pb;
 
-message ListenForRequest{
+message SSEListenForRequest{
     BaseRequest base = 1;
     int64 op_types = 2;
     string source_reciver = 3;
@@ -12,6 +12,35 @@ message ListenForRequest{
     bool with_resume = 5;
 }
 
+message SSEGetDataRequest{
+    BaseRequest base = 1;
+    string source_reciver = 2;
+    int64 count = 3;
+}
+
+message SSEGetData{
+    int64 sse_config_id = 1;
+    string source_receiver = 2;
+    string stellar_account = 3;
+    int64 operation_type = 4;
+    string operation_data = 5;
+    int64 transaction_id = 6;
+    int64 operation_id = 7;
+    int64 ledger_id = 8;
+}
+
+message SSEGetDataResponse {
+    repeated SSEGetData data = 1;
+}
+
+message SSERemoveListeningRequest{
+    BaseRequest base = 1;
+    string source_reciver = 2;
+    string stellar_account = 3;
+}
+
 service SSEService {
-    rpc ListenFor (ListenForRequest) returns (Empty) {}
+    rpc ListenFor (SSEListenForRequest) returns (Empty) {}
+    rpc RemoveListening (SSERemoveListeningRequest) returns (Empty) {}
+    rpc GetData (SSEGetDataRequest) returns (SSEGetDataResponse) {}
 }

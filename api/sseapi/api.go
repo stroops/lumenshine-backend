@@ -10,6 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	bitCreate      = 1
+	bitPayment     = 2
+	bitPaymentPath = 3
+)
+
+var bits helpers.Bits
+
+func init() {
+	bits = helpers.Set(bits, bitCreate)
+	bits = helpers.Set(bits, bitPayment)
+	bits = helpers.Set(bits, bitPaymentPath)
+}
+
 //GetWSRequest - requestdata for a websocket
 //swagger:parameters GetWSRequest GetWS
 type GetWSRequest struct {

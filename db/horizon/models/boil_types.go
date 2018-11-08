@@ -66,5 +66,5 @@ const (
 
 // Enum values for sse_index_names
 const (
-	SseIndexNamesNextOperationID = "next_operation_id"
+	SseIndexNamesLastLedgerID = "last_ledger_id"
 )

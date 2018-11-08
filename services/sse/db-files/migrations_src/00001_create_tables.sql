@@ -25,13 +25,18 @@ CREATE TABLE sse_data
     stellar_account varchar(56) NOT NULL,
     operation_type int not null,
     operation_data jsonb null,
+    transaction_id bigint not null,
+    operation_id bigint not null,
+    ledger_id bigint not null,
 
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp
 );
 CREATE INDEX sse_data_ix1 ON sse_data(source_receiver);
+CREATE INDEX sse_data_ix2 ON sse_data(source_receiver, stellar_account);
+CREATE INDEX sse_data_ix3 ON sse_data(status);
 
-CREATE TYPE sse_index_names AS ENUM ('next_operation_id');
+CREATE TYPE sse_index_names AS ENUM ('last_ledger_id');
 CREATE TABLE sse_index
 (
     id SERIAL PRIMARY KEY not null,
@@ -40,7 +45,7 @@ CREATE TABLE sse_index
 );
 CREATE INDEX sse_index_ix1 ON sse_index(name);
 
-insert into  sse_index(name, value) values ('next_operation_id', 0);
+insert into  sse_index(name, value) values ('last_ledger_id', 0);
 
 -- +goose Down
 -- SQL in this section is executed when the migration is rolled back.
