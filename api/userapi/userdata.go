@@ -17,9 +17,7 @@ type GetUserDataResponse struct {
 	Email             string     `form:"email" json:"email"`
 	Forename          string     `form:"forename" json:"forename"`
 	Lastname          string     `form:"lastname" json:"lastname"`
-	Company           string     `form:"company" json:"company"`
 	Salutation        string     `form:"salutation" json:"salutation"`
-	Title             string     `form:"title" json:"title"`
 	Address           string     `form:"address" json:"address"`
 	ZipCode           string     `form:"zip_code" json:"zip_code"`
 	City              string     `form:"city" json:"city"`
@@ -69,9 +67,7 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		Email:            u.Email,
 		Forename:         u.Forename,
 		Lastname:         u.Lastname,
-		Company:          u.Company,
 		Salutation:       u.Salutation,
-		Title:            u.Title,
 		Address:          u.Address,
 		ZipCode:          u.ZipCode,
 		City:             u.City,
@@ -122,9 +118,7 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 type UpdateUserDataRequest struct {
 	Forename          string  `form:"forename" json:"forename" validate:"max=64"`
 	Lastname          string  `form:"lastname" json:"lastname" validate:"max=64"`
-	Company           string  `form:"company" json:"company" validate:"max=128"`
 	Salutation        string  `form:"salutation" json:"salutation" validate:"max=64"`
-	Title             string  `form:"title" json:"title" validate:"max=64"`
 	Address           string  `form:"address" json:"address" validate:"max=512"`
 	ZipCode           string  `form:"zip_code" json:"zip_code" validate:"max=32"`
 	City              string  `form:"city" json:"city" validate:"max=128"`
@@ -185,9 +179,7 @@ func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 		Id:               user.UserID,
 		Forename:         rr.Forename,
 		Lastname:         rr.Lastname,
-		Company:          rr.Company,
 		Salutation:       rr.Salutation,
-		Title:            rr.Title,
 		Address:          rr.Address,
 		ZipCode:          rr.ZipCode,
 		City:             rr.City,

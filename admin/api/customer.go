@@ -202,9 +202,7 @@ type CustomerDetailsResponse struct {
 	Email      string `json:"email"`
 	Forename   string `json:"forename"`
 	Lastname   string `json:"lastname"`
-	Company    string `json:"company"`
 	Salutation string `json:"salutation"`
-	Title      string `json:"title"`
 	//LastLogin        time.Time `json:"last_login"`
 	Address           string     `json:"address"`
 	ZipCode           string     `json:"zip_code"`
@@ -268,9 +266,7 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 		Email:             u.Email,
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
-		Company:           u.Company,
 		Salutation:        u.Salutation,
-		Title:             u.Title,
 		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
@@ -307,9 +303,7 @@ type CustomerEditRequest struct {
 	ID                int    `form:"id" json:"id"`
 	Forename          string `form:"forename" json:"forename" validate:"max=64"`
 	Lastname          string `form:"lastname" json:"lastname" validate:"max=64"`
-	Company           string `form:"company" json:"company" validate:"max=128"`
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
-	Title             string `form:"title" json:"title" validate:"max=64"`
 	Address           string `form:"address" json:"address" validate:"max=512"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"max=32"`
 	City              string `form:"city" json:"city" validate:"max=128"`
@@ -382,9 +376,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 
 	u.Forename = rr.Forename
 	u.Lastname = rr.Lastname
-	u.Company = rr.Company
 	u.Salutation = rr.Salutation
-	u.Title = rr.Title
 	u.Address = rr.Address
 	u.ZipCode = rr.ZipCode
 	u.City = rr.City
@@ -424,9 +416,7 @@ func CustomerEdit(uc *mw.AdminContext, c *gin.Context) {
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
 		Email:             u.Email,
-		Company:           u.Company,
 		Salutation:        u.Salutation,
-		Title:             u.Title,
 		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,

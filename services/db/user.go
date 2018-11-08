@@ -112,10 +112,8 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		Id:                int64(u.ID),
 		Email:             u.Email,
 		Salutation:        u.Salutation,
-		Title:             u.Title,
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
-		Company:           u.Company,
 		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
@@ -164,10 +162,8 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.PublicKey0 = r.PublicKey_0
 
 	u.Salutation = r.Salutation
-	u.Title = r.Title
 	u.Forename = r.Forename
 	u.Lastname = r.Lastname
-	u.Company = r.Company
 	u.Address = r.Address
 	u.ZipCode = r.ZipCode
 	u.City = r.City
@@ -843,9 +839,7 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 
 	u.Forename = r.Forename
 	u.Lastname = r.Lastname
-	u.Company = r.Company
 	u.Salutation = r.Salutation
-	u.Title = r.Title
 	u.Address = r.Address
 	u.ZipCode = r.ZipCode
 	u.City = r.City
@@ -871,9 +865,7 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 
 	whitelist := []string{models.UserProfileColumns.Forename,
 		models.UserProfileColumns.Lastname,
-		models.UserProfileColumns.Company,
 		models.UserProfileColumns.Salutation,
-		models.UserProfileColumns.Title,
 		models.UserProfileColumns.Address,
 		models.UserProfileColumns.ZipCode,
 		models.UserProfileColumns.City,
