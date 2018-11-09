@@ -142,6 +142,7 @@ type GetWalletResponse struct {
 	FederationAddress string `json:"federation_address"`
 	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
 	WalletType        string `json:"wallet_type"`
+	OrderNumber       int    `json:"order_nr"`
 }
 
 //GetWallet returns wallet details
@@ -187,6 +188,7 @@ func GetWallet(uc *mw.IcopContext, c *gin.Context) {
 		FederationAddress: getFederationAddress(wallet),
 		ShowOnHomescreen:  wallet.ShowOnHomescreen,
 		WalletType:        wallet.WalletType.String(),
+		OrderNumber:       int(wallet.OrderNr),
 	})
 }
 
@@ -199,6 +201,7 @@ type GetUserWalletsResponse struct {
 	FederationAddress string `json:"federation_address"`
 	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
 	WalletType        string `json:"wallet_type"`
+	OrderNumber       int    `json:"order_nr"`
 }
 
 //GetUserWallets returns all wallets for one user
@@ -232,6 +235,7 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 			FederationAddress: getFederationAddress(w),
 			ShowOnHomescreen:  w.ShowOnHomescreen,
 			WalletType:        w.WalletType.String(),
+			OrderNumber:       int(w.OrderNr),
 		}
 	}
 

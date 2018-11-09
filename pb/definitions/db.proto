@@ -369,6 +369,7 @@ message Wallet {
   string domain = 6;
   bool show_on_homescreen = 7;
   WalletType wallet_type = 8;
+  int64 order_nr = 9;
 }
 
 message GetWalletsRequest {

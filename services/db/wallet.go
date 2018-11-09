@@ -255,6 +255,7 @@ func (s *server) GetWallet(ctx context.Context, r *pb.GetWalletRequest) (*pb.Wal
 		FriendlyId:       wallet.FriendlyID,
 		Domain:           wallet.Domain,
 		WalletType:       pb.WalletType(pb.WalletType_value[wallet.WalletType]),
+		OrderNr:          int64(wallet.OrderNR),
 	}, nil
 }
 
@@ -293,6 +294,7 @@ func (s *server) GetUserWallets(ctx context.Context, r *pb.GetWalletsRequest) (*
 			FriendlyId:       w.FriendlyID,
 			Domain:           w.Domain,
 			WalletType:       pb.WalletType(pb.WalletType_value[w.WalletType]),
+			OrderNr:          int64(w.OrderNR),
 		})
 	}
 
