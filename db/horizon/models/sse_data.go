@@ -29,6 +29,9 @@ type SseDatum struct {
 	StellarAccount string    `boil:"stellar_account" json:"stellar_account" toml:"stellar_account" yaml:"stellar_account"`
 	OperationType  int       `boil:"operation_type" json:"operation_type" toml:"operation_type" yaml:"operation_type"`
 	OperationData  null.JSON `boil:"operation_data" json:"operation_data,omitempty" toml:"operation_data" yaml:"operation_data,omitempty"`
+	TransactionID  int64     `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
+	OperationID    int64     `boil:"operation_id" json:"operation_id" toml:"operation_id" yaml:"operation_id"`
+	LedgerID       int64     `boil:"ledger_id" json:"ledger_id" toml:"ledger_id" yaml:"ledger_id"`
 	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -44,6 +47,9 @@ var SseDatumColumns = struct {
 	StellarAccount string
 	OperationType  string
 	OperationData  string
+	TransactionID  string
+	OperationID    string
+	LedgerID       string
 	CreatedAt      string
 	UpdatedAt      string
 }{
@@ -54,6 +60,9 @@ var SseDatumColumns = struct {
 	StellarAccount: "stellar_account",
 	OperationType:  "operation_type",
 	OperationData:  "operation_data",
+	TransactionID:  "transaction_id",
+	OperationID:    "operation_id",
+	LedgerID:       "ledger_id",
 	CreatedAt:      "created_at",
 	UpdatedAt:      "updated_at",
 }
@@ -79,8 +88,8 @@ func (*sseDatumR) NewStruct() *sseDatumR {
 type sseDatumL struct{}
 
 var (
-	sseDatumColumns               = []string{"id", "sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data", "created_at", "updated_at"}
-	sseDatumColumnsWithoutDefault = []string{"sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data"}
+	sseDatumColumns               = []string{"id", "sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data", "transaction_id", "operation_id", "ledger_id", "created_at", "updated_at"}
+	sseDatumColumnsWithoutDefault = []string{"sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data", "transaction_id", "operation_id", "ledger_id"}
 	sseDatumColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	sseDatumPrimaryKeyColumns     = []string{"id"}
 )
