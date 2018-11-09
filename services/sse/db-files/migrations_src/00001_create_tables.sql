@@ -13,7 +13,9 @@ CREATE TABLE sse_config
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp
 );
+create unique index sse_config_ix1 ON sse_config(source_receiver, stellar_account);
 CREATE INDEX sse_config_ix2 ON sse_config(stellar_account, with_resume);
+
 
 CREATE TYPE sse_data_status AS ENUM ('new', 'selected');
 CREATE TABLE sse_data

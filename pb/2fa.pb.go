@@ -3,9 +3,11 @@
 
 package pb
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -35,16 +37,17 @@ func (m *NewSecretRequest) Reset()         { *m = NewSecretRequest{} }
 func (m *NewSecretRequest) String() string { return proto.CompactTextString(m) }
 func (*NewSecretRequest) ProtoMessage()    {}
 func (*NewSecretRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2fa_4efbc1ddd30874f4, []int{0}
+	return fileDescriptor_24f08724372c8940, []int{0}
 }
+
 func (m *NewSecretRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_NewSecretRequest.Unmarshal(m, b)
 }
 func (m *NewSecretRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_NewSecretRequest.Marshal(b, m, deterministic)
 }
-func (dst *NewSecretRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_NewSecretRequest.Merge(dst, src)
+func (m *NewSecretRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_NewSecretRequest.Merge(m, src)
 }
 func (m *NewSecretRequest) XXX_Size() int {
 	return xxx_messageInfo_NewSecretRequest.Size(m)
@@ -82,16 +85,17 @@ func (m *FromSecretRequest) Reset()         { *m = FromSecretRequest{} }
 func (m *FromSecretRequest) String() string { return proto.CompactTextString(m) }
 func (*FromSecretRequest) ProtoMessage()    {}
 func (*FromSecretRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2fa_4efbc1ddd30874f4, []int{1}
+	return fileDescriptor_24f08724372c8940, []int{1}
 }
+
 func (m *FromSecretRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FromSecretRequest.Unmarshal(m, b)
 }
 func (m *FromSecretRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FromSecretRequest.Marshal(b, m, deterministic)
 }
-func (dst *FromSecretRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FromSecretRequest.Merge(dst, src)
+func (m *FromSecretRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FromSecretRequest.Merge(m, src)
 }
 func (m *FromSecretRequest) XXX_Size() int {
 	return xxx_messageInfo_FromSecretRequest.Size(m)
@@ -136,16 +140,17 @@ func (m *QrCodeResponse) Reset()         { *m = QrCodeResponse{} }
 func (m *QrCodeResponse) String() string { return proto.CompactTextString(m) }
 func (*QrCodeResponse) ProtoMessage()    {}
 func (*QrCodeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2fa_4efbc1ddd30874f4, []int{2}
+	return fileDescriptor_24f08724372c8940, []int{2}
 }
+
 func (m *QrCodeResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_QrCodeResponse.Unmarshal(m, b)
 }
 func (m *QrCodeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_QrCodeResponse.Marshal(b, m, deterministic)
 }
-func (dst *QrCodeResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QrCodeResponse.Merge(dst, src)
+func (m *QrCodeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QrCodeResponse.Merge(m, src)
 }
 func (m *QrCodeResponse) XXX_Size() int {
 	return xxx_messageInfo_QrCodeResponse.Size(m)
@@ -190,16 +195,17 @@ func (m *AuthenticateRequest) Reset()         { *m = AuthenticateRequest{} }
 func (m *AuthenticateRequest) String() string { return proto.CompactTextString(m) }
 func (*AuthenticateRequest) ProtoMessage()    {}
 func (*AuthenticateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2fa_4efbc1ddd30874f4, []int{3}
+	return fileDescriptor_24f08724372c8940, []int{3}
 }
+
 func (m *AuthenticateRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AuthenticateRequest.Unmarshal(m, b)
 }
 func (m *AuthenticateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AuthenticateRequest.Marshal(b, m, deterministic)
 }
-func (dst *AuthenticateRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AuthenticateRequest.Merge(dst, src)
+func (m *AuthenticateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthenticateRequest.Merge(m, src)
 }
 func (m *AuthenticateRequest) XXX_Size() int {
 	return xxx_messageInfo_AuthenticateRequest.Size(m)
@@ -242,16 +248,17 @@ func (m *AuthenticateResponse) Reset()         { *m = AuthenticateResponse{} }
 func (m *AuthenticateResponse) String() string { return proto.CompactTextString(m) }
 func (*AuthenticateResponse) ProtoMessage()    {}
 func (*AuthenticateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2fa_4efbc1ddd30874f4, []int{4}
+	return fileDescriptor_24f08724372c8940, []int{4}
 }
+
 func (m *AuthenticateResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AuthenticateResponse.Unmarshal(m, b)
 }
 func (m *AuthenticateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AuthenticateResponse.Marshal(b, m, deterministic)
 }
-func (dst *AuthenticateResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AuthenticateResponse.Merge(dst, src)
+func (m *AuthenticateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthenticateResponse.Merge(m, src)
 }
 func (m *AuthenticateResponse) XXX_Size() int {
 	return xxx_messageInfo_AuthenticateResponse.Size(m)
@@ -415,9 +422,9 @@ var _TwoFactorAuthService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "2fa.proto",
 }
 
-func init() { proto.RegisterFile("2fa.proto", fileDescriptor_2fa_4efbc1ddd30874f4) }
+func init() { proto.RegisterFile("2fa.proto", fileDescriptor_24f08724372c8940) }
 
-var fileDescriptor_2fa_4efbc1ddd30874f4 = []byte{
+var fileDescriptor_24f08724372c8940 = []byte{
 	// 307 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0x4d, 0x4f, 0xc2, 0x40,
 	0x10, 0xb5, 0x80, 0xc4, 0x8e, 0x44, 0x71, 0xac, 0xd8, 0x70, 0x22, 0xf5, 0xc2, 0xa9, 0x07, 0x3c,

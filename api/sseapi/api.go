@@ -7,6 +7,7 @@ import (
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
+	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/gin-gonic/gin"
 )
 
@@ -140,6 +141,19 @@ func ListenAccount(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 			c.JSON(http.StatusOK, "{}")
 			return
 		}
+	}
+
+	//register account in sse for events
+	_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
+		Base:           NewBaseRequest(uc),
+		OpTypes:        4,
+		SourceReciver:  "sse",
+		StellarAccount: l.Account,
+		WithResume:     false,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error registering account for sse", cerr.GeneralError))
+		return
 	}
 
 	//not found add address to listener and reverselookup

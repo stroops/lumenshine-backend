@@ -28,6 +28,9 @@ type ServicesConfig struct {
 
 	PaySrvPort int64
 	PaySrvHost string
+
+	SSESrvPort int64
+	SSESrvHost string
 }
 
 //Config for the app
