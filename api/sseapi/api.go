@@ -221,9 +221,9 @@ func SendMessage(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 	_, ok := hub.addresses[l.Account]
 	if ok {
 		hub.send <- &WsMessage{
-			Account:     l.Account,
-			MessageType: l.MessageType,
-			Message:     []byte(l.Data),
+			Account: l.Account,
+			//MessageType: l.MessageType,
+			//Message:     []byte(l.Data),
 		}
 	}
 
