@@ -11,18 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	bitCreate      = 1
-	bitPayment     = 2
-	bitPaymentPath = 3
-)
-
 var bits helpers.Bits
 
 func init() {
-	bits = helpers.Set(bits, bitCreate)
-	bits = helpers.Set(bits, bitPayment)
-	bits = helpers.Set(bits, bitPaymentPath)
+	bits = helpers.Set(bits, helpers.F0) //create
+	bits = helpers.Set(bits, helpers.F1) //payment
+	bits = helpers.Set(bits, helpers.F2) //paymentPath
 }
 
 //GetWSRequest - requestdata for a websocket
@@ -62,7 +56,7 @@ func GetWS(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 
 	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), key: l.RandomKey}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 1024), key: l.RandomKey}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
@@ -146,7 +140,7 @@ func ListenAccount(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 	//register account in sse for events
 	_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
 		Base:           NewBaseRequest(uc),
-		OpTypes:        4,
+		OpTypes:        int64(bits),
 		SourceReciver:  "sse",
 		StellarAccount: l.Account,
 		WithResume:     false,

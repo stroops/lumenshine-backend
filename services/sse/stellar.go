@@ -157,7 +157,7 @@ func (s *StellarProcessor) processLedger(l *m.HistoryLedger) error {
 	  inner join history_ledgers on history_transactions.ledger_sequence = history_ledgers.sequence
 	WHERE
 	  (history_ledgers.sequence=$1) and
-	  (2<<type&operation_types=operation_types)
+	  (1<<type&operation_types>0)
 	  AND (case when type=1 or type=2 then cast(details->>'to' as character varying)=stellar_account else true end)
 	  AND (case when type=0 then cast(details->>'account' as character varying)=stellar_account else true end)
 	  AND (case when with_resume=false then history_ledgers.sequence>=$2 else true end)`
