@@ -492,9 +492,6 @@ definitions:
       city:
         type: string
         x-go-name: City
-      company:
-        type: string
-        x-go-name: Company
       country_code:
         type: string
         x-go-name: CountryCode
@@ -547,9 +544,6 @@ definitions:
       tax_id_name:
         type: string
         x-go-name: TaxIDName
-      title:
-        type: string
-        x-go-name: Title
       zip_code:
         type: string
         x-go-name: ZipCode
@@ -1333,9 +1327,6 @@ definitions:
       city:
         type: string
         x-go-name: City
-      company:
-        type: string
-        x-go-name: Company
       country_code:
         type: string
         x-go-name: CountryCode
@@ -1381,9 +1372,6 @@ definitions:
       tax_id_name:
         type: string
         x-go-name: TaxIDName
-      title:
-        type: string
-        x-go-name: Title
       zip_code:
         type: string
         x-go-name: ZipCode
@@ -2516,7 +2504,7 @@ paths:
         x-go-name: PushToken
       - description: Device type, e.g. apple, google
         in: query
-        name: wallet_name
+        name: device_type
         required: true
         type: string
         x-go-name: DeviceType
@@ -2612,7 +2600,7 @@ paths:
         x-go-name: OldPushToken
       - description: Device type, e.g. apple, google
         in: query
-        name: wallet_name
+        name: device_type
         required: true
         type: string
         x-go-name: DeviceType
@@ -2638,17 +2626,9 @@ paths:
         type: string
         x-go-name: Lastname
       - in: query
-        name: company
-        type: string
-        x-go-name: Company
-      - in: query
         name: salutation
         type: string
         x-go-name: Salutation
-      - in: query
-        name: title
-        type: string
-        x-go-name: Title
       - in: query
         name: address
         type: string

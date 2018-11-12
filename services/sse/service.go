@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"strings"
 
 	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/db/querying"
@@ -21,7 +22,12 @@ func (s *server) ListenFor(ctx context.Context, r *pb.SSEListenForRequest) (*pb.
 		WithResume:     r.WithResume,
 	}
 
-	return &pb.Empty{}, c.Insert(s.Env.DBH, boil.Infer())
+	err := c.Insert(s.Env.DBH, boil.Infer())
+	if err != nil && !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+		return nil, err
+	}
+
+	return &pb.Empty{}, nil
 }
 
 func (s *server) RemoveListening(ctx context.Context, r *pb.SSERemoveListeningRequest) (*pb.Empty, error) {
@@ -34,9 +40,24 @@ func (s *server) RemoveListening(ctx context.Context, r *pb.SSERemoveListeningRe
 	return &pb.Empty{}, err
 }
 
+func (s *server) ClearSourceRecivers(ctx context.Context, r *pb.SSEClearSourceReciversRequest) (*pb.Empty, error) {
+	//log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
+
+	_, err := m.SseConfigs(
+		qm.Where(m.SseConfigColumns.SourceReceiver+"=?", r.SourceReciver),
+	).DeleteAll(s.Env.DBH)
+
+	_, err = m.SseData(
+		qm.Where(m.SseDatumColumns.SourceReceiver+"=?", r.SourceReciver),
+	).DeleteAll(s.Env.DBH)
+
+	return &pb.Empty{}, err
+}
+
 func (s *server) GetData(ctx context.Context, r *pb.SSEGetDataRequest) (*pb.SSEGetDataResponse, error) {
 	//log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
-	sqlStr := querying.GetSQLKeyString(`update @sse_data set @status=$1 where @status=$2 and @source_receiver=$3 limit $4 returning *`,
+
+	sqlStr := querying.GetSQLKeyString(`with cte as (select id from sse_data where @status=$1 and @source_receiver=$2 limit $3) update sse_data s set @status=$4 from cte where s.id=cte.id returning *`,
 		map[string]string{
 			"@sse_data":        m.TableNames.SseData,
 			"@status":          m.SseDatumColumns.Status,
@@ -44,7 +65,7 @@ func (s *server) GetData(ctx context.Context, r *pb.SSEGetDataRequest) (*pb.SSEG
 		})
 
 	var d []m.SseDatum
-	err := queries.Raw(sqlStr, m.SseDataStatusSelected, m.SseDataStatusNew, r.SourceReciver, r.Count).Bind(nil, s.Env.DBH, &d)
+	err := queries.Raw(sqlStr, m.SseDataStatusNew, r.SourceReciver, r.Count, m.SseDataStatusSelected).Bind(nil, s.Env.DBH, &d)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
@@ -74,6 +95,6 @@ func (s *server) GetData(ctx context.Context, r *pb.SSEGetDataRequest) (*pb.SSEG
 	}
 
 	//need to delete the data also
-	_, err = m.SseData(qm.Where(m.SseDatumColumns.Status+"=?", m.SseDataStatusSelected)).DeleteAll(s.Env.DBH)
+	//_, err = m.SseData(qm.Where(m.SseDatumColumns.Status+"=?", m.SseDataStatusSelected)).DeleteAll(s.Env.DBH)
 	return &ret, err
 }

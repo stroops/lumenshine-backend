@@ -35,9 +35,11 @@ const (
 )
 
 var (
-	dbClient  pb.DBServiceClient
-	jwtClient pb.JwtServiceClient
-	hub       *Hub
+	dbClient    pb.DBServiceClient
+	jwtClient   pb.JwtServiceClient
+	sseClient   pb.SSEServiceClient
+	hub         *Hub
+	sseListener *SSEListener
 )
 
 func main() {
@@ -79,6 +81,10 @@ func main() {
 	//websocket hub
 	hub = newHub()
 	go hub.run()
+
+	//listener for SSE Events
+	sseListener = NewListenSSE()
+	go sseListener.Run()
 
 	// Add CORS middleware
 	r.Use(cors.New(cors.Config{
@@ -155,6 +161,13 @@ func connectServices(log *logrus.Entry) {
 		log.WithError(err).Fatalf("Dial failed: %v", err)
 	}
 	dbClient = pb.NewDBServiceClient(connDB)
+
+	//connect sse service
+	connSSE, err := grpc.Dial(fmt.Sprintf("%s:%d", cnf.Services.SSESrvHost, cnf.Services.SSESrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	sseClient = pb.NewSSEServiceClient(connSSE)
 }
 
 var (

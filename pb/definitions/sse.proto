@@ -39,8 +39,14 @@ message SSERemoveListeningRequest{
     string stellar_account = 3;
 }
 
+message SSEClearSourceReciversRequest{
+    BaseRequest base = 1;
+    string source_reciver = 2;
+}
+
 service SSEService {
     rpc ListenFor (SSEListenForRequest) returns (Empty) {}
     rpc RemoveListening (SSERemoveListeningRequest) returns (Empty) {}
+    rpc ClearSourceRecivers (SSEClearSourceReciversRequest) returns (Empty) {}
     rpc GetData (SSEGetDataRequest) returns (SSEGetDataResponse) {}
 }

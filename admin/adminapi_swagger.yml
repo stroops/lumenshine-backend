@@ -236,11 +236,6 @@ definitions:
   AddPromoRequest:
     description: AddPromoRequest request
     properties:
-      buttons:
-        items:
-          $ref: '#/definitions/Button'
-        type: array
-        x-go-name: Buttons
       name:
         type: string
         x-go-name: Name
@@ -256,7 +251,6 @@ definitions:
     required:
     - name
     - type
-    - buttons
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   AddTrustlineRequest:
@@ -386,9 +380,6 @@ definitions:
       city:
         type: string
         x-go-name: City
-      company:
-        type: string
-        x-go-name: Company
       country_code:
         type: string
         x-go-name: CountryCode
@@ -445,9 +436,6 @@ definitions:
       tax_id_name:
         type: string
         x-go-name: TaxIDName
-      title:
-        type: string
-        x-go-name: Title
       zip_code:
         type: string
         x-go-name: ZipCode
@@ -483,9 +471,6 @@ definitions:
       city:
         type: string
         x-go-name: City
-      company:
-        type: string
-        x-go-name: Company
       country_code:
         type: string
         x-go-name: CountryCode
@@ -535,9 +520,6 @@ definitions:
       tax_id_name:
         type: string
         x-go-name: TaxIDName
-      title:
-        type: string
-        x-go-name: Title
       zip_code:
         type: string
         x-go-name: ZipCode
@@ -781,11 +763,6 @@ definitions:
   EditPromoRequest:
     description: EditPromoRequest request
     properties:
-      buttons:
-        items:
-          $ref: '#/definitions/Button'
-        type: array
-        x-go-name: Buttons
       id:
         format: int64
         type: integer
@@ -804,8 +781,6 @@ definitions:
         x-go-name: Type
     required:
     - id
-    - type
-    - buttons
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   EditRequest:
@@ -1952,17 +1927,9 @@ paths:
         type: string
         x-go-name: Lastname
       - in: query
-        name: company
-        type: string
-        x-go-name: Company
-      - in: query
         name: salutation
         type: string
         x-go-name: Salutation
-      - in: query
-        name: title
-        type: string
-        x-go-name: Title
       - in: query
         name: address
         type: string
@@ -2704,13 +2671,6 @@ paths:
         required: true
         type: string
         x-go-name: Type
-      - in: query
-        items:
-          $ref: '#/definitions/Button'
-        name: buttons
-        required: true
-        type: array
-        x-go-name: Buttons
       produces:
       - application/json
       responses:
@@ -2802,16 +2762,8 @@ paths:
         x-go-name: Text
       - in: query
         name: type
-        required: true
         type: string
         x-go-name: Type
-      - in: query
-        items:
-          $ref: '#/definitions/Button'
-        name: buttons
-        required: true
-        type: array
-        x-go-name: Buttons
       produces:
       - application/json
       responses:
