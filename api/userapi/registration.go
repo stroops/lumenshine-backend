@@ -209,9 +209,8 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	msgBody := RenderTemplateToString(uc, c, "confirm_mail", gin.H{
-		"Forename": ur.Forename,
-		"Lastname": ur.Lastname,
-		"TokeUrl":  cnf.WebLinks.ConfirmMail + reqC.MailConfirmationKey,
+		"TokenUrl":  cnf.WebLinks.ConfirmMail + reqC.MailConfirmationKey,
+		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(reqC.MailConfirmationExpiry, 0), uc.Language,
 		),
@@ -225,6 +224,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		//ToMultiple: []string{ur.Email, "udo@n-wt.com"},
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))
@@ -448,9 +448,8 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "confirm_mail", gin.H{
-		"Forename": ur.Forename,
-		"Lastname": ur.Lastname,
-		"TokeUrl":  cnf.WebLinks.ConfirmMail + user.MailConfirmationKey,
+		"TokenUrl":  cnf.WebLinks.ConfirmMail + user.MailConfirmationKey,
+		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(user.MailConfirmationExpiry, 0), uc.Language,
 		),
@@ -463,6 +462,7 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 		To:      ur.Email,
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))

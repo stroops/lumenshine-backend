@@ -790,9 +790,8 @@ func Reset2fa(uc *mw.AdminContext, c *gin.Context) {
 	langCode := "en"
 	msgSubject := fmt.Sprintf("%s :: Your new 2FA Secret", config.Cnf.Site.SiteName)
 	msgBody := tt.RenderTemplateToString(uc, c, "reset_tfa_mail", langCode, gin.H{
-		"Forename": u.Forename,
-		"Lastname": u.Lastname,
-		"TokeUrl":  config.Cnf.WebLinks.LostTFA + u.MailConfirmationKey,
+		"TokenUrl":  config.Cnf.WebLinks.LostTFA + u.MailConfirmationKey,
+		"ImagesUrl": config.Cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			u.MailConfirmationExpiryDate, langCode,
 		),
@@ -804,6 +803,7 @@ func Reset2fa(uc *mw.AdminContext, c *gin.Context) {
 		To:      u.Email,
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))

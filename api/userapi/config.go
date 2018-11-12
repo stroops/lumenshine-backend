@@ -49,6 +49,7 @@ type ConfigWebLinks struct {
 	ConfirmMail  string
 	LostPassword string
 	LostTFA      string
+	ImagesUrl    string
 }
 
 //Config for the app
