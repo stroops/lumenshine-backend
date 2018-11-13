@@ -40,9 +40,9 @@ func (s *SSEListener) Run() {
 			if data != nil && data.Data != nil {
 				for _, d := range data.Data {
 					hub.send <- &WsMessage{
-						Account:     d.StellarAccount,
-						MessageType: d.OperationType,
-						Message:     []byte(d.OperationData),
+						Account: d.StellarAccount,
+						//MessageType: d.OperationType,
+						//Message:     []byte(d.OperationData),
 					}
 				}
 			} else {

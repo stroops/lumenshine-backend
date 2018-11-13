@@ -14,10 +14,10 @@ type WsMessage struct {
 	//account we want to send the message to
 	Account string `json:"account"`
 
-	MessageType int64 `json:"message_type"`
+	//MessageType int64 `json:"message_type"`
 
 	//message to be send
-	Message []byte `json:"message"`
+	//Message []byte `json:"message"`
 }
 
 //GetJSON returns the json string for a message

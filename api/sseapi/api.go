@@ -13,10 +13,21 @@ import (
 
 var bits helpers.Bits
 
+//{ CREATE_ACCOUNT = 0, PAYMENT = 1, PATH_PAYMENT = 2, MANAGE_OFFER = 3, CREATE_PASSIVE_OFFER = 4,
+//	SET_OPTIONS = 5, CHANGE_TRUST = 6, ALLOW_TRUST = 7, ACCOUNT_MERGE = 8, INFLATION = 9, MANAGE_DATA = 10, BUMP_SEQUENCE = 11 }
+
 func init() {
 	bits = helpers.Set(bits, helpers.F0) //create
 	bits = helpers.Set(bits, helpers.F1) //payment
 	bits = helpers.Set(bits, helpers.F2) //paymentPath
+	bits = helpers.Set(bits, helpers.F3)
+	bits = helpers.Set(bits, helpers.F4)
+	bits = helpers.Set(bits, helpers.F5)
+	bits = helpers.Set(bits, helpers.F6)
+	bits = helpers.Set(bits, helpers.F7)
+	bits = helpers.Set(bits, helpers.F8)
+	bits = helpers.Set(bits, helpers.F10)
+	bits = helpers.Set(bits, helpers.F11)
 }
 
 //GetWSRequest - requestdata for a websocket
@@ -221,9 +232,9 @@ func SendMessage(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 	_, ok := hub.addresses[l.Account]
 	if ok {
 		hub.send <- &WsMessage{
-			Account:     l.Account,
-			MessageType: l.MessageType,
-			Message:     []byte(l.Data),
+			Account: l.Account,
+			//MessageType: l.MessageType,
+			//Message:     []byte(l.Data),
 		}
 	}
 
