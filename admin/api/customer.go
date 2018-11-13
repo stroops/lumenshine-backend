@@ -301,8 +301,8 @@ func CustomerDetails(uc *mw.AdminContext, c *gin.Context) {
 type CustomerEditRequest struct {
 	//required : true
 	ID                int    `form:"id" json:"id"`
-	Forename          string `form:"forename" json:"forename" validate:"max=64"`
-	Lastname          string `form:"lastname" json:"lastname" validate:"max=64"`
+	Forename          string `form:"forename" json:"forename" validate:"required,icop_nonum,min_trim=2,max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"required,icop_nonum,min_trim=2,max=64"`
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Address           string `form:"address" json:"address" validate:"max=512"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"max=32"`

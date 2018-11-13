@@ -46,10 +46,8 @@ type RegisterUserRequest struct {
 	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
-	Title             string `form:"title" json:"title" validate:"max=64"`
-	Forename          string `form:"forename" json:"forename" validate:"max=64"`
-	Lastname          string `form:"lastname" json:"lastname" validate:"max=64"`
-	Company           string `form:"company" json:"company" validate:"max=128"`
+	Forename          string `form:"forename" json:"forename" validate:"required,icop_nonum,min_trim=2,max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"required,icop_nonum,min_trim=2,max=64"`
 	Address           string `form:"address" json:"address" validate:"max=512"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"max=32"`
 	City              string `form:"city" json:"city" validate:"max=128"`

@@ -116,8 +116,8 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 //UpdateUserDataRequest - edit user request
 //swagger:parameters UpdateUserDataRequest UpdateUserData
 type UpdateUserDataRequest struct {
-	Forename          string  `form:"forename" json:"forename" validate:"max=64"`
-	Lastname          string  `form:"lastname" json:"lastname" validate:"max=64"`
+	Forename          string  `form:"forename" json:"forename" validate:"required,icop_nonum,min_trim=2,max=64"`
+	Lastname          string  `form:"lastname" json:"lastname" validate:"required,icop_nonum,min_trim=2,max=64"`
 	Salutation        string  `form:"salutation" json:"salutation" validate:"max=64"`
 	Address           string  `form:"address" json:"address" validate:"max=512"`
 	ZipCode           string  `form:"zip_code" json:"zip_code" validate:"max=32"`
