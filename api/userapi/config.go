@@ -31,6 +31,9 @@ type ServicesConfig struct {
 
 	NotificationSrvPort int64
 	NotificationSrvHost string
+
+	SSESrvPort int64
+	SSESrvHost string
 }
 
 //ConfigSite globals that define the site behaviour

@@ -34,11 +34,21 @@ type GooglePayload struct {
 	Body  string `json:"body"`
 }
 
-//SendPushNotification - stores the notification in the db queue to be picked up and sent by the routine
 func (s *server) SendPushNotification(c context.Context, request *pb.PushNotificationRequest) (*pb.Empty, error) {
-	var err error
 	log := helpers.GetDefaultLog(ServiceName, request.Base.RequestId)
 
+	response, err := sendPushNotification(c, request, log)
+	if err != nil {
+		log.WithError(err).Error("Error on notification sending")
+		return nil, err
+	}
+
+	return response, nil
+}
+
+//SendPushNotification - stores the notification in the db queue to be picked up and sent by the routine
+func sendPushNotification(c context.Context, request *pb.PushNotificationRequest, log *logrus.Entry) (*pb.Empty, error) {
+	var err error
 	idRequest := &pb.IDRequest{
 		Base: &pb.BaseRequest{RequestId: request.Base.RequestId, UpdateBy: request.Base.UpdateBy},
 		Id:   request.UserID}

@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "admin",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/admin",
+            "env": {"icop_debug": "1"}
+        },
+        {
             "name": "userAPI",
             "type": "go",
             "request": "launch",

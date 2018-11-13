@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/Soneso/lumenshine-backend/helpers"
 	"os"
 	"path/filepath"
+
+	"github.com/Soneso/lumenshine-backend/helpers"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,6 +17,9 @@ type Config struct {
 
 	DBSrvPort int64
 	DBSrvHost string
+
+	SSESrvPort int64
+	SSESrvHost string
 }
 
 var cnf *Config

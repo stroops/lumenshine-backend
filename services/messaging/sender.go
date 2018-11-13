@@ -115,15 +115,11 @@ func sendIos(notification *pb.Notification) *pb.NotificationArchive {
 			archive.Status = pb.NotificationStatusCode_success
 		}
 		if response.StatusCode == iosStatuscodeInvalidtoken {
-			ctx := context.Background()
-			_, err := dbClient.DeletePushToken(ctx, &pb.DeletePushTokenRequest{
-				Base:      &pb.BaseRequest{UpdateBy: ServiceName},
-				UserId:    notification.UserId,
-				PushToken: notification.PushToken})
-
+			err := deletePushToken(notification.PushToken, notification.UserId)
 			if err != nil {
 				log.WithError(err).
-					WithFields(logrus.Fields{"user_id": notification.UserId, "token": notification.PushToken}).Error("Error deleting push token")
+					WithFields(logrus.Fields{"user_id": notification.UserId, "token": notification.PushToken}).
+					Error("Error deleting push token")
 			}
 		}
 	} else {
@@ -157,15 +153,11 @@ func sendAndroid(notification *pb.Notification) *pb.NotificationArchive {
 	archive.ExternalError = ResultsString(response) + " " + response.Err
 
 	if IsNotRegisteredToken(response) {
-		ctx := context.Background()
-		_, err := dbClient.DeletePushToken(ctx, &pb.DeletePushTokenRequest{
-			Base:      &pb.BaseRequest{UpdateBy: ServiceName},
-			UserId:    notification.UserId,
-			PushToken: notification.PushToken})
-
+		err := deletePushToken(notification.PushToken, notification.UserId)
 		if err != nil {
 			log.WithError(err).
-				WithFields(logrus.Fields{"user_id": notification.UserId, "token": notification.PushToken}).Error("Error deleting push token")
+				WithFields(logrus.Fields{"user_id": notification.UserId, "token": notification.PushToken}).
+				Error("Error deleting push token")
 		}
 	}
 
@@ -202,4 +194,45 @@ func isHTML(emailContentType pb.EmailContentType) bool {
 	}
 
 	return false
+}
+
+func deletePushToken(pushToken string, userID int64) error {
+	ctx := context.Background()
+	_, err := dbClient.DeletePushToken(ctx, &pb.DeletePushTokenRequest{
+		Base:      &pb.BaseRequest{UpdateBy: ServiceName},
+		UserId:    userID,
+		PushToken: pushToken})
+
+	if err != nil {
+		return err
+	}
+
+	response, err := dbClient.HasPushTokens(ctx, &pb.IDRequest{
+		Base: &pb.BaseRequest{UpdateBy: ServiceName},
+		Id:   userID})
+	if err != nil {
+		return err
+	}
+
+	if !response.HasPushTokens {
+		req := &pb.GetWalletsRequest{
+			Base:   &pb.BaseRequest{UpdateBy: ServiceName},
+			UserId: userID,
+		}
+		wallets, err := dbClient.GetUserWallets(ctx, req)
+		if err != nil {
+			return err
+		}
+		for _, w := range wallets.Wallets {
+			_, err := sseClient.RemoveListening(ctx, &pb.SSERemoveListeningRequest{
+				Base:           &pb.BaseRequest{UpdateBy: ServiceName},
+				SourceReciver:  "notify",
+				StellarAccount: w.PublicKey,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

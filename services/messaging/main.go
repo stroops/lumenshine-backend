@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/Soneso/lumenshine-backend/services/messaging/cmd"
@@ -21,6 +22,7 @@ const (
 var (
 	dbClient   pb.DBServiceClient
 	mailClient pb.MailServiceClient
+	sseClient  pb.SSEServiceClient
 )
 
 func main() {
@@ -55,6 +57,13 @@ func main() {
 		log.WithError(err).Fatalf("Dial failed: %v", err)
 	}
 	mailClient = pb.NewMailServiceClient(connMail)
+
+	//connect sse service
+	connSSE, err := grpc.Dial(fmt.Sprintf("%s:%d", cnf.Services.SSESrvHost, cnf.Services.SSESrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	sseClient = pb.NewSSEServiceClient(connSSE)
 
 	log.WithFields(logrus.Fields{"idleSeconds": cnf.IdleSeconds, "limitCount": cnf.LimitCount}).Print("Messaging-Service running")
 

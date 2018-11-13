@@ -549,6 +549,10 @@ message UpdatePushTokenRequest {
   string new_push_token = 5;
 }
 
+message HasPushTokensResponse {
+  bool has_push_tokens = 1;
+}
+
 message UpdateUserContactRequest {
   BaseRequest base = 1;
   int64 id = 2;
@@ -644,6 +648,7 @@ service DBService {
   rpc DeletePushToken(DeletePushTokenRequest) returns (Empty) {}
   rpc GetPushTokens(IDRequest) returns (GetPushTokensResponse) {}
   rpc UpdatePushToken(UpdatePushTokenRequest) returns (Empty) {}
+  rpc HasPushTokens(IDRequest) returns (HasPushTokensResponse) {}
 
   rpc QueuePushNotification(QueuePushNotificationRequest) returns (Empty) {}
   rpc QueueMailNotification(QueueMailNotificationRequest) returns (Empty) {}

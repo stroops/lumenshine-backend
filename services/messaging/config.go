@@ -30,6 +30,9 @@ type ServicesConfig struct {
 
 	MailSrvPort int64
 	MailSrvHost string
+
+	SSESrvPort int64
+	SSESrvHost string
 }
 
 //Config for the app
