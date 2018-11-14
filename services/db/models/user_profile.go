@@ -25,9 +25,7 @@ type UserProfile struct {
 	Email                      string    `boil:"email" json:"email" toml:"email" yaml:"email"`
 	Forename                   string    `boil:"forename" json:"forename" toml:"forename" yaml:"forename"`
 	Lastname                   string    `boil:"lastname" json:"lastname" toml:"lastname" yaml:"lastname"`
-	Company                    string    `boil:"company" json:"company" toml:"company" yaml:"company"`
 	Salutation                 string    `boil:"salutation" json:"salutation" toml:"salutation" yaml:"salutation"`
-	Title                      string    `boil:"title" json:"title" toml:"title" yaml:"title"`
 	AdditionalName             string    `boil:"additional_name" json:"additional_name" toml:"additional_name" yaml:"additional_name"`
 	BirthCountryCode           string    `boil:"birth_country_code" json:"birth_country_code" toml:"birth_country_code" yaml:"birth_country_code"`
 	BankAccountNumber          string    `boil:"bank_account_number" json:"bank_account_number" toml:"bank_account_number" yaml:"bank_account_number"`
@@ -77,9 +75,7 @@ var UserProfileColumns = struct {
 	Email                      string
 	Forename                   string
 	Lastname                   string
-	Company                    string
 	Salutation                 string
-	Title                      string
 	AdditionalName             string
 	BirthCountryCode           string
 	BankAccountNumber          string
@@ -124,9 +120,7 @@ var UserProfileColumns = struct {
 	Email:                      "email",
 	Forename:                   "forename",
 	Lastname:                   "lastname",
-	Company:                    "company",
 	Salutation:                 "salutation",
-	Title:                      "title",
 	AdditionalName:             "additional_name",
 	BirthCountryCode:           "birth_country_code",
 	BankAccountNumber:          "bank_account_number",
@@ -219,8 +213,8 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "company", "salutation", "title", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "occupation_name", "occupation_code88", "public_key_0"}
-	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "company", "salutation", "title", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "salutation", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "occupation_name", "occupation_code88", "public_key_0"}
+	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "salutation", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
 	userProfileColumnsWithDefault    = []string{"id", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "occupation_name", "occupation_code88", "public_key_0"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )

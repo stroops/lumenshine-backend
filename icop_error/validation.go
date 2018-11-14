@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/Soneso/lumenshine-backend/pb"
@@ -114,6 +115,8 @@ var validationErrorCodes = map[string]vD{
 	"icop_phone":      vD{1000, "wrong phone number format"},
 	"icop_assetcode":  vD{1000, "wrong asset code format"},
 	"icop_devicetype": vD{1000, "wrong device type value"},
+	"icop_nonum":      vD{1000, "contains numbers"},
+	"min_trim":        vD{1000, "Length to short"},
 }
 
 var (
@@ -121,6 +124,7 @@ var (
 	emailRegExp     *regexp.Regexp
 	phoneRegExp     *regexp.Regexp
 	assetCodeRegExp *regexp.Regexp
+	noNumRegExp     *regexp.Regexp
 )
 
 func getValidator() *validator.Validate {
@@ -141,10 +145,17 @@ func getValidator() *validator.Validate {
 		log.Fatalf("Error building asset code regexp %v", err)
 	}
 
+	noNumRegExp, err = regexp.Compile("[0-9]+")
+	if err != nil {
+		log.Fatalf("Error building no num regexp %v", err)
+	}
+
 	v.RegisterValidation("icop_email", icopEmailValidator)
 	v.RegisterValidation("icop_phone", icopPhoneValidator)
 	v.RegisterValidation("icop_assetcode", icopAssetCodeValidator)
 	v.RegisterValidation("icop_devicetype", icopDeviceTypeValidator)
+	v.RegisterValidation("icop_nonum", icopNoNumbers)
+	v.RegisterValidation("min_trim", icopMinTrim)
 	return v
 }
 
@@ -164,6 +175,18 @@ func icopDeviceTypeValidator(fl validator.FieldLevel) bool {
 	input := fl.Field().String()
 	_, ok := pb.DeviceType_value[strings.ToLower(input)]
 	return ok
+}
+
+func icopNoNumbers(fl validator.FieldLevel) bool {
+	return noNumRegExp.FindString(fl.Field().String()) == ""
+}
+
+func icopMinTrim(fl validator.FieldLevel) bool {
+	param, err := strconv.Atoi(fl.Param())
+	if err != nil {
+		return false
+	}
+	return len(strings.TrimSpace(fl.Field().String())) >= param
 }
 
 //IcopError are the details for the validations

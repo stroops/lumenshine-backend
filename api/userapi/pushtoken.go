@@ -8,9 +8,17 @@ import (
 	"github.com/Soneso/lumenshine-backend/pb"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
-
+	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/gin-gonic/gin"
 )
+
+var sseBits helpers.Bits
+
+func init() {
+	sseBits = helpers.Set(sseBits, helpers.F0) //create
+	sseBits = helpers.Set(sseBits, helpers.F1) //payment
+	sseBits = helpers.Set(sseBits, helpers.F2) //paymentPath
+}
 
 //SubscribeForPushNotificationsRequest request
 //swagger:parameters SubscribeForPushNotificationsRequest SubscribeForPushNotifications
@@ -58,6 +66,30 @@ func SubscribeForPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error adding push token", cerr.GeneralError))
 		return
+	}
+
+	req := &pb.GetWalletsRequest{
+		Base:   NewBaseRequest(uc),
+		UserId: userID,
+	}
+	wallets, err := dbClient.GetUserWallets(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+		return
+	}
+
+	for _, w := range wallets.Wallets {
+		_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
+			Base:           NewBaseRequest(uc),
+			OpTypes:        int64(sseBits),
+			SourceReciver:  "notify",
+			StellarAccount: w.PublicKey,
+			WithResume:     false,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error registering account for sse", cerr.GeneralError))
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, "{}")
@@ -161,6 +193,39 @@ func UnsubscribeFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	idRequest := &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID}
+	response, err := dbClient.HasPushTokens(c, idRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting has pushtokens", cerr.GeneralError))
+		return
+	}
+
+	if !response.HasPushTokens {
+		req := &pb.GetWalletsRequest{
+			Base:   NewBaseRequest(uc),
+			UserId: userID,
+		}
+		wallets, err := dbClient.GetUserWallets(c, req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+			return
+		}
+
+		for _, w := range wallets.Wallets {
+			_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
+				Base:           NewBaseRequest(uc),
+				SourceReciver:  "notify",
+				StellarAccount: w.PublicKey,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting sse-account", cerr.GeneralError))
+				return
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, "{}")
 }
 
@@ -218,6 +283,39 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting push token", cerr.GeneralError))
 		return
+	}
+
+	idRequest := &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userResponse.Id}
+	response, err := dbClient.HasPushTokens(c, idRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting has pushtokens", cerr.GeneralError))
+		return
+	}
+
+	if !response.HasPushTokens {
+		req := &pb.GetWalletsRequest{
+			Base:   NewBaseRequest(uc),
+			UserId: userResponse.Id,
+		}
+		wallets, err := dbClient.GetUserWallets(c, req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+			return
+		}
+
+		for _, w := range wallets.Wallets {
+			_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
+				Base:           NewBaseRequest(uc),
+				SourceReciver:  "notify",
+				StellarAccount: w.PublicKey,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting sse-account", cerr.GeneralError))
+				return
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, "{}")

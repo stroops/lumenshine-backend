@@ -122,6 +122,29 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	idRequest := &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID}
+	response, err := dbClient.HasPushTokens(c, idRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting has pushtokens", cerr.GeneralError))
+		return
+	}
+
+	if response.HasPushTokens {
+		_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
+			Base:           NewBaseRequest(uc),
+			OpTypes:        int64(sseBits),
+			SourceReciver:  "notify",
+			StellarAccount: req.PublicKey,
+			WithResume:     false,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error registering account for sse", cerr.GeneralError))
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, &AddWalletResponse{
 		ID: id.Id,
 	})

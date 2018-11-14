@@ -41,6 +41,7 @@ var (
 	mailClient         pb.MailServiceClient
 	adminAPIClient     pb.AdminApiServiceClient
 	notificationClient pb.NotificationServiceClient
+	sseClient          pb.SSEServiceClient
 )
 
 func main() {
@@ -247,6 +248,13 @@ func connectServices(log *logrus.Entry) {
 		log.WithError(err).Fatalf("Dial failed: %v", err)
 	}
 	notificationClient = pb.NewNotificationServiceClient(connNotification)
+
+	//connect sse service
+	connSSE, err := grpc.Dial(fmt.Sprintf("%s:%d", cnf.Services.SSESrvHost, cnf.Services.SSESrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	sseClient = pb.NewSSEServiceClient(connSSE)
 }
 
 var (

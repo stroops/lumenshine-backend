@@ -807,6 +807,15 @@ func (s *server) GetPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.GetPus
 	return &pb.GetPushTokensResponse{PushTokens: tokens}, nil
 }
 
+func (s *server) HasPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.HasPushTokensResponse, error) {
+	exists, err := models.UserPushtokens(qm.Where(models.UserPushtokenColumns.UserID+"=?", r.Id)).Exists(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.HasPushTokensResponse{HasPushTokens : exists}, nil
+}
+
 func (s *server) AddKycDocument(ctx context.Context, r *pb.AddKycDocumentRequest) (*pb.AddKycDocumentResponse, error) {
 
 	document := &models.UserKycDocument{}
