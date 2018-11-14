@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	context "golang.org/x/net/context"
@@ -116,6 +117,31 @@ func sendPushNotification(c context.Context, request *pb.PushNotificationRequest
 		if err != nil {
 			log.WithFields(logrus.Fields{"userID": request.UserID}).WithError(err).Error("Error reading push tokens")
 			return nil, err
+		}
+
+		if !user.MailNotifications {
+			//delete sse-config for account
+			req := &pb.GetWalletsRequest{
+				Base:   &pb.BaseRequest{UpdateBy: ServiceName},
+				UserId: user.Id,
+			}
+			wallets, err := dbClient.GetUserWallets(c, req)
+			if err != nil {
+				return nil, err
+			}
+			for _, w := range wallets.Wallets {
+				_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
+					Base:           &pb.BaseRequest{UpdateBy: ServiceName},
+					SourceReciver:  m.SourceReceiverNotify,
+					StellarAccount: w.PublicKey,
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			//return so we don't send mail
+			return &pb.Empty{}, nil
 		}
 
 		_, err = dbClient.QueueMailNotification(c, &pb.QueueMailNotificationRequest{

@@ -91,6 +91,7 @@ message UserProfileResponse {
   int64 created_at = 29;
   bool user_not_found = 30;
   string public_key_0 = 31;
+  bool mail_notifications = 32;
 }
 
 message UpdateUserProfileRequest {
@@ -139,6 +140,7 @@ message UserDetailsResponse {
   bool reset2fa_by_admin =  13;
   string public_key_0 = 14;
   string payment_state = 15;
+  bool mail_notifications = 16;
 }
 
 message ExistsEmailRequest {

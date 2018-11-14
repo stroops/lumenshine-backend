@@ -5,6 +5,7 @@ import (
 	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
@@ -152,7 +153,7 @@ func ListenAccount(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 	_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
 		Base:           NewBaseRequest(uc),
 		OpTypes:        int64(bits),
-		SourceReciver:  "sse",
+		SourceReciver:  m.SourceReceiverSse,
 		StellarAccount: l.Account,
 		WithResume:     false,
 	})

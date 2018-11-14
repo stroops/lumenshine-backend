@@ -8,6 +8,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/pb"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/gin-gonic/gin"
 )
@@ -82,7 +83,7 @@ func SubscribeForPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
 			Base:           NewBaseRequest(uc),
 			OpTypes:        int64(sseBits),
-			SourceReciver:  "notify",
+			SourceReciver:  m.SourceReceiverNotify,
 			StellarAccount: w.PublicKey,
 			WithResume:     false,
 		})
@@ -202,7 +203,15 @@ func UnsubscribeFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if !response.HasPushTokens {
+	user, err := dbClient.GetUserProfile(c, &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user profile", cerr.GeneralError))
+		return
+	}
+
+	if !response.HasPushTokens && !user.MailNotifications {
 		req := &pb.GetWalletsRequest{
 			Base:   NewBaseRequest(uc),
 			UserId: userID,
@@ -216,7 +225,7 @@ func UnsubscribeFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		for _, w := range wallets.Wallets {
 			_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
 				Base:           NewBaseRequest(uc),
-				SourceReciver:  "notify",
+				SourceReciver:  m.SourceReceiverNotify,
 				StellarAccount: w.PublicKey,
 			})
 			if err != nil {
@@ -294,7 +303,7 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 		return
 	}
 
-	if !response.HasPushTokens {
+	if !response.HasPushTokens && !userResponse.MailNotifications {
 		req := &pb.GetWalletsRequest{
 			Base:   NewBaseRequest(uc),
 			UserId: userResponse.Id,
@@ -308,7 +317,7 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 		for _, w := range wallets.Wallets {
 			_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
 				Base:           NewBaseRequest(uc),
-				SourceReciver:  "notify",
+				SourceReciver:  m.SourceReceiverNotify,
 				StellarAccount: w.PublicKey,
 			})
 			if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/sirupsen/logrus"
@@ -27,7 +28,7 @@ func (s *SSEListener) Run() {
 	for {
 		data, err := sseClient.GetData(ctx, &pb.SSEGetDataRequest{
 			Base:          baseRequest,
-			SourceReciver: "notify",
+			SourceReciver: m.SourceReceiverNotify,
 			Count:         20,
 		})
 
@@ -69,6 +70,7 @@ func sendPush(publicKey string, title string, message string, log *logrus.Entry)
 		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_wallet_key, Value: publicKey},
 	}
 
+	//TODO: implement reading of parameter from user_profile
 	pushReq := &pb.PushNotificationRequest{
 		Base:                       baseRequest,
 		UserID:                     wallet.UserId,

@@ -12,6 +12,7 @@ import (
 
 	"context"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -214,7 +215,15 @@ func deletePushToken(pushToken string, userID int64) error {
 		return err
 	}
 
-	if !response.HasPushTokens {
+	user, err := dbClient.GetUserProfile(ctx, &pb.IDRequest{
+		Base: &pb.BaseRequest{UpdateBy: ServiceName},
+		Id:   userID})
+
+	if err != nil {
+		return err
+	}
+
+	if !response.HasPushTokens && !user.MailNotifications {
 		req := &pb.GetWalletsRequest{
 			Base:   &pb.BaseRequest{UpdateBy: ServiceName},
 			UserId: userID,
@@ -226,7 +235,7 @@ func deletePushToken(pushToken string, userID int64) error {
 		for _, w := range wallets.Wallets {
 			_, err := sseClient.RemoveListening(ctx, &pb.SSERemoveListeningRequest{
 				Base:           &pb.BaseRequest{UpdateBy: ServiceName},
-				SourceReciver:  "notify",
+				SourceReciver:  m.SourceReceiverNotify,
 				StellarAccount: w.PublicKey,
 			})
 			if err != nil {

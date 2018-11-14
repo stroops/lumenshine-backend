@@ -154,7 +154,7 @@ func (s *StellarProcessor) processLedger(l *m.HistoryLedger) error {
 	sqlStr := `
 	SELECT sse_config.id, sse_config.source_receiver, sse_config.stellar_account,
 	history_operations.type,
-	case when sse_config.return_data then history_operations.details else null end as return_data,
+	case when sse_config.return_data then history_operations.details else null end as details,
 	history_transactions.id as transaction_id, history_operations.id as operation_id, history_ledgers.id as ledger_id
 	FROM sse_config
 	  inner join history_accounts on address = stellar_account
@@ -165,6 +165,14 @@ func (s *StellarProcessor) processLedger(l *m.HistoryLedger) error {
 	WHERE
 	  (history_ledgers.sequence=$1) and
 	  (1<<type&operation_types>0)
+	  and ((type=1 or type=2) and
+	    (case when
+	    	source_receiver='notify' or source_receiver='payment' then cast(details->>'to' as character varying)=stellar_account
+	    else
+	    	true
+	    end)
+	  )
+	  AND (case when type=0 and source_receiver='notify' then cast(details->>'account' as character varying)=stellar_account else true end)
 	  AND (case when with_resume=false then history_ledgers.sequence>=$2 else true end)`
 
 	var orders []sseConfigData

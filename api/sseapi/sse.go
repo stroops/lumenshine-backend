@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/sirupsen/logrus"
@@ -29,7 +30,7 @@ func (s *SSEListener) Run() {
 	for {
 		data, err := sseClient.GetData(ctx, &pb.SSEGetDataRequest{
 			Base:          baseRequest,
-			SourceReciver: "sse",
+			SourceReciver: m.SourceReceiverSse,
 			Count:         20,
 		})
 

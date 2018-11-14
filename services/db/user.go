@@ -91,6 +91,7 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		Reset2FaByAdmin:        u.Reset2faByAdmin,
 		PublicKey_0:            u.PublicKey0,
 		PaymentState:           u.PaymentState,
+		MailNotifications:      u.MailNotifications,
 	}
 
 	return ret, nil
@@ -139,6 +140,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		LanguageCode:      u.LanguageCode,
 		CreatedAt:         int64(u.CreatedAt.Unix()),
 		PublicKey_0:       u.PublicKey0,
+		MailNotifications: u.MailNotifications,
 	}, nil
 }
 
@@ -813,7 +815,7 @@ func (s *server) HasPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.HasPus
 		return nil, err
 	}
 
-	return &pb.HasPushTokensResponse{HasPushTokens : exists}, nil
+	return &pb.HasPushTokensResponse{HasPushTokens: exists}, nil
 }
 
 func (s *server) AddKycDocument(ctx context.Context, r *pb.AddKycDocumentRequest) (*pb.AddKycDocumentResponse, error) {

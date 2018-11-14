@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/pb"
 	context "golang.org/x/net/context"
 )
@@ -58,7 +59,7 @@ func newHub() *Hub {
 	ctx := context.Background()
 	_, err := sseClient.ClearSourceRecivers(ctx, &pb.SSEClearSourceReciversRequest{
 		Base:          &pb.BaseRequest{RequestId: "0", UpdateBy: ServiceName},
-		SourceReciver: "sse",
+		SourceReciver: m.SourceReceiverSse,
 	})
 	if err != nil {
 		fmt.Printf("Error deleting sse-data %v", err)
@@ -114,7 +115,7 @@ func (h *Hub) removeAddress(client *Client, account string) {
 		ctx := context.Background()
 		_, err := sseClient.RemoveListening(ctx, &pb.SSERemoveListeningRequest{
 			Base:           &pb.BaseRequest{RequestId: "0", UpdateBy: ServiceName},
-			SourceReciver:  "sse",
+			SourceReciver:  m.SourceReceiverSse,
 			StellarAccount: account,
 		})
 		if err != nil {

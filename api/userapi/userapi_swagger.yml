@@ -1003,9 +1003,6 @@ definitions:
       city:
         type: string
         x-go-name: City
-      company:
-        type: string
-        x-go-name: Company
       country_code:
         type: string
         x-go-name: CountryCode
@@ -1075,9 +1072,6 @@ definitions:
       tax_id_name:
         type: string
         x-go-name: TaxIDName
-      title:
-        type: string
-        x-go-name: Title
       wordlist:
         type: string
         x-go-name: Wordlist
@@ -2980,10 +2974,6 @@ paths:
         type: string
         x-go-name: Salutation
       - in: query
-        name: title
-        type: string
-        x-go-name: Title
-      - in: query
         name: forename
         type: string
         x-go-name: Forename
@@ -2991,10 +2981,6 @@ paths:
         name: lastname
         type: string
         x-go-name: Lastname
-      - in: query
-        name: company
-        type: string
-        x-go-name: Company
       - in: query
         name: address
         type: string

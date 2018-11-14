@@ -34,11 +34,22 @@ func (s *server) ListenFor(ctx context.Context, r *pb.SSEListenForRequest) (*pb.
 func (s *server) RemoveListening(ctx context.Context, r *pb.SSERemoveListeningRequest) (*pb.Empty, error) {
 	//log := helpers.GetDefaultLog(ServiceName, r.Base.RequestId)
 
-	_, err := m.SseConfigs(
-		qm.Where(m.SseConfigColumns.SourceReceiver+"=? and "+m.SseConfigColumns.StellarAccount+"=?", r.SourceReciver, r.StellarAccount),
+	_, err := m.SseData(
+		qm.Where(m.SseDatumColumns.SourceReceiver+"=? and "+m.SseDatumColumns.StellarAccount+"=?", r.SourceReciver, r.StellarAccount),
 	).DeleteAll(s.Env.DBH)
 
-	return &pb.Empty{}, err
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = m.SseConfigs(
+		qm.Where(m.SseConfigColumns.SourceReceiver+"=? and "+m.SseConfigColumns.StellarAccount+"=?", r.SourceReciver, r.StellarAccount),
+	).DeleteAll(s.Env.DBH)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Empty{}, nil
 }
 
 func (s *server) ClearSourceRecivers(ctx context.Context, r *pb.SSEClearSourceReciversRequest) (*pb.Empty, error) {

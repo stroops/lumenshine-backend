@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
 
@@ -135,7 +136,7 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 		_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
 			Base:           NewBaseRequest(uc),
 			OpTypes:        int64(sseBits),
-			SourceReciver:  "notify",
+			SourceReciver:  m.SourceReceiverNotify,
 			StellarAccount: req.PublicKey,
 			WithResume:     false,
 		})
@@ -876,7 +877,7 @@ func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
 	ws := make([]GetPaymentTemplateResponse, len(templates.Templates))
 	for i, t := range templates.Templates {
 		ws[i] = GetPaymentTemplateResponse{
-			ID: int(t.Id),
+			ID:                      int(t.Id),
 			RecipientStellarAddress: t.RecipientStellarAddress,
 			RecipientPK:             t.RecipientPublickey,
 			AssetCode:               t.AssetCode,
