@@ -9,6 +9,7 @@ CREATE TABLE sse_config
     stellar_account varchar(56) NOT NULL,
     operation_types bigint not null,
     with_resume boolean not null default false,
+    return_data boolean not null default false,
 
     created_at timestamp with time zone NOT NULL default current_timestamp,
     updated_at timestamp with time zone NOT NULL default current_timestamp

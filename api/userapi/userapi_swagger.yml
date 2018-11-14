@@ -604,6 +604,10 @@ definitions:
         format: int64
         type: integer
         x-go-name: ID
+      order_nr:
+        format: int64
+        type: integer
+        x-go-name: OrderNumber
       public_key:
         type: string
         x-go-name: PublicKey
@@ -635,6 +639,10 @@ definitions:
       federation_address:
         type: string
         x-go-name: FederationAddress
+      order_nr:
+        format: int64
+        type: integer
+        x-go-name: OrderNumber
       public_key:
         type: string
         x-go-name: PublicKey

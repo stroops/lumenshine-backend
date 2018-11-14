@@ -20,6 +20,7 @@ func (s *server) ListenFor(ctx context.Context, r *pb.SSEListenForRequest) (*pb.
 		StellarAccount: r.StellarAccount,
 		OperationTypes: r.OpTypes,
 		WithResume:     r.WithResume,
+		ReturnData:     r.ReturnData,
 	}
 
 	err := c.Insert(s.Env.DBH, boil.Infer())
@@ -92,6 +93,7 @@ func (s *server) GetData(ctx context.Context, r *pb.SSEGetDataRequest) (*pb.SSEG
 			LedgerId:       d[i].LedgerID,
 			OperationData:  str,
 		}
+
 	}
 
 	//need to delete the data also

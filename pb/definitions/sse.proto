@@ -10,6 +10,7 @@ message SSEListenForRequest{
     string source_reciver = 3;
     string stellar_account = 4;
     bool with_resume = 5;
+    bool return_data = 6;
 }
 
 message SSEGetDataRequest{

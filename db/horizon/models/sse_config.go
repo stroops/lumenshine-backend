@@ -28,6 +28,7 @@ type SseConfig struct {
 	WithResume     bool      `boil:"with_resume" json:"with_resume" toml:"with_resume" yaml:"with_resume"`
 	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ReturnData     bool      `boil:"return_data" json:"return_data" toml:"return_data" yaml:"return_data"`
 
 	R *sseConfigR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L sseConfigL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -41,6 +42,7 @@ var SseConfigColumns = struct {
 	WithResume     string
 	CreatedAt      string
 	UpdatedAt      string
+	ReturnData     string
 }{
 	ID:             "id",
 	SourceReceiver: "source_receiver",
@@ -49,6 +51,7 @@ var SseConfigColumns = struct {
 	WithResume:     "with_resume",
 	CreatedAt:      "created_at",
 	UpdatedAt:      "updated_at",
+	ReturnData:     "return_data",
 }
 
 // SseConfigRels is where relationship names are stored.
@@ -72,9 +75,9 @@ func (*sseConfigR) NewStruct() *sseConfigR {
 type sseConfigL struct{}
 
 var (
-	sseConfigColumns               = []string{"id", "source_receiver", "stellar_account", "operation_types", "with_resume", "created_at", "updated_at"}
+	sseConfigColumns               = []string{"id", "source_receiver", "stellar_account", "operation_types", "with_resume", "created_at", "updated_at", "return_data"}
 	sseConfigColumnsWithoutDefault = []string{"source_receiver", "stellar_account", "operation_types"}
-	sseConfigColumnsWithDefault    = []string{"id", "with_resume", "created_at", "updated_at"}
+	sseConfigColumnsWithDefault    = []string{"id", "with_resume", "created_at", "updated_at", "return_data"}
 	sseConfigPrimaryKeyColumns     = []string{"id"}
 )
 
