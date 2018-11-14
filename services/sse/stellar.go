@@ -186,7 +186,6 @@ func (s *StellarProcessor) processLedger(l *m.HistoryLedger) error {
 
 	for _, sC := range orders {
 		var sD m.SseDatum
-		sD.SseConfigID = sC.SseConfigID
 		sD.SourceReceiver = sC.SourceReceiver
 		sD.Status = m.SseDataStatusNew
 		sD.StellarAccount = sC.StellarAccount
@@ -205,7 +204,6 @@ func (s *StellarProcessor) processLedger(l *m.HistoryLedger) error {
 }
 
 type sseConfigData struct {
-	SseConfigID    int       `boil:"id"`
 	SourceReceiver string    `boil:"source_receiver"`
 	StellarAccount string    `boil:"stellar_account"`
 	OperationType  int       `boil:"type"`

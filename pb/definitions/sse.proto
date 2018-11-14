@@ -20,7 +20,6 @@ message SSEGetDataRequest{
 }
 
 message SSEGetData{
-    int64 sse_config_id = 1;
     string source_receiver = 2;
     string stellar_account = 3;
     int64 operation_type = 4;

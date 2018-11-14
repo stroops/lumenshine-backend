@@ -95,7 +95,6 @@ func (s *server) GetData(ctx context.Context, r *pb.SSEGetDataRequest) (*pb.SSEG
 		}
 
 		ret.Data[i] = &pb.SSEGetData{
-			SseConfigId:    int64(d[i].SseConfigID),
 			SourceReceiver: d[i].SourceReceiver,
 			StellarAccount: d[i].StellarAccount,
 			OperationType:  int64(d[i].OperationType),
