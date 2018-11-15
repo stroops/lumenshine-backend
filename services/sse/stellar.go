@@ -165,13 +165,11 @@ func (s *StellarProcessor) processLedger(l *m.HistoryLedger) error {
 	WHERE
 	  (history_ledgers.sequence=$1) and
 	  (1<<type&operation_types>0)
-	  and ((type=1 or type=2) and
-	    (case when
-	    	source_receiver='notify' or source_receiver='payment' then cast(details->>'to' as character varying)=stellar_account
-	    else
-	    	true
-	    end)
-	  )
+	  and case when type=1 or type=2 then
+	  	case when source_receiver='notify' or source_receiver='payment' then cast(details->>'to' as character varying)=stellar_account else true end
+	  else
+	  	true
+	  end
 	  AND (case when type=0 and source_receiver='notify' then cast(details->>'account' as character varying)=stellar_account else true end)
 	  AND (case when with_resume=false then history_ledgers.sequence>=$2 else true end)`
 
