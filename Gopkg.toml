@@ -74,10 +74,6 @@
   version = "1.2.0"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/haltingstate/secp256k1-go"
-
-[[constraint]]
   name = "github.com/labstack/echo"
   version = "3.3.6"
 

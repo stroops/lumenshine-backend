@@ -46,10 +46,8 @@ type RegisterUserRequest struct {
 	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
-	Title             string `form:"title" json:"title" validate:"max=64"`
-	Forename          string `form:"forename" json:"forename" validate:"max=64"`
-	Lastname          string `form:"lastname" json:"lastname" validate:"max=64"`
-	Company           string `form:"company" json:"company" validate:"max=128"`
+	Forename          string `form:"forename" json:"forename" validate:"required,icop_nonum,min_trim=2,max=64"`
+	Lastname          string `form:"lastname" json:"lastname" validate:"required,icop_nonum,min_trim=2,max=64"`
 	Address           string `form:"address" json:"address" validate:"max=512"`
 	ZipCode           string `form:"zip_code" json:"zip_code" validate:"max=32"`
 	City              string `form:"city" json:"city" validate:"max=128"`
@@ -165,10 +163,8 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		MailConfirmationExpiry: time.Now().AddDate(0, 0, constants.DefaultMailkeyExpiryDays).Unix(),
 		TfaTempSecret:          twoFaResp.Secret,
 		Salutation:             ur.Salutation,
-		Title:                  ur.Title,
 		Forename:               ur.Forename,
 		Lastname:               ur.Lastname,
-		Company:                ur.Company,
 		Address:                ur.Address,
 		ZipCode:                ur.ZipCode,
 		City:                   ur.City,
@@ -211,9 +207,8 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	msgBody := RenderTemplateToString(uc, c, "confirm_mail", gin.H{
-		"Forename": ur.Forename,
-		"Lastname": ur.Lastname,
-		"TokeUrl":  cnf.WebLinks.ConfirmMail + reqC.MailConfirmationKey,
+		"TokenUrl":  cnf.WebLinks.ConfirmMail + reqC.MailConfirmationKey,
+		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(reqC.MailConfirmationExpiry, 0), uc.Language,
 		),
@@ -227,6 +222,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		//ToMultiple: []string{ur.Email, "udo@n-wt.com"},
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))
@@ -450,9 +446,8 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "confirm_mail", gin.H{
-		"Forename": ur.Forename,
-		"Lastname": ur.Lastname,
-		"TokeUrl":  cnf.WebLinks.ConfirmMail + user.MailConfirmationKey,
+		"TokenUrl":  cnf.WebLinks.ConfirmMail + user.MailConfirmationKey,
+		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(user.MailConfirmationExpiry, 0), uc.Language,
 		),
@@ -465,6 +460,7 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 		To:      ur.Email,
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error sending mail to user", cerr.GeneralError))

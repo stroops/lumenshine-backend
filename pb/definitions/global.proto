@@ -100,3 +100,9 @@ enum WalletType {
   internal = 0;
   external = 1;
 }
+
+enum NotificationParameterType {
+  ios_title_localized_key = 0;
+  ios_category = 1;
+  ios_wallet_key = 2;
+}

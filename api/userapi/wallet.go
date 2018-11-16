@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
 	"github.com/Soneso/lumenshine-backend/pb"
 
@@ -122,6 +123,29 @@ func AddWallet(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	idRequest := &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID}
+	response, err := dbClient.HasPushTokens(c, idRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting has pushtokens", cerr.GeneralError))
+		return
+	}
+
+	if response.HasPushTokens {
+		_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
+			Base:           NewBaseRequest(uc),
+			OpTypes:        int64(sseBits),
+			SourceReciver:  m.SourceReceiverNotify,
+			StellarAccount: req.PublicKey,
+			WithResume:     false,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error registering account for sse", cerr.GeneralError))
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, &AddWalletResponse{
 		ID: id.Id,
 	})
@@ -142,6 +166,7 @@ type GetWalletResponse struct {
 	FederationAddress string `json:"federation_address"`
 	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
 	WalletType        string `json:"wallet_type"`
+	OrderNumber       int    `json:"order_nr"`
 }
 
 //GetWallet returns wallet details
@@ -187,6 +212,7 @@ func GetWallet(uc *mw.IcopContext, c *gin.Context) {
 		FederationAddress: getFederationAddress(wallet),
 		ShowOnHomescreen:  wallet.ShowOnHomescreen,
 		WalletType:        wallet.WalletType.String(),
+		OrderNumber:       int(wallet.OrderNr),
 	})
 }
 
@@ -199,6 +225,7 @@ type GetUserWalletsResponse struct {
 	FederationAddress string `json:"federation_address"`
 	ShowOnHomescreen  bool   `json:"show_on_homescreen"`
 	WalletType        string `json:"wallet_type"`
+	OrderNumber       int    `json:"order_nr"`
 }
 
 //GetUserWallets returns all wallets for one user
@@ -232,6 +259,7 @@ func GetUserWallets(uc *mw.IcopContext, c *gin.Context) {
 			FederationAddress: getFederationAddress(w),
 			ShowOnHomescreen:  w.ShowOnHomescreen,
 			WalletType:        w.WalletType.String(),
+			OrderNumber:       int(w.OrderNr),
 		}
 	}
 
@@ -849,7 +877,7 @@ func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
 	ws := make([]GetPaymentTemplateResponse, len(templates.Templates))
 	for i, t := range templates.Templates {
 		ws[i] = GetPaymentTemplateResponse{
-			ID: int(t.Id),
+			ID:                      int(t.Id),
 			RecipientStellarAddress: t.RecipientStellarAddress,
 			RecipientPK:             t.RecipientPublickey,
 			AssetCode:               t.AssetCode,

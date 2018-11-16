@@ -8,9 +8,18 @@ import (
 	"github.com/Soneso/lumenshine-backend/pb"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
-
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
+	"github.com/Soneso/lumenshine-backend/helpers"
 	"github.com/gin-gonic/gin"
 )
+
+var sseBits helpers.Bits
+
+func init() {
+	sseBits = helpers.Set(sseBits, helpers.F0) //create
+	sseBits = helpers.Set(sseBits, helpers.F1) //payment
+	sseBits = helpers.Set(sseBits, helpers.F2) //paymentPath
+}
 
 //SubscribeForPushNotificationsRequest request
 //swagger:parameters SubscribeForPushNotificationsRequest SubscribeForPushNotifications
@@ -19,7 +28,7 @@ type SubscribeForPushNotificationsRequest struct {
 	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
 	//Device type, e.g. apple, google
 	//required: true
-	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	DeviceType string `form:"device_type" json:"device_type" validate:"required,max=50,icop_devicetype"`
 }
 
 //SubscribeForPushNotifications adds a new token to the user
@@ -60,6 +69,30 @@ func SubscribeForPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	req := &pb.GetWalletsRequest{
+		Base:   NewBaseRequest(uc),
+		UserId: userID,
+	}
+	wallets, err := dbClient.GetUserWallets(c, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+		return
+	}
+
+	for _, w := range wallets.Wallets {
+		_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
+			Base:           NewBaseRequest(uc),
+			OpTypes:        int64(sseBits),
+			SourceReciver:  m.SourceReceiverNotify,
+			StellarAccount: w.PublicKey,
+			WithResume:     false,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error registering account for sse", cerr.GeneralError))
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, "{}")
 }
 
@@ -72,7 +105,7 @@ type UpdatePushTokenRequest struct {
 	OldPushToken string `form:"old_push_token" json:"old_push_token"  validate:"required,max=500"`
 	//Device type, e.g. apple, google
 	//required: true
-	DeviceType string `form:"wallet_name" json:"wallet_name" validate:"required,max=50,icop_devicetype"`
+	DeviceType string `form:"device_type" json:"device_type" validate:"required,max=50,icop_devicetype"`
 }
 
 //UpdatePushToken updates the push token
@@ -121,7 +154,7 @@ func UpdatePushToken(uc *mw.IcopContext, c *gin.Context) {
 //swagger:parameters UnsubscribeFromPushNotificationsRequest UnsubscribeFromPushNotifications
 type UnsubscribeFromPushNotificationsRequest struct {
 	//required: true
-	PushToken string `form:"push_token" json:"push_token"  validate:"required,max=500"`
+	PushToken string `form:"push_token" json:"push_token" validate:"required,max=500"`
 }
 
 //UnsubscribeFromPushNotifications removes the specified token from the user
@@ -159,6 +192,47 @@ func UnsubscribeFromPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting push token", cerr.GeneralError))
 		return
+	}
+
+	idRequest := &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID}
+	response, err := dbClient.HasPushTokens(c, idRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting has pushtokens", cerr.GeneralError))
+		return
+	}
+
+	user, err := dbClient.GetUserProfile(c, &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting user profile", cerr.GeneralError))
+		return
+	}
+
+	if !response.HasPushTokens && !user.MailNotifications {
+		req := &pb.GetWalletsRequest{
+			Base:   NewBaseRequest(uc),
+			UserId: userID,
+		}
+		wallets, err := dbClient.GetUserWallets(c, req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+			return
+		}
+
+		for _, w := range wallets.Wallets {
+			_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
+				Base:           NewBaseRequest(uc),
+				SourceReciver:  m.SourceReceiverNotify,
+				StellarAccount: w.PublicKey,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting sse-account", cerr.GeneralError))
+				return
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, "{}")
@@ -220,6 +294,39 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 		return
 	}
 
+	idRequest := &pb.IDRequest{
+		Base: NewBaseRequest(uc),
+		Id:   userResponse.Id}
+	response, err := dbClient.HasPushTokens(c, idRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error getting has pushtokens", cerr.GeneralError))
+		return
+	}
+
+	if !response.HasPushTokens && !userResponse.MailNotifications {
+		req := &pb.GetWalletsRequest{
+			Base:   NewBaseRequest(uc),
+			UserId: userResponse.Id,
+		}
+		wallets, err := dbClient.GetUserWallets(c, req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallets", cerr.GeneralError))
+			return
+		}
+
+		for _, w := range wallets.Wallets {
+			_, err := sseClient.RemoveListening(c, &pb.SSERemoveListeningRequest{
+				Base:           NewBaseRequest(uc),
+				SourceReciver:  m.SourceReceiverNotify,
+				StellarAccount: w.PublicKey,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error deleting sse-account", cerr.GeneralError))
+				return
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, "{}")
 }
 
@@ -235,11 +342,17 @@ func TestPushNotifications(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading wallet", cerr.GeneralError))
 		return
 	}
+	params := []*pb.NotificationParameter{
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_title_localized_key, Value: "payment_received"},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_category, Value: "GENERAL"},
+		&pb.NotificationParameter{Type: pb.NotificationParameterType_ios_wallet_key, Value: publicKey},
+	}
 	pushReq := &pb.PushNotificationRequest{
 		Base:                       NewBaseRequest(uc),
 		UserID:                     wallet.UserId,
-		Title:                      "Test title",
-		Message:                    "Test message",
+		Title:                      "Lumenshine",
+		Message:                    "Payment received",
+		Parameters:                 params,
 		SendAsMailIfNoTokenPresent: true,
 	}
 

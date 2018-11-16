@@ -9,6 +9,7 @@ message PushNotificationRequest {
   string title = 3;
   string message = 4;
   bool SendAsMailIfNoTokenPresent = 5;  
+  repeated NotificationParameter parameters = 6;
 }
 
 message MailNotificationRequest{
@@ -17,6 +18,11 @@ message MailNotificationRequest{
   string subject = 3;
   string content = 4;
   EmailContentType ContentType = 5;
+}
+
+message NotificationParameter {
+  NotificationParameterType type = 1;
+  string value = 2;
 }
 
 service NotificationService {

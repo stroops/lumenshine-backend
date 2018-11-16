@@ -43,7 +43,8 @@ type SiteConfig struct {
 
 //WebLinksConfig links that are used in the clients (e.g. token confirm)
 type WebLinksConfig struct {
-	LostTFA string
+	LostTFA   string
+	ImagesUrl string
 }
 
 //KycConfig - kyc configuration

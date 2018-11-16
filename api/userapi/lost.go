@@ -92,9 +92,8 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "lost_password_mail", gin.H{
-		"Forename": ur.Forename,
-		"Lastname": ur.Lastname,
-		"TokeUrl":  cnf.WebLinks.LostPassword + reqConf.MailConfirmationKey,
+		"TokenUrl":  cnf.WebLinks.LostPassword + reqConf.MailConfirmationKey,
+		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(reqConf.MailConfirmationExpiry, 0), uc.Language,
 		),
@@ -107,6 +106,7 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		To:      ur.Email,
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, could not send mail", cerr.GeneralError))
@@ -505,9 +505,8 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "lost_tfa_mail", gin.H{
-		"Forename": ur.Forename,
-		"Lastname": ur.Lastname,
-		"TokeUrl":  cnf.WebLinks.LostTFA + reqConf.MailConfirmationKey,
+		"TokenUrl":   cnf.WebLinks.LostTFA + reqConf.MailConfirmationKey,
+		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(reqConf.MailConfirmationExpiry, 0), uc.Language,
 		),
@@ -520,6 +519,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		To:      ur.Email,
 		Subject: msgSubject,
 		Body:    msgBody,
+		IsHtml:  true,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, can not send mail", cerr.GeneralError))

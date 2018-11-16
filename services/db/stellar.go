@@ -19,6 +19,9 @@ type stellarOperation struct {
 	TxCreatedAt       null.Time   `boil:"tx_created_at" json:"tx_created_at"`
 	TxMemoType        string      `boil:"tx_memo_type" json:"tx_memo_type"`
 	TxMemo            null.String `boil:"tx_memo" json:"tx_memo"`
+	TxOperationCount  int         `boil:"tx_operation_count" json:"tx_operation_count"`
+	TxFeePaid         int         `boil:"tx_fee_paid" json:"tx_fee_paid"`
+	TxAccount         string      `boil:"tx_account" json:"tx_account"`
 
 	OpID               int64     `boil:"op_id" json:"op_id"`
 	OpApplicationOrder int       `boil:"op_application_order" json:"op_application_order"`
@@ -46,6 +49,9 @@ func (s *server) GetStellarTransactions(ctx context.Context, r *pb.GetStellarTra
 		qm.Select("t4."+cT.CreatedAt+" as tx_created_at"),
 		qm.Select("t4."+cT.MemoType+" as tx_memo_type"),
 		qm.Select("t4."+cT.Memo+" as tx_memo"),
+		qm.Select("t4."+cT.OperationCount+" as tx_operation_count"),
+		qm.Select("t4."+cT.FeePaid+" as tx_fee_paid"),
+		qm.Select("t4."+cT.Account+" as tx_account"),
 
 		qm.Select("t1."+cO.ID+" as op_id"),
 		qm.Select("t1."+cO.ApplicationOrder+" as op_application_order"),
@@ -73,10 +79,14 @@ func (s *server) GetStellarTransactions(ctx context.Context, r *pb.GetStellarTra
 
 	for i, op := range ops {
 		ret.Operations[i] = &pb.StellarOperation{
-			TxTransactionHash:  op.TxTransactionHash,
-			TxCreatedAt:        op.TxCreatedAt.Time.Unix(),
-			TxMemoType:         op.TxMemoType,
-			TxMemo:             op.TxMemo.String,
+			TxTransactionHash: op.TxTransactionHash,
+			TxCreatedAt:       op.TxCreatedAt.Time.Unix(),
+			TxMemoType:        op.TxMemoType,
+			TxMemo:            op.TxMemo.String,
+			TxOperationCount:  int64(op.TxOperationCount),
+			TxFeePaid:         int64(op.TxFeePaid),
+			TxAccount:         op.TxAccount,
+
 			OpId:               op.OpID,
 			OpApplicationOrder: int64(op.OpApplicationOrder),
 			OpType:             int64(op.OpType),

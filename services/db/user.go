@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -92,6 +91,7 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		Reset2FaByAdmin:        u.Reset2faByAdmin,
 		PublicKey_0:            u.PublicKey0,
 		PaymentState:           u.PaymentState,
+		MailNotifications:      u.MailNotifications,
 	}
 
 	return ret, nil
@@ -113,10 +113,8 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		Id:                int64(u.ID),
 		Email:             u.Email,
 		Salutation:        u.Salutation,
-		Title:             u.Title,
 		Forename:          u.Forename,
 		Lastname:          u.Lastname,
-		Company:           u.Company,
 		Address:           u.Address,
 		ZipCode:           u.ZipCode,
 		City:              u.City,
@@ -142,6 +140,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		LanguageCode:      u.LanguageCode,
 		CreatedAt:         int64(u.CreatedAt.Unix()),
 		PublicKey_0:       u.PublicKey0,
+		MailNotifications: u.MailNotifications,
 	}, nil
 }
 
@@ -165,10 +164,8 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.PublicKey0 = r.PublicKey_0
 
 	u.Salutation = r.Salutation
-	u.Title = r.Title
 	u.Forename = r.Forename
 	u.Lastname = r.Lastname
-	u.Company = r.Company
 	u.Address = r.Address
 	u.ZipCode = r.ZipCode
 	u.City = r.City
@@ -467,9 +464,11 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 		return nil, err
 	}
 	user.Password = string(pwd)
+	user.PublicKey0 = r.PublicKey_0
 	user.UpdatedBy = r.Base.UpdateBy
 	_, err = user.Update(tx, boil.Whitelist(
 		models.UserProfileColumns.Password,
+		models.UserProfileColumns.PublicKey0,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
 	))
@@ -691,7 +690,7 @@ func (s *server) MoveMessageToArchive(ctx context.Context, r *pb.IDRequest) (*pb
 
 func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*pb.Empty, error) {
 	pushToken, err := models.UserPushtokens(qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
@@ -726,18 +725,11 @@ func (s *server) AddPushToken(ctx context.Context, r *pb.AddPushTokenRequest) (*
 }
 
 func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One(db)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("User id:%d does not exist", r.UserId)
-		}
-		return nil, err
-	}
 	pushToken, err := models.UserPushtokens(
-		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
+		qm.Where(models.UserPushtokenColumns.UserID+"=?", r.UserId),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.OldPushToken)).
 		One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 	if pushToken != nil {
@@ -748,7 +740,7 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 	}
 
 	pushToken, err = models.UserPushtokens(qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.NewPushToken)).One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 
@@ -783,18 +775,11 @@ func (s *server) UpdatePushToken(ctx context.Context, r *pb.UpdatePushTokenReque
 }
 
 func (s *server) DeletePushToken(ctx context.Context, r *pb.DeletePushTokenRequest) (*pb.Empty, error) {
-	u, err := models.UserProfiles(qm.Where(models.UserProfileColumns.ID+"=?", r.UserId)).One(db)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("User id:%d does not exist", r.UserId)
-		}
-		return nil, err
-	}
 	pushToken, err := models.UserPushtokens(
-		qm.Where(models.UserPushtokenColumns.UserID+"=?", u.ID),
+		qm.Where(models.UserPushtokenColumns.UserID+"=?", r.UserId),
 		qm.Where(models.UserPushtokenColumns.PushToken+"=?", r.PushToken)).
 		One(db)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 	if pushToken != nil {
@@ -822,6 +807,15 @@ func (s *server) GetPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.GetPus
 	}
 
 	return &pb.GetPushTokensResponse{PushTokens: tokens}, nil
+}
+
+func (s *server) HasPushTokens(ctx context.Context, r *pb.IDRequest) (*pb.HasPushTokensResponse, error) {
+	exists, err := models.UserPushtokens(qm.Where(models.UserPushtokenColumns.UserID+"=?", r.Id)).Exists(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.HasPushTokensResponse{HasPushTokens: exists}, nil
 }
 
 func (s *server) AddKycDocument(ctx context.Context, r *pb.AddKycDocumentRequest) (*pb.AddKycDocumentResponse, error) {
@@ -856,9 +850,7 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 
 	u.Forename = r.Forename
 	u.Lastname = r.Lastname
-	u.Company = r.Company
 	u.Salutation = r.Salutation
-	u.Title = r.Title
 	u.Address = r.Address
 	u.ZipCode = r.ZipCode
 	u.City = r.City
@@ -884,9 +876,7 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 
 	whitelist := []string{models.UserProfileColumns.Forename,
 		models.UserProfileColumns.Lastname,
-		models.UserProfileColumns.Company,
 		models.UserProfileColumns.Salutation,
-		models.UserProfileColumns.Title,
 		models.UserProfileColumns.Address,
 		models.UserProfileColumns.ZipCode,
 		models.UserProfileColumns.City,

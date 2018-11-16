@@ -23,12 +23,14 @@ import (
 // SseDatum is an object representing the database table.
 type SseDatum struct {
 	ID             int       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	SseConfigID    int       `boil:"sse_config_id" json:"sse_config_id" toml:"sse_config_id" yaml:"sse_config_id"`
 	SourceReceiver string    `boil:"source_receiver" json:"source_receiver" toml:"source_receiver" yaml:"source_receiver"`
 	Status         string    `boil:"status" json:"status" toml:"status" yaml:"status"`
 	StellarAccount string    `boil:"stellar_account" json:"stellar_account" toml:"stellar_account" yaml:"stellar_account"`
 	OperationType  int       `boil:"operation_type" json:"operation_type" toml:"operation_type" yaml:"operation_type"`
 	OperationData  null.JSON `boil:"operation_data" json:"operation_data,omitempty" toml:"operation_data" yaml:"operation_data,omitempty"`
+	TransactionID  int64     `boil:"transaction_id" json:"transaction_id" toml:"transaction_id" yaml:"transaction_id"`
+	OperationID    int64     `boil:"operation_id" json:"operation_id" toml:"operation_id" yaml:"operation_id"`
+	LedgerID       int64     `boil:"ledger_id" json:"ledger_id" toml:"ledger_id" yaml:"ledger_id"`
 	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -38,36 +40,36 @@ type SseDatum struct {
 
 var SseDatumColumns = struct {
 	ID             string
-	SseConfigID    string
 	SourceReceiver string
 	Status         string
 	StellarAccount string
 	OperationType  string
 	OperationData  string
+	TransactionID  string
+	OperationID    string
+	LedgerID       string
 	CreatedAt      string
 	UpdatedAt      string
 }{
 	ID:             "id",
-	SseConfigID:    "sse_config_id",
 	SourceReceiver: "source_receiver",
 	Status:         "status",
 	StellarAccount: "stellar_account",
 	OperationType:  "operation_type",
 	OperationData:  "operation_data",
+	TransactionID:  "transaction_id",
+	OperationID:    "operation_id",
+	LedgerID:       "ledger_id",
 	CreatedAt:      "created_at",
 	UpdatedAt:      "updated_at",
 }
 
 // SseDatumRels is where relationship names are stored.
 var SseDatumRels = struct {
-	SseConfig string
-}{
-	SseConfig: "SseConfig",
-}
+}{}
 
 // sseDatumR is where relationships are stored.
 type sseDatumR struct {
-	SseConfig *SseConfig
 }
 
 // NewStruct creates a new relationship struct
@@ -79,8 +81,8 @@ func (*sseDatumR) NewStruct() *sseDatumR {
 type sseDatumL struct{}
 
 var (
-	sseDatumColumns               = []string{"id", "sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data", "created_at", "updated_at"}
-	sseDatumColumnsWithoutDefault = []string{"sse_config_id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data"}
+	sseDatumColumns               = []string{"id", "source_receiver", "status", "stellar_account", "operation_type", "operation_data", "transaction_id", "operation_id", "ledger_id", "created_at", "updated_at"}
+	sseDatumColumnsWithoutDefault = []string{"source_receiver", "status", "stellar_account", "operation_type", "operation_data", "transaction_id", "operation_id", "ledger_id"}
 	sseDatumColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	sseDatumPrimaryKeyColumns     = []string{"id"}
 )
@@ -338,170 +340,6 @@ func (q sseDatumQuery) Exists(exec boil.Executor) (bool, error) {
 	}
 
 	return count > 0, nil
-}
-
-// SseConfig pointed to by the foreign key.
-func (o *SseDatum) SseConfig(mods ...qm.QueryMod) sseConfigQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.SseConfigID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	query := SseConfigs(queryMods...)
-	queries.SetFrom(query.Query, "\"sse_config\"")
-
-	return query
-}
-
-// LoadSseConfig allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (sseDatumL) LoadSseConfig(e boil.Executor, singular bool, maybeSseDatum interface{}, mods queries.Applicator) error {
-	var slice []*SseDatum
-	var object *SseDatum
-
-	if singular {
-		object = maybeSseDatum.(*SseDatum)
-	} else {
-		slice = *maybeSseDatum.(*[]*SseDatum)
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &sseDatumR{}
-		}
-		args = append(args, object.SseConfigID)
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &sseDatumR{}
-			}
-
-			for _, a := range args {
-				if a == obj.SseConfigID {
-					continue Outer
-				}
-			}
-
-			args = append(args, obj.SseConfigID)
-		}
-	}
-
-	query := NewQuery(qm.From(`sse_config`), qm.WhereIn(`id in ?`, args...))
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.Query(e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load SseConfig")
-	}
-
-	var resultSlice []*SseConfig
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice SseConfig")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for sse_config")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for sse_config")
-	}
-
-	if len(sseDatumAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.SseConfig = foreign
-		if foreign.R == nil {
-			foreign.R = &sseConfigR{}
-		}
-		foreign.R.SseData = append(foreign.R.SseData, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.SseConfigID == foreign.ID {
-				local.R.SseConfig = foreign
-				if foreign.R == nil {
-					foreign.R = &sseConfigR{}
-				}
-				foreign.R.SseData = append(foreign.R.SseData, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
-// SetSseConfigG of the sseDatum to the related item.
-// Sets o.R.SseConfig to related.
-// Adds o to related.R.SseData.
-// Uses the global database handle.
-func (o *SseDatum) SetSseConfigG(insert bool, related *SseConfig) error {
-	return o.SetSseConfig(boil.GetDB(), insert, related)
-}
-
-// SetSseConfig of the sseDatum to the related item.
-// Sets o.R.SseConfig to related.
-// Adds o to related.R.SseData.
-func (o *SseDatum) SetSseConfig(exec boil.Executor, insert bool, related *SseConfig) error {
-	var err error
-	if insert {
-		if err = related.Insert(exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"sse_data\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"sse_config_id"}),
-		strmangle.WhereClause("\"", "\"", 2, sseDatumPrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, updateQuery)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	if _, err = exec.Exec(updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.SseConfigID = related.ID
-	if o.R == nil {
-		o.R = &sseDatumR{
-			SseConfig: related,
-		}
-	} else {
-		o.R.SseConfig = related
-	}
-
-	if related.R == nil {
-		related.R = &sseConfigR{
-			SseData: SseDatumSlice{o},
-		}
-	} else {
-		related.R.SseData = append(related.R.SseData, o)
-	}
-
-	return nil
 }
 
 // SseData retrieves all the records using an executor.

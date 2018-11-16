@@ -63,3 +63,8 @@ const (
 	SseDataStatusNew      = "new"
 	SseDataStatusSelected = "selected"
 )
+
+// Enum values for sse_index_names
+const (
+	SseIndexNamesLastLedgerID = "last_ledger_id"
+)

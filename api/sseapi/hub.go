@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
+	"github.com/Soneso/lumenshine-backend/pb"
+	context "golang.org/x/net/context"
 )
 
 //WsMessage is a message to be send to the websocket
@@ -11,10 +15,10 @@ type WsMessage struct {
 	//account we want to send the message to
 	Account string `json:"account"`
 
-	MessageType int64 `json:"message_type"`
+	//MessageType int64 `json:"message_type"`
 
 	//message to be send
-	Message []byte `json:"message"`
+	//Message []byte `json:"message"`
 }
 
 //GetJSON returns the json string for a message
@@ -51,6 +55,16 @@ type address string
 type key string
 
 func newHub() *Hub {
+	//  Clear current data for sse
+	ctx := context.Background()
+	_, err := sseClient.ClearSourceRecivers(ctx, &pb.SSEClearSourceReciversRequest{
+		Base:          &pb.BaseRequest{RequestId: "0", UpdateBy: ServiceName},
+		SourceReciver: m.SourceReceiverSse,
+	})
+	if err != nil {
+		fmt.Printf("Error deleting sse-data %v", err)
+	}
+
 	return &Hub{
 		send: make(chan *WsMessage),
 
@@ -87,12 +101,26 @@ func (h *Hub) removeAddress(client *Client, account string) {
 				copy(keys[i:], keys[i+1:])
 				keys[len(keys)-1] = ""
 				keys = keys[:len(keys)-1]
+				h.addresses[account] = keys
 			}
 		}
 	}
 
 	if len(keys) == 0 {
 		delete(h.addresses, account)
+		fmt.Printf("Deleting account %s", account)
+
+		//if we do not listen for the address any longer, we also need to remove the address from the sse-service
+		//register account in sse for events
+		ctx := context.Background()
+		_, err := sseClient.RemoveListening(ctx, &pb.SSERemoveListeningRequest{
+			Base:           &pb.BaseRequest{RequestId: "0", UpdateBy: ServiceName},
+			SourceReciver:  m.SourceReceiverSse,
+			StellarAccount: account,
+		})
+		if err != nil {
+			fmt.Printf("Error deleting sse-account %v", err)
+		}
 	}
 }
 

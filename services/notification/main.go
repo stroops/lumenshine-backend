@@ -22,6 +22,8 @@ const (
 )
 
 var dbClient pb.DBServiceClient
+var sseClient pb.SSEServiceClient
+var sseListener *SSEListener
 
 func main() {
 	var err error
@@ -38,16 +40,11 @@ func main() {
 		log.WithError(err).Fatalf("Error reading config")
 	}
 
-	//connect db service
-	dbURL := fmt.Sprintf("%s:%d", cnf.DBSrvHost, cnf.DBSrvPort)
-	connDB, err := grpc.Dial(dbURL, grpc.WithInsecure())
-	if err != nil {
-		log.WithError(err).WithFields(logrus.Fields{
-			"host": cnf.DBSrvHost,
-			"port": cnf.DBSrvPort,
-		}).Fatalf("Dial db-srv failed")
-	}
-	dbClient = pb.NewDBServiceClient(connDB)
+	connectServices(log)
+
+	//listener for SSE Events
+	sseListener = NewListenSSE()
+	go sseListener.Run()
 
 	//start the service
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cnf.Port))
@@ -62,4 +59,24 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.WithError(err).Fatalf("Failed to serve")
 	}
+}
+
+func connectServices(log *logrus.Entry) {
+	//connect db service
+	dbURL := fmt.Sprintf("%s:%d", cnf.DBSrvHost, cnf.DBSrvPort)
+	connDB, err := grpc.Dial(dbURL, grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).WithFields(logrus.Fields{
+			"host": cnf.DBSrvHost,
+			"port": cnf.DBSrvPort,
+		}).Fatalf("Dial db-srv failed")
+	}
+	dbClient = pb.NewDBServiceClient(connDB)
+
+	//connect sse service
+	connSSE, err := grpc.Dial(fmt.Sprintf("%s:%d", cnf.SSESrvHost, cnf.SSESrvPort), grpc.WithInsecure())
+	if err != nil {
+		log.WithError(err).Fatalf("Dial failed: %v", err)
+	}
+	sseClient = pb.NewSSEServiceClient(connSSE)
 }

@@ -36,10 +36,13 @@ type stellarOperations struct {
 // StellarTransactionResponse transactions for one user account, including all operations
 // swagger:model
 type StellarTransactionResponse struct {
-	TransactionHash string    `json:"tx_transaction_hash"`
-	TXCreatedAt     time.Time `json:"tx_created_at"`
-	TXMemoType      string    `json:"tx_memo_type"`
-	TXMemo          string    `json:"tx_memo"`
+	TransactionHash  string    `json:"tx_transaction_hash"`
+	TXCreatedAt      time.Time `json:"tx_created_at"`
+	TXMemoType       string    `json:"tx_memo_type"`
+	TXMemo           string    `json:"tx_memo"`
+	TxOperationCount int64     `json:"tx_operation_count"`
+	TxFeePaid        int64     `json:"tx_fee_paid"`
+	TxSourceAccount  string    `json:"tx_source_account"`
 
 	OpID               int64  `json:"op_id"`
 	OpApplicationOrder int64  `json:"op_application_order"`
@@ -98,10 +101,13 @@ func GetStellarTransactions(uc *mw.IcopContext, c *gin.Context) {
 	var ret []*StellarTransactionResponse
 	for _, tx := range txs.Operations {
 		ret = append(ret, &StellarTransactionResponse{
-			TransactionHash: tx.TxTransactionHash,
-			TXCreatedAt:     time.Unix(tx.TxCreatedAt, 0),
-			TXMemoType:      tx.TxMemoType,
-			TXMemo:          tx.TxMemo,
+			TransactionHash:  tx.TxTransactionHash,
+			TXCreatedAt:      time.Unix(tx.TxCreatedAt, 0),
+			TXMemoType:       tx.TxMemoType,
+			TXMemo:           tx.TxMemo,
+			TxOperationCount: tx.TxOperationCount,
+			TxFeePaid:        tx.TxFeePaid,
+			TxSourceAccount:  tx.TxAccount,
 
 			OpID:               tx.OpId,
 			OpApplicationOrder: tx.OpApplicationOrder,

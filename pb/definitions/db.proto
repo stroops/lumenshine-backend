@@ -27,74 +27,71 @@ message CreateUserRequest {
   string public_key_188 = 13;
 
   string salutation = 14;
-  string title = 15;
-  string forename = 16;
-  string lastname = 17;
-  string company = 18;
-  string address = 19;
-  string zip_code = 20;
-  string city = 21;
-  string state = 22;
-  string country_code = 23;
-  string nationality = 24;
-  string mobile_nr = 25;
-  int64 birth_day = 26;
-  string birth_place = 27;
+  string forename = 15;
+  string lastname = 16;
+  string address = 17;
+  string zip_code = 18;
+  string city = 19;
+  string state = 20;
+  string country_code = 21;
+  string nationality = 22;
+  string mobile_nr = 23;
+  int64 birth_day = 24;
+  string birth_place = 25;
 
-  string password = 28;
-  string mail_confirmation_key = 29;
-  int64 mail_confirmation_expiry = 30;
-  string tfa_temp_secret = 31;
+  string password = 26;
+  string mail_confirmation_key = 27;
+  int64 mail_confirmation_expiry = 28;
+  string tfa_temp_secret = 29;
 
-  string additional_name = 32;
-	string birth_country_code = 33;
-	string bank_account_number = 34;
-	string bank_number = 35;
-	string bank_phone_number = 36;
-	string tax_id = 37;
-	string tax_id_name = 38;
-  string occupation_name = 39;
-  string occupation_code08 = 40;
-  string occupation_code88 = 41;
-	string employer_name = 42;
-	string employer_address = 43;
-	string language_code = 44;
+  string additional_name = 30;
+	string birth_country_code = 31;
+	string bank_account_number = 32;
+	string bank_number = 33;
+	string bank_phone_number = 34;
+	string tax_id = 35;
+	string tax_id_name = 36;
+  string occupation_name = 37;
+  string occupation_code08 = 38;
+  string occupation_code88 = 39;
+	string employer_name = 40;
+	string employer_address = 41;
+	string language_code = 42;
 }
 
 message UserProfileResponse {
   int64 id = 1;
   string email = 2;
   string salutation = 3;
-  string title = 4;
-  string forename = 5;
-  string lastname = 6;
-  string company = 7;
-  string address = 8;
-  string zip_code = 9;
-  string city = 10;
-  string state = 11;
-  string country_code = 12;
-  string nationality = 13;
-  string mobile_nr = 14;
-  int64 birth_day = 15;
-  string birth_place = 16;
-  string password = 17;
-  string additional_name = 18;
-	string birth_country_code = 19;
-	string bank_account_number = 20;
-	string bank_number = 21;
-	string bank_phone_number = 22;
-	string tax_id = 23;
-	string tax_id_name = 24;
-  string occupation_name = 25;
-  string occupation_code08 = 26;
-  string occupation_code88 = 27;
-	string employer_name = 28;
-	string employer_address = 29;
-  string language_code = 30;
-  int64 created_at = 31;
-  bool user_not_found = 32;
-  string public_key_0 = 33;
+  string forename = 4;
+  string lastname = 5;
+  string address = 6;
+  string zip_code = 7;
+  string city = 8;
+  string state = 9;
+  string country_code = 10;
+  string nationality = 11;
+  string mobile_nr = 12;
+  int64 birth_day = 13;
+  string birth_place = 14;
+  string password = 15;
+  string additional_name = 16;
+	string birth_country_code = 17;
+	string bank_account_number = 18;
+	string bank_number = 19;
+	string bank_phone_number = 20;
+	string tax_id = 21;
+	string tax_id_name = 22;
+  string occupation_name = 23;
+  string occupation_code08 = 24;
+  string occupation_code88 = 25;
+	string employer_name = 26;
+	string employer_address = 27;
+  string language_code = 28;
+  int64 created_at = 29;
+  bool user_not_found = 30;
+  string public_key_0 = 31;
+  bool mail_notifications = 32;
 }
 
 message UpdateUserProfileRequest {
@@ -102,31 +99,29 @@ message UpdateUserProfileRequest {
   int64 id = 2;
   string forename = 3;
   string lastname = 4;
-  string company = 5;
-  string salutation = 6;
-  string title = 7;
-  string address = 8;
-  string zip_code = 9;
-  string city = 10;
-  string state = 11;
-  string country_code = 12;
-  string nationality = 13;
-  string mobile_nr = 14;
-  int64 birth_day = 15;
-  string birth_place = 16;
-  string additional_name = 17;
-	string birth_country_code = 18;
-	string bank_account_number = 19;
-	string bank_number = 20;
-	string bank_phone_number = 21;
-	string tax_id = 22;
-	string tax_id_name = 23;
-  string occupation_name = 24;
-  string occupation_code08 = 25;
-  string occupation_code88 = 26;
-	string employer_name = 27;
-	string employer_address = 28;
-  string language_code = 29;
+  string salutation = 5;
+  string address = 6;
+  string zip_code = 7;
+  string city = 8;
+  string state = 9;
+  string country_code = 10;
+  string nationality = 11;
+  string mobile_nr = 12;
+  int64 birth_day = 13;
+  string birth_place = 14;
+  string additional_name = 15;
+	string birth_country_code = 16;
+	string bank_account_number = 17;
+	string bank_number = 18;
+	string bank_phone_number = 19;
+	string tax_id = 20;
+	string tax_id_name = 21;
+  string occupation_name = 22;
+  string occupation_code08 = 23;
+  string occupation_code88 = 24;
+	string employer_name = 25;
+	string employer_address = 26;
+  string language_code = 27;
 }
 
 message UserDetailsResponse {
@@ -145,6 +140,7 @@ message UserDetailsResponse {
   bool reset2fa_by_admin =  13;
   string public_key_0 = 14;
   string payment_state = 15;
+  bool mail_notifications = 16;
 }
 
 message ExistsEmailRequest {
@@ -375,6 +371,7 @@ message Wallet {
   string domain = 6;
   bool show_on_homescreen = 7;
   WalletType wallet_type = 8;
+  int64 order_nr = 9;
 }
 
 message GetWalletsRequest {
@@ -554,6 +551,10 @@ message UpdatePushTokenRequest {
   string new_push_token = 5;
 }
 
+message HasPushTokensResponse {
+  bool has_push_tokens = 1;
+}
+
 message UpdateUserContactRequest {
   BaseRequest base = 1;
   int64 id = 2;
@@ -590,6 +591,10 @@ message StellarOperation {
   int64 op_application_order = 6;
   int64 op_type = 7;
   string op_details = 8;
+
+  int64 tx_operation_count = 9;
+  int64 tx_fee_paid = 10;
+  string tx_account = 11;
 }
 
 message StellarOperations {
@@ -645,6 +650,7 @@ service DBService {
   rpc DeletePushToken(DeletePushTokenRequest) returns (Empty) {}
   rpc GetPushTokens(IDRequest) returns (GetPushTokensResponse) {}
   rpc UpdatePushToken(UpdatePushTokenRequest) returns (Empty) {}
+  rpc HasPushTokens(IDRequest) returns (HasPushTokensResponse) {}
 
   rpc QueuePushNotification(QueuePushNotificationRequest) returns (Empty) {}
   rpc QueueMailNotification(QueueMailNotificationRequest) returns (Empty) {}

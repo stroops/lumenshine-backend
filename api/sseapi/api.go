@@ -5,10 +5,31 @@ import (
 	"time"
 
 	mw "github.com/Soneso/lumenshine-backend/api/middleware"
+	m "github.com/Soneso/lumenshine-backend/db/horizon/models"
 	"github.com/Soneso/lumenshine-backend/helpers"
 	cerr "github.com/Soneso/lumenshine-backend/icop_error"
+	"github.com/Soneso/lumenshine-backend/pb"
 	"github.com/gin-gonic/gin"
 )
+
+var bits helpers.Bits
+
+//{ CREATE_ACCOUNT = 0, PAYMENT = 1, PATH_PAYMENT = 2, MANAGE_OFFER = 3, CREATE_PASSIVE_OFFER = 4,
+//	SET_OPTIONS = 5, CHANGE_TRUST = 6, ALLOW_TRUST = 7, ACCOUNT_MERGE = 8, INFLATION = 9, MANAGE_DATA = 10, BUMP_SEQUENCE = 11 }
+
+func init() {
+	bits = helpers.Set(bits, helpers.F0) //create
+	bits = helpers.Set(bits, helpers.F1) //payment
+	bits = helpers.Set(bits, helpers.F2) //paymentPath
+	bits = helpers.Set(bits, helpers.F3)
+	bits = helpers.Set(bits, helpers.F4)
+	bits = helpers.Set(bits, helpers.F5)
+	bits = helpers.Set(bits, helpers.F6)
+	bits = helpers.Set(bits, helpers.F7)
+	bits = helpers.Set(bits, helpers.F8)
+	bits = helpers.Set(bits, helpers.F10)
+	bits = helpers.Set(bits, helpers.F11)
+}
 
 //GetWSRequest - requestdata for a websocket
 //swagger:parameters GetWSRequest GetWS
@@ -47,7 +68,7 @@ func GetWS(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 
 	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), key: l.RandomKey}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 1024), key: l.RandomKey}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.
@@ -128,6 +149,19 @@ func ListenAccount(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 		}
 	}
 
+	//register account in sse for events
+	_, err := sseClient.ListenFor(c, &pb.SSEListenForRequest{
+		Base:           NewBaseRequest(uc),
+		OpTypes:        int64(bits),
+		SourceReciver:  m.SourceReceiverSse,
+		StellarAccount: l.Account,
+		WithResume:     false,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error registering account for sse", cerr.GeneralError))
+		return
+	}
+
 	//not found add address to listener and reverselookup
 	client.addresses = append(client.addresses, l.Account)
 	hub.addresses[l.Account] = append(hub.addresses[l.Account], l.Key)
@@ -199,9 +233,9 @@ func SendMessage(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 	_, ok := hub.addresses[l.Account]
 	if ok {
 		hub.send <- &WsMessage{
-			Account:     l.Account,
-			MessageType: l.MessageType,
-			Message:     []byte(l.Data),
+			Account: l.Account,
+			//MessageType: l.MessageType,
+			//Message:     []byte(l.Data),
 		}
 	}
 
