@@ -92,7 +92,6 @@ type AuthUser struct {
 	MnemonicConfirmed bool
 	TfaConfirmed      bool
 	TfaSecret         string
-	Password          string
 	Email             string
 	MessageCount      int
 	PublicKey0        string
@@ -377,7 +376,19 @@ func (mw *IcopJWTMiddleware) SetAuthUserData(c *gin.Context, userID int64) bool 
 	}
 
 	if user.UserNotFound {
-		l.WithError(err).WithField("user-id", userID).Error("User from jwt could not be found in db")
+		l.WithField("user-id", userID).Error("User from jwt could not be found in db")
+		c.Set("user", &AuthUser{}) //on error we set an empty user
+		return false
+	}
+
+	if user.IsClosed {
+		l.WithField("user-id", userID).Error("User from jwt is closed")
+		c.Set("user", &AuthUser{}) //on error we set an empty user
+		return false
+	}
+
+	if user.IsSuspended {
+		l.WithField("user-id", userID).Error("User from jwt is suspended")
 		c.Set("user", &AuthUser{}) //on error we set an empty user
 		return false
 	}
@@ -388,7 +399,6 @@ func (mw *IcopJWTMiddleware) SetAuthUserData(c *gin.Context, userID int64) bool 
 		MnemonicConfirmed: user.MnemonicConfirmed,
 		TfaConfirmed:      user.TfaConfirmed,
 		TfaSecret:         user.TfaSecret,
-		Password:          user.Password,
 		Email:             user.Email,
 		MessageCount:      int(user.MessageCount),
 		PublicKey0:        user.PublicKey_0,

@@ -24,7 +24,6 @@ message CreateUserRequest {
   string wordlist = 10;
   string wordlist_iv = 11;
   string public_key_0 = 12;
-  string public_key_188 = 13;
 
   string salutation = 14;
   string forename = 15;
@@ -74,7 +73,6 @@ message UserProfileResponse {
   string mobile_nr = 12;
   int64 birth_day = 13;
   string birth_place = 14;
-  string password = 15;
   string additional_name = 16;
 	string birth_country_code = 17;
 	string bank_account_number = 18;
@@ -132,7 +130,6 @@ message UserDetailsResponse {
   string tfa_secret = 5;
   bool tfa_confirmed = 6;
   bool mnemonic_confirmed = 7;
-  string password = 8;
   string email = 9;
   int64 message_count = 10;
   bool user_not_found = 11;
@@ -141,6 +138,8 @@ message UserDetailsResponse {
   string public_key_0 = 14;
   string payment_state = 15;
   bool mail_notifications = 16;
+  bool is_suspended = 17;
+  bool is_closed = 18;
 }
 
 message ExistsEmailRequest {
@@ -219,7 +218,6 @@ message UserSecurityRequest {
   string wordlist = 11;
   string wordlist_iv = 12;
   string public_key_0 = 13;
-  string public_key_188 = 14;
   bool user_not_found = 15;
 }
 
@@ -236,7 +234,6 @@ message UserSecurityResponse {
   string wordlist = 10;
   string wordlist_iv = 11;
   string public_key_0 = 12;
-  string public_key_188 = 13;
   bool user_not_found = 14;
 }
 
@@ -606,7 +603,7 @@ service DBService {
   rpc GetUserSecurities (IDRequest) returns (UserSecurityResponse) {}
   rpc SetUserSecurities (UserSecurityRequest) returns (Empty) {}
   rpc SetTempTfaSecret (SetTempTfaSecretRequest) returns (Empty) {}
-  rpc UpdateUserSecurityPassword (UserSecurityRequest) returns (Empty) {}
+  rpc UpdateUserSecurity (UserSecurityRequest) returns (Empty) {}
   rpc CreateUser (CreateUserRequest) returns (IDResponse) {}
   rpc ExistsEmail (ExistsEmailRequest) returns (ExistsEmailResponse) {}
   rpc GetCountryList (Empty) returns (CountryListResponse) {}

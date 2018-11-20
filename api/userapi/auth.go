@@ -106,6 +106,16 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	if user.TfaConfirmed {
 		//user already did 2fa registration, so the tfa code is mandatory
 		if l.TfaCode == "" {
@@ -218,8 +228,7 @@ func GetSEP10Transaction(uc *mw.IcopContext, c *gin.Context) {
 //LoginStep2Request is the data needed for the second step of the login
 //swagger:parameters LoginStep2Request LoginStep2
 type LoginStep2Request struct {
-	Key              string `form:"key" json:"key"`
-	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction" validate:"required"`
 }
 
 //LoginStep2Response to the api
@@ -275,22 +284,24 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if l.SEP10Transaction == "" {
-		match := CheckPasswordHash(uc.Log, l.Key, u.Password)
-		if !match {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("key", cerr.InvalidArgument, "Can not login user, public key is invalid", "loginStep2.key.invalid"))
-			return
-		}
-	} else {
-		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-			return
-		}
-		if !valid {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
-			return
-		}
+	if u.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if u.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
+	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+		return
 	}
 
 	ret := &LoginStep2Response{

@@ -227,6 +227,16 @@ func GetUserRegistrationDetails(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	//reached this point --> return requested data
 	c.JSON(http.StatusOK, &UserDetails{
 		MailConfirmed:     user.MailConfirmed,
@@ -414,8 +424,6 @@ func UserSecurityData(uc *mw.IcopContext, c *gin.Context) {
 //GetTfaSecretRequest for requesting the tfa secrete
 //swagger:parameters GetTfaSecretRequest GetTfaSecret
 type GetTfaSecretRequest struct {
-	//users public key of index 188
-	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
 	//SEP 10 transaction
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
@@ -467,21 +475,24 @@ func GetTfaSecret(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	if l.SEP10Transaction == "" {
-		if !CheckPasswordHash(uc.Log, l.PublicKey188, user.Password) {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Invalid public key", ""))
-			return
-		}
-	} else {
-		valid, _, err := verifySEP10Data(l.SEP10Transaction, userID, uc, c)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-			return
-		}
-		if !valid {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
-			return
-		}
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
+	valid, _, err := verifySEP10Data(l.SEP10Transaction, userID, uc, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+		return
 	}
 
 	c.JSON(http.StatusOK, &GetTfaSecretResponse{

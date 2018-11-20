@@ -130,9 +130,6 @@ definitions:
       mnemonic_master_key:
         type: string
         x-go-name: MnemonicMasterKey
-      public_key_188:
-        type: string
-        x-go-name: PublicKey188
       sep10_transaction:
         type: string
         x-go-name: SEP10Transaction
@@ -153,9 +150,6 @@ definitions:
   Confirm2FARequest:
     description: Confirm2FARequest is the data needed for the 2fa registration
     properties:
-      sep10_transaction:
-        type: string
-        x-go-name: SEP10Transaction
       tfa_code:
         type: string
         x-go-name: TfaCode
@@ -443,10 +437,6 @@ definitions:
   GetTfaSecretRequest:
     description: GetTfaSecretRequest for requesting the tfa secrete
     properties:
-      public_key_188:
-        description: users public key of index 188
-        type: string
-        x-go-name: PublicKey188
       sep10_transaction:
         description: SEP 10 transaction
         type: string
@@ -735,9 +725,6 @@ definitions:
   LoginStep2Request:
     description: LoginStep2Request is the data needed for the second step of the login
     properties:
-      key:
-        type: string
-        x-go-name: Key
       sep10_transaction:
         type: string
         x-go-name: SEP10Transaction
@@ -827,9 +814,6 @@ definitions:
       public_key_0:
         type: string
         x-go-name: PublicKey0
-      public_key_188:
-        type: string
-        x-go-name: PublicKey188
       sep10_transaction:
         type: string
         x-go-name: SEP10Transaction
@@ -908,9 +892,6 @@ definitions:
   NewTfaRequest:
     description: NewTfaRequest for proving the password
     properties:
-      public_key_188:
-        type: string
-        x-go-name: PublicKey188
       sep10_transaction:
         type: string
         x-go-name: SEP10Transaction
@@ -1057,9 +1038,6 @@ definitions:
       public_key_0:
         type: string
         x-go-name: PublicKey0
-      public_key_188:
-        type: string
-        x-go-name: PublicKey188
       salutation:
         type: string
         x-go-name: Salutation
@@ -1268,9 +1246,6 @@ definitions:
       public_key_0:
         type: string
         x-go-name: PublicKey0
-      public_key_188:
-        type: string
-        x-go-name: PublicKey188
       tfa_code:
         type: string
         x-go-name: TfaCode
@@ -1574,10 +1549,6 @@ paths:
       operationId: LoginStep2
       parameters:
       - in: query
-        name: key
-        type: string
-        x-go-name: Key
-      - in: query
         name: sep10_transaction
         type: string
         x-go-name: SEP10Transaction
@@ -1683,10 +1654,6 @@ paths:
         type: string
         x-go-name: PublicKey0
       - in: query
-        name: public_key_188
-        type: string
-        x-go-name: PublicKey188
-      - in: query
         name: tfa_code
         type: string
         x-go-name: TfaCode
@@ -1766,10 +1733,6 @@ paths:
         required: true
         type: string
         x-go-name: PublicKey0
-      - in: query
-        name: public_key_188
-        type: string
-        x-go-name: PublicKey188
       - in: query
         name: sep10_transaction
         type: string
@@ -2044,10 +2007,6 @@ paths:
         required: true
         type: string
         x-go-name: TfaCode
-      - in: query
-        name: sep10_transaction
-        type: string
-        x-go-name: SEP10Transaction
       produces:
       - application/json
       responses:
@@ -2069,10 +2028,6 @@ paths:
         required: true
         type: string
         x-go-name: TfaCode
-      - in: query
-        name: sep10_transaction
-        type: string
-        x-go-name: SEP10Transaction
       produces:
       - application/json
       responses:
@@ -2394,10 +2349,6 @@ paths:
       operationId: NewTfaUpdate
       parameters:
       - in: query
-        name: public_key_188
-        type: string
-        x-go-name: PublicKey188
-      - in: query
         name: sep10_transaction
         type: string
         x-go-name: SEP10Transaction
@@ -2523,11 +2474,6 @@ paths:
       description: Returns the tfa secrete for the user
       operationId: GetTfaSecret
       parameters:
-      - description: users public key of index 188
-        in: query
-        name: public_key_188
-        type: string
-        x-go-name: PublicKey188
       - description: SEP 10 transaction
         in: query
         name: sep10_transaction
@@ -2965,10 +2911,6 @@ paths:
         required: true
         type: string
         x-go-name: PublicKey0
-      - in: query
-        name: public_key_188
-        type: string
-        x-go-name: PublicKey188
       - in: query
         name: salutation
         type: string

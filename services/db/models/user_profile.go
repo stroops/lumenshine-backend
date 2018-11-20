@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -56,7 +57,6 @@ type UserProfile struct {
 	MessageCount               int       `boil:"message_count" json:"message_count" toml:"message_count" yaml:"message_count"`
 	PaymentState               string    `boil:"payment_state" json:"payment_state" toml:"payment_state" yaml:"payment_state"`
 	KycStatus                  string    `boil:"kyc_status" json:"kyc_status" toml:"kyc_status" yaml:"kyc_status"`
-	Password                   string    `boil:"password" json:"password" toml:"password" yaml:"password"`
 	StellarAccountCreated      bool      `boil:"stellar_account_created" json:"stellar_account_created" toml:"stellar_account_created" yaml:"stellar_account_created"`
 	Reset2faByAdmin            bool      `boil:"reset2fa_by_admin" json:"reset2fa_by_admin" toml:"reset2fa_by_admin" yaml:"reset2fa_by_admin"`
 	CreatedAt                  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -66,6 +66,8 @@ type UserProfile struct {
 	OccupationCode88           string    `boil:"occupation_code88" json:"occupation_code88" toml:"occupation_code88" yaml:"occupation_code88"`
 	PublicKey0                 string    `boil:"public_key_0" json:"public_key_0" toml:"public_key_0" yaml:"public_key_0"`
 	MailNotifications          bool      `boil:"mail_notifications" json:"mail_notifications" toml:"mail_notifications" yaml:"mail_notifications"`
+	DateSuspended              null.Time `boil:"date_suspended" json:"date_suspended,omitempty" toml:"date_suspended" yaml:"date_suspended,omitempty"`
+	DateClosed                 null.Time `boil:"date_closed" json:"date_closed,omitempty" toml:"date_closed" yaml:"date_closed,omitempty"`
 
 	R *userProfileR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userProfileL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -107,7 +109,6 @@ var UserProfileColumns = struct {
 	MessageCount               string
 	PaymentState               string
 	KycStatus                  string
-	Password                   string
 	StellarAccountCreated      string
 	Reset2faByAdmin            string
 	CreatedAt                  string
@@ -117,6 +118,8 @@ var UserProfileColumns = struct {
 	OccupationCode88           string
 	PublicKey0                 string
 	MailNotifications          string
+	DateSuspended              string
+	DateClosed                 string
 }{
 	ID:                         "id",
 	Email:                      "email",
@@ -153,7 +156,6 @@ var UserProfileColumns = struct {
 	MessageCount:               "message_count",
 	PaymentState:               "payment_state",
 	KycStatus:                  "kyc_status",
-	Password:                   "password",
 	StellarAccountCreated:      "stellar_account_created",
 	Reset2faByAdmin:            "reset2fa_by_admin",
 	CreatedAt:                  "created_at",
@@ -163,6 +165,8 @@ var UserProfileColumns = struct {
 	OccupationCode88:           "occupation_code88",
 	PublicKey0:                 "public_key_0",
 	MailNotifications:          "mail_notifications",
+	DateSuspended:              "date_suspended",
+	DateClosed:                 "date_closed",
 }
 
 // UserProfileRels is where relationship names are stored.
@@ -216,8 +220,8 @@ func (*userProfileR) NewStruct() *userProfileR {
 type userProfileL struct{}
 
 var (
-	userProfileColumns               = []string{"id", "email", "forename", "lastname", "salutation", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "password", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "occupation_name", "occupation_code88", "public_key_0", "mail_notifications"}
-	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "salutation", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "password", "updated_by"}
+	userProfileColumns               = []string{"id", "email", "forename", "lastname", "salutation", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "updated_by", "occupation_name", "occupation_code88", "public_key_0", "mail_notifications", "date_suspended", "date_closed"}
+	userProfileColumnsWithoutDefault = []string{"email", "forename", "lastname", "salutation", "address", "zip_code", "city", "state", "country_code", "nationality", "mobile_nr", "birth_day", "birth_place", "mail_confirmation_key", "mail_confirmation_expiry_date", "tfa_secret", "tfa_temp_secret", "updated_by", "date_suspended", "date_closed"}
 	userProfileColumnsWithDefault    = []string{"id", "additional_name", "birth_country_code", "bank_account_number", "bank_number", "bank_phone_number", "tax_id", "tax_id_name", "occupation_code08", "employer_name", "employer_address", "language_code", "mail_confirmed", "tfa_confirmed", "mnemonic_confirmed", "message_count", "payment_state", "kyc_status", "stellar_account_created", "reset2fa_by_admin", "created_at", "updated_at", "occupation_name", "occupation_code88", "public_key_0", "mail_notifications"}
 	userProfilePrimaryKeyColumns     = []string{"id"}
 )

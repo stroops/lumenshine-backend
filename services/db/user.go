@@ -13,7 +13,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
-	"golang.org/x/crypto/bcrypt"
 	context "golang.org/x/net/context"
 )
 
@@ -85,13 +84,14 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		TfaTempSecret:          u.TfaTempSecret,
 		TfaConfirmed:           u.TfaConfirmed,
 		MnemonicConfirmed:      u.MnemonicConfirmed,
-		Password:               u.Password,
 		Email:                  u.Email,
 		MessageCount:           int64(u.MessageCount),
 		Reset2FaByAdmin:        u.Reset2faByAdmin,
 		PublicKey_0:            u.PublicKey0,
 		PaymentState:           u.PaymentState,
 		MailNotifications:      u.MailNotifications,
+		IsClosed:               u.DateClosed.Valid && u.DateClosed.Time.Before(time.Now()),
+		IsSuspended:            u.DateSuspended.Valid && u.DateSuspended.Time.Before(time.Now()),
 	}
 
 	return ret, nil
@@ -124,7 +124,6 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		MobileNr:          u.MobileNR,
 		BirthDay:          int64(u.BirthDay.Unix()),
 		BirthPlace:        u.BirthPlace,
-		Password:          u.Password,
 		AdditionalName:    u.AdditionalName,
 		BirthCountryCode:  u.BirthCountryCode,
 		BankAccountNumber: u.BankAccountNumber,
@@ -190,7 +189,6 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	u.EmployerAddress = r.EmployerAddress
 	u.LanguageCode = r.LanguageCode
 
-	u.Password = r.Password
 	u.UpdatedBy = r.Base.UpdateBy
 
 	err = u.Insert(tx, boil.Infer())
@@ -214,7 +212,6 @@ func (s *server) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*pb.I
 	ud.WordlistIv = r.WordlistIv
 
 	ud.PublicKey0 = r.PublicKey_0
-	ud.PublicKey188 = r.PublicKey_188
 	ud.UpdatedBy = r.Base.UpdateBy
 
 	err = ud.Insert(tx, boil.Infer())
@@ -412,7 +409,6 @@ func (s *server) GetUserSecurities(ctx context.Context, r *pb.IDRequest) (*pb.Us
 		Wordlist:          ss.Wordlist,
 		WordlistIv:        ss.WordlistIv,
 		PublicKey_0:       ss.PublicKey0,
-		PublicKey_188:     ss.PublicKey188,
 	}, nil
 }
 
@@ -453,21 +449,13 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 	if err != nil {
 		return nil, err
 	}
-
-	//need to update the user password, because pub188 could have changed
-	pwd, err := bcrypt.GenerateFromPassword([]byte(r.PublicKey_188), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
 	user, err := models.UserProfiles(qm.Where("id=?", r.UserId)).One(tx)
 	if err != nil {
 		return nil, err
 	}
-	user.Password = string(pwd)
 	user.PublicKey0 = r.PublicKey_0
 	user.UpdatedBy = r.Base.UpdateBy
 	_, err = user.Update(tx, boil.Whitelist(
-		models.UserProfileColumns.Password,
 		models.UserProfileColumns.PublicKey0,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
@@ -495,7 +483,6 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 	u.Wordlist = r.Wordlist
 	u.WordlistIv = r.WordlistIv
 	u.PublicKey0 = r.PublicKey_0
-	u.PublicKey188 = r.PublicKey_188
 	u.UpdatedBy = r.Base.UpdateBy
 
 	_, err = u.Update(tx, boil.Whitelist(
@@ -509,7 +496,6 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 		models.UserSecurityColumns.Wordlist,
 		models.UserSecurityColumns.WordlistIv,
 		models.UserSecurityColumns.PublicKey0,
-		models.UserSecurityColumns.PublicKey188,
 
 		models.UserSecurityColumns.UpdatedAt,
 		models.UserSecurityColumns.UpdatedBy,
@@ -523,7 +509,7 @@ func (s *server) SetUserSecurities(ctx context.Context, r *pb.UserSecurityReques
 	return &pb.Empty{}, nil
 }
 
-func (s *server) UpdateUserSecurityPassword(ctx context.Context, r *pb.UserSecurityRequest) (*pb.Empty, error) {
+func (s *server) UpdateUserSecurity(ctx context.Context, r *pb.UserSecurityRequest) (*pb.Empty, error) {
 	u, err := models.UserSecurities(qm.Where(
 		models.UserSecurityColumns.UserID+"=?", r.UserId,
 	)).One(db)

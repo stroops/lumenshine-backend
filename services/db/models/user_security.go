@@ -33,7 +33,6 @@ type UserSecurity struct {
 	Wordlist          string    `boil:"wordlist" json:"wordlist" toml:"wordlist" yaml:"wordlist"`
 	WordlistIv        string    `boil:"wordlist_iv" json:"wordlist_iv" toml:"wordlist_iv" yaml:"wordlist_iv"`
 	PublicKey0        string    `boil:"public_key_0" json:"public_key_0" toml:"public_key_0" yaml:"public_key_0"`
-	PublicKey188      string    `boil:"public_key_188" json:"public_key_188" toml:"public_key_188" yaml:"public_key_188"`
 	CreatedAt         time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt         time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy         string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
@@ -55,7 +54,6 @@ var UserSecurityColumns = struct {
 	Wordlist          string
 	WordlistIv        string
 	PublicKey0        string
-	PublicKey188      string
 	CreatedAt         string
 	UpdatedAt         string
 	UpdatedBy         string
@@ -72,7 +70,6 @@ var UserSecurityColumns = struct {
 	Wordlist:          "wordlist",
 	WordlistIv:        "wordlist_iv",
 	PublicKey0:        "public_key_0",
-	PublicKey188:      "public_key_188",
 	CreatedAt:         "created_at",
 	UpdatedAt:         "updated_at",
 	UpdatedBy:         "updated_by",
@@ -99,8 +96,8 @@ func (*userSecurityR) NewStruct() *userSecurityR {
 type userSecurityL struct{}
 
 var (
-	userSecurityColumns               = []string{"id", "user_id", "kdf_salt", "mnemonic_master_key", "mnemonic_master_iv", "wordlist_master_key", "wordlist_master_iv", "mnemonic", "mnemonic_iv", "wordlist", "wordlist_iv", "public_key_0", "public_key_188", "created_at", "updated_at", "updated_by"}
-	userSecurityColumnsWithoutDefault = []string{"user_id", "kdf_salt", "mnemonic_master_key", "mnemonic_master_iv", "wordlist_master_key", "wordlist_master_iv", "mnemonic", "mnemonic_iv", "wordlist", "wordlist_iv", "public_key_0", "public_key_188", "updated_by"}
+	userSecurityColumns               = []string{"id", "user_id", "kdf_salt", "mnemonic_master_key", "mnemonic_master_iv", "wordlist_master_key", "wordlist_master_iv", "mnemonic", "mnemonic_iv", "wordlist", "wordlist_iv", "public_key_0", "created_at", "updated_at", "updated_by"}
+	userSecurityColumnsWithoutDefault = []string{"user_id", "kdf_salt", "mnemonic_master_key", "mnemonic_master_iv", "wordlist_master_key", "wordlist_master_iv", "mnemonic", "mnemonic_iv", "wordlist", "wordlist_iv", "public_key_0", "updated_by"}
 	userSecurityColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	userSecurityPrimaryKeyColumns     = []string{"id"}
 )

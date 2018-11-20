@@ -283,6 +283,16 @@ func UnsubscribePreviousUserFromPushNotifications(uc *mw.IcopContext, c *gin.Con
 		return
 	}
 
+	if userResponse.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if userResponse.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	reqData := &pb.DeletePushTokenRequest{
 		Base:      NewBaseRequest(uc),
 		UserId:    userResponse.Id,

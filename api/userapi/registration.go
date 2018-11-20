@@ -15,7 +15,6 @@ import (
 	"github.com/Soneso/lumenshine-backend/constants"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 //RegisterUserRequest is the data needed for registration
@@ -42,8 +41,7 @@ type RegisterUserRequest struct {
 	//required : true
 	WordlistIV string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
 	//required : true
-	PublicKey0   string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
-	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
+	PublicKey0 string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 
 	Salutation        string `form:"salutation" json:"salutation" validate:"max=64"`
 	Forename          string `form:"forename" json:"forename" validate:"required,icop_nonum,min_trim=2,max=64"`
@@ -134,13 +132,6 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	//hash the password
-	pwd, err := bcrypt.GenerateFromPassword([]byte(ur.PublicKey188), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error generating password", cerr.GeneralError))
-		return
-	}
-
 	//get the birthday
 	birthDaty, err := time.Parse("2006-01-02", ur.BirthDay)
 	if ur.BirthDay != "" && err != nil {
@@ -187,7 +178,6 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		EmployerName:           ur.EmployerName,
 		EmployerAddress:        ur.EmployerAddress,
 		LanguageCode:           ur.LanguageCode,
-		Password:               string(pwd),
 		KdfSalt:                ur.KDFSalt,
 		MnemonicMasterKey:      ur.MnemonicMasterKey,
 		MnemonicMasterIv:       ur.MnemonicMasterIV,
@@ -198,7 +188,6 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		Wordlist:               ur.Wordlist,
 		WordlistIv:             ur.WordlistIV,
 		PublicKey_0:            ur.PublicKey0,
-		PublicKey_188:          ur.PublicKey188,
 	}
 	user, err := dbClient.CreateUser(c, reqC)
 	if err != nil {
@@ -248,8 +237,7 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 //swagger:parameters Confirm2FARequest Confirm2FA
 type Confirm2FARequest struct {
 	//required : true
-	TfaCode          string `form:"tfa_code" json:"tfa_code" validate:"required"`
-	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
+	TfaCode string `form:"tfa_code" json:"tfa_code" validate:"required"`
 }
 
 //Confirm2FAResponse response for API
@@ -316,6 +304,16 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	if user.TfaTempSecret == "" {
 		//user already did 2fa registration
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.TfaAlreadyConfirmed, "already confirmed", "confirm_2FAregsitration.2FACode.already_done"))
@@ -361,17 +359,6 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error setting user 2fa confirmed", cerr.GeneralError))
 		return
 	}
-
-	//TODO: check with Christian
-	/*valid, _, err := verifySEP10Data(cd.SEP10Transaction, user.Id, uc, c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-		return
-	}
-	if !valid {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
-		return
-	}*/
 
 	authMiddlewareFull.SetAuthHeader(c, user.Id)
 
@@ -427,6 +414,16 @@ func ResendConfirmMail(uc *mw.IcopContext, c *gin.Context) {
 	if user.UserNotFound {
 		c.JSON(http.StatusBadRequest,
 			cerr.NewIcopError("email", cerr.InvalidArgument, "Email-address not found in database", "resend_mail.email.notFound"))
+		return
+	}
+
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
 		return
 	}
 
@@ -498,6 +495,16 @@ func ConfirmMnemonic(uc *mw.IcopContext, c *gin.Context) {
 	if user.UserNotFound {
 		c.JSON(http.StatusBadRequest,
 			cerr.NewIcopError("email", cerr.InvalidArgument, "Email-address not found in database", "resend_mail.email.notFound"))
+		return
+	}
+
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
 		return
 	}
 

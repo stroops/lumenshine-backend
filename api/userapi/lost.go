@@ -64,6 +64,16 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	if !user.MailConfirmed {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not verified", ""))
 		return
@@ -150,6 +160,16 @@ func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	c.JSON(http.StatusOK, &Need2FAResetPasswordResponse{
 		Need2FAResetPassword: !user.Reset2FaByAdmin,
 	})
@@ -207,6 +227,16 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 
 	if user.UserNotFound {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "User for email not found", cerr.GeneralError))
+		return
+	}
+
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
 		return
 	}
 
@@ -277,7 +307,6 @@ type LostPasswordUpdateRequest struct {
 	EncryptionWordlistIV string `form:"encryption_wordlist_iv" json:"encryption_wordlist_iv" validate:"required,base64,len=24"`
 	//required: true
 	PublicKey0       string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
-	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
@@ -307,23 +336,14 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
-	if l.SEP10Transaction == "" {
-		//check that public key 188 is correct
-		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-		if !match {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Password does not match", ""))
-			return
-		}
-	} else {
-		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-			return
-		}
-		if !valid {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
-			return
-		}
+	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+		return
 	}
 
 	req := &pb.UserSecurityRequest{
@@ -339,9 +359,8 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 		Wordlist:          l.EncryptedWordlist,
 		WordlistIv:        l.EncryptionWordlistIV,
 		PublicKey_0:       l.PublicKey0,
-		PublicKey_188:     l.PublicKey188,
 	}
-	_, err := dbClient.SetUserSecurities(c, req)
+	_, err = dbClient.SetUserSecurities(c, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, update security data", cerr.GeneralError))
 		return
@@ -364,7 +383,6 @@ type ChangePasswordUpdateRequest struct {
 	//required: true
 	WordlistMasterIV string `form:"wordlist_master_iv" json:"wordlist_master_iv" validate:"required,base64,len=24"`
 
-	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
 	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
 }
 
@@ -394,23 +412,14 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
-	if l.SEP10Transaction == "" {
-		//check that the password_188 was correct
-		match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-		if !match {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "password does not match", ""))
-			return
-		}
-	} else {
-		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-			return
-		}
-		if !valid {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
-			return
-		}
+	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+		return
 	}
 
 	req := &pb.UserSecurityRequest{
@@ -422,7 +431,7 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 		WordlistMasterKey: l.WordlistMasterKey,
 		WordlistMasterIv:  l.WordlistMasterIV,
 	}
-	_, err := dbClient.UpdateUserSecurityPassword(c, req)
+	_, err = dbClient.UpdateUserSecurity(c, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Server error, update security data", cerr.GeneralError))
 		return
@@ -479,6 +488,16 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	if user.IsClosed {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsClosed, "user closed", ""))
+		return
+	}
+
+	if user.IsSuspended {
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.UserIsSuspended, "user suspended", ""))
+		return
+	}
+
 	if !user.MailConfirmed {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not verified", ""))
 		return
@@ -505,7 +524,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 	msgBody := RenderTemplateToString(uc, c, "lost_tfa_mail", gin.H{
-		"TokenUrl":   cnf.WebLinks.LostTFA + reqConf.MailConfirmationKey,
+		"TokenUrl":  cnf.WebLinks.LostTFA + reqConf.MailConfirmationKey,
 		"ImagesUrl": cnf.WebLinks.ImagesUrl,
 		"TokenValidTo": helpers.TimeToString(
 			time.Unix(reqConf.MailConfirmationExpiry, 0), uc.Language,
@@ -532,8 +551,7 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 //NewTfaRequest for proving the password
 //swagger:parameters NewTfaRequest NewTfaUpdate
 type NewTfaRequest struct {
-	PublicKey188     string `form:"public_key_188" json:"public_key_188"`
-	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"`
+	SEP10Transaction string `form:"sep10_transaction" json:"sep10_transaction"` //no required
 }
 
 //NewTfaResponse response for update
@@ -565,7 +583,7 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 
 	user := mw.GetAuthUser(c)
 
-	if l.PublicKey188 == "" {
+	if l.SEP10Transaction == "" {
 		req := &pb.GetUserByIDOrEmailRequest{
 			Base: NewBaseRequest(uc),
 			Id:   user.UserID,
@@ -576,27 +594,18 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 		if !user.Reset2FaByAdmin {
-			c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.MissingMandatoryField, "Missing parameter", ""))
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("sep10_transaction", cerr.MissingMandatoryField, "Missing parameter", ""))
 			return
 		}
 	} else {
-		if l.SEP10Transaction == "" {
-			//check that public key 188 is correct
-			match := CheckPasswordHash(uc.Log, l.PublicKey188, user.Password)
-			if !match {
-				c.JSON(http.StatusBadRequest, cerr.NewIcopError("public_key_188", cerr.InvalidPassword, "Password does not match", ""))
-				return
-			}
-		} else {
-			valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-				return
-			}
-			if !valid {
-				c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
-				return
-			}
+		valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+			return
 		}
 	}
 
@@ -650,8 +659,7 @@ type UpdateSecurityDataRequest struct {
 	//required: true
 	WordlistIV string `form:"wordlist_iv" json:"wordlist_iv" validate:"required,base64,len=24"`
 	//required: true
-	PublicKey0   string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
-	PublicKey188 string `form:"public_key_188" json:"public_key_188"`
+	PublicKey0 string `form:"public_key_0" json:"public_key_0" validate:"required,base64,len=56"`
 
 	TfaCode string `form:"tfa_code" json:"tfa_code"`
 }
@@ -726,7 +734,6 @@ func UpdateSecurityData(uc *mw.IcopContext, c *gin.Context) {
 		Wordlist:          l.Wordlist,
 		WordlistIv:        l.WordlistIV,
 		PublicKey_0:       l.PublicKey0,
-		PublicKey_188:     l.PublicKey188,
 	}
 	_, err := dbClient.SetUserSecurities(c, req)
 	if err != nil {
