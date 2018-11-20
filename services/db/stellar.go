@@ -38,6 +38,7 @@ func (s *server) GetStellarTransactions(ctx context.Context, r *pb.GetStellarTra
 	cO := hm.HistoryOperationColumns
 	cOP := hm.HistoryOperationParticipantColumns
 	cA := hm.HistoryAccountColumns
+	cL := hm.HistoryLedgerColumns
 	tN := hm.TableNames
 
 	boil.DebugMode = true
@@ -46,7 +47,7 @@ func (s *server) GetStellarTransactions(ctx context.Context, r *pb.GetStellarTra
 		qm.From(tN.HistoryOperations+" t1"),
 
 		qm.Select("t4."+cT.TransactionHash+" as tx_transaction_hash"),
-		qm.Select("t4."+cT.CreatedAt+" as tx_created_at"),
+		qm.Select("t5."+cL.ClosedAt+" as tx_created_at"),
 		qm.Select("t4."+cT.MemoType+" as tx_memo_type"),
 		qm.Select("t4."+cT.Memo+" as tx_memo"),
 		qm.Select("t4."+cT.OperationCount+" as tx_operation_count"),
@@ -61,9 +62,10 @@ func (s *server) GetStellarTransactions(ctx context.Context, r *pb.GetStellarTra
 		qm.InnerJoin(tN.HistoryOperationParticipants+" t2 on t1.id=t2."+cOP.HistoryOperationID),
 		qm.InnerJoin(tN.HistoryAccounts+" t3 on t3.id=t2."+cOP.HistoryAccountID),
 		qm.InnerJoin(tN.HistoryTransactions+" t4 on t4.id=t1."+cO.TransactionID),
+		qm.InnerJoin(tN.HistoryLedgers+" t5 on t5.sequence=t4."+cT.LedgerSequence),
 
 		qm.Where(
-			"t3."+cA.Address+"=? and t4."+cT.CreatedAt+">=? and t4."+cT.CreatedAt+"<=?",
+			"t3."+cA.Address+"=? and t5."+cL.ClosedAt+">=? and t5."+cL.ClosedAt+"<=?",
 			r.StellarAccountPk, timeFrom, timeTo,
 		),
 	)
