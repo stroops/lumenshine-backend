@@ -326,12 +326,14 @@ func (s *server) SetUserTFAConfirmed(ctx context.Context, r *pb.SetUserTfaConfir
 	u.TfaSecret = u.TfaTempSecret
 	u.TfaTempSecret = ""
 	u.TfaConfirmed = true
+	u.Reset2faByAdmin = false
 	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
 
 	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.TfaSecret,
 		models.UserProfileColumns.TfaTempSecret,
+		models.UserProfileColumns.Reset2faByAdmin,
 		models.UserProfileColumns.TfaConfirmed,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
@@ -543,13 +545,11 @@ func (s *server) SetTempTfaSecret(ctx context.Context, r *pb.SetTempTfaSecretReq
 	}
 
 	u.TfaTempSecret = r.TfaSecret
-	u.Reset2faByAdmin = false
 	u.UpdatedAt = time.Now()
 	u.UpdatedBy = r.Base.UpdateBy
 
 	_, err = u.Update(db, boil.Whitelist(
 		models.UserProfileColumns.TfaTempSecret,
-		models.UserProfileColumns.Reset2faByAdmin,
 		models.UserProfileColumns.UpdatedAt,
 		models.UserProfileColumns.UpdatedBy,
 	))

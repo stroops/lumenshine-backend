@@ -360,7 +360,11 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	authMiddlewareFull.SetAuthHeader(c, user.Id)
+	if user.Reset2FaByAdmin {
+		authMiddlewareSimple.SetAuthHeader(c, user.Id)
+	} else {
+		authMiddlewareFull.SetAuthHeader(c, user.Id)
+	}
 
 	c.JSON(http.StatusOK, &Confirm2FAResponse{
 		MailConfirmed:     user.MailConfirmed,
