@@ -62,7 +62,7 @@ func GetWS(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("random_key", cerr.InvalidArgument, "Upgrader not created", ""))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Upgrader not created", cerr.GeneralError))
 		return
 	}
 
