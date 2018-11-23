@@ -48,7 +48,8 @@ type Hub struct {
 	// Unregister requests from clients.
 	unregister chan *Client
 
-	mux sync.Mutex
+	muxAddresses sync.Mutex
+	muxClient    sync.Mutex
 }
 
 type address string
@@ -81,8 +82,8 @@ func newHub() *Hub {
 }
 
 func (h *Hub) removeAddress(client *Client, account string) {
-	h.mux.Lock()
-	defer h.mux.Unlock()
+	h.muxAddresses.Lock()
+	defer h.muxAddresses.Unlock()
 
 	//delete address from client-list
 	for i, a := range client.addresses {
@@ -108,7 +109,6 @@ func (h *Hub) removeAddress(client *Client, account string) {
 
 	if len(keys) == 0 {
 		delete(h.addresses, account)
-		fmt.Printf("Deleting account %s", account)
 
 		//if we do not listen for the address any longer, we also need to remove the address from the sse-service
 		//register account in sse for events
@@ -125,8 +125,8 @@ func (h *Hub) removeAddress(client *Client, account string) {
 }
 
 func (h *Hub) removeClient(client *Client) {
-	h.mux.Lock()
-	defer h.mux.Unlock()
+	h.muxClient.Lock()
+	defer h.muxClient.Unlock()
 
 	if _, ok := h.clients[client.key]; ok {
 		for _, ca := range client.addresses {
@@ -137,7 +137,6 @@ func (h *Hub) removeClient(client *Client) {
 		client.conn.Close()
 		close(client.send)
 		delete(h.clients, client.key)
-		fmt.Println("Closed client")
 	}
 }
 

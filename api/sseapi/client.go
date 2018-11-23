@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -67,7 +66,6 @@ func (c *Client) writePump() {
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				fmt.Println("Sending Close message")
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
