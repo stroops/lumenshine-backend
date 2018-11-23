@@ -185,8 +185,10 @@ var (
 
 //InfoClient info for all connected clients
 type InfoClient struct {
-	Key       string
-	Addresses []string
+	Key          string
+	Addresses    []string
+	CreateTime   time.Time
+	LastPingTime time.Time
 }
 
 // InfoStruct represents the information for the application
@@ -234,8 +236,10 @@ func Info(c *gin.Context) {
 	d.HubClientsCount = len(hub.clients)
 	for key, c := range hub.clients {
 		d.HubClients = append(d.HubClients, &InfoClient{
-			Key:       key,
-			Addresses: c.addresses,
+			Key:          key,
+			Addresses:    c.addresses,
+			CreateTime:   c.createTime,
+			LastPingTime: c.lastPingTime,
 		})
 	}
 	d.HubAddresses = hub.addresses

@@ -69,7 +69,7 @@ func GetWS(hub *Hub, uc *mw.IcopContext, c *gin.Context) {
 
 	conn.SetPongHandler(func(string) error { conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 1024), key: l.RandomKey}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 1024), key: l.RandomKey, createTime: time.Now(), lastPingTime: time.Now()}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in new goroutines.

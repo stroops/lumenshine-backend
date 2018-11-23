@@ -47,6 +47,9 @@ type Client struct {
 
 	// addresses this client listens on
 	addresses []string
+
+	createTime   time.Time
+	lastPingTime time.Time
 }
 
 // writePump pumps messages from the hub to the websocket connection.
@@ -91,6 +94,7 @@ func (c *Client) writePump() {
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
+			c.lastPingTime = time.Now()
 		}
 	}
 }
