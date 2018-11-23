@@ -121,7 +121,7 @@ func (s *StellarProcessor) StartProcessing() {
 				} else {
 					//we are behind the startupMaxID, so there where no new legderIDs in horizon. wait some time
 					s.log.WithField("ledger_seq", nextID).Info("Waiting for ledger")
-					time.Sleep(5 * time.Second) // ledger closes roughly every 5 seconds
+					time.Sleep(2 * time.Second) // ledger closes roughly every 5 seconds
 				}
 			} else {
 				s.log.WithError(err).WithField("ledger_seq", nextID).Error("Error retreiving ledger")
