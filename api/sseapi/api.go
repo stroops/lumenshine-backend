@@ -43,6 +43,7 @@ type GetWSRequest struct {
 // swagger:route GET /portal/sse/get_ws websocket GetWS
 //
 // Returns a new websocket connection
+// Can also be called via /portal/sse/ws. One needs to pass in the JWT Authorization key as query param then
 // 	  Consumes:
 //     - multipart/form-data
 //

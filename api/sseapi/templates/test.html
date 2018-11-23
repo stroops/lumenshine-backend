@@ -73,7 +73,8 @@
         created: function () {
 
             console.log(this.wsKey);
-            this.ws = new WebSocket('ws://localhost:9006/get_ws?random_key='+this.wsKey);
+            //this.ws = new WebSocket('ws://localhost:9006/get_ws?random_key='+this.wsKey);
+            this.ws = new WebSocket('ws://localhost:9006/portal/sse/ws/get_ws?random_key='+this.wsKey + "&Authorization=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmdWxsX2F1dGhvcml6ZWQiOnRydWUsImlkIjoiMiJ9.lOvR8RcqOtcSe9EnD33-jD6BW4v5g4CDhz5AqLtB-Mk");
             console.log(this.ws);
             var that=this
             this.ws.addEventListener('message', function(e) {

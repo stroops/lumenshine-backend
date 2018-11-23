@@ -130,6 +130,13 @@ func main() {
 		auth.POST("/remove_account", SSEContext(RemoveAccount))
 	}
 
+	authWS := r.Group("/portal/sse/ws")
+	authWS.Use(authMiddlewareFullWS.MiddlewareFunc())
+	{
+		authWS.POST("refresh", authMiddlewareFullWS.RefreshHandler)
+		authWS.GET("/get_ws", SSEContext(GetWS))
+	}
+
 	//run the api
 	if err := r.Run(fmt.Sprintf(":%d", cnf.Port)); err != nil {
 		log.WithError(err).Fatalf("Failed to run server")
