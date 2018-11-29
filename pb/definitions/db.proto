@@ -414,6 +414,7 @@ message AddPaymentTemplateRequest {
   int64 amount = 8;
   MemoType memoType = 9;
   string memo = 10;
+  string template_name = 11;
 }
 
 message RemovePaymentTemplateRequest {
@@ -438,6 +439,7 @@ message PaymentTemplate {
   int64 amount = 7;
   MemoType memoType = 8;
   string memo = 9;
+  string template_name = 10;
 }
 
 message GetTemplatesResponse {

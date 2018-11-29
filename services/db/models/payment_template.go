@@ -33,6 +33,7 @@ type PaymentTemplate struct {
 	CreatedAt               time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt               time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy               string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
+	TemplateName            string    `boil:"template_name" json:"template_name" toml:"template_name" yaml:"template_name"`
 
 	R *paymentTemplateR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L paymentTemplateL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -51,6 +52,7 @@ var PaymentTemplateColumns = struct {
 	CreatedAt               string
 	UpdatedAt               string
 	UpdatedBy               string
+	TemplateName            string
 }{
 	ID:                      "id",
 	WalletID:                "wallet_id",
@@ -64,6 +66,7 @@ var PaymentTemplateColumns = struct {
 	CreatedAt:               "created_at",
 	UpdatedAt:               "updated_at",
 	UpdatedBy:               "updated_by",
+	TemplateName:            "template_name",
 }
 
 // PaymentTemplateRels is where relationship names are stored.
@@ -87,9 +90,9 @@ func (*paymentTemplateR) NewStruct() *paymentTemplateR {
 type paymentTemplateL struct{}
 
 var (
-	paymentTemplateColumns               = []string{"id", "wallet_id", "recepient_stellar_address", "recepient_pk", "asset_code", "issuer_pk", "amount", "memo_type", "memo", "created_at", "updated_at", "updated_by"}
+	paymentTemplateColumns               = []string{"id", "wallet_id", "recepient_stellar_address", "recepient_pk", "asset_code", "issuer_pk", "amount", "memo_type", "memo", "created_at", "updated_at", "updated_by", "template_name"}
 	paymentTemplateColumnsWithoutDefault = []string{"wallet_id", "recepient_pk", "asset_code", "amount", "memo_type", "updated_by"}
-	paymentTemplateColumnsWithDefault    = []string{"id", "recepient_stellar_address", "issuer_pk", "memo", "created_at", "updated_at"}
+	paymentTemplateColumnsWithDefault    = []string{"id", "recepient_stellar_address", "issuer_pk", "memo", "created_at", "updated_at", "template_name"}
 	paymentTemplatePrimaryKeyColumns     = []string{"id"}
 )
 

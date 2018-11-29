@@ -840,6 +840,7 @@ type GetPaymentTemplateResponse struct {
 	Amount                  int64  `json:"amount"`
 	MemoType                string `json:"memo_type"`
 	Memo                    string `json:"memo"`
+	TemplateName            string `json:"template_name"`
 }
 
 //GetPaymentTemplates returns all templates for a wallet
@@ -885,6 +886,7 @@ func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
 			Amount:                  t.Amount,
 			MemoType:                t.MemoType.String(),
 			Memo:                    t.Memo,
+			TemplateName:            t.TemplateName,
 		}
 	}
 
@@ -907,8 +909,9 @@ type AddPaymentTemplateRequest struct {
 	// required: true
 	Amount int64 `form:"amount" json:"amount"`
 	// required: true
-	MemoType string `form:"memo_type" json:"memo_type" validate:"required,max=8"`
-	Memo     string `form:"memo" json:"memo"`
+	MemoType     string `form:"memo_type" json:"memo_type" validate:"required,max=8"`
+	Memo         string `form:"memo" json:"memo"`
+	TemplateName string `form:"template_name" json:"template_name" validate:"required,max=128"`
 }
 
 //AddTemplateResponse response
@@ -970,6 +973,7 @@ func AddPaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
 		Amount:                  r.Amount,
 		MemoType:                pb.MemoType(pb.MemoType_value[r.MemoType]),
 		Memo:                    r.Memo,
+		TemplateName:            r.TemplateName,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error adding payment template", cerr.GeneralError))
