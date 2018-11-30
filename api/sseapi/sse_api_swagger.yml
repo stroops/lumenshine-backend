@@ -7,7 +7,13 @@ definitions:
         items:
           type: string
         type: array
+      CreateTime:
+        format: date-time
+        type: string
       Key:
+        type: string
+      LastPingTime:
+        format: date-time
         type: string
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/sseapi
@@ -69,7 +75,9 @@ paths:
     get:
       consumes:
       - multipart/form-data
-      description: Returns a new websocket connection
+      description: |-
+        Returns a new websocket connection
+        Can also be called via /portal/sse/ws. One needs to pass in the JWT Authorization key as query param then
       operationId: GetWS
       parameters:
       - description: Random key for identlifying the websocket on the backend.

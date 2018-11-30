@@ -837,7 +837,7 @@ type GetPaymentTemplateResponse struct {
 	RecipientPK             string `json:"recipient_pk"`
 	AssetCode               string `json:"asset_code"`
 	IssuerPK                string `json:"issuer_pk"`
-	Amount                  int64  `json:"amount"`
+	Amount                  string `json:"amount"`
 	MemoType                string `json:"memo_type"`
 	Memo                    string `json:"memo"`
 	TemplateName            string `json:"template_name"`
@@ -907,9 +907,9 @@ type AddPaymentTemplateRequest struct {
 	// required: asset code is not XLM
 	IssuerPK string `form:"issuer_pk" json:"issuer_pk" validate:"omitempty,base64,len=56"`
 	// required: true
-	Amount int64 `form:"amount" json:"amount"`
+	Amount string `form:"amount" json:"amount"`
 	// required: true
-	MemoType     string `form:"memo_type" json:"memo_type" validate:"required,max=8"`
+	MemoType     string `form:"memo_type" json:"memo_type" validate:"required,max=9"`
 	Memo         string `form:"memo" json:"memo"`
 	TemplateName string `form:"template_name" json:"template_name" validate:"required,max=128"`
 }

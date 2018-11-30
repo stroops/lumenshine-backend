@@ -27,7 +27,7 @@ type PaymentTemplate struct {
 	RecepientPK             string    `boil:"recepient_pk" json:"recepient_pk" toml:"recepient_pk" yaml:"recepient_pk"`
 	AssetCode               string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
 	IssuerPK                string    `boil:"issuer_pk" json:"issuer_pk" toml:"issuer_pk" yaml:"issuer_pk"`
-	Amount                  int64     `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
+	Amount                  string    `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
 	MemoType                string    `boil:"memo_type" json:"memo_type" toml:"memo_type" yaml:"memo_type"`
 	Memo                    string    `boil:"memo" json:"memo" toml:"memo" yaml:"memo"`
 	CreatedAt               time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -91,8 +91,8 @@ type paymentTemplateL struct{}
 
 var (
 	paymentTemplateColumns               = []string{"id", "wallet_id", "recepient_stellar_address", "recepient_pk", "asset_code", "issuer_pk", "amount", "memo_type", "memo", "created_at", "updated_at", "updated_by", "template_name"}
-	paymentTemplateColumnsWithoutDefault = []string{"wallet_id", "recepient_pk", "asset_code", "amount", "memo_type", "updated_by"}
-	paymentTemplateColumnsWithDefault    = []string{"id", "recepient_stellar_address", "issuer_pk", "memo", "created_at", "updated_at", "template_name"}
+	paymentTemplateColumnsWithoutDefault = []string{"wallet_id", "recepient_pk", "asset_code", "memo_type", "updated_by"}
+	paymentTemplateColumnsWithDefault    = []string{"id", "recepient_stellar_address", "issuer_pk", "amount", "memo", "created_at", "updated_at", "template_name"}
 	paymentTemplatePrimaryKeyColumns     = []string{"id"}
 )
 
