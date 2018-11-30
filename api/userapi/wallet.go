@@ -834,7 +834,7 @@ type GetPaymentTemplatesRequest struct {
 type GetPaymentTemplateResponse struct {
 	ID                      int    `json:"id"`
 	RecipientStellarAddress string `json:"recipient_stellar_address"`
-	RecipientPK             string `json:"recipien_pk"`
+	RecipientPK             string `json:"recipient_pk"`
 	AssetCode               string `json:"asset_code"`
 	IssuerPK                string `json:"issuer_pk"`
 	Amount                  int64  `json:"amount"`
