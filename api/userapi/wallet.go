@@ -884,7 +884,7 @@ func GetPaymentTemplates(uc *mw.IcopContext, c *gin.Context) {
 			AssetCode:               t.AssetCode,
 			IssuerPK:                t.IssuerPublickey,
 			Amount:                  t.Amount,
-			MemoType:                t.MemoType.String(),
+			MemoType:                t.MemoType,
 			Memo:                    t.Memo,
 			TemplateName:            t.TemplateName,
 		}
@@ -909,7 +909,7 @@ type AddPaymentTemplateRequest struct {
 	// required: true
 	Amount string `form:"amount" json:"amount"`
 	// required: true
-	MemoType     string `form:"memo_type" json:"memo_type" validate:"required,max=9"`
+	MemoType     string `form:"memo_type" json:"memo_type" validate:"required,oneof=MEMO_TEXT MEMO_ID MEMO_HASH MEMO_RETURN"`
 	Memo         string `form:"memo" json:"memo"`
 	TemplateName string `form:"template_name" json:"template_name" validate:"required,max=128"`
 }
@@ -956,10 +956,6 @@ func AddPaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("issuer_pk", cerr.InvalidArgument, "Issuer must not be set for native XLM.", ""))
 		return
 	}
-	if _, ok := pb.MemoType_value[r.MemoType]; !ok {
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("memo_type", cerr.InvalidArgument, "Invalid memo type.", ""))
-		return
-	}
 
 	userID := mw.GetAuthUser(c).UserID
 	id, err := dbClient.AddPaymentTemplate(c, &pb.AddPaymentTemplateRequest{
@@ -971,7 +967,7 @@ func AddPaymentTemplate(uc *mw.IcopContext, c *gin.Context) {
 		AssetCode:               r.AssetCode,
 		IssuerPublickey:         r.IssuerPK,
 		Amount:                  r.Amount,
-		MemoType:                pb.MemoType(pb.MemoType_value[r.MemoType]),
+		MemoType:                r.MemoType,
 		Memo:                    r.Memo,
 		TemplateName:            r.TemplateName,
 	})

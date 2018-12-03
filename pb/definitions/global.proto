@@ -88,13 +88,14 @@ enum DocumentSide {
   back = 1;
 }
 
+/*
 enum MemoType {
   none = 0;
   memo_text = 1;
   id = 2;
   hash = 3;
   return = 4;
-}
+}*/
 
 enum WalletType {
   internal = 0;

@@ -28,12 +28,12 @@ type PaymentTemplate struct {
 	AssetCode               string    `boil:"asset_code" json:"asset_code" toml:"asset_code" yaml:"asset_code"`
 	IssuerPK                string    `boil:"issuer_pk" json:"issuer_pk" toml:"issuer_pk" yaml:"issuer_pk"`
 	Amount                  string    `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
-	MemoType                string    `boil:"memo_type" json:"memo_type" toml:"memo_type" yaml:"memo_type"`
 	Memo                    string    `boil:"memo" json:"memo" toml:"memo" yaml:"memo"`
 	CreatedAt               time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt               time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	UpdatedBy               string    `boil:"updated_by" json:"updated_by" toml:"updated_by" yaml:"updated_by"`
 	TemplateName            string    `boil:"template_name" json:"template_name" toml:"template_name" yaml:"template_name"`
+	MemoType                string    `boil:"memo_type" json:"memo_type" toml:"memo_type" yaml:"memo_type"`
 
 	R *paymentTemplateR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L paymentTemplateL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -47,12 +47,12 @@ var PaymentTemplateColumns = struct {
 	AssetCode               string
 	IssuerPK                string
 	Amount                  string
-	MemoType                string
 	Memo                    string
 	CreatedAt               string
 	UpdatedAt               string
 	UpdatedBy               string
 	TemplateName            string
+	MemoType                string
 }{
 	ID:                      "id",
 	WalletID:                "wallet_id",
@@ -61,12 +61,12 @@ var PaymentTemplateColumns = struct {
 	AssetCode:               "asset_code",
 	IssuerPK:                "issuer_pk",
 	Amount:                  "amount",
-	MemoType:                "memo_type",
 	Memo:                    "memo",
 	CreatedAt:               "created_at",
 	UpdatedAt:               "updated_at",
 	UpdatedBy:               "updated_by",
 	TemplateName:            "template_name",
+	MemoType:                "memo_type",
 }
 
 // PaymentTemplateRels is where relationship names are stored.
@@ -90,9 +90,9 @@ func (*paymentTemplateR) NewStruct() *paymentTemplateR {
 type paymentTemplateL struct{}
 
 var (
-	paymentTemplateColumns               = []string{"id", "wallet_id", "recepient_stellar_address", "recepient_pk", "asset_code", "issuer_pk", "amount", "memo_type", "memo", "created_at", "updated_at", "updated_by", "template_name"}
-	paymentTemplateColumnsWithoutDefault = []string{"wallet_id", "recepient_pk", "asset_code", "memo_type", "updated_by"}
-	paymentTemplateColumnsWithDefault    = []string{"id", "recepient_stellar_address", "issuer_pk", "amount", "memo", "created_at", "updated_at", "template_name"}
+	paymentTemplateColumns               = []string{"id", "wallet_id", "recepient_stellar_address", "recepient_pk", "asset_code", "issuer_pk", "amount", "memo", "created_at", "updated_at", "updated_by", "template_name", "memo_type"}
+	paymentTemplateColumnsWithoutDefault = []string{"wallet_id", "recepient_pk", "asset_code", "updated_by"}
+	paymentTemplateColumnsWithDefault    = []string{"id", "recepient_stellar_address", "issuer_pk", "amount", "memo", "created_at", "updated_at", "template_name", "memo_type"}
 	paymentTemplatePrimaryKeyColumns     = []string{"id"}
 )
 

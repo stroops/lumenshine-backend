@@ -128,11 +128,10 @@ const (
 
 // Enum values for memo_type
 const (
-	MemoTypeNone   = "none"
-	MemoTypeText   = "text"
-	MemoTypeID     = "id"
-	MemoTypeHash   = "hash"
-	MemoTypeReturn = "return"
+	MemoTypeMEMO_TEXT   = "MEMO_TEXT"
+	MemoTypeMEMO_ID     = "MEMO_ID"
+	MemoTypeMEMO_HASH   = "MEMO_HASH"
+	MemoTypeMEMO_RETURN = "MEMO_RETURN"
 )
 
 // Enum values for kyc_document_type

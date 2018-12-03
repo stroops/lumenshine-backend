@@ -412,7 +412,7 @@ message AddPaymentTemplateRequest {
   string asset_code = 6;
   string issuer_publickey = 7;
   string amount = 8;
-  MemoType memoType = 9;
+  string memoType = 9;
   string memo = 10;
   string template_name = 11;
 }
@@ -437,7 +437,7 @@ message PaymentTemplate {
   string asset_code = 5;
   string issuer_publickey = 6;
   string amount = 7;
-  MemoType memoType = 8;
+  string memoType = 8;
   string memo = 9;
   string template_name = 10;
 }

@@ -352,9 +352,10 @@ func (s *server) AddPaymentTemplate(ctx context.Context, r *pb.AddPaymentTemplat
 		AssetCode:               r.AssetCode,
 		IssuerPK:                r.IssuerPublickey,
 		Amount:                  r.Amount,
-		MemoType:                r.MemoType.String(),
+		MemoType:                r.MemoType,
 		Memo:                    r.Memo,
 		UpdatedBy:               r.Base.UpdateBy,
+		TemplateName:            r.TemplateName,
 	}
 
 	err = t.Insert(db, boil.Infer())
@@ -392,9 +393,8 @@ func (s *server) GetPaymentTemplates(ctx context.Context, r *pb.GetTemplatesRequ
 			AssetCode:               t.AssetCode,
 			Amount:                  t.Amount,
 			Memo:                    t.Memo,
-		}
-		if t.MemoType != "" {
-			template.MemoType = pb.MemoType(pb.MemoType_value[t.MemoType])
+			MemoType:                t.MemoType,
+			TemplateName:            t.TemplateName,
 		}
 		ret.Templates = append(ret.Templates, &template)
 	}
