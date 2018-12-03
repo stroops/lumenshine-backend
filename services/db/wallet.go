@@ -395,6 +395,7 @@ func (s *server) GetPaymentTemplates(ctx context.Context, r *pb.GetTemplatesRequ
 			Memo:                    t.Memo,
 			MemoType:                t.MemoType,
 			TemplateName:            t.TemplateName,
+			IssuerPublickey:         t.IssuerPK,
 		}
 		ret.Templates = append(ret.Templates, &template)
 	}
