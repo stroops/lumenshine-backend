@@ -26,6 +26,8 @@ vendor/
 db/migrations/
 no_git.txt
 
+*local.toml
+
 admin/admin.exe
 admin/admin
 admin/web/dist/

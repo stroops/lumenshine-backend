@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -651,5 +654,87 @@ func GetUserMessage(uc *mw.IcopContext, c *gin.Context) {
 		Title:       m.Title,
 		Message:     m.Message,
 		DateCreated: time.Unix(m.DateCreated, 0),
+	})
+}
+
+//GetStellarTomlRequest used for requesting toml file
+//swagger:parameters GetStellarTomlRequest GetStellarToml
+type GetStellarTomlRequest struct {
+	//Filter by message id
+	//required: true
+	Domain string `form:"domain" json:"domain" query:"domain" validate:"required"`
+
+	//Protocol might be http or https, uses https if not specified
+	Protocol string `form:"protocol" json:"protocol" query:"protocol" validate:"omitempty,oneof=http https"`
+}
+
+//GetStellarTomlResponse is a toml file content
+// swagger:model
+type GetStellarTomlResponse struct {
+	TomlFileContent string `json:"toml_file_content"`
+	HTTPStatusCode  int    `json:"http_status_code"`
+	HTTPUrl         string `json:"http_url"`
+}
+
+//GetStellarToml returns the requested toml file
+// swagger:route GET /portal/user/dashboard/get_stellar_toml general GetStellarToml
+//
+// Returns the requested message
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200: GetStellarTomlResponse
+func GetStellarToml(uc *mw.IcopContext, c *gin.Context) {
+	var l GetStellarTomlRequest
+	if err := c.Bind(&l); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, l); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+
+	protocol := "https"
+	if l.Protocol != "" {
+		protocol = l.Protocol
+	}
+
+	client := &http.Client{
+		Timeout: (60 * time.Second), //max 60 seconds, then timeout
+	}
+
+	if protocol == "https" {
+		//allow insecure configuration of selfsigned ceritficates
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
+
+	url := fmt.Sprintf("%s://%s/.well-known/stellar.toml", protocol, l.Domain)
+	resp, err := client.Get(url)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading http request", cerr.GeneralError))
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading http response body", cerr.GeneralError))
+		return
+	}
+	bodyStr := string(body[:])
+
+	c.JSON(http.StatusOK, &GetStellarTomlResponse{
+		TomlFileContent: bodyStr,
+		HTTPStatusCode:  resp.StatusCode,
+		HTTPUrl:         url,
 	})
 }

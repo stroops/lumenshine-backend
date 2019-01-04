@@ -438,6 +438,36 @@ definitions:
         x-go-name: SEP10Transaction
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetStellarTomlRequest:
+    description: GetStellarTomlRequest used for requesting toml file
+    properties:
+      domain:
+        description: Filter by message id
+        type: string
+        x-go-name: Domain
+      protocol:
+        description: Protocol might be http or https
+        type: string
+        x-go-name: Protocol
+    required:
+    - domain
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  GetStellarTomlResponse:
+    description: GetStellarTomlResponse is a toml file content
+    properties:
+      http_status_code:
+        format: int64
+        type: integer
+        x-go-name: HTTPStatusCode
+      http_url:
+        type: string
+        x-go-name: HTTPUrl
+      toml_file_content:
+        type: string
+        x-go-name: TomlFileContent
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetTfaSecretRequest:
     description: GetTfaSecretRequest for requesting the tfa secrete
     properties:
@@ -2213,6 +2243,33 @@ paths:
             type: array
       tags:
       - promo
+  /portal/user/dashboard/get_stellar_toml:
+    get:
+      consumes:
+      - multipart/form-data
+      description: Returns the requested message
+      operationId: GetStellarToml
+      parameters:
+      - description: Filter by message id
+        in: query
+        name: domain
+        required: true
+        type: string
+        x-go-name: Domain
+      - description: Protocol might be http or https
+        in: query
+        name: protocol
+        type: string
+        x-go-name: Protocol
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: GetStellarTomlResponse
+          schema:
+            $ref: '#/definitions/GetStellarTomlResponse'
+      tags:
+      - general
   /portal/user/dashboard/get_stellar_transactions:
     get:
       consumes:

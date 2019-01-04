@@ -189,6 +189,8 @@ func main() {
 		authDash.GET("/get_stellar_transactions", mw.UseIcopContext(GetStellarTransactions))
 
 		authDash.GET("/get_sep10_challange", mw.UseIcopContext(GetSEP10Transaction))
+
+		authDash.GET("/get_stellar_toml", mw.UseIcopContext(GetStellarToml))
 	}
 
 	//this group is used only for the change password functionality. It is a special key, which is received from
