@@ -446,7 +446,7 @@ definitions:
         type: string
         x-go-name: Domain
       protocol:
-        description: Protocol might be http or https
+        description: Protocol might be http or https, uses https if not specified
         type: string
         x-go-name: Protocol
     required:
@@ -2256,7 +2256,7 @@ paths:
         required: true
         type: string
         x-go-name: Domain
-      - description: Protocol might be http or https
+      - description: Protocol might be http or https, uses https if not specified
         in: query
         name: protocol
         type: string

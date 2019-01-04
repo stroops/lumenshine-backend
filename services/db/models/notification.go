@@ -334,6 +334,7 @@ func (q notificationQuery) ExistsG() (bool, error) {
 func (q notificationQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -377,6 +378,7 @@ func (notificationL) LoadUser(e boil.Executor, singular bool, maybeNotification 
 			object.R = &notificationR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -391,6 +393,7 @@ func (notificationL) LoadUser(e boil.Executor, singular bool, maybeNotification 
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -708,6 +711,11 @@ func (o *Notification) Update(exec boil.Executor, columns boil.Columns) (int64, 
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q notificationQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

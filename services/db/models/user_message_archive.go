@@ -322,6 +322,7 @@ func (q userMessageArchiveQuery) ExistsG() (bool, error) {
 func (q userMessageArchiveQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -365,6 +366,7 @@ func (userMessageArchiveL) LoadUser(e boil.Executor, singular bool, maybeUserMes
 			object.R = &userMessageArchiveR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -379,6 +381,7 @@ func (userMessageArchiveL) LoadUser(e boil.Executor, singular bool, maybeUserMes
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -696,6 +699,11 @@ func (o *UserMessageArchive) Update(exec boil.Executor, columns boil.Columns) (i
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q userMessageArchiveQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

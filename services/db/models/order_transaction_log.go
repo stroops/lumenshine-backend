@@ -328,6 +328,7 @@ func (q orderTransactionLogQuery) ExistsG() (bool, error) {
 func (q orderTransactionLogQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -371,6 +372,7 @@ func (orderTransactionLogL) LoadOrder(e boil.Executor, singular bool, maybeOrder
 			object.R = &orderTransactionLogR{}
 		}
 		args = append(args, object.OrderID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -385,6 +387,7 @@ func (orderTransactionLogL) LoadOrder(e boil.Executor, singular bool, maybeOrder
 			}
 
 			args = append(args, obj.OrderID)
+
 		}
 	}
 
@@ -695,6 +698,11 @@ func (o *OrderTransactionLog) Update(exec boil.Executor, columns boil.Columns) (
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q orderTransactionLogQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

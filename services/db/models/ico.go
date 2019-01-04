@@ -334,6 +334,7 @@ func (q icoQuery) ExistsG() (bool, error) {
 func (q icoQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -892,6 +893,11 @@ func (o *Ico) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q icoQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

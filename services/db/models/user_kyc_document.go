@@ -340,6 +340,7 @@ func (q userKycDocumentQuery) ExistsG() (bool, error) {
 func (q userKycDocumentQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -383,6 +384,7 @@ func (userKycDocumentL) LoadUser(e boil.Executor, singular bool, maybeUserKycDoc
 			object.R = &userKycDocumentR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -397,6 +399,7 @@ func (userKycDocumentL) LoadUser(e boil.Executor, singular bool, maybeUserKycDoc
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -714,6 +717,11 @@ func (o *UserKycDocument) Update(exec boil.Executor, columns boil.Columns) (int6
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q userKycDocumentQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

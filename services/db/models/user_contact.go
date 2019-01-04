@@ -325,6 +325,7 @@ func (q userContactQuery) ExistsG() (bool, error) {
 func (q userContactQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -368,6 +369,7 @@ func (userContactL) LoadUser(e boil.Executor, singular bool, maybeUserContact in
 			object.R = &userContactR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -382,6 +384,7 @@ func (userContactL) LoadUser(e boil.Executor, singular bool, maybeUserContact in
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -699,6 +702,11 @@ func (o *UserContact) Update(exec boil.Executor, columns boil.Columns) (int64, e
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q userContactQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

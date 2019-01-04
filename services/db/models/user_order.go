@@ -374,6 +374,7 @@ func (q userOrderQuery) ExistsG() (bool, error) {
 func (q userOrderQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -508,6 +509,7 @@ func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interf
 			object.R = &userOrderR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -522,6 +524,7 @@ func (userOrderL) LoadUser(e boil.Executor, singular bool, maybeUserOrder interf
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -603,6 +606,7 @@ func (userOrderL) LoadIcoPhase(e boil.Executor, singular bool, maybeUserOrder in
 			object.R = &userOrderR{}
 		}
 		args = append(args, object.IcoPhaseID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -617,6 +621,7 @@ func (userOrderL) LoadIcoPhase(e boil.Executor, singular bool, maybeUserOrder in
 			}
 
 			args = append(args, obj.IcoPhaseID)
+
 		}
 	}
 
@@ -698,6 +703,7 @@ func (userOrderL) LoadExchangeCurrency(e boil.Executor, singular bool, maybeUser
 			object.R = &userOrderR{}
 		}
 		args = append(args, object.ExchangeCurrencyID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -712,6 +718,7 @@ func (userOrderL) LoadExchangeCurrency(e boil.Executor, singular bool, maybeUser
 			}
 
 			args = append(args, obj.ExchangeCurrencyID)
+
 		}
 	}
 
@@ -1598,6 +1605,11 @@ func (o *UserOrder) Update(exec boil.Executor, columns boil.Columns) (int64, err
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q userOrderQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

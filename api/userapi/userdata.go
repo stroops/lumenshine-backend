@@ -14,33 +14,34 @@ import (
 //GetUserDataResponse - user data response
 // swagger:model
 type GetUserDataResponse struct {
-	Email             string     `form:"email" json:"email"`
-	Forename          string     `form:"forename" json:"forename"`
-	Lastname          string     `form:"lastname" json:"lastname"`
-	Salutation        string     `form:"salutation" json:"salutation"`
-	Address           string     `form:"address" json:"address"`
-	ZipCode           string     `form:"zip_code" json:"zip_code"`
-	City              string     `form:"city" json:"city"`
-	State             string     `form:"state" json:"state"`
-	CountryCode       string     `form:"country_code" json:"country_code"`
-	Nationality       string     `form:"nationality" json:"nationality"`
-	MobileNR          string     `form:"mobile_nr" json:"mobile_nr"`
-	BirthDay          *time.Time `form:"birth_day" json:"birth_day"`
-	BirthPlace        string     `form:"birth_place" json:"birth_place"`
-	AdditionalName    string     `form:"additional_name" json:"additional_name"`
-	BirthCountryCode  string     `form:"birth_country_code" json:"birth_country_code"`
-	BankAccountNumber string     `form:"bank_account_number" json:"bank_account_number"`
-	BankNumber        string     `form:"bank_number" json:"bank_number"`
-	BankPhoneNumber   string     `form:"bank_phone_number" json:"bank_phone_number"`
-	TaxID             string     `form:"tax_id" json:"tax_id"`
-	TaxIDName         string     `form:"tax_id_name" json:"tax_id_name"`
-	OccupationName    string     `form:"occupation_name" json:"occupation_name" validate:"max=256"`
-	OccupationCode08  string     `form:"occupation_code08" json:"occupation_code08" validate:"max=8"`
-	OccupationCode88  string     `form:"occupation_code88" json:"occupation_code88" validate:"max=8"`
-	EmployerName      string     `form:"employer_name" json:"employer_name"`
-	EmployerAddress   string     `form:"employer_address" json:"employer_address"`
-	LanguageCode      string     `form:"language_code" json:"language_code"`
-	RegistrationDate  time.Time  `form:"registration_date" json:"registration_date"`
+	Email             string     `json:"email"`
+	Forename          string     `json:"forename"`
+	Lastname          string     `json:"lastname"`
+	Salutation        string     `json:"salutation"`
+	Address           string     `json:"address"`
+	ZipCode           string     `json:"zip_code"`
+	City              string     `json:"city"`
+	State             string     `json:"state"`
+	CountryCode       string     `json:"country_code"`
+	Nationality       string     `json:"nationality"`
+	MobileNR          string     `json:"mobile_nr"`
+	BirthDay          *time.Time `json:"birth_day"`
+	BirthPlace        string     `json:"birth_place"`
+	AdditionalName    string     `json:"additional_name"`
+	BirthCountryCode  string     `json:"birth_country_code"`
+	BankAccountNumber string     `json:"bank_account_number"`
+	BankNumber        string     `json:"bank_number"`
+	BankPhoneNumber   string     `json:"bank_phone_number"`
+	TaxID             string     `json:"tax_id"`
+	TaxIDName         string     `json:"tax_id_name"`
+	OccupationName    string     `json:"occupation_name"`
+	OccupationCode08  string     `json:"occupation_code08"`
+	OccupationCode88  string     `json:"occupation_code88"`
+	EmployerName      string     `json:"employer_name"`
+	EmployerAddress   string     `json:"employer_address"`
+	LanguageCode      string     `json:"language_code"`
+	RegistrationDate  time.Time  `json:"registration_date"`
+	ShowMemos         bool       `json:"show_memos"`
 }
 
 //GetUserData - returns the authenticated user's data
@@ -87,6 +88,7 @@ func GetUserData(uc *mw.IcopContext, c *gin.Context) {
 		EmployerAddress:  u.EmployerAddress,
 		LanguageCode:     u.LanguageCode,
 		RegistrationDate: time.Unix(u.CreatedAt, 0),
+		ShowMemos:        u.ShowMemos,
 	}
 	birthDay := time.Unix(u.BirthDay, 0)
 	if !birthDay.IsZero() {
@@ -218,6 +220,51 @@ func UpdateUserData(uc *mw.IcopContext, c *gin.Context) {
 	_, err = dbClient.UpdateUserProfile(c, reqC)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user", cerr.GeneralError))
+		return
+	}
+	c.JSON(http.StatusOK, "{}")
+}
+
+//UpdateUserShowMemoRequest - edit user show memo field request
+//swagger:parameters UpdateUserShowMemoRequest UpdateUserShowMemo
+type UpdateUserShowMemoRequest struct {
+	ShowMemo bool `form:"show_memo" json:"show_memo"`
+}
+
+//UpdateUserShowMemo - updates the user's show_memo field
+// swagger:route POST /portal/user/dashboard/update_user_show_memo userdata UpdateUserShowMemo
+//
+// Updates the authenticated user's data show_memo field
+//
+// 	  Consumes:
+//     - multipart/form-data
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       200:
+func UpdateUserShowMemo(uc *mw.IcopContext, c *gin.Context) {
+	rr := new(UpdateUserShowMemoRequest)
+	if err := c.Bind(rr); err != nil {
+		c.JSON(http.StatusBadRequest, cerr.LogAndReturnError(uc.Log, err, cerr.ValidBadInputData, cerr.BindError))
+		return
+	}
+	if valid, validErrors := cerr.ValidateStruct(uc.Log, rr); !valid {
+		c.JSON(http.StatusBadRequest, validErrors)
+		return
+	}
+	user := mw.GetAuthUser(c)
+
+	reqC := &pb.UpdateProfileShowMemoRequest{
+		Base:   NewBaseRequest(uc),
+		UserId: user.UserID,
+		Value:  rr.ShowMemo,
+	}
+
+	_, err := dbClient.UpdateUserShowMemos(c, reqC)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error updating user show-memo", cerr.GeneralError))
 		return
 	}
 	c.JSON(http.StatusOK, "{}")

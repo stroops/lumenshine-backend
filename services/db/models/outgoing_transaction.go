@@ -347,6 +347,7 @@ func (q outgoingTransactionQuery) ExistsG() (bool, error) {
 func (q outgoingTransactionQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -403,7 +404,10 @@ func (outgoingTransactionL) LoadIncomingTransaction(e boil.Executor, singular bo
 		if object.R == nil {
 			object.R = &outgoingTransactionR{}
 		}
-		args = append(args, object.IncomingTransactionID)
+		if !queries.IsNil(object.IncomingTransactionID) {
+			args = append(args, object.IncomingTransactionID)
+		}
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -417,7 +421,10 @@ func (outgoingTransactionL) LoadIncomingTransaction(e boil.Executor, singular bo
 				}
 			}
 
-			args = append(args, obj.IncomingTransactionID)
+			if !queries.IsNil(obj.IncomingTransactionID) {
+				args = append(args, obj.IncomingTransactionID)
+			}
+
 		}
 	}
 
@@ -499,6 +506,7 @@ func (outgoingTransactionL) LoadOrder(e boil.Executor, singular bool, maybeOutgo
 			object.R = &outgoingTransactionR{}
 		}
 		args = append(args, object.OrderID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -513,6 +521,7 @@ func (outgoingTransactionL) LoadOrder(e boil.Executor, singular bool, maybeOutgo
 			}
 
 			args = append(args, obj.OrderID)
+
 		}
 	}
 
@@ -924,6 +933,11 @@ func (o *OutgoingTransaction) Update(exec boil.Executor, columns boil.Columns) (
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q outgoingTransactionQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

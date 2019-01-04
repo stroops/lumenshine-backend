@@ -350,6 +350,7 @@ func (q icoPhaseActivatedExchangeCurrencyQuery) ExistsG() (bool, error) {
 func (q icoPhaseActivatedExchangeCurrencyQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -421,6 +422,7 @@ func (icoPhaseActivatedExchangeCurrencyL) LoadIcoPhase(e boil.Executor, singular
 			object.R = &icoPhaseActivatedExchangeCurrencyR{}
 		}
 		args = append(args, object.IcoPhaseID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -435,6 +437,7 @@ func (icoPhaseActivatedExchangeCurrencyL) LoadIcoPhase(e boil.Executor, singular
 			}
 
 			args = append(args, obj.IcoPhaseID)
+
 		}
 	}
 
@@ -516,6 +519,7 @@ func (icoPhaseActivatedExchangeCurrencyL) LoadExchangeCurrency(e boil.Executor, 
 			object.R = &icoPhaseActivatedExchangeCurrencyR{}
 		}
 		args = append(args, object.ExchangeCurrencyID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -530,6 +534,7 @@ func (icoPhaseActivatedExchangeCurrencyL) LoadExchangeCurrency(e boil.Executor, 
 			}
 
 			args = append(args, obj.ExchangeCurrencyID)
+
 		}
 	}
 
@@ -610,7 +615,10 @@ func (icoPhaseActivatedExchangeCurrencyL) LoadIcoPhaseBankAccount(e boil.Executo
 		if object.R == nil {
 			object.R = &icoPhaseActivatedExchangeCurrencyR{}
 		}
-		args = append(args, object.IcoPhaseBankAccountID)
+		if !queries.IsNil(object.IcoPhaseBankAccountID) {
+			args = append(args, object.IcoPhaseBankAccountID)
+		}
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -624,7 +632,10 @@ func (icoPhaseActivatedExchangeCurrencyL) LoadIcoPhaseBankAccount(e boil.Executo
 				}
 			}
 
-			args = append(args, obj.IcoPhaseBankAccountID)
+			if !queries.IsNil(obj.IcoPhaseBankAccountID) {
+				args = append(args, obj.IcoPhaseBankAccountID)
+			}
+
 		}
 	}
 
@@ -1091,6 +1102,11 @@ func (o *IcoPhaseActivatedExchangeCurrency) Update(exec boil.Executor, columns b
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q icoPhaseActivatedExchangeCurrencyQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

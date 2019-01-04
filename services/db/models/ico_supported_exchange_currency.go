@@ -322,6 +322,7 @@ func (q icoSupportedExchangeCurrencyQuery) ExistsG() (bool, error) {
 func (q icoSupportedExchangeCurrencyQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -379,6 +380,7 @@ func (icoSupportedExchangeCurrencyL) LoadIco(e boil.Executor, singular bool, may
 			object.R = &icoSupportedExchangeCurrencyR{}
 		}
 		args = append(args, object.IcoID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -393,6 +395,7 @@ func (icoSupportedExchangeCurrencyL) LoadIco(e boil.Executor, singular bool, may
 			}
 
 			args = append(args, obj.IcoID)
+
 		}
 	}
 
@@ -474,6 +477,7 @@ func (icoSupportedExchangeCurrencyL) LoadExchangeCurrency(e boil.Executor, singu
 			object.R = &icoSupportedExchangeCurrencyR{}
 		}
 		args = append(args, object.ExchangeCurrencyID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -488,6 +492,7 @@ func (icoSupportedExchangeCurrencyL) LoadExchangeCurrency(e boil.Executor, singu
 			}
 
 			args = append(args, obj.ExchangeCurrencyID)
+
 		}
 	}
 
@@ -860,6 +865,11 @@ func (o *IcoSupportedExchangeCurrency) Update(exec boil.Executor, columns boil.C
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q icoSupportedExchangeCurrencyQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

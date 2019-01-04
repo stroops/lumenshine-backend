@@ -346,6 +346,7 @@ func (q notificationArchiveQuery) ExistsG() (bool, error) {
 func (q notificationArchiveQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -389,6 +390,7 @@ func (notificationArchiveL) LoadUser(e boil.Executor, singular bool, maybeNotifi
 			object.R = &notificationArchiveR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -403,6 +405,7 @@ func (notificationArchiveL) LoadUser(e boil.Executor, singular bool, maybeNotifi
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -720,6 +723,11 @@ func (o *NotificationArchive) Update(exec boil.Executor, columns boil.Columns) (
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q notificationArchiveQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

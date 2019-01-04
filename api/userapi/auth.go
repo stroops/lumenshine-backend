@@ -240,6 +240,7 @@ type LoginStep2Response struct {
 	MailConfirmed     bool   `json:"mail_confirmed"`
 	TfaConfirmed      bool   `json:"tfa_confirmed"`
 	MnemonicConfirmed bool   `json:"mnemonic_confirmed"`
+	ShowMemos         bool   `json:"show_memos"`
 }
 
 //LoginStep2 is the second step of the login
@@ -309,6 +310,7 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		TfaConfirmed:      user.TfaConfirmed,
 		MnemonicConfirmed: user.MnemonicConfirmed,
 		PaymentState:      u.PaymentState,
+		ShowMemos:         u.ShowMemos,
 	}
 
 	if user.TfaConfirmed {

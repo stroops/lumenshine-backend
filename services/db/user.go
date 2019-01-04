@@ -92,6 +92,7 @@ func (s *server) GetUserDetails(ctx context.Context, r *pb.GetUserByIDOrEmailReq
 		MailNotifications:      u.MailNotifications,
 		IsClosed:               u.DateClosed.Valid && u.DateClosed.Time.Before(time.Now()),
 		IsSuspended:            u.DateSuspended.Valid && u.DateSuspended.Time.Before(time.Now()),
+		ShowMemos:              u.ShowMemos,
 	}
 
 	return ret, nil
@@ -140,6 +141,7 @@ func (s *server) GetUserProfile(ctx context.Context, r *pb.IDRequest) (*pb.UserP
 		CreatedAt:         int64(u.CreatedAt.Unix()),
 		PublicKey_0:       u.PublicKey0,
 		MailNotifications: u.MailNotifications,
+		ShowMemos:         u.ShowMemos,
 	}, nil
 }
 
@@ -895,6 +897,30 @@ func (s *server) UpdateUserProfile(ctx context.Context, r *pb.UpdateUserProfileR
 		u.BankPhoneNumber = r.BankPhoneNumber
 		whitelist = append(whitelist, models.UserProfileColumns.BankPhoneNumber)
 	}
+
+	_, err = u.Update(db, boil.Whitelist(whitelist...))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Empty{}, nil
+}
+
+func (s *server) UpdateUserShowMemos(ctx context.Context, r *pb.UpdateProfileShowMemoRequest) (*pb.Empty, error) {
+	u, err := models.UserProfiles(qm.Where(
+		models.UserProfileColumns.ID+"=?", r.UserId,
+	)).One(db)
+
+	if err != nil {
+		return nil, err
+	}
+
+	u.ShowMemos = r.Value
+	u.UpdatedBy = r.Base.UpdateBy
+
+	whitelist := []string{
+		models.UserProfileColumns.ShowMemos,
+		models.UserProfileColumns.UpdatedBy}
 
 	_, err = u.Update(db, boil.Whitelist(whitelist...))
 	if err != nil {

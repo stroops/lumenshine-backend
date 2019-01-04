@@ -331,6 +331,7 @@ func (q icoPhaseBankAccountQuery) ExistsG() (bool, error) {
 func (q icoPhaseBankAccountQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -804,6 +805,11 @@ func (o *IcoPhaseBankAccount) Update(exec boil.Executor, columns boil.Columns) (
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q icoPhaseBankAccountQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

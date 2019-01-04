@@ -346,6 +346,7 @@ func (q userSecurityQuery) ExistsG() (bool, error) {
 func (q userSecurityQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
@@ -389,6 +390,7 @@ func (userSecurityL) LoadUser(e boil.Executor, singular bool, maybeUserSecurity 
 			object.R = &userSecurityR{}
 		}
 		args = append(args, object.UserID)
+
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -403,6 +405,7 @@ func (userSecurityL) LoadUser(e boil.Executor, singular bool, maybeUserSecurity 
 			}
 
 			args = append(args, obj.UserID)
+
 		}
 	}
 
@@ -720,6 +723,11 @@ func (o *UserSecurity) Update(exec boil.Executor, columns boil.Columns) (int64, 
 	}
 
 	return rowsAff, o.doAfterUpdateHooks(exec)
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (q userSecurityQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.

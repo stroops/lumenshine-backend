@@ -90,6 +90,7 @@ message UserProfileResponse {
   bool user_not_found = 30;
   string public_key_0 = 31;
   bool mail_notifications = 32;
+  bool show_memos = 33;
 }
 
 message UpdateUserProfileRequest {
@@ -140,6 +141,7 @@ message UserDetailsResponse {
   bool mail_notifications = 16;
   bool is_suspended = 17;
   bool is_closed = 18;
+  bool show_memos = 19;
 }
 
 message ExistsEmailRequest {
@@ -600,6 +602,12 @@ message StellarOperations {
   repeated StellarOperation operations = 1;
 }
 
+message UpdateProfileShowMemoRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+  bool value = 3;
+}
+
 service DBService {
   rpc GetUserDetails (GetUserByIDOrEmailRequest) returns (UserDetailsResponse) {}
   rpc GetUserSecurities (IDRequest) returns (UserSecurityResponse) {}
@@ -617,6 +625,7 @@ service DBService {
   rpc SetUserMailToken (SetMailTokenRequest) returns (Empty) {}
   rpc GetUserProfile (IDRequest) returns (UserProfileResponse) {}
   rpc UpdateUserProfile (UpdateUserProfileRequest) returns (Empty) {}
+  rpc UpdateUserShowMemos (UpdateProfileShowMemoRequest) returns (Empty) {}
 
   rpc SetUserMailConfirmed (IDRequest) returns (Empty) {}
   rpc SetUserMnemonicConfirmed (IDRequest) returns (Empty) {}

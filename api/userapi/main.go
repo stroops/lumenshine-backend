@@ -191,6 +191,7 @@ func main() {
 		authDash.GET("/get_sep10_challange", mw.UseIcopContext(GetSEP10Transaction))
 
 		authDash.GET("/get_stellar_toml", mw.UseIcopContext(GetStellarToml))
+		authDash.POST("/update_user_show_memo", mw.UseIcopContext(UpdateUserShowMemo))
 	}
 
 	//this group is used only for the change password functionality. It is a special key, which is received from
