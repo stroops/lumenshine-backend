@@ -40,6 +40,12 @@ func assertAvailablePRNG() {
 	}
 }
 
+//LockoutResponse response for API, if user is locked out
+// swagger:model
+type LockoutResponse struct {
+	LockoutMinutes int64 `json:"lockout_minutes"`
+}
+
 //LoginStep1Request is the data needed for the first step of the login
 //swagger:parameters LoginStep1Request LoginStep1
 type LoginStep1Request struct {
@@ -116,6 +122,20 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	if user.TfaConfirmed {
 		//user already did 2fa registration, so the tfa code is mandatory
 		if l.TfaCode == "" {
@@ -136,6 +156,19 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 		}
 
 		if !resp2FA.Result {
+			lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+				Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+				UserId: user.Id,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+				return
+			}
+			if lo.LockoutMinutes > 0 {
+				c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+				return
+			}
+
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.InvalidArgument, "2FA code is invalid", "login.2FACode.invalid"))
 			return
 		}
@@ -145,6 +178,16 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 	//if he did not pass a tfa code he MUST have TfaConfirmed==false. Therefore we will pass out the security data from the user
 	//although there is a smal gap in here: if the user did not finish the 2fa registration but created the account (in register)
 	//the data will be readable by only passing in the email
+
+	//lockin the user
+	_, err = dbClient.LockinUser(c, &pb.UserLockinRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error locking in user", cerr.GeneralError))
+		return
+	}
 
 	idRequest := &pb.IDRequest{
 		Base: &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
@@ -214,6 +257,20 @@ type GetSEP10TransactionResponse struct {
 func GetSEP10Transaction(uc *mw.IcopContext, c *gin.Context) {
 
 	user := mw.GetAuthUser(c)
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.UserID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	sep10ChallangeTX, err := getSEP10Challenge(user.PublicKey0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "error generating challange :"+err.Error(), cerr.GeneralError))
@@ -295,13 +352,50 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: u.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
 		return
 	}
 	if !valid {
+		lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+			UserId: u.Id,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+			return
+		}
+		if lo.LockoutMinutes > 0 {
+			c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+			return
+		}
+
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+		return
+	}
+
+	//lockin the user
+	_, err = dbClient.LockinUser(c, &pb.UserLockinRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: u.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error locking in user", cerr.GeneralError))
 		return
 	}
 

@@ -45,6 +45,14 @@
             "env": {"icop_debug": "1"}
         },
         {
+            "name": "2faAPI",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/services/2fa",
+            "env": {"icop_debug": "1"}
+        },
+        {
             "name": "sseSRV",
             "type": "go",
             "request": "launch",

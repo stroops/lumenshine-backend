@@ -79,6 +79,20 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	//set the confirmation keys
 	reqConf := &pb.SetMailTokenRequest{
 		Base:                   NewBaseRequest(uc),
@@ -170,6 +184,20 @@ func Need2FAResetPassword(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	c.JSON(http.StatusOK, &Need2FAResetPasswordResponse{
 		Need2FAResetPassword: !user.Reset2FaByAdmin,
 	})
@@ -240,6 +268,20 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	if !user.TfaConfirmed {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.TfaNotYetConfirmed, "2FA secret not confirmed yet", ""))
 		return
@@ -257,6 +299,18 @@ func LostPasswordTfa(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	if !resp2FA.Result {
+		lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+			UserId: user.Id,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+			return
+		}
+		if lo.LockoutMinutes > 0 {
+			c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+			return
+		}
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.InvalidArgument, "2FA code is invalid", "login.2FACode.invalid"))
 		return
 	}
@@ -336,12 +390,38 @@ func LostPasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.UserID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
 		return
 	}
 	if !valid {
+		lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+			UserId: user.UserID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+			return
+		}
+		if lo.LockoutMinutes > 0 {
+			c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+			return
+		}
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 		return
 	}
@@ -412,12 +492,38 @@ func ChangePasswordUpdate(uc *mw.IcopContext, c *gin.Context) {
 	}
 	user := mw.GetAuthUser(c)
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.UserID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
 		return
 	}
 	if !valid {
+		lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+			UserId: user.UserID,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+			return
+		}
+		if lo.LockoutMinutes > 0 {
+			c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+			return
+		}
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 		return
 	}
@@ -500,6 +606,20 @@ func LostTfa(uc *mw.IcopContext, c *gin.Context) {
 
 	if !user.MailConfirmed {
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("email", cerr.EmailNotConfigured, "Email address is not verified", ""))
+		return
+	}
+
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
 		return
 	}
 
@@ -604,6 +724,18 @@ func NewTfaUpdate(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 		if !valid {
+			lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+				Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+				UserId: user.UserID,
+			})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+				return
+			}
+			if lo.LockoutMinutes > 0 {
+				c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+				return
+			}
 			c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
 			return
 		}

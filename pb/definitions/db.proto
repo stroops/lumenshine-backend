@@ -608,7 +608,25 @@ message UpdateProfileShowMemoRequest {
   bool value = 3;
 }
 
+message UserLockoutRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+}
+
+message UserLockoutResponse {
+  int64 lockout_minutes = 1;
+}
+
+message UserLockinRequest {
+  BaseRequest base = 1;
+  int64 user_id = 2;
+}
+
 service DBService {
+  rpc LockoutUser (UserLockoutRequest) returns (UserLockoutResponse) {}
+  rpc GetLockoutUser (UserLockoutRequest) returns (UserLockoutResponse) {}
+  rpc LockinUser (UserLockinRequest) returns (Empty) {}
+
   rpc GetUserDetails (GetUserByIDOrEmailRequest) returns (UserDetailsResponse) {}
   rpc GetUserSecurities (IDRequest) returns (UserSecurityResponse) {}
   rpc SetUserSecurities (UserSecurityRequest) returns (Empty) {}

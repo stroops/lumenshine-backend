@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"math"
 	"strings"
 	"time"
 
@@ -920,6 +921,95 @@ func (s *server) UpdateUserShowMemos(ctx context.Context, r *pb.UpdateProfileSho
 
 	whitelist := []string{
 		models.UserProfileColumns.ShowMemos,
+		models.UserProfileColumns.UpdatedBy}
+
+	_, err = u.Update(db, boil.Whitelist(whitelist...))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.Empty{}, nil
+}
+
+const (
+	lockoutMinutes = 60
+)
+
+func getLockoutTime(now time.Time, u *models.UserProfile) int64 {
+	if u.LastLockoutCounter >= 3 {
+		diff := now.Sub(u.LastLockoutTime).Minutes()
+
+		return int64(lockoutMinutes - math.Round(diff))
+	}
+	return 0
+}
+
+func (s *server) LockoutUser(ctx context.Context, r *pb.UserLockoutRequest) (*pb.UserLockoutResponse, error) {
+	u, err := models.UserProfiles(qm.Where(
+		models.UserProfileColumns.ID+"=?", r.UserId,
+	)).One(db)
+
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	if now.Sub(u.LastLockoutTime).Minutes() > lockoutMinutes {
+		//user was not locked out
+		u.LastLockoutTime = now
+		u.LastLockoutCounter = 1
+	} else {
+		//user allready did at least one false login. increment counter
+		if u.LastLockoutCounter < 3 {
+			u.LastLockoutCounter++
+		}
+	}
+
+	u.UpdatedBy = r.Base.UpdateBy
+
+	whitelist := []string{
+		models.UserProfileColumns.LastLockoutCounter,
+		models.UserProfileColumns.LastLockoutTime,
+		models.UserProfileColumns.UpdatedBy}
+
+	_, err = u.Update(db, boil.Whitelist(whitelist...))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UserLockoutResponse{
+		LockoutMinutes: getLockoutTime(now, u),
+	}, nil
+}
+
+func (s *server) GetLockoutUser(ctx context.Context, r *pb.UserLockoutRequest) (*pb.UserLockoutResponse, error) {
+	u, err := models.UserProfiles(qm.Where(
+		models.UserProfileColumns.ID+"=?", r.UserId,
+	)).One(db)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.UserLockoutResponse{
+		LockoutMinutes: getLockoutTime(time.Now(), u),
+	}, nil
+}
+
+func (s *server) LockinUser(ctx context.Context, r *pb.UserLockinRequest) (*pb.Empty, error) {
+	u, err := models.UserProfiles(qm.Where(
+		models.UserProfileColumns.ID+"=?", r.UserId,
+	)).One(db)
+
+	if err != nil {
+		return nil, err
+	}
+
+	u.LastLockoutCounter = 0
+	u.UpdatedBy = r.Base.UpdateBy
+
+	whitelist := []string{
+		models.UserProfileColumns.LastLockoutCounter,
 		models.UserProfileColumns.UpdatedBy}
 
 	_, err = u.Update(db, boil.Whitelist(whitelist...))

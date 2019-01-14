@@ -320,6 +320,20 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
+	//check if user is locked out
+	lc, err := dbClient.GetLockoutUser(c, &pb.UserLockoutRequest{
+		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+		UserId: user.Id,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout-data", cerr.GeneralError))
+		return
+	}
+	if lc.LockoutMinutes > 0 {
+		c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lc.LockoutMinutes})
+		return
+	}
+
 	//do the 2fa authentication
 	req2FA := &pb.AuthenticateRequest{
 		Base:   NewBaseRequest(uc),
@@ -333,6 +347,18 @@ func Confirm2FA(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	if !resp2FA.Result {
+		lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
+			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
+			UserId: user.Id,
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error reading user lockout", cerr.GeneralError))
+			return
+		}
+		if lo.LockoutMinutes > 0 {
+			c.JSON(http.StatusForbidden, &LockoutResponse{LockoutMinutes: lo.LockoutMinutes})
+			return
+		}
 		c.JSON(http.StatusBadRequest, cerr.NewIcopError("tfa_code", cerr.InvalidArgument, "2FA code is invalid", "confirm_2FAregsitration.2FACode.invalid"))
 		return
 	}

@@ -559,6 +559,9 @@ definitions:
       salutation:
         type: string
         x-go-name: Salutation
+      show_memos:
+        type: boolean
+        x-go-name: ShowMemos
       state:
         type: string
         x-go-name: State
@@ -702,6 +705,15 @@ definitions:
         x-go-name: Languages
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  LockoutResponse:
+    description: LockoutResponse response for API, if user is locked out
+    properties:
+      lockout_minutes:
+        format: int64
+        type: integer
+        x-go-name: LockoutMinutes
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   LoginStep1Request:
     description: LoginStep1Request is the data needed for the first step of the login
     properties:
@@ -776,6 +788,9 @@ definitions:
       payment_state:
         type: string
         x-go-name: PaymentState
+      show_memos:
+        type: boolean
+        x-go-name: ShowMemos
       tfa_confirmed:
         type: boolean
         x-go-name: TfaConfirmed
@@ -1386,6 +1401,14 @@ definitions:
       zip_code:
         type: string
         x-go-name: ZipCode
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
+  UpdateUserShowMemoRequest:
+    description: UpdateUserShowMemoRequest - edit user show memo field request
+    properties:
+      show_memo:
+        type: boolean
+        x-go-name: ShowMemo
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   UploadKycDocumentRequest:
@@ -2729,6 +2752,23 @@ paths:
         name: language_code
         type: string
         x-go-name: LanguageCode
+      produces:
+      - application/json
+      responses:
+        "200": {}
+      tags:
+      - userdata
+  /portal/user/dashboard/update_user_show_memo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Updates the authenticated user's data show_memo field
+      operationId: UpdateUserShowMemo
+      parameters:
+      - in: query
+        name: show_memo
+        type: boolean
+        x-go-name: ShowMemo
       produces:
       - application/json
       responses:
