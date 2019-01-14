@@ -179,16 +179,6 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 	//although there is a smal gap in here: if the user did not finish the 2fa registration but created the account (in register)
 	//the data will be readable by only passing in the email
 
-	//lockin the user
-	_, err = dbClient.LockinUser(c, &pb.UserLockinRequest{
-		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
-		UserId: user.Id,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error locking in user", cerr.GeneralError))
-		return
-	}
-
 	idRequest := &pb.IDRequest{
 		Base: &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
 		Id:   user.Id,
@@ -389,13 +379,13 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 		return
 	}
 
-	//lockin the user
+	//unlock the user
 	_, err = dbClient.LockinUser(c, &pb.UserLockinRequest{
 		Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
 		UserId: u.Id,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error locking in user", cerr.GeneralError))
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, "Error unlocking account", cerr.GeneralError))
 		return
 	}
 
