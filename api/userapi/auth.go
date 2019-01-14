@@ -367,10 +367,6 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 	}
 
 	valid, _, err := verifySEP10Data(l.SEP10Transaction, user.UserID, uc, c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
-		return
-	}
 	if !valid {
 		lo, err := dbClient.LockoutUser(c, &pb.UserLockoutRequest{
 			Base:   &pb.BaseRequest{RequestId: uc.RequestID, UpdateBy: ServiceName},
@@ -385,7 +381,11 @@ func LoginStep2(uc *mw.IcopContext, c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction", cerr.InvalidArgument, "could not validate challange transaction", ""))
+		c.JSON(http.StatusBadRequest, cerr.NewIcopError("transaction challenge", cerr.InvalidArgument, "invalid transaction challenge", ""))
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, cerr.LogAndReturnError(uc.Log, err, err.Error(), cerr.GeneralError))
 		return
 	}
 
