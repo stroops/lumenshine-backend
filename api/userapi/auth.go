@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/stellar/go/keypair"
 	"github.com/stellar/go/network"
@@ -95,6 +96,8 @@ func LoginStep1(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validErrors)
 		return
 	}
+
+	l.Email = strings.ToLower(l.Email)
 
 	//get user details
 	req := &pb.GetUserByIDOrEmailRequest{
