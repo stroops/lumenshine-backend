@@ -27,7 +27,7 @@ type UserDetails struct {
 func GetUserByEmail(email string) (*UserDetails, error) {
 	user, err := models.AdminUsers(
 		qm.Load("UserAdminUsergroups.Group"),
-		qm.Where("email=?", email)).OneG()
+		qm.Where("email=?", strings.ToLower(email))).OneG()
 
 	if err != nil {
 		return nil, err

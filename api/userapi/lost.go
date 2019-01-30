@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Soneso/lumenshine-backend/constants"
@@ -47,6 +48,8 @@ func LostPassword(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validErrors)
 		return
 	}
+
+	l.Email = strings.ToLower(l.Email)
 
 	//get user details
 	req := &pb.GetUserByIDOrEmailRequest{

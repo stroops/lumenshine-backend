@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Soneso/lumenshine-backend/helpers"
@@ -103,6 +104,8 @@ func RegisterUser(uc *mw.IcopContext, c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validErrors)
 		return
 	}
+
+	ur.Email = strings.ToLower(ur.Email)
 
 	//check email does not exist
 	req := &pb.ExistsEmailRequest{
