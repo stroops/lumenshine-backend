@@ -886,7 +886,7 @@ func getAssetBalance(hAccount horizon.Account, ico *m.Ico) *horizon.Balance {
 func getSigner(hAccount horizon.Account, publicKey string) *horizon.Signer {
 	if hAccount.Signers != nil {
 		for _, signer := range hAccount.Signers {
-			if signer.PublicKey == publicKey {
+			if signer.Key == publicKey {
 				return &signer
 			}
 		}

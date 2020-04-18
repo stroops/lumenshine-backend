@@ -225,7 +225,7 @@ func (c *Configurator) ExecuteTransaction(o *m.UserOrder, tx string) (string, er
 
 		//get correstponding signer from account
 		for _, signer := range acc.Signers {
-			kp, _ := keypair.Parse(signer.PublicKey)
+			kp, _ := keypair.Parse(signer.Key)
 			if kp.Hint() == sigH {
 				sw += signer.Weight
 			}

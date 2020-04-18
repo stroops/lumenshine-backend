@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 //RequestID generates a new requestID and stores it in the gin context
@@ -13,7 +13,7 @@ func RequestID() gin.HandlerFunc {
 
 		// Create request id with UUID4
 		if requestID == "" {
-			uuid4 := uuid.NewV4()
+			uuid4, _ := uuid.NewV4()
 			requestID = uuid4.String()
 		}
 

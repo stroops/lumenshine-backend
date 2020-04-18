@@ -1,28 +1,5 @@
 basePath: /portal/user/
 definitions:
-  AddContactRequest:
-    description: AddContactRequest request-data
-    properties:
-      contact_name:
-        description: Contact name
-        type: string
-        x-go-name: ContactName
-      public_key:
-        description: |-
-          Stellar account public key - identifies the account
-          required: required if stellar address is not specified
-        type: string
-        x-go-name: PublicKey
-      stellar_address:
-        description: |-
-          Stellar account federation address - identifies the account
-          required: required if stellar public key is not specified
-        type: string
-        x-go-name: StellarAddress
-    required:
-    - contact_name
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   AddContactResponse:
     description: AddContactResponse - list of contacts and newly added contact id
     properties:
@@ -37,47 +14,6 @@ definitions:
         x-go-name: ID
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  AddPaymentTemplateRequest:
-    description: AddPaymentTemplateRequest request
-    properties:
-      amount:
-        type: string
-        x-go-name: Amount
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      issuer_pk:
-        description: 'required: asset code is not XLM'
-        type: string
-        x-go-name: IssuerPK
-      memo:
-        type: string
-        x-go-name: Memo
-      memo_type:
-        type: string
-        x-go-name: MemoType
-      recipient_pk:
-        description: 'required: if recipient stellar address is not specified'
-        type: string
-        x-go-name: RecipientPK
-      recipient_stellar_address:
-        description: 'required: if recipient public key is not specified'
-        type: string
-        x-go-name: RecipientStellarAddress
-      template_name:
-        type: string
-        x-go-name: TemplateName
-      wallet_id:
-        format: int64
-        type: integer
-        x-go-name: WalletID
-    required:
-    - wallet_id
-    - asset_code
-    - amount
-    - memo_type
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   AddTemplateResponse:
     description: AddTemplateResponse response
     properties:
@@ -88,29 +24,6 @@ definitions:
         x-go-name: ID
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  AddWalletRequest:
-    description: AddWalletRequest request
-    properties:
-      federation_address:
-        type: string
-        x-go-name: FederationAddress
-      public_key:
-        type: string
-        x-go-name: PublicKey
-      show_on_homescreen:
-        type: boolean
-        x-go-name: ShowOnHomescreen
-      wallet_name:
-        type: string
-        x-go-name: WalletName
-      wallet_type:
-        type: string
-        x-go-name: WalletType
-    required:
-    - public_key
-    - wallet_name
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   AddWalletResponse:
     description: AddWalletResponse request
     properties:
@@ -118,45 +31,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: ID
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  ChangePasswordUpdateRequest:
-    description: ChangePasswordUpdateRequest is the new security data for the user
-    properties:
-      kdf_salt:
-        type: string
-        x-go-name: KDFSalt
-      mnemonic_master_iv:
-        type: string
-        x-go-name: MnemonicMasterIV
-      mnemonic_master_key:
-        type: string
-        x-go-name: MnemonicMasterKey
-      sep10_transaction:
-        type: string
-        x-go-name: SEP10Transaction
-      wordlist_master_iv:
-        type: string
-        x-go-name: WordlistMasterIV
-      wordlist_master_key:
-        type: string
-        x-go-name: WordlistMasterKey
-    required:
-    - kdf_salt
-    - mnemonic_master_key
-    - mnemonic_master_iv
-    - wordlist_master_key
-    - wordlist_master_iv
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  Confirm2FARequest:
-    description: Confirm2FARequest is the data needed for the 2fa registration
-    properties:
-      tfa_code:
-        type: string
-        x-go-name: TfaCode
-    required:
-    - tfa_code
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   Confirm2FAResponse:
@@ -171,17 +45,6 @@ definitions:
       tfa_confirmed:
         type: boolean
         x-go-name: TfaConfirmed
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  ConfirmTokeRequest:
-    description: ConfirmTokeRequest is the data needed for confirming the mail
-    properties:
-      token:
-        description: Mail token to confirm
-        type: string
-        x-go-name: Token
-    required:
-    - token
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   ConfirmTokenResponse:
@@ -241,35 +104,6 @@ definitions:
         x-go-name: Countries
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  EditContactRequest:
-    description: EditContactRequest request-data
-    properties:
-      contact_name:
-        description: Contact name
-        type: string
-        x-go-name: ContactName
-      id:
-        description: Contact id
-        format: int64
-        type: integer
-        x-go-name: ID
-      public_key:
-        description: |-
-          Stellar account public key - identifies the account
-          required: required if stellar address is not specified
-        type: string
-        x-go-name: PublicKey
-      stellar_address:
-        description: |-
-          Stellar account federation address - identifies the account
-          required: required if stellar public key is not specified
-        type: string
-        x-go-name: StellarAddress
-    required:
-    - id
-    - contact_name
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetKnownCurrenciesResponse:
     description: GetKnownCurrenciesResponse response
     properties:
@@ -298,28 +132,6 @@ definitions:
         x-go-name: ShortDescription
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetKnownCurrencyRequest:
-    description: GetKnownCurrencyRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetKnownInflationDestinationRequest:
-    description: GetKnownInflationDestinationRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetKnownInflationDestinationsResponse:
     description: GetKnownInflationDestinationsResponse response
     properties:
@@ -343,16 +155,6 @@ definitions:
       short_description:
         type: string
         x-go-name: ShortDescription
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetOccupationsRequest:
-    description: GetOccupationsRequest - filters occupations by name
-    properties:
-      Name:
-        description: Occupation name
-        type: string
-    required:
-    - Name
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetPaymentTemplateResponse:
@@ -386,17 +188,6 @@ definitions:
       template_name:
         type: string
         x-go-name: TemplateName
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetPaymentTemplatesRequest:
-    description: GetPaymentTemplatesRequest request
-    properties:
-      wallet_id:
-        format: int64
-        type: integer
-        x-go-name: WalletID
-    required:
-    - wallet_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetPromoResponse:
@@ -438,21 +229,6 @@ definitions:
         x-go-name: SEP10Transaction
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetStellarTomlRequest:
-    description: GetStellarTomlRequest used for requesting toml file
-    properties:
-      domain:
-        description: Filter by message id
-        type: string
-        x-go-name: Domain
-      protocol:
-        description: Protocol might be http or https, uses https if not specified
-        type: string
-        x-go-name: Protocol
-    required:
-    - domain
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetStellarTomlResponse:
     description: GetStellarTomlResponse is a toml file content
     properties:
@@ -466,15 +242,6 @@ definitions:
       toml_file_content:
         type: string
         x-go-name: TomlFileContent
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetTfaSecretRequest:
-    description: GetTfaSecretRequest for requesting the tfa secrete
-    properties:
-      sep10_transaction:
-        description: SEP 10 transaction
-        type: string
-        x-go-name: SEP10Transaction
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetTfaSecretResponse:
@@ -576,17 +343,6 @@ definitions:
         x-go-name: ZipCode
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetUserMessageListRequest:
-    description: |-
-      GetUserMessageListRequest used for requesting the user messages
-      if from_archive specified, the data will be read from the archive
-    properties:
-      from_archive:
-        description: Flag to filter the archived messages
-        type: boolean
-        x-go-name: FromArchive
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetUserMessageListResponse:
     description: GetUserMessageListResponse response for the api call
     properties:
@@ -603,22 +359,6 @@ definitions:
           $ref: '#/definitions/MessageListItem'
         type: array
         x-go-name: Messages
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetUserMessageRequest:
-    description: GetUserMessageRequest used for requesting the user message
-    properties:
-      from_archive:
-        description: Flag to filter the archived messages
-        type: boolean
-        x-go-name: FromArchive
-      message_id:
-        description: Filter by message id
-        format: int64
-        type: integer
-        x-go-name: MessageID
-    required:
-    - message_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetUserWalletsResponse:
@@ -647,17 +387,6 @@ definitions:
       wallet_type:
         type: string
         x-go-name: WalletType
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  GetWalletRequest:
-    description: GetWalletRequest used for requesting the wallet
-    properties:
-      wallet_id:
-        format: int64
-        type: integer
-        x-go-name: WalletID
-    required:
-    - wallet_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   GetWalletResponse:
@@ -714,19 +443,6 @@ definitions:
         x-go-name: LockoutMinutes
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  LoginStep1Request:
-    description: LoginStep1Request is the data needed for the first step of the login
-    properties:
-      email:
-        type: string
-        x-go-name: Email
-      tfa_code:
-        type: string
-        x-go-name: TfaCode
-    required:
-    - email
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   LoginStep1Response:
     description: LoginStep1Response response for API
     properties:
@@ -768,14 +484,6 @@ definitions:
         x-go-name: WordlistMasterKeyEncryptionIV
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  LoginStep2Request:
-    description: LoginStep2Request is the data needed for the second step of the login
-    properties:
-      sep10_transaction:
-        type: string
-        x-go-name: SEP10Transaction
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   LoginStep2Response:
     description: LoginStep2Response to the api
     properties:
@@ -805,94 +513,12 @@ definitions:
         x-go-name: TfaSecret
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  LostPasswordRequest:
-    description: LostPasswordRequest is the data needed for the first step of the
-      login
-    properties:
-      email:
-        type: string
-        x-go-name: Email
-    required:
-    - email
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  LostPasswordTfaRequest:
-    description: |-
-      LostPasswordTfaRequest is the data needed for the first step of the login
-      The user clicked the confirm link and thus called the /ico/confirm_token function, which sets the simple-auth-token
-    properties:
-      tfa_code:
-        type: string
-        x-go-name: TfaCode
-    required:
-    - tfa_code
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   LostPasswordTfaResponse:
     description: LostPasswordTfaResponse returned from the API
     properties:
       public_key_0:
         type: string
         x-go-name: PublicKey0
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  LostPasswordUpdateRequest:
-    description: LostPasswordUpdateRequest is the new secuurity data for the user
-    properties:
-      encrypted_mnemonic:
-        type: string
-        x-go-name: EncryptedMnemonic
-      encrypted_wordlist:
-        type: string
-        x-go-name: EncryptedWordlist
-      encryption_mnemonic_iv:
-        type: string
-        x-go-name: EncryptedMnemonicIV
-      encryption_wordlist_iv:
-        type: string
-        x-go-name: EncryptionWordlistIV
-      kdf_salt:
-        type: string
-        x-go-name: KDFSalt
-      mnemonic_master_iv:
-        type: string
-        x-go-name: MnemonicMasterIV
-      mnemonic_master_key:
-        type: string
-        x-go-name: MnemonicMasterKey
-      public_key_0:
-        type: string
-        x-go-name: PublicKey0
-      sep10_transaction:
-        type: string
-        x-go-name: SEP10Transaction
-      wordlist_master_iv:
-        type: string
-        x-go-name: WordlistMasterIV
-      wordlist_master_key:
-        type: string
-        x-go-name: WordlistMasterKey
-    required:
-    - kdf_salt
-    - mnemonic_master_key
-    - mnemonic_master_iv
-    - encrypted_mnemonic
-    - encryption_mnemonic_iv
-    - wordlist_master_key
-    - wordlist_master_iv
-    - encrypted_wordlist
-    - encryption_wordlist_iv
-    - public_key_0
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  LostTfaRequest:
-    description: LostTfaRequest initiates the reset 2fa function
-    properties:
-      email:
-        type: string
-        x-go-name: Email
-    required:
-    - email
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   MessageItem:
@@ -936,14 +562,6 @@ definitions:
       need2fa_reset_pwd:
         type: boolean
         x-go-name: Need2FAResetPassword
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  NewTfaRequest:
-    description: NewTfaRequest for proving the password
-    properties:
-      sep10_transaction:
-        type: string
-        x-go-name: SEP10Transaction
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   NewTfaResponse:
@@ -1003,131 +621,6 @@ definitions:
         x-go-name: MimeType
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  RegisterUserRequest:
-    description: RegisterUserRequest is the data needed for registration
-    properties:
-      additional_name:
-        type: string
-        x-go-name: AdditionalName
-      address:
-        type: string
-        x-go-name: Address
-      bank_account_number:
-        type: string
-        x-go-name: BankAccountNumber
-      bank_number:
-        type: string
-        x-go-name: BankNumber
-      bank_phone_number:
-        type: string
-        x-go-name: BankPhoneNumber
-      birth_country_code:
-        type: string
-        x-go-name: BirthCountryCode
-      birth_day:
-        type: string
-        x-go-name: BirthDay
-      birth_place:
-        type: string
-        x-go-name: BirthPlace
-      city:
-        type: string
-        x-go-name: City
-      country_code:
-        type: string
-        x-go-name: CountryCode
-      email:
-        type: string
-        x-go-name: Email
-      employer_address:
-        type: string
-        x-go-name: EmployerAddress
-      employer_name:
-        type: string
-        x-go-name: EmployerName
-      forename:
-        type: string
-        x-go-name: Forename
-      kdf_salt:
-        type: string
-        x-go-name: KDFSalt
-      language_code:
-        type: string
-        x-go-name: LanguageCode
-      lastname:
-        type: string
-        x-go-name: Lastname
-      mnemonic:
-        type: string
-        x-go-name: Mnemonic
-      mnemonic_iv:
-        type: string
-        x-go-name: MnemonicIV
-      mnemonic_master_iv:
-        type: string
-        x-go-name: MnemonicMasterIV
-      mnemonic_master_key:
-        type: string
-        x-go-name: MnemonicMasterKey
-      mobile_nr:
-        type: string
-        x-go-name: MobileNr
-      nationality:
-        type: string
-        x-go-name: Nationality
-      occupation_code08:
-        type: string
-        x-go-name: OccupationCode08
-      occupation_code88:
-        type: string
-        x-go-name: OccupationCode88
-      occupation_name:
-        type: string
-        x-go-name: OccupationName
-      public_key_0:
-        type: string
-        x-go-name: PublicKey0
-      salutation:
-        type: string
-        x-go-name: Salutation
-      state:
-        type: string
-        x-go-name: State
-      tax_id:
-        type: string
-        x-go-name: TaxID
-      tax_id_name:
-        type: string
-        x-go-name: TaxIDName
-      wordlist:
-        type: string
-        x-go-name: Wordlist
-      wordlist_iv:
-        type: string
-        x-go-name: WordlistIV
-      wordlist_master_iv:
-        type: string
-        x-go-name: WordlistMasterIV
-      wordlist_master_key:
-        type: string
-        x-go-name: WordlistMasterKey
-      zip_code:
-        type: string
-        x-go-name: ZipCode
-    required:
-    - email
-    - kdf_salt
-    - mnemonic_master_key
-    - mnemonic_master_iv
-    - wordlist_master_key
-    - wordlist_master_iv
-    - mnemonic
-    - mnemonic_iv
-    - wordlist
-    - wordlist_iv
-    - public_key_0
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   RegisterUserResponse:
     description: RegisterUserResponse response for registration
     properties:
@@ -1142,62 +635,6 @@ definitions:
         x-go-name: TFASecret
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  RemoveContactRequest:
-    description: RemoveContactRequest request-data
-    properties:
-      id:
-        description: Contact id
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  RemovePaymentTemplateRequest:
-    description: RemovePaymentTemplateRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  RemoveWalletFederationAddressRequest:
-    description: RemoveWalletFederationAddressRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  RemoveWalletRequest:
-    description: RemoveWalletRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  ResendConfirmationMailRequest:
-    description: ResendConfirmationMailRequest is the data needed for confirming the
-      mail
-    properties:
-      email:
-        type: string
-        x-go-name: Email
-    required:
-    - email
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   SalutationResponse:
     description: SalutationResponse List of all salutations
     properties:
@@ -1206,27 +643,6 @@ definitions:
           type: string
         type: array
         x-go-name: Salutations
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  StellarTransactionRequest:
-    description: StellarTransactionRequest request-data
-    properties:
-      end_timestamp:
-        description: TX-Endtime timestamp without time zone, eg. 2006-01-02 15:04:05
-        type: string
-        x-go-name: EndTimestamp
-      start_timestamp:
-        description: TX-Starting timestamp without time zone, eg. 2006-01-02 15:04:05
-        type: string
-        x-go-name: StartTimestamp
-      stellar_account_pk:
-        description: Filter for stellar account
-        type: string
-        x-go-name: StellarAccountPK
-    required:
-    - stellar_account_pk
-    - start_timestamp
-    - end_timestamp
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   StellarTransactionResponse:
@@ -1272,177 +688,6 @@ definitions:
       tx_transaction_hash:
         type: string
         x-go-name: TransactionHash
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  UpdateSecurityDataRequest:
-    description: UpdateSecurityDataRequest is the data needed for updateing the data
-    properties:
-      kdf_salt:
-        type: string
-        x-go-name: KDFSalt
-      mnemonic:
-        type: string
-        x-go-name: Mnemonic
-      mnemonic_iv:
-        type: string
-        x-go-name: MnemonicIV
-      mnemonic_master_iv:
-        type: string
-        x-go-name: MnemonicMasterIV
-      mnemonic_master_key:
-        type: string
-        x-go-name: MnemonicMasterKey
-      public_key_0:
-        type: string
-        x-go-name: PublicKey0
-      tfa_code:
-        type: string
-        x-go-name: TfaCode
-      wordlist:
-        type: string
-        x-go-name: Wordlist
-      wordlist_iv:
-        type: string
-        x-go-name: WordlistIV
-      wordlist_master_iv:
-        type: string
-        x-go-name: WordlistMasterIV
-      wordlist_master_key:
-        type: string
-        x-go-name: WordlistMasterKey
-    required:
-    - kdf_salt
-    - mnemonic_master_key
-    - mnemonic_master_iv
-    - wordlist_master_key
-    - wordlist_master_iv
-    - mnemonic
-    - mnemonic_iv
-    - wordlist
-    - wordlist_iv
-    - public_key_0
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  UpdateUserDataRequest:
-    description: UpdateUserDataRequest - edit user request
-    properties:
-      additional_name:
-        type: string
-        x-go-name: AdditionalName
-      address:
-        type: string
-        x-go-name: Address
-      bank_account_number:
-        type: string
-        x-go-name: BankAccountNumber
-      bank_number:
-        type: string
-        x-go-name: BankNumber
-      bank_phone_number:
-        type: string
-        x-go-name: BankPhoneNumber
-      birth_country_code:
-        type: string
-        x-go-name: BirthCountryCode
-      birth_day:
-        type: string
-        x-go-name: BirthDay
-      birth_place:
-        type: string
-        x-go-name: BirthPlace
-      city:
-        type: string
-        x-go-name: City
-      country_code:
-        type: string
-        x-go-name: CountryCode
-      employer_address:
-        type: string
-        x-go-name: EmployerAddress
-      employer_name:
-        type: string
-        x-go-name: EmployerName
-      forename:
-        type: string
-        x-go-name: Forename
-      language_code:
-        type: string
-        x-go-name: LanguageCode
-      lastname:
-        type: string
-        x-go-name: Lastname
-      mobile_nr:
-        type: string
-        x-go-name: MobileNR
-      nationality:
-        type: string
-        x-go-name: Nationality
-      occupation_code08:
-        type: string
-        x-go-name: OccupationCode08
-      occupation_code88:
-        type: string
-        x-go-name: OccupationCode88
-      occupation_name:
-        type: string
-        x-go-name: OccupationName
-      salutation:
-        type: string
-        x-go-name: Salutation
-      state:
-        type: string
-        x-go-name: State
-      tax_id:
-        type: string
-        x-go-name: TaxID
-      tax_id_name:
-        type: string
-        x-go-name: TaxIDName
-      zip_code:
-        type: string
-        x-go-name: ZipCode
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  UpdateUserShowMemoRequest:
-    description: UpdateUserShowMemoRequest - edit user show memo field request
-    properties:
-      show_memo:
-        type: boolean
-        x-go-name: ShowMemo
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  UploadKycDocumentRequest:
-    description: UploadKycDocumentRequest is the data needed for the kyc document
-    properties:
-      document_side:
-        description: document side, e.g. front, back
-        type: string
-        x-go-name: DocumentSide
-      document_type:
-        description: document type, e.g. passport, id_card
-        type: string
-        x-go-name: DocumentType
-      id_country_code:
-        description: Country code of the id card
-        type: string
-        x-go-name: IDCountryCode
-      id_expiration_date:
-        description: Expiration date of the id card
-        format: date-time
-        type: string
-        x-go-name: IDExpirationDate
-      id_issue_date:
-        description: Issuing date of the id card
-        format: date-time
-        type: string
-        x-go-name: IDIssueDate
-      id_number:
-        description: Number of the id card
-        type: string
-        x-go-name: IDNumber
-    required:
-    - document_type
-    - document_side
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
   UploadKycDocumentResponse:
@@ -1501,71 +746,6 @@ definitions:
       wordlist_master_key_encryption_iv:
         type: string
         x-go-name: WordlistMasterKeyEncryptionIV
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  WalletChangeDataRequest:
-    description: WalletChangeDataRequest request
-    properties:
-      federation_address:
-        type: string
-        x-go-name: FederationAddress
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      wallet_name:
-        type: string
-        x-go-name: WalletName
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  WalletChangeOrderRequest:
-    description: WalletChangeOrderRequest - request
-    properties:
-      order_nr:
-        format: int64
-        type: integer
-        x-go-name: OrderNr
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
-    - order_nr
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  WalletSetHomescreenRequest:
-    description: WalletSetHomescreenRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      visible:
-        type: boolean
-        x-go-name: Visible
-    required:
-    - id
-    - visible
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
-  stellarOperations:
-    properties:
-      application_order:
-        format: int64
-        type: integer
-        x-go-name: ApplicationOrder
-      details:
-        type: string
-        x-go-name: Details
-      source_account:
-        type: string
-        x-go-name: SourceAccount
-      type:
-        format: int64
-        type: integer
-        x-go-name: Type
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/userapi
 host: demoapi.lumenshine.com

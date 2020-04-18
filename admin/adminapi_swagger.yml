@@ -1,34 +1,4 @@
 definitions:
-  ActivatePromoRequest:
-    description: ActivatePromoRequest request
-    properties:
-      active:
-        type: boolean
-        x-go-name: Active
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    - active
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  ActivateRequest:
-    description: ActivateRequest for activate/deactivate
-    properties:
-      active:
-        type: boolean
-        x-go-name: Active
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    - active
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   ActivateResponse:
     description: ActivateResponse after activation/deactivation
     properties:
@@ -41,254 +11,6 @@ definitions:
         x-go-name: ID
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddAllowtrustRequest:
-    description: AddAllowtrustRequest signer info
-    properties:
-      issuing_account_public_key:
-        type: string
-        x-go-name: IssuingPublicKey
-      signer_description:
-        type: string
-        x-go-name: SignerDescription
-      signer_name:
-        type: string
-        x-go-name: SignerName
-      signer_public_key:
-        type: string
-        x-go-name: SignerPublicKey
-      signer_secret_seed:
-        type: string
-        x-go-name: SignerSecretSeed
-    required:
-    - issuing_account_public_key
-    - signer_public_key
-    - signer_secret_seed
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddIcoPhaseRequest:
-    description: AddIcoPhaseRequest - request
-    properties:
-      activated_currencies:
-        items:
-          $ref: '#/definitions/PhaseCurrency'
-        type: array
-        x-go-name: ActivatedCurrencies
-      distribution_account_pk:
-        type: string
-        x-go-name: DistributionPublicKey
-      end:
-        type: string
-        x-go-name: EndDate
-      ico_id:
-        format: int64
-        type: integer
-        x-go-name: IcoID
-      max_tokens_per_order:
-        format: int64
-        type: integer
-        x-go-name: MaxPerOrder
-      min_tokens_per_order:
-        format: int64
-        type: integer
-        x-go-name: MinPerOrder
-      phase_name:
-        type: string
-        x-go-name: Name
-      post_signer_pk:
-        type: string
-        x-go-name: PostSignerPublicKey
-      post_signer_seed:
-        type: string
-        x-go-name: PostSignerSeed
-      pre_signer_pk:
-        type: string
-        x-go-name: PreSignerPublicKey
-      pre_signer_seed:
-        type: string
-        x-go-name: PreSignerSeed
-      start:
-        type: string
-        x-go-name: StartDate
-      tokens_to_distribute:
-        format: int64
-        type: integer
-        x-go-name: TokensToDistribute
-    required:
-    - ico_id
-    - phase_name
-    - distribution_account_pk
-    - pre_signer_pk
-    - pre_signer_seed
-    - post_signer_pk
-    - post_signer_seed
-    - start
-    - end
-    - tokens_to_distribute
-    - min_tokens_per_order
-    - max_tokens_per_order
-    - activated_currencies
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddIcoRequest:
-    description: AddIcoRequest - request
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      issuing_account_pk:
-        type: string
-        x-go-name: IssuerPublicKey
-      kyc:
-        type: boolean
-        x-go-name: Kyc
-      name:
-        type: string
-        x-go-name: Name
-      sales_model:
-        type: string
-        x-go-name: SalesModel
-      supported_currencies:
-        items:
-          format: int64
-          type: integer
-        type: array
-        x-go-name: SupportedCurrencies
-    required:
-    - name
-    - sales_model
-    - issuing_account_pk
-    - asset_code
-    - supported_currencies
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddKnownCurrencyRequest:
-    description: AddKnownCurrencyRequest request
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      issuer_public_key:
-        type: string
-        x-go-name: IssuerPublicKey
-      long_description:
-        type: string
-        x-go-name: LongDescription
-      name:
-        type: string
-        x-go-name: Name
-      short_description:
-        type: string
-        x-go-name: ShortDescription
-    required:
-    - name
-    - issuer_public_key
-    - asset_code
-    - short_description
-    - long_description
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddKnownInflationDestinationRequest:
-    description: AddKnownInflationDestinationRequest request
-    properties:
-      issuer_public_key:
-        type: string
-        x-go-name: IssuerPublicKey
-      long_description:
-        type: string
-        x-go-name: LongDescription
-      name:
-        type: string
-        x-go-name: Name
-      short_description:
-        type: string
-        x-go-name: ShortDescription
-    required:
-    - name
-    - issuer_public_key
-    - short_description
-    - long_description
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddOtherSignerRequest:
-    description: AddOtherSignerRequest signer info
-    properties:
-      account_public_key:
-        type: string
-        x-go-name: IssuingPublicKey
-      signer_description:
-        type: string
-        x-go-name: SignerDescription
-      signer_name:
-        type: string
-        x-go-name: SignerName
-      signer_public_key:
-        type: string
-        x-go-name: SignerPublicKey
-      signer_secret_seed:
-        type: string
-        x-go-name: SignerSecretSeed
-    required:
-    - account_public_key
-    - signer_public_key
-    - signer_secret_seed
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddPromoRequest:
-    description: AddPromoRequest request
-    properties:
-      name:
-        type: string
-        x-go-name: Name
-      text:
-        type: string
-        x-go-name: Text
-      title:
-        type: string
-        x-go-name: Title
-      type:
-        type: string
-        x-go-name: Type
-    required:
-    - name
-    - type
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AddTrustlineRequest:
-    description: AddTrustlineRequest - info
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      issuing_account_public_key:
-        type: string
-        x-go-name: IssuingPublicKey
-      reason:
-        type: string
-        x-go-name: Reason
-      status:
-        type: string
-        x-go-name: Status
-      trusting_account_public_key:
-        type: string
-        x-go-name: TrustorPublicKey
-    required:
-    - trusting_account_public_key
-    - issuing_account_public_key
-    - asset_code
-    - status
-    - reason
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  AssetCodesRequest:
-    description: AssetCodesRequest new user information
-    properties:
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   Button:
     description: Button - one button
     properties:
@@ -298,54 +20,6 @@ definitions:
       name:
         type: string
         x-go-name: Name
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  ChangeOrderKnownCurrencyRequest:
-    description: ChangeOrderKnownCurrencyRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      order_modifier:
-        format: int64
-        type: integer
-        x-go-name: OrderModifier
-    required:
-    - id
-    - order_modifier
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  ChangeOrderKnownInflationDestinationRequest:
-    description: ChangeOrderKnownInflationDestinationRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      order_modifier:
-        format: int64
-        type: integer
-        x-go-name: OrderModifier
-    required:
-    - id
-    - order_modifier
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  ChangeOrderPromoRequest:
-    description: ChangeOrderPromoRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      order_modifier:
-        format: int64
-        type: integer
-        x-go-name: OrderModifier
-    required:
-    - id
-    - order_modifier
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   CustomerDetailsResponse:
@@ -441,92 +115,6 @@ definitions:
         x-go-name: ZipCode
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  CustomerEditRequest:
-    description: CustomerEditRequest - request data
-    properties:
-      additional_name:
-        type: string
-        x-go-name: AdditionalName
-      address:
-        type: string
-        x-go-name: Address
-      bank_account_number:
-        type: string
-        x-go-name: BankAccountNumber
-      bank_number:
-        type: string
-        x-go-name: BankNumber
-      bank_phone_number:
-        type: string
-        x-go-name: BankPhoneNumber
-      birth_country_code:
-        type: string
-        x-go-name: BirthCountryCode
-      birth_day:
-        type: string
-        x-go-name: BirthDay
-      birth_place:
-        type: string
-        x-go-name: BirthPlace
-      city:
-        type: string
-        x-go-name: City
-      country_code:
-        type: string
-        x-go-name: CountryCode
-      employer_address:
-        type: string
-        x-go-name: EmployerAddress
-      employer_name:
-        type: string
-        x-go-name: EmployerName
-      forename:
-        type: string
-        x-go-name: Forename
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      language_code:
-        type: string
-        x-go-name: LanguageCode
-      lastname:
-        type: string
-        x-go-name: Lastname
-      mobile_nr:
-        type: string
-        x-go-name: MobileNR
-      nationality:
-        type: string
-        x-go-name: Nationality
-      occupation_code08:
-        type: string
-        x-go-name: OccupationCode08
-      occupation_code88:
-        type: string
-        x-go-name: OccupationCode88
-      occupation_name:
-        type: string
-        x-go-name: OccupationName
-      salutation:
-        type: string
-        x-go-name: Salutation
-      state:
-        type: string
-        x-go-name: State
-      tax_id:
-        type: string
-        x-go-name: TaxID
-      tax_id_name:
-        type: string
-        x-go-name: TaxIDName
-      zip_code:
-        type: string
-        x-go-name: ZipCode
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   CustomerListItem:
     description: CustomerListItem is one item in the list
     properties:
@@ -556,55 +144,6 @@ definitions:
         x-go-name: RegistrationDate
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  CustomerListRequest:
-    description: CustomerListRequest for filtering the customers
-    properties:
-      filter_customer_id:
-        format: int64
-        type: integer
-        x-go-name: FilterCustomerID
-      filter_email:
-        type: string
-        x-go-name: FilterEmail
-      filter_forename:
-        type: string
-        x-go-name: FilterForeName
-      filter_kyc_status:
-        items:
-          type: string
-        type: array
-        x-go-name: FilterKycStatus
-      filter_lastname:
-        type: string
-        x-go-name: FilterLastName
-      page_number:
-        format: int64
-        type: integer
-        x-go-name: PageNumber
-      per_page_count:
-        format: int64
-        type: integer
-        x-go-name: PerPageCount
-      sort_customer_id:
-        type: string
-        x-go-name: SortCustomerID
-      sort_email:
-        type: string
-        x-go-name: SortEmail
-      sort_forename:
-        type: string
-        x-go-name: SortForeName
-      sort_last_login:
-        type: string
-        x-go-name: SortLastLogin
-      sort_lastname:
-        type: string
-        x-go-name: SortLastName
-      sort_registration_date:
-        type: string
-        x-go-name: SortRegistrationDate
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   CustomerListResponse:
     description: CustomerListResponse list of customers
     properties:
@@ -621,203 +160,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: TotalCount
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  CustomerOrdersRequest:
-    description: CustomerOrdersRequest to get the orders
-    properties:
-      page_number:
-        format: int64
-        type: integer
-        x-go-name: PageNumber
-      per_page_count:
-        format: int64
-        type: integer
-        x-go-name: PerPageCount
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  CustomerUpdateKYCStatusRequest:
-    description: CustomerUpdateKYCStatusRequest - request
-    properties:
-      id:
-        description: the customer id
-        format: int64
-        type: integer
-        x-go-name: ID
-      kyc_status:
-        description: KYC status, e.g. InReview, Pending
-        type: string
-        x-go-name: KycStatus
-    required:
-    - id
-    - kyc_status
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  CustomerWalletsRequest:
-    description: CustomerWalletsRequest to get the wallets
-    properties:
-      page_number:
-        format: int64
-        type: integer
-        x-go-name: PageNumber
-      per_page_count:
-        format: int64
-        type: integer
-        x-go-name: PerPageCount
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  DeleteKnownInflationDestinationRequest:
-    description: DeleteKnownInflationDestinationRequest request used to delete
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  EditAllowtrustSignerRequest:
-    description: EditAllowtrustSignerRequest edits signer
-    properties:
-      description:
-        type: string
-        x-go-name: Description
-      name:
-        type: string
-        x-go-name: Name
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
-    - name
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  EditKnownCurrencyRequest:
-    description: EditKnownCurrencyRequest request
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      issuer_public_key:
-        type: string
-        x-go-name: IssuerPublicKey
-      long_description:
-        type: string
-        x-go-name: LongDescription
-      name:
-        type: string
-        x-go-name: Name
-      short_description:
-        type: string
-        x-go-name: ShortDescription
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  EditKnownInflationDestinationRequest:
-    description: EditKnownInflationDestinationRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      issuer_public_key:
-        type: string
-        x-go-name: IssuerPublicKey
-      long_description:
-        type: string
-        x-go-name: LongDescription
-      name:
-        type: string
-        x-go-name: Name
-      short_description:
-        type: string
-        x-go-name: ShortDescription
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  EditOtherSignerRequest:
-    description: EditOtherSignerRequest edits signer
-    properties:
-      description:
-        type: string
-        x-go-name: Description
-      name:
-        type: string
-        x-go-name: Name
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
-    - name
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  EditPromoRequest:
-    description: EditPromoRequest request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      name:
-        type: string
-        x-go-name: Name
-      text:
-        type: string
-        x-go-name: Text
-      title:
-        type: string
-        x-go-name: Title
-      type:
-        type: string
-        x-go-name: Type
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  EditRequest:
-    description: EditRequest - edits user information
-    properties:
-      active:
-        type: boolean
-        x-go-name: Active
-      firstname:
-        type: string
-        x-go-name: FirstName
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      lastname:
-        type: string
-        x-go-name: LastName
-      password:
-        type: string
-        x-go-name: Password
-      phone:
-        type: string
-        x-go-name: Phone
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  ExchangeCurrencyListRequest:
-    description: ExchangeCurrencyListRequest request
-    properties:
-      ico_id:
-        format: int64
-        type: integer
-        x-go-name: IcoID
-    required:
-    - ico_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   ExchangeCurrencyListResponse:
@@ -897,17 +239,6 @@ definitions:
         x-go-name: ShortDescription
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  GetPromoRequest:
-    description: GetPromoRequest request used in get one and delete
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   GetPromoResponse:
     description: GetPromoResponse response
     properties:
@@ -937,16 +268,6 @@ definitions:
       type:
         type: string
         x-go-name: Type
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  GetSignerSeedRequest:
-    description: GetSignerSeedRequest new user information
-    properties:
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   ICOListResponse:
@@ -981,53 +302,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: TokensReleased
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  IssuerAssetCodeRequest:
-    description: IssuerAssetCodeRequest new user information
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
-    - asset_code
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  KnownCurrencyDeleteRequest:
-    description: KnownCurrencyDeleteRequest request used in get one and delete
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  KnownCurrencyIDRequest:
-    description: KnownCurrencyIDRequest request used in get one and delete
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  KnownInflationDestinationIDRequest:
-    description: KnownInflationDestinationIDRequest request used to get one
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   KycDetailsResponse:
@@ -1138,6 +412,19 @@ definitions:
         x-go-name: TotalCount
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
+  PaginationResponseStruct:
+    description: PaginationResponseStruct represents the pagination results
+    properties:
+      page_number:
+        format: int64
+        type: integer
+        x-go-name: PageNumber
+      total_count:
+        format: int64
+        type: integer
+        x-go-name: TotalCount
+    type: object
+    x-go-package: github.com/Soneso/lumenshine-backend/db/pageinate
   PhaseCurrency:
     description: PhaseCurrency - request
     properties:
@@ -1155,17 +442,6 @@ definitions:
         x-go-name: Price
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  PromoDeleteRequest:
-    description: PromoDeleteRequest request used in get one and delete
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   PromoImageResponse:
     description: PromoImageResponse - image content and details
     properties:
@@ -1178,42 +454,6 @@ definitions:
       mime_type:
         type: string
         x-go-name: MimeType
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  RegisterRequest:
-    description: RegisterRequest new user information
-    properties:
-      active:
-        type: boolean
-        x-go-name: Active
-      email:
-        type: string
-        x-go-name: Email
-      firstname:
-        type: string
-        x-go-name: FirstName
-      groups:
-        items:
-          type: string
-        type: array
-        x-go-name: Groups
-      lastname:
-        type: string
-        x-go-name: LastName
-      password:
-        type: string
-        x-go-name: Password
-      phone:
-        type: string
-        x-go-name: Phone
-    required:
-    - email
-    - password
-    - firstname
-    - lastname
-    - phone
-    - active
-    - groups
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   RegisterResponse:
@@ -1229,75 +469,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: ID
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  RemoveIcoRequest:
-    description: RemoveIcoRequest - request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  RemoveOtherSignerRequest:
-    description: RemoveOtherSignerRequest new user information
-    properties:
-      account_public_key:
-        type: string
-        x-go-name: IssuingPublicKey
-      signer_public_key:
-        type: string
-        x-go-name: SignerPublicKey
-    required:
-    - account_public_key
-    - signer_public_key
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  RemoveSignerRequest:
-    description: RemoveSignerRequest new user information
-    properties:
-      issuing_account_public_key:
-        type: string
-        x-go-name: IssuingPublicKey
-      signer_public_key:
-        type: string
-        x-go-name: SignerPublicKey
-    required:
-    - issuing_account_public_key
-    - signer_public_key
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  RemoveTrustlineRequest:
-    description: RemoveTrustlineRequest - info
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      issuing_account_public_key:
-        type: string
-        x-go-name: IssuingPublicKey
-      trusting_account_public_key:
-        type: string
-        x-go-name: TrustorPublicKey
-    required:
-    - trusting_account_public_key
-    - issuing_account_public_key
-    - asset_code
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  Reset2faRequest:
-    description: Reset2faRequest - request
-    properties:
-      id:
-        description: the customer id
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   SearchAccountsItem:
@@ -1323,43 +494,6 @@ definitions:
         x-go-name: Type
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  SearchAccountsRequest:
-    description: SearchAccountsRequest for filtering the issuer's trusting accounts
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      filter_name:
-        type: string
-        x-go-name: FilterName
-      filter_public_key:
-        type: string
-        x-go-name: FilterPublicKey
-      filter_statuses:
-        items:
-          type: string
-        type: array
-        x-go-name: FilterStatuses
-      filter_type:
-        type: string
-        x-go-name: FilterType
-      issuing_account_public_key:
-        type: string
-        x-go-name: IssueingPublicKey
-      page_number:
-        format: int64
-        type: integer
-        x-go-name: PageNumber
-      per_page_count:
-        format: int64
-        type: integer
-        x-go-name: PerPageCount
-    required:
-    - issuing_account_public_key
-    - asset_code
-    - filter_type
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   SearchAccountsResponse:
     description: SearchAccountsResponse list of accounts
     properties:
@@ -1378,69 +512,6 @@ definitions:
         x-go-name: TotalCount
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  SetGroupsRequest:
-    description: SetGroupsRequest information
-    properties:
-      groups:
-        items:
-          type: string
-        type: array
-        x-go-name: Groups
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-    required:
-    - id
-    - groups
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  SignerType:
-    description: SignerType holds the type of a signer
-    type: string
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  StellarAccountAddRequest:
-    description: StellarAccountAddRequest new user information
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      description:
-        type: string
-        x-go-name: Description
-      name:
-        type: string
-        x-go-name: Name
-      public_key:
-        type: string
-        x-go-name: PublicKey
-      type:
-        type: string
-        x-go-name: Type
-    required:
-    - public_key
-    - name
-    - description
-    - type
-    - asset_code
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  StellarAccountEditRequest:
-    description: StellarAccountEditRequest new user information
-    properties:
-      description:
-        type: string
-        x-go-name: Description
-      name:
-        type: string
-        x-go-name: Name
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   StellarAccountItem:
     description: StellarAccountItem new user information
     properties:
@@ -1456,16 +527,6 @@ definitions:
       type:
         type: string
         x-go-name: Type
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  StellarAccountRequest:
-    description: StellarAccountRequest new user information
-    properties:
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   StellarAccountResponse:
@@ -1500,10 +561,6 @@ definitions:
         x-go-name: Type
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  StellarAccountType:
-    description: StellarAccountType holds the type of the account
-    type: string
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   StellarSigner:
     description: StellarSigner - signer details
     properties:
@@ -1516,73 +573,6 @@ definitions:
       public_key:
         type: string
         x-go-name: SignerPublicKey
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  UpdateIcoCurrenciesRequest:
-    description: UpdateIcoCurrenciesRequest - request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      supported_currencies:
-        items:
-          format: int64
-          type: integer
-        type: array
-        x-go-name: SupportedCurrencies
-    required:
-    - id
-    - supported_currencies
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  UpdateIcoIssuerRequest:
-    description: UpdateIcoIssuerRequest - request
-    properties:
-      asset_code:
-        type: string
-        x-go-name: AssetCode
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      issuing_account_pk:
-        type: string
-        x-go-name: IssuerPublicKey
-    required:
-    - id
-    - issuing_account_pk
-    - asset_code
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  UpdateIcoKycRequest:
-    description: UpdateIcoKycRequest - request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      kyc:
-        type: boolean
-        x-go-name: Kyc
-    required:
-    - id
-    - kyc
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  UpdateIcoNameRequest:
-    description: UpdateIcoNameRequest - request
-    properties:
-      id:
-        format: int64
-        type: integer
-        x-go-name: ID
-      name:
-        type: string
-        x-go-name: Name
-    required:
-    - id
-    - name
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   UserAuthData:
@@ -1689,16 +679,6 @@ definitions:
         format: int64
         type: integer
         x-go-name: TotalCount
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/admin/api
-  WorkerAccountTrustlinesRequest:
-    description: WorkerAccountTrustlinesRequest - info
-    properties:
-      public_key:
-        type: string
-        x-go-name: PublicKey
-    required:
-    - public_key
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/admin/api
   WorkerTrustlineItem:

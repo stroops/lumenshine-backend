@@ -95,7 +95,7 @@ func (l *Channel) getBlock(blockNumber uint64) (*types.Block, error) {
 
 func (l *Channel) processBlock(block *types.Block) error {
 	transactions := block.Transactions()
-	blockTime := time.Unix(block.Time().Int64(), 0)
+	blockTime := time.Unix(int64(block.Time()), 0)
 
 	localLog := l.log.WithFields(logrus.Fields{
 		"blockNumber":  block.NumberU64(),

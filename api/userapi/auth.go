@@ -507,10 +507,10 @@ func verifySEP10Data(txStr string, userID int64, uc *mw.IcopContext, c *gin.Cont
 		}
 
 		now := xdr.Uint64(time.Now().Unix())
-		if now < tx.TimeBounds.MinTime || tx.TimeBounds.MinTime == 0 {
+		if now < xdr.Uint64(tx.TimeBounds.MinTime) || tx.TimeBounds.MinTime == 0 {
 			return false, "", fmt.Errorf("tx not valid yet")
 		}
-		if now > tx.TimeBounds.MaxTime || tx.TimeBounds.MaxTime == 0 {
+		if now > xdr.Uint64(tx.TimeBounds.MaxTime) || tx.TimeBounds.MaxTime == 0 {
 			return false, "", fmt.Errorf("tx not valid any more")
 		}
 

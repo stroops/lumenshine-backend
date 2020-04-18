@@ -94,7 +94,7 @@
   version = "2.3.0"
 
 [[constraint]]
-  name = "github.com/rsc/qr"
+  name = "github.com/rsc.io/qr"
   version = "0.1.0"
 
 [[constraint]]

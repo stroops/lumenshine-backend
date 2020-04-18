@@ -14,7 +14,7 @@ import (
 	"github.com/Soneso/lumenshine-backend/services/2fa/cmd"
 
 	"github.com/dgryski/dgoogauth"
-	qr "github.com/rsc/qr"
+	qr "rsc.io/qr"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"

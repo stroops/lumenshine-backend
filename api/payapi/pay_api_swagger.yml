@@ -1,33 +1,5 @@
 basePath: /portal/pay
 definitions:
-  CreateOrderRequest:
-    description: CreateOrderRequest is the data for creating an order
-    properties:
-      exchange_currency_id:
-        description: ID of the Exchange currency
-        format: int64
-        type: integer
-        x-go-name: ExchangeCurrencyID
-      ico_phase_id:
-        description: ID of the Ico-Phase
-        format: int64
-        type: integer
-        x-go-name: IcoPhaseID
-      ordered_token_amount:
-        description: Ammount of tokens orderd
-        format: int64
-        type: integer
-        x-go-name: OrderedTokenAmount
-      stellar_user_public_key:
-        description: Stellar Public Key of the user for the payment/coins
-        type: string
-        x-go-name: StellarUserPublicKey
-    required:
-    - ico_phase_id
-    - ordered_token_amount
-    - exchange_currency_id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   CreateOrderResponse:
     description: CreateOrderResponse is the return data , for creating a new order
     properties:
@@ -129,18 +101,6 @@ definitions:
         x-go-name: PricePerToken
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  ExecuteTransactionRequest:
-    description: ExecuteTransactionRequest request data
-    properties:
-      order_id:
-        format: int64
-        type: integer
-        x-go-name: OrderID
-      transaction:
-        type: string
-        x-go-name: Transaction
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   ExecuteTransactionResponse:
     description: ExecuteTransactionResponse response object
     properties:
@@ -149,79 +109,12 @@ definitions:
         x-go-name: TransactionHash
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  FakeTransactionRequest:
-    description: FakeTransactionRequest request-data
-    properties:
-      denomination_amount:
-        description: This is the denomination amount in the UoM of the payment network
-          that the transaction should fake
-        format: int64
-        type: integer
-        x-go-name: DenominationAmount
-      order_id:
-        format: int64
-        type: integer
-        x-go-name: OrderID
-      payment_channel:
-        type: string
-        x-go-name: PaymentChannel
-      payment_usage:
-        description: This is the MEMO field for stellar payments. Must be a valid
-          order ID
-        type: string
-        x-go-name: PaymentUsage
-      recipient_address:
-        description: This is the payment-address that we genrated for the order
-        type: string
-        x-go-name: RecipientAddress
-      sender_address:
-        description: This is the payment-address that send the payment from the external
-          network
-        type: string
-        x-go-name: SenderAddress
-      tx_hash:
-        type: string
-        x-go-name: TxHash
-    required:
-    - payment_channel
-    - recipient_address
-    - sender_address
-    - order_id
-    - denomination_amount
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   FakeTransactionResponse:
     description: FakeTransactionResponse response object
     properties:
       is_duplicate:
         type: boolean
         x-go-name: IsDuplicate
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  GetOrdersRequest:
-    description: GetOrdersRequest is the data for filtering the user orders
-    properties:
-      ico_phase_id:
-        description: ID of the Ico-Phase
-        format: int64
-        type: integer
-        x-go-name: IcoPhaseID
-      order_status:
-        description: ID of the Order
-        type: string
-        x-go-name: OrderStatus
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  IcoPhaseDetailsRequest:
-    description: IcoPhaseDetailsRequest is the request data
-    properties:
-      ico_phase_id:
-        description: ID of the ICO-Phase
-        format: int64
-        type: integer
-        x-go-name: ICOPhaseID
-    required:
-    - ico_phase_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   IcoPhaseDetailsResponse:
@@ -293,57 +186,12 @@ definitions:
         type: string
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  OrderDetailsRequest:
-    description: OrderDetailsRequest request-data
-    properties:
-      order_id:
-        description: ID of the Order
-        format: int64
-        type: integer
-        x-go-name: OrderID
-    required:
-    - order_id
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  OrderGetTransactionRequest:
-    description: OrderGetTransactionRequest request data
-    properties:
-      order_id:
-        format: int64
-        type: integer
-        x-go-name: OrderID
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   OrderGetTransactionResponse:
     description: OrderGetTransactionResponse response object
     properties:
       transaction:
         type: string
         x-go-name: Transaction
-    type: object
-    x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
-  PriceForCoinRequest:
-    description: PriceForCoinRequest is the request data
-    properties:
-      coin_amount:
-        description: Amount of coins for the price-calculation
-        format: int64
-        type: integer
-        x-go-name: CoinAmount
-      exchange_currency_id:
-        description: ID of the Exchange currency
-        format: int64
-        type: integer
-        x-go-name: ExchangeCurrencyID
-      ico_phase_id:
-        description: ID of the ICO-Phase
-        format: int64
-        type: integer
-        x-go-name: ICOPhaseID
-    required:
-    - coin_amount
-    - exchange_currency_id
-    - ico_phase_id
     type: object
     x-go-package: github.com/Soneso/lumenshine-backend/api/payapi
   PriceForCoinResponse:
